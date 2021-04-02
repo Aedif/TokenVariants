@@ -1,0 +1,5 @@
+{
+    "token-variants.searchPathsTitle": "Variant art search paths",
+    "token-variants.searchPathsLabel": "Open",
+    "token-variants.SearchPathsHint": "Place all the paths to the folders you want to be included in the token art search."
+}
