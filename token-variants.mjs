@@ -1,4 +1,5 @@
 import SearchPaths from "./applications/searchPaths.js";
+import ArtSelect from "./applications/artSelect.js";
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = ["modules/caeora-maps-tokens-assets/assets/tokens/"];
@@ -177,24 +178,19 @@ function replaceActorArtwork(actor, options, userId) {
         return;
     }
 
-    let buttons = {};
-    tokens.forEach((tokenSrc, index) => {
-        buttons[index] = {
-            icon: `<img src="${tokenSrc}"/>`,
+    let buttons = [];
+    tokens.forEach((tokenSrc, i) => {
+        buttons.push({
+            // icon: `<img src="${tokenSrc}"/>`,
+            index: i,
+            path: tokenSrc,
             label: getFileName(tokenSrc),
             callback: () => setTokenImage(actor, tokenSrc),
-        };
+        });
     });
 
-    let d = new Dialog({
-        title: "Variant Select",
-        content: "<p>Choose the art for the token.</p>",
-        buttons: buttons,
-        default: 1,
-        render: html => console.log("Register interactivity in the rendered dialog"),
-        close: html => console.log("This always is logged no matter which option is chosen"),
-    }, { width: 400, height: 250, resizable: true });
-    d.render(true);
+    let artSelect = new ArtSelect(buttons);
+    artSelect.render(true);
 }
 
 /**

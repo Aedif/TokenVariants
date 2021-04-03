@@ -12,6 +12,9 @@
         "token-variants.mjs"
     ],
     "scripts": [],
+    "styles": [
+        "styles/artSelect.css"
+    ],
     "languages": [
         {
             "lang": "en",
