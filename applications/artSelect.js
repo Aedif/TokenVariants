@@ -1,10 +1,11 @@
 export default class ArtSelect extends FormApplication {
     constructor(buttons) {
-        super({}, {});
+        super({}, { width: buttons.length < 4 ? 150 * buttons.length + 30 : 550 });
         this.buttons = buttons;
     }
 
     static get defaultOptions() {
+        console.log("IN DEFAULT OPTIONS");
         return mergeObject(super.defaultOptions, {
             id: "token-variants-art-select",
             classes: ["sheet"],
@@ -12,7 +13,6 @@ export default class ArtSelect extends FormApplication {
             resizable: true,
             minimizable: false,
             title: "Variant Art Select Screen",
-            width: 520
         });
     }
 
@@ -28,9 +28,7 @@ export default class ArtSelect extends FormApplication {
     activateListeners(html) {
         super.activateListeners(html);
         this.buttons.forEach((button, index) => {
-            html.find(`input#${index}`).on("click", () => {
-                button.callback();
-            });
+            html.find(`input#${index}`).on("click", button.callback);
         });
     }
 
