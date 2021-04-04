@@ -99,7 +99,7 @@ async function findTokens(name) {
     const simpleName = simplifyTokenName(name);
 
     if (cachedTokens.has("all_paths")) {
-        if (!monsterNameList.includes(simpleName)) return;
+        if (filterMSRD && !monsterNameList.includes(simpleName)) return;
 
         let allPaths = cachedTokens.get("all_paths");
         allPaths.forEach((tokenSrc) => {
@@ -195,7 +195,7 @@ function cacheToken(token) {
  */
 async function replaceActorArtwork(actor, options, userId) {
     let data = actor._data;
-    if ((data.type !== "npc") || !hasProperty(data, "data.details.cr")) return;
+    if ((data.type !== "npc")) return;
 
     const cleanName = simplifyTokenName(data.name);
 
