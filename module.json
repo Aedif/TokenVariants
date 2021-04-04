@@ -4,6 +4,7 @@
     "description": "A simple module that searches for token art in provided folders and displays all of the options at the time of token creation to be selected by the user.",
     "version": "1.0.0",
     "download": "https://github.com/Aedif/TokenVariants/releases/latest/download/token-variants.zip",
+    "url": "https://github.com/Aedif/TokenVariants",
     "author": "Aedif",
     "minimumCoreVersion": "0.7.7",
     "systems": [
