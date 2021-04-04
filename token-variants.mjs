@@ -235,7 +235,7 @@ async function replaceActorArtwork(actor, options, userId) {
  * Assign new artwork to the actor
  */
 function setTokenImage(actor, tokenSrc) {
-    actor.update({ "_id": actor.id, "img": tokenSrc });
+    actor.update({ "_id": actor.id, "img": tokenSrc, "token.img": tokenSrc });
     actor.getActiveTokens().forEach((token) => {
         token.update({ "img": tokenSrc });
     });
