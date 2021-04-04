@@ -209,7 +209,9 @@ async function replaceActorArtwork(actor, options, userId) {
         return;
     }
 
-    if (tokens.length == 1) {
+    // Auto-replace if only 1 variant art was found and the actor does not
+    // currently have any art assigned to it.
+    if (tokens.length == 1 && actor.img == DEFAULT_TOKEN) {
         setTokenImage(actor, tokens[0]);
         return;
     }

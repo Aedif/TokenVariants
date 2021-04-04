@@ -5,7 +5,6 @@ export default class ArtSelect extends FormApplication {
     }
 
     static get defaultOptions() {
-        console.log("IN DEFAULT OPTIONS");
         return mergeObject(super.defaultOptions, {
             id: "token-variants-art-select",
             classes: ["sheet"],
