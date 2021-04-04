@@ -1,3 +1,7 @@
+# v 1.0.3
+
+* Fixing grid layout breaking in the art selection window when filenames overflow the grid box
+
 # v 1.0.2
 
 * A fix to 'Filter by Monster (SRD)' config not being used correctly by the module

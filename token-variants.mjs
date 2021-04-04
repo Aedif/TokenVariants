@@ -153,7 +153,7 @@ async function walkFindTokens(path, name) {
  * Simplifies token and monster names.
  */
 function simplifyTokenName(tokenName) {
-    return tokenName.replace(/ |-|_/g, "").toLowerCase();
+    return tokenName.replace(/\W/g, '').toLowerCase();
 }
 
 /**
