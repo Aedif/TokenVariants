@@ -7,6 +7,7 @@
     "url": "https://github.com/Aedif/TokenVariants",
     "author": "Aedif",
     "minimumCoreVersion": "0.7.7",
+    "compatibleCoreVersion": "0.7.9",
     "systems": [
         "dnd5e"
     ],
