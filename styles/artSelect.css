@@ -35,4 +35,5 @@
 
 .token-variants-grid p{
     overflow: scroll;
+    white-space: nowrap;
 }

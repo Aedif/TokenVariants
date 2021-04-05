@@ -160,7 +160,7 @@ function simplifyTokenName(tokenName) {
  * Extracts the file name from the given path.
  */
 function getFileName(path) {
-    return path.split('\\').pop().split('/').pop().split('.')[0]
+    return decodeURI(path).split('\\').pop().split('/').pop().split('.')[0]
 }
 
 /**

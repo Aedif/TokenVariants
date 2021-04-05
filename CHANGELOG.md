@@ -1,3 +1,8 @@
+# v 1.0.4
+
+* Fixing space encoding causing issues with Actor to File name comparisons
+* Fixing grid layout breaking in the art selection window when file names with spaces overflow to the 2nd line
+
 # v 1.0.3
 
 * Fixing grid layout breaking in the art selection window when filenames overflow the grid box
