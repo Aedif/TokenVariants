@@ -67,9 +67,25 @@ function initialize() {
 
     // Handle actor/token art replacement
     Hooks.on("createActor", replaceActorArtwork);
+    Hooks.on("renderTokenConfig", modTokenConfig);
 
     // Cache tokens if not disabled
     cacheTokens();
+}
+
+function modTokenConfig(tokenConfig, html, data) {
+    let fields = html[0].getElementsByClassName("image");
+    for (let field of fields) {
+        if (field.getAttribute("name") == "img") {
+            let el = document.createElement("button");
+            el.type = "button";
+            el.title = "Select variant";
+            el.innerHTML = '<i class="fas fa-images"></i>';
+            el.tabIndex = -1;
+            el.onclick = () => replaceTokenConfigImage(tokenConfig.object, field);
+            field.parentNode.append(el);
+        }
+    }
 }
 
 /**
@@ -190,6 +206,45 @@ function cacheToken(token) {
     }
 }
 
+async function retrieveTokens(name) {
+    const cleanName = simplifyTokenName(name);
+    let tokens = [];
+    if (disableCaching || cachedTokens.has("all_paths")) {
+        tokens = Array.from(new Set(await findTokens(cleanName)));
+        if (tokens.length == 0) return;
+    } else if (cachedTokens.has(cleanName)) {
+        tokens = Array.from(new Set(cachedTokens.get(cleanName)))
+    }
+    return tokens;
+}
+
+async function replaceTokenConfigImage(token, tokenImagePathEl) {
+    let tokens = await retrieveTokens(token.data.name);
+    if (!tokens) {
+        let d = Dialog.prompt({
+            title: token.data.name,
+            content: `<p>No art found containing: <b>${token.data.name}</b></p>`,
+            label: "Ok",
+            callback: html => { }
+        });
+        return;
+    }
+
+    // Display a form to select the variant art
+    let buttons = [];
+    tokens.forEach((tokenSrc, i) => {
+        buttons.push({
+            index: i,
+            path: tokenSrc,
+            label: getFileName(tokenSrc),
+            callback: () => tokenImagePathEl.value = tokenSrc,
+        });
+    });
+
+    let artSelect = new ArtSelect(buttons);
+    artSelect.render(true);
+}
+
 /**
  * Replace the artwork for a NPC actor with the variant version.
  */
@@ -197,17 +252,8 @@ async function replaceActorArtwork(actor, options, userId) {
     let data = actor._data;
     if ((data.type !== "npc")) return;
 
-    const cleanName = simplifyTokenName(data.name);
-
-    let tokens = [];
-    if (disableCaching || cachedTokens.has("all_paths")) {
-        tokens = Array.from(new Set(await findTokens(cleanName)));
-        if (tokens.length == 0) return;
-    } else if (cachedTokens.has(cleanName)) {
-        tokens = Array.from(new Set(cachedTokens.get(cleanName)))
-    } else {
-        return;
-    }
+    let tokens = await retrieveTokens(data.name);
+    if (!tokens) return;
 
     // Auto-replace if only 1 variant art was found and the actor does not
     // currently have any art assigned to it.

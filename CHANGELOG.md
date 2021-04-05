@@ -1,3 +1,7 @@
+# v 1.1.0
+
+* Added a new button to 'Token Configuration' window's 'Image' tab which will bring up the 'Art Select' screen using the token's name as the search criteria.
+
 # v 1.0.4
 
 * Fixing space encoding causing issues with Actor to File name comparisons
