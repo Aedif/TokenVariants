@@ -13,6 +13,7 @@
             "discord": "Aedif#7268"
         }
     ],
+    "bugs": "https://github.com/Aedif/TokenVariants/issues",
     "minimumCoreVersion": "0.7.7",
     "compatibleCoreVersion": "0.7.9",
     "systems": [
