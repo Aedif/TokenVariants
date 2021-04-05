@@ -5,5 +5,8 @@
     "token-variants.DisableCachingName": "Disable Caching",
     "token-variants.DisableCachingHint": "Disables caching of token art paths. Saves some memory but greatly impacts the search speed.",
     "token-variants.FilterMSRDName": "Filter by Monster (SRD)",
-    "token-variants.FilterMSRDHint": "Excludes token variants for tokens with names not included in the Monster (SRD) list."
+    "token-variants.FilterMSRDHint": "Excludes token variants for tokens with names not included in the Monster (SRD) list.",
+    "token-variants.TokenConfigPrompt": "No art found containing",
+    "token-variants.TokenConfigButtonTitle": "Select variant",
+    "token-variants.SelectScreenTitle": "Select variant"
 }

@@ -3,10 +3,16 @@
     "title": "Token Variant Art",
     "description": "A simple module that searches for token art in configured directories and displays all of the options at the time of token creation to be selected by the user.",
     "version": "1.1.0",
-    "download": "https://github.com/Aedif/TokenVariants/releases/latest/download/token-variants.zip",
+    "download": "https://github.com//Aedif/TokenVariants/releases/download/1.1.0/token-variants.zip",
     "url": "https://github.com/Aedif/TokenVariants",
-    "manifest": "https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json",
+    "manifest": "https://github.com/Aedif/TokenVariants/releases/latest/download/module.json",
     "author": "Aedif",
+    "authors": [
+        {
+            "name": "Aedif",
+            "discord": "Aedif#7268"
+        }
+    ],
     "minimumCoreVersion": "0.7.7",
     "compatibleCoreVersion": "0.7.9",
     "systems": [

@@ -11,7 +11,7 @@ export default class ArtSelect extends FormApplication {
             template: "modules/token-variants/templates/artSelect.html",
             resizable: true,
             minimizable: false,
-            title: "Variant Art Select Screen",
+            title: game.i18n.localize("token-variants.SelectScreenTitle"),
         });
     }
 

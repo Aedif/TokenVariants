@@ -73,17 +73,22 @@ function initialize() {
     cacheTokens();
 }
 
-function modTokenConfig(tokenConfig, html, data) {
+/**
+ * Adds a button to 'Token Configuration' window's 'Image' tab which opens
+ * ArtSelect using the token's name.
+ */
+function modTokenConfig(tokenConfig, html, _) {
     let fields = html[0].getElementsByClassName("image");
     for (let field of fields) {
         if (field.getAttribute("name") == "img") {
             let el = document.createElement("button");
             el.type = "button";
-            el.title = "Select variant";
+            el.title = game.i18n.localize("token-variants.TokenConfigButtonTitle");
             el.innerHTML = '<i class="fas fa-images"></i>';
             el.tabIndex = -1;
             el.onclick = () => replaceTokenConfigImage(tokenConfig.object, field);
             field.parentNode.append(el);
+            return;
         }
     }
 }
@@ -206,6 +211,9 @@ function cacheToken(token) {
     }
 }
 
+/**
+ * Returns all token art paths for the given Actor/Token name
+ */
 async function retrieveTokens(name) {
     const cleanName = simplifyTokenName(name);
     let tokens = [];
@@ -218,12 +226,16 @@ async function retrieveTokens(name) {
     return tokens;
 }
 
+/**
+ * Retrieves and displays all of the art found for the given token.
+ * If a particular art is selected, the path to it is assigned to the html element.
+ */
 async function replaceTokenConfigImage(token, tokenImagePathEl) {
     let tokens = await retrieveTokens(token.data.name);
     if (!tokens) {
-        let d = Dialog.prompt({
+        Dialog.prompt({
             title: token.data.name,
-            content: `<p>No art found containing: <b>${token.data.name}</b></p>`,
+            content: `<p>${game.i18n.localize("token-variants.TokenConfigPrompt")}: <b>${token.data.name}</b></p>`,
             label: "Ok",
             callback: html => { }
         });
