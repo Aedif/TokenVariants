@@ -230,7 +230,7 @@ async function retrieveTokens(name) {
  * Retrieves and displays all of the art found for the given token.
  * If a particular art is selected, the path to it is assigned to the html element.
  */
-async function replaceTokenConfigImage(token, tokenImagePathEl) {
+async function replaceTokenConfigImage(token, element) {
     let tokens = await retrieveTokens(token.data.name);
     if (!tokens) {
         Dialog.prompt({
@@ -249,7 +249,7 @@ async function replaceTokenConfigImage(token, tokenImagePathEl) {
             index: i,
             path: tokenSrc,
             label: getFileName(tokenSrc),
-            callback: () => tokenImagePathEl.value = tokenSrc,
+            callback: () => element.value = tokenSrc,
         });
     });
 
@@ -262,17 +262,9 @@ async function replaceTokenConfigImage(token, tokenImagePathEl) {
  */
 async function replaceActorArtwork(actor, options, userId) {
     let data = actor._data;
-    if ((data.type !== "npc")) return;
 
     let tokens = await retrieveTokens(data.name);
     if (!tokens) return;
-
-    // Auto-replace if only 1 variant art was found and the actor does not
-    // currently have any art assigned to it.
-    if (tokens.length == 1 && actor.img == DEFAULT_TOKEN) {
-        setTokenImage(actor, tokens[0]);
-        return;
-    }
 
     // Display a form to select the variant art
     let buttons = [];
