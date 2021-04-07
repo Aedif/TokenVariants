@@ -1,10 +1,17 @@
 <form>
+
+    {{#each allButtons}}
+    <div>
+        <t2><b>{{{@key}}}</b></t2>
+    </div>
+    <hr />
     <div class="token-variants-grid">
-        {{#each buttons}}
+        {{#each this}}
         <div>
-            <input type="image" src="{{path}}" id="{{index}}" />
+            <input type="image" src="{{path}}" id="{{id}}" />
             <p>{{label}}</p>
         </div>
         {{/each}}
     </div>
+    {{/each}}
 </form>

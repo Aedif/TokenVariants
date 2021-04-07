@@ -10,6 +10,10 @@ let monsterNameList = [];
 // Controls whether found art should be filtered by 5e monster srd
 let filterMSRD = true;
 
+// Controls whether a keyword search is to be performed in addition to full-name search
+let keywordSearch = false;
+let excludedKeywords = ["and", "for"]
+
 // Disables storing of token paths in a cache
 let disableCaching = false;
 
@@ -62,8 +66,19 @@ function initialize() {
         onChange: filter => { filterMSRD = filter; cacheTokens(); }
     });
 
+    game.settings.register("token-variants", "keywordSearch", {
+        name: game.i18n.localize("token-variants.KeywordSearchName"),
+        hint: game.i18n.localize("token-variants.KeywordSearchHint"),
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: kSearch => keywordSearch = kSearch
+    });
+
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
+    keywordSearch = game.settings.get("token-variants", "keywordSearch");
 
     // Handle actor/token art replacement
     Hooks.on("createActor", replaceActorArtwork);
@@ -243,6 +258,7 @@ async function replaceTokenConfigImage(token, element) {
     }
 
     // Display a form to select the variant art
+    let allButtons = {};
     let buttons = [];
     tokens.forEach((tokenSrc, i) => {
         buttons.push({
@@ -252,8 +268,9 @@ async function replaceTokenConfigImage(token, element) {
             callback: () => element.value = tokenSrc,
         });
     });
+    allButtons[data.name] = buttons;
 
-    let artSelect = new ArtSelect(buttons);
+    let artSelect = new ArtSelect(allButtons);
     artSelect.render(true);
 }
 
@@ -261,23 +278,42 @@ async function replaceTokenConfigImage(token, element) {
  * Replace the artwork for a NPC actor with the variant version.
  */
 async function replaceActorArtwork(actor, options, userId) {
-    let data = actor._data;
+    let name = actor._data.name;
 
-    let tokens = await retrieveTokens(data.name);
-    if (!tokens) return;
+    let searches = [name];
+    let allButtons = {};
+    let usedTokens = new Set();
 
-    // Display a form to select the variant art
-    let buttons = [];
-    tokens.forEach((tokenSrc, i) => {
-        buttons.push({
-            index: i,
-            path: tokenSrc,
-            label: getFileName(tokenSrc),
-            callback: () => setTokenImage(actor, tokenSrc),
+    if (keywordSearch) {
+        searches = searches.concat(name.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word)).reverse());
+    }
+
+    let buttonId = 0;
+    for (let search of searches) {
+        let tokens = await retrieveTokens(search);
+        if (!tokens) continue;
+
+        // Display a form to select the variant art
+        let buttons = [];
+        tokens.forEach((tokenSrc) => {
+            if (!usedTokens.has(tokenSrc)) {
+                usedTokens.add(tokenSrc);
+                buttons.push({
+                    id: ++buttonId,
+                    path: tokenSrc,
+                    label: getFileName(tokenSrc),
+                    callback: () => setTokenImage(actor, tokenSrc),
+                });
+            }
         });
-    });
+        if (buttons.length > 0) {
+            allButtons[search] = buttons;
+        }
+    }
 
-    let artSelect = new ArtSelect(buttons);
+    if (allButtons.size == 0) return;
+
+    let artSelect = new ArtSelect(allButtons);
     artSelect.render(true);
 }
 
