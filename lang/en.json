@@ -6,9 +6,12 @@
     "token-variants.DisableCachingHint": "Disables caching of token art paths. Saves some memory but greatly impacts the search speed.",
     "token-variants.FilterMSRDName": "Filter by Monster (SRD)",
     "token-variants.FilterMSRDHint": "Excludes token variants for tokens with names not included in the Monster (SRD) list.",
+    "token-variants.FilterMSRDError": "Token name is not part of Monster (SRD): ",
     "token-variants.TokenConfigPrompt": "No art found containing",
     "token-variants.TokenConfigButtonTitle": "Select variant",
     "token-variants.SelectScreenTitle": "Select variant",
     "token-variants.KeywordSearchName": "Search by Keyword",
-    "token-variants.KeywordSearchHint": "Searches both using full name and individual words in the name of the actor/token."
+    "token-variants.KeywordSearchHint": "Searches both using full name and individual words in the name of the actor/token. Words less than 3 characters are ignored.",
+    "token-variants.ExcludedKeywordsName": "Excluded Keywords",
+    "token-variants.ExcludedKeywordsHint": "This is a list of keywords that will not be included in the search when 'Search by Keyword' is on."
 }

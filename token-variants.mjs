@@ -12,16 +12,16 @@ let filterMSRD = true;
 
 // Controls whether a keyword search is to be performed in addition to full-name search
 let keywordSearch = false;
-let excludedKeywords = ["and", "for"]
+let excludedKeywords = [];
 
 // Disables storing of token paths in a cache
 let disableCaching = false;
 
 // A cached map of all the found tokens
-let cachedTokens = new Map();
+let cachedTokens = new Set();
 
 // Tokens found with caching disabled
-let foundTokens = new Array();
+let foundTokens = new Set();
 
 /**
  * Initialize the Token Variants module on Foundry VTT init
@@ -76,6 +76,16 @@ function initialize() {
         onChange: kSearch => keywordSearch = kSearch
     });
 
+    game.settings.register("token-variants", "excludedKeywords", {
+        name: game.i18n.localize("token-variants.ExcludedKeywordsName"),
+        hint: game.i18n.localize("token-variants.ExcludedKeywordsHint"),
+        scope: "world",
+        config: true,
+        type: String,
+        default: "and,for",
+        onChange: keywords => excludedKeywords = parseKeywords(keywords)
+    });
+
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
@@ -86,6 +96,10 @@ function initialize() {
 
     // Cache tokens if not disabled
     cacheTokens();
+}
+
+function parseKeywords(keywords) {
+    return keywords.split(/\W/).map(word => simplifyTokenName(word)).filter(word => word != "")
 }
 
 /**
@@ -114,34 +128,35 @@ function modTokenConfig(tokenConfig, html, _) {
 async function cacheTokens() {
     cachedTokens.clear();
 
-    await jQuery.getJSON("modules/token-variants/data/monster_srd_names.json", (json) => (monsterNameList = json));
-    monsterNameList = monsterNameList.map(name => simplifyTokenName(name));
+    if (filterMSRD) {
+        await jQuery.getJSON("modules/token-variants/data/monster_srd_names.json", (json) => (monsterNameList = json));
+        monsterNameList = monsterNameList.map(name => simplifyTokenName(name));
+    }
 
     if (disableCaching) return;
 
     let searchPaths = game.settings.get("token-variants", "searchPaths")[0];
     for (let path of searchPaths) {
         if (path) {
-            walkCacheTokens(path);
+            await walkFindTokens(path);
         }
     }
+    cachedTokens = foundTokens;
+    foundTokens = new Set();
 }
 
 /**
  * Search for tokens matching the supplied name
  */
 async function findTokens(name) {
-    foundTokens = [];
+    foundTokens = new Set();
     const simpleName = simplifyTokenName(name);
 
-    if (cachedTokens.has("all_paths")) {
-        if (filterMSRD && !monsterNameList.includes(simpleName)) return;
-
-        let allPaths = cachedTokens.get("all_paths");
-        allPaths.forEach((tokenSrc) => {
+    if (cachedTokens.size != 0) {
+        cachedTokens.forEach((tokenSrc) => {
             const simpleTokenName = simplifyTokenName(getFileName(tokenSrc));
             if (simpleTokenName.includes(simpleName)) {
-                foundTokens.push(tokenSrc);
+                foundTokens.add(tokenSrc);
             }
         });
     } else {
@@ -152,33 +167,20 @@ async function findTokens(name) {
             }
         }
     }
-    return foundTokens;
-}
-
-/**
- * Walks the directory tree and caches the found token art
- */
-async function walkCacheTokens(path) {
-    const files = await FilePicker.browse("data", path);
-    for (let token of files.files) {
-        cacheToken(token);
-    }
-    for (let dir of files.dirs) {
-        walkCacheTokens(dir);
-    }
+    return Array.from(foundTokens);
 }
 
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name) {
+async function walkFindTokens(path, name = "") {
     const files = await FilePicker.browse("data", path);
     for (let token of files.files) {
         let tokenName = getFileName(token);
         const cleanTokenName = simplifyTokenName(tokenName);
-        if (cleanTokenName.includes(name)) {
-            foundTokens.push(token);
-        }
+
+        if (name && !cleanTokenName.includes(name)) continue;
+        foundTokens.add(token);
     }
     for (let dir of files.dirs) {
         await walkFindTokens(dir, name);
@@ -200,100 +202,57 @@ function getFileName(path) {
 }
 
 /**
- * Cache the given token path
- */
-function cacheToken(token) {
-    if (filterMSRD) {
-        // Getting the filename without extension and removing
-        let tokenName = getFileName(token);
-        const cleanTokenName = simplifyTokenName(tokenName);
-        // Place tokens in a Map where key=simplified
-        for (let name of monsterNameList) {
-            if (cleanTokenName.includes(name)) {
-                if (cachedTokens.has(name)) {
-                    cachedTokens.get(name).push(token);
-                } else {
-                    cachedTokens.set(name, [token]);
-                }
-            }
-        }
-    } else {
-        if (cachedTokens.has("all_paths")) {
-            cachedTokens.get("all_paths").push(token);
-        } else {
-            cachedTokens.set("all_paths", [token]);
-        }
-    }
-}
-
-/**
- * Returns all token art paths for the given Actor/Token name
- */
-async function retrieveTokens(name) {
-    const cleanName = simplifyTokenName(name);
-    let tokens = [];
-    if (disableCaching || cachedTokens.has("all_paths")) {
-        tokens = Array.from(new Set(await findTokens(cleanName)));
-        if (tokens.length == 0) return;
-    } else if (cachedTokens.has(cleanName)) {
-        tokens = Array.from(new Set(cachedTokens.get(cleanName)))
-    }
-    return tokens;
-}
-
-/**
  * Retrieves and displays all of the art found for the given token.
  * If a particular art is selected, the path to it is assigned to the html element.
  */
 async function replaceTokenConfigImage(token, element) {
-    let tokens = await retrieveTokens(token.data.name);
-    if (!tokens) {
-        Dialog.prompt({
-            title: token.data.name,
-            content: `<p>${game.i18n.localize("token-variants.TokenConfigPrompt")}: <b>${token.data.name}</b></p>`,
-            label: "Ok",
-            callback: html => { }
-        });
-        return;
-    }
-
-    // Display a form to select the variant art
-    let allButtons = {};
-    let buttons = [];
-    tokens.forEach((tokenSrc, i) => {
-        buttons.push({
-            index: i,
-            path: tokenSrc,
-            label: getFileName(tokenSrc),
-            callback: () => element.value = tokenSrc,
-        });
-    });
-    allButtons[data.name] = buttons;
-
-    let artSelect = new ArtSelect(allButtons);
-    artSelect.render(true);
+    displayArtSelect(token.data.name, element, false);
 }
 
 /**
  * Replace the artwork for a NPC actor with the variant version.
  */
 async function replaceActorArtwork(actor, options, userId) {
-    let name = actor._data.name;
+    displayArtSelect(actor._data.name, actor, true);
+}
 
+/**
+ * Performs searches and displays the Art Select screen with the results.
+ * @param name The name to be used as the search criteria
+ * @param obj Actor or HTML element to be used in the callback upon art selection
+ * @param isActor boolean to indicate what type obj is
+ * @returns 
+ */
+async function displayArtSelect(name, obj, isActor) {
+    if (filterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
+        if (!isActor) {
+            Dialog.prompt({
+                title: game.i18n.localize("token-variants.FilterMSRDName"),
+                content: `<p>${game.i18n.localize("token-variants.FilterMSRDError")}: <b>${name}</b></p>`,
+                label: "Ok",
+                callback: _ => { }
+            });
+        }
+        return;
+    }
     let searches = [name];
     let allButtons = {};
     let usedTokens = new Set();
 
     if (keywordSearch) {
-        searches = searches.concat(name.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word)).reverse());
+        excludedKeywords = parseKeywords(game.settings.get("token-variants", "excludedKeywords"));
+        console.log(excludedKeywords);
+        searches = searches.concat(name.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word.toLowerCase())).reverse());
     }
 
     let buttonId = 0;
+    let artFound = false;
     for (let search of searches) {
-        let tokens = await retrieveTokens(search);
+        if (allButtons[search] !== undefined) continue;
+        let tokens = await findTokens(search);
         if (!tokens) continue;
 
-        // Display a form to select the variant art
+        // Generate buttons for each token art
         let buttons = [];
         tokens.forEach((tokenSrc) => {
             if (!usedTokens.has(tokenSrc)) {
@@ -302,16 +261,27 @@ async function replaceActorArtwork(actor, options, userId) {
                     id: ++buttonId,
                     path: tokenSrc,
                     label: getFileName(tokenSrc),
-                    callback: () => setTokenImage(actor, tokenSrc),
+                    callback: isActor ? () => setTokenImage(obj, tokenSrc) : () => obj.value = tokenSrc,
                 });
             }
         });
         if (buttons.length > 0) {
-            allButtons[search] = buttons;
+            artFound = true;
         }
+        allButtons[search] = buttons;
     }
 
-    if (allButtons.size == 0) return;
+    if (!artFound) {
+        if (!isActor) {
+            Dialog.prompt({
+                title: name,
+                content: `<p>${game.i18n.localize("token-variants.TokenConfigPrompt")}: <b>${name}</b></p>`,
+                label: "Ok",
+                callback: _ => { }
+            });
+        }
+        return;
+    }
 
     let artSelect = new ArtSelect(allButtons);
     artSelect.render(true);
