@@ -1,3 +1,9 @@
+# v 1.2.0
+
+* Introducing '**Search by Keyword**' and '**Excluded Keywords**' configs:
+    * **Search by Keyword**: When enabled the art search will be done using both the Actor/Token full name as well as individual words within the name.
+    * **Excluded Keywords**: Words within this list will be excluded from the keywords search.
+
 # v 1.1.1
 
 * Removed the restriction on Actor type having to be '**npc**' in order to trigger the display of **Art Select** screen.

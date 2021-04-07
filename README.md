@@ -6,7 +6,7 @@
 
 This module provides a pop-up window upon token creation which displays all the available variants of the token art it could find in the customizable list of directories.
 
-![](./docs/art_select.gif)
+!["Art Select"](./docs/art_select.gif)
 
 The search is done using the Actor's name, and will ignore special characters, case, or spaces in the files
 
@@ -24,14 +24,14 @@ The only requirement is that the full name of the Actor is present in the file n
 
 The 'Art Select' screen can also be opened up from the 'Token Configuration' window's 'Image' tab. A new button is added right next to the File Picker:
 
-![](./docs/token_config_button.png)
+!["Token Configuration Button"](./docs/token_config_button.png)
 
 ## Settings
 ### Variant art search paths
 
 The directories that will be scanned for art can be set here. All of the sub-directories will be searched as well so feel free to organise your art as you wish.
 
-![](./docs/search_paths.png)
+!["Search Paths Config"](./docs/search_paths.png)
 
 The root of these paths is Foundry VTT's Data folder. The same folder where you would find your worlds, systems, and modules.
 
@@ -44,6 +44,16 @@ By default the module will search the directories defined in 'Variant art search
 ### Filter by Monster (SRD)
 
 Can be disabled if you want variant art to be retrieved for actors with names not found in Monster (SRD) list.
+
+### Search by Keyword
+
+When enabled the art search will be done using both the Actor/Token full name as well as individual words within the name:
+
+!["Keyword Search"](./docs/keyword_search.png)
+### Excluded Keywords
+
+Words within this list will be excluded from the keywords search:
+!["Excluded Keywords"](./docs/excluded_keywords.png)
 
 ## Installation
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.
