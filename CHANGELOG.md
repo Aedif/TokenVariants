@@ -1,3 +1,8 @@
+# v 1.3.0
+
+* Adding support for AWS S3 buckets.
+    * Buckets configuered as per the following [PAGE](https://foundryvtt.com/article/aws-s3/) can be defined in the **Search Paths** configuration like so: **s3:{bucket-name}:{path}** 
+
 # v 1.2.0
 
 * Introducing '**Search by Keyword**' and '**Excluded Keywords**' configs:

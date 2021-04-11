@@ -33,10 +33,13 @@ The directories that will be scanned for art can be set here. All of the sub-dir
 
 !["Search Paths Config"](./docs/search_paths.png)
 
-The root of these paths is Foundry VTT's Data folder. The same folder where you would find your worlds, systems, and modules.
+The root of these paths is assumed to be Foundry VTT's local Data folder. The same folder where you would find your worlds, systems, and modules.
 
 By default 'Token Variants' will attempt to search [Caeora's Maps, Tokens, and Assets](https://foundryvtt.com/packages/caeora-maps-tokens-assets) asset folder if installed.
 
+To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket you can use the following format:
+
+**s3:{bucket-name}:{path}**
 ### Disable Caching
 
 By default the module will search the directories defined in 'Variant art search paths' only when the world is loaded or when the module settings have changed. If new art is added while the world is still open it will not be found by the module. 'Disable Caching' will force the search to be performed every time a new actor is created at a significant cost to speed at which the art is displayed to the user.

@@ -122,6 +122,34 @@ function modTokenConfig(tokenConfig, html, _) {
     }
 }
 
+function getSearchPaths() {
+    const regexpBucket = /s3:(.*):(.*)/;
+    let searchPathList = game.settings.get("token-variants", "searchPaths")[0];
+    let searchPaths = new Map();
+    searchPaths.set("data", []);
+    searchPaths.set("s3", new Map());
+
+    searchPathList.forEach((path) => {
+        if (path.startsWith("s3:")) {
+            const match = path.match(regexpBucket);
+            if (match[1]) {
+                let bucket = match[1];
+                let bPath = match[2];
+                let buckets = searchPaths.get("s3");
+
+                if (buckets.has(bucket)) {
+                    buckets.get(bucket).push(bPath);
+                } else {
+                    buckets.set(bucket, [bPath]);
+                }
+            }
+        } else {
+            searchPaths.get("data").push(path);
+        }
+    });
+    return searchPaths;
+}
+
 /**
  * Search for and cache all the found token art
  */
@@ -135,12 +163,7 @@ async function cacheTokens() {
 
     if (disableCaching) return;
 
-    let searchPaths = game.settings.get("token-variants", "searchPaths")[0];
-    for (let path of searchPaths) {
-        if (path) {
-            await walkFindTokens(path);
-        }
-    }
+    await findTokens("");
     cachedTokens = foundTokens;
     foundTokens = new Set();
 }
@@ -160,10 +183,13 @@ async function findTokens(name) {
             }
         });
     } else {
-        let searchPaths = game.settings.get("token-variants", "searchPaths")[0];
-        for (let path of searchPaths) {
-            if (path) {
-                await walkFindTokens(path, simpleName);
+        let searchPaths = getSearchPaths();
+        for (let path of searchPaths.get("data")) {
+            await walkFindTokens(path, simpleName);
+        }
+        for (let [bucket, paths] of searchPaths.get("s3")) {
+            for (let path of paths) {
+                await walkFindTokens(path, simpleName, bucket);
             }
         }
     }
@@ -173,8 +199,16 @@ async function findTokens(name) {
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "") {
-    const files = await FilePicker.browse("data", path);
+async function walkFindTokens(path, name = "", bucket = "") {
+    if (!bucket && !path) return;
+
+    let files = [];
+    if (bucket) {
+        files = await FilePicker.browse("s3", path, { bucket: bucket });
+    } else {
+        files = await FilePicker.browse("data", path);
+    }
+
     for (let token of files.files) {
         let tokenName = getFileName(token);
         const cleanTokenName = simplifyTokenName(tokenName);
@@ -183,7 +217,7 @@ async function walkFindTokens(path, name = "") {
         foundTokens.add(token);
     }
     for (let dir of files.dirs) {
-        await walkFindTokens(dir, name);
+        await walkFindTokens(dir, name, bucket);
     }
 }
 
@@ -241,7 +275,6 @@ async function displayArtSelect(name, obj, isActor) {
 
     if (keywordSearch) {
         excludedKeywords = parseKeywords(game.settings.get("token-variants", "excludedKeywords"));
-        console.log(excludedKeywords);
         searches = searches.concat(name.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word.toLowerCase())).reverse());
     }
 
