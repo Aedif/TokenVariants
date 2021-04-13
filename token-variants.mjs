@@ -125,6 +125,7 @@ function modTokenConfig(tokenConfig, html, _) {
 function getSearchPaths() {
     const regexpBucket = /s3:(.*):(.*)/;
     let searchPathList = game.settings.get("token-variants", "searchPaths")[0];
+    searchPathList = searchPathList.flat(); // To fix the problem seen in https://github.com/Aedif/TokenVariants/issues/2 for users still using DEFAULT search path
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
