@@ -42,7 +42,7 @@ function initialize() {
         scope: "world",
         config: false,
         type: Array,
-        default: [DEFAULT_TOKEN_PATHS],
+        default: DEFAULT_TOKEN_PATHS,
         onChange: _ => disableCaching || cacheTokens()
     });
 
@@ -208,6 +208,8 @@ async function walkFindTokens(path, name = "", bucket = "") {
     } else {
         files = await FilePicker.browse("data", path);
     }
+
+    if (files.target == ".") return;
 
     for (let token of files.files) {
         let tokenName = getFileName(token);

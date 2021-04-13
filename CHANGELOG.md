@@ -1,3 +1,8 @@
+# v 1.3.1
+
+* Fixing an issue with the default search path on a fresh world not being read correctly and throwing up "TypeError: path.startsWith is not a function" 
+* Fixing an issue with entire 'Data' folder being read when invalid path is provided.
+
 # v 1.3.0
 
 * Adding support for AWS S3 buckets.
