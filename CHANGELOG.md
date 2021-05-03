@@ -1,3 +1,7 @@
+# v 1.3.2
+
+* Fixing an issue with 'Art Select' screen being shown to players.
+
 # v 1.3.1
 
 * Fixing an issue with the default search path on a fresh world not being read correctly and throwing up "TypeError: path.startsWith is not a function" 

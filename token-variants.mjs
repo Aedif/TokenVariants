@@ -28,6 +28,11 @@ let foundTokens = new Set();
  */
 function initialize() {
 
+    // Perform initialization only if the user is a GM
+    if (!game.user.isGM) {
+        return;
+    }
+
     // Settings 
     game.settings.registerMenu("token-variants", "searchPaths", {
         name: game.i18n.localize("token-variants.searchPathsTitle"),
@@ -334,4 +339,4 @@ function setTokenImage(actor, tokenSrc) {
 }
 
 // Initialize module
-Hooks.on("init", initialize);
+Hooks.on("canvasInit", initialize);
