@@ -67,7 +67,7 @@ function initialize() {
         scope: "world",
         config: true,
         type: Boolean,
-        default: true,
+        default: false,
         onChange: filter => { filterMSRD = filter; cacheTokens(); }
     });
 
@@ -77,7 +77,7 @@ function initialize() {
         scope: "world",
         config: true,
         type: Boolean,
-        default: false,
+        default: true,
         onChange: kSearch => keywordSearch = kSearch
     });
 
@@ -255,6 +255,10 @@ async function replaceTokenConfigImage(token, element) {
  * Replace the artwork for a NPC actor with the variant version.
  */
 async function replaceActorArtwork(actor, options, userId) {
+    // Display 'Art Select' to the user only if they have created the token
+    if (userId && game.user.id != userId)
+        return;
+
     displayArtSelect(actor._data.name, actor, true);
 }
 
@@ -265,18 +269,19 @@ async function replaceActorArtwork(actor, options, userId) {
  * @param isActor boolean to indicate what type obj is
  * @returns 
  */
-async function displayArtSelect(name, obj, isActor) {
-    if (filterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
+async function displayArtSelect(name, obj, isActor, ignoreFilterMSRD = false) {
+    if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
         if (!isActor) {
             Dialog.prompt({
                 title: game.i18n.localize("token-variants.FilterMSRDName"),
-                content: `<p>${game.i18n.localize("token-variants.FilterMSRDError")}: <b>${name}</b></p>`,
+                content: `<p>${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b></p>`,
                 label: "Ok",
                 callback: _ => { }
             });
         }
         return;
     }
+
     let searches = [name];
     let allButtons = {};
     let usedTokens = new Set();
@@ -312,20 +317,18 @@ async function displayArtSelect(name, obj, isActor) {
         allButtons[search] = buttons;
     }
 
-    if (!artFound) {
-        if (!isActor) {
-            Dialog.prompt({
-                title: name,
-                content: `<p>${game.i18n.localize("token-variants.TokenConfigPrompt")}: <b>${name}</b></p>`,
-                label: "Ok",
-                callback: _ => { }
-            });
-        }
-        return;
-    }
+    let searchAndDisplay = (search) => {
+        console.log(search);
+        displayArtSelect(search, obj, isActor, true);
+    };
 
-    let artSelect = new ArtSelect(allButtons);
-    artSelect.render(true);
+    if (artFound) {
+        let artSelect = new ArtSelect(allButtons, name, searchAndDisplay);
+        artSelect.render(true);
+    } else {
+        let artSelect = new ArtSelect(null, name, searchAndDisplay);
+        artSelect.render(true);
+    }
 }
 
 /**

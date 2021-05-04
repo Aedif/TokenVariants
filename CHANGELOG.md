@@ -1,3 +1,6 @@
+# v 1.4.1
+* Added a search field to 'Art Select' screen to allow for custom name searches.
+
 # v 1.3.2
 
 * Fixing an issue with 'Art Select' screen being shown to players.

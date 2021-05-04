@@ -23,9 +23,11 @@ function getStartingHeight(allButtons) {
 }
 
 export default class ArtSelect extends FormApplication {
-    constructor(allButtons) {
-        super({}, { width: getStartingWidth(allButtons), height: getStartingHeight(allButtons) });
+    constructor(allButtons, search, performSearch) {
+        super({}, { closeOnSubmit: false, width: getStartingWidth(allButtons), height: getStartingHeight(allButtons) });
         this.allButtons = allButtons;
+        this.search = search;
+        this.performSearch = performSearch;
     }
 
     static get defaultOptions() {
@@ -42,6 +44,7 @@ export default class ArtSelect extends FormApplication {
     async getData(options) {
         const data = super.getData(options);
         data.allButtons = this.allButtons;
+        data.search = this.search;
         return data;
     }
 
@@ -52,12 +55,16 @@ export default class ArtSelect extends FormApplication {
         super.activateListeners(html);
         for (let k in this.allButtons) {
             for (let button of this.allButtons[k]) {
-                html.find(`input#${button.id}`).on("click", button.callback);
+                html.find(`input#${button.id}`).on("click", () => {
+                    button.callback();
+                    this.close();
+                });
             }
         }
-        // this.buttons.forEach((button, index) => {
-        //     html.find(`input#${index}`).on("click", button.callback);
-        // });
+
+        html.find(`button#custom-art-search-bt`).on("click", () => {
+            this.performSearch(html.find(`input#custom-art-search`)[0].value);
+        });
     }
 
     /**
@@ -65,6 +72,10 @@ export default class ArtSelect extends FormApplication {
      * @param {Object} formData
      */
     async _updateObject(event, formData) {
-        this.close();
+        if (formData && formData.search != this.search) {
+            this.performSearch(formData.search);
+        } else {
+            this.close();
+        }
     }
 }

@@ -1,4 +1,11 @@
 <form>
+    <div class="form-group">
+        <input type="text" id="custom-art-search" name="search" value="{{search}}" />
+        <button type="button" id="custom-art-search-bt">
+            Search
+        </button>
+    </div>
+    {{#if allButtons}}
     {{#each allButtons}}
     <div>
         <h2><b>{{{@key}}}</b></h2>
@@ -13,4 +20,12 @@
         {{/each}}
     </div>
     {{/each}}
+
+    {{else}}
+
+    <div>
+        <p>{{localize "token-variants.TokenConfigPrompt"}}: <b>{{search}}</b></p>
+    </div>
+
+    {{/if}}
 </form>
