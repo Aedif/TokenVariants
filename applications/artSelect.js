@@ -57,7 +57,6 @@ export default class ArtSelect extends FormApplication {
             for (let button of this.allButtons[k]) {
                 html.find(`input#${button.id}`).on("click", () => {
                     button.callback();
-                    this.close();
                 });
             }
         }

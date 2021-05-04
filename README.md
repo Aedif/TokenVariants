@@ -44,9 +44,9 @@ To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS
 
 By default the module will search the directories defined in 'Variant art search paths' only when the world is loaded or when the module settings have changed. If new art is added while the world is still open it will not be found by the module. 'Disable Caching' will force the search to be performed every time a new actor is created at a significant cost to speed at which the art is displayed to the user.
 
-### Filter by Monster (SRD)
+### Filter by D&D 5e Monster (SRD)
 
-Can be disabled if you want variant art to be retrieved for actors with names not found in Monster (SRD) list.
+Can be enabled if you want variant art to not be retrieved for actors with names not found in D&D 5e Monster (SRD) list.
 
 ### Search by Keyword
 

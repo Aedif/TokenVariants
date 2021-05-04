@@ -1,3 +1,6 @@
+# v 1.4.2
+* Removed system limitation to dnd5e
+
 # v 1.4.1
 * Added a search field to 'Art Select' screen to allow for custom name searches.
 
