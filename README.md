@@ -1,7 +1,7 @@
 
 ![GitHub Latest Version](https://img.shields.io/github/v/release/Aedif/TokenVariants?sort=semver)
-![GitHub Latest Release](https://img.shields.io/github/downloads/Aedif/TokenVariants/latest/total)
-![GitHub All Releases](https://img.shields.io/github/downloads/Aedif/TokenVariants/total)
+![GitHub Latest Release](https://img.shields.io/github/downloads/Aedif/TokenVariants/latest/token-variants.zip)
+![GitHub All Releases](https://img.shields.io/github/downloads/Aedif/TokenVariants/token-variants.zip)
 # Token Variant Art
 
 This module provides a pop-up window upon token creation which displays all the available variants of the token art it could find in the customizable list of directories.
