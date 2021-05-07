@@ -55,15 +55,13 @@ export default class ArtSelect extends FormApplication {
         super.activateListeners(html);
         for (let k in this.allButtons) {
             for (let button of this.allButtons[k]) {
-                html.find(`input#${button.id}`).on("click", () => {
-                    button.callback();
-                });
+                html.find(`input#${button.id}`).on("click", button.callback);
             }
         }
 
-        html.find(`button#custom-art-search-bt`).on("click", () => {
+        html.find(`button#custom-art-search-bt`).on("click", (() => {
             this.performSearch(html.find(`input#custom-art-search`)[0].value);
-        });
+        }));
     }
 
     /**

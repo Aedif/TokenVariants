@@ -1,3 +1,6 @@
+# v 1.4.3
+* Removed a bug that caused multiple 'Art Select' screens to be displayed after switching between scenes
+
 # v 1.4.2
 * Removed system limitation to dnd5e
 

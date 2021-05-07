@@ -23,10 +23,18 @@ let cachedTokens = new Set();
 // Tokens found with caching disabled
 let foundTokens = new Set();
 
+// Tracks if module has been initialized
+let initialized = false;
+
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
 function initialize() {
+
+    // Initialization should only be performed once
+    if (initialized) {
+        return;
+    }
 
     // Perform initialization only if the user is a GM
     if (!game.user.isGM) {
@@ -101,6 +109,8 @@ function initialize() {
 
     // Cache tokens if not disabled
     cacheTokens();
+
+    initialized = true;
 }
 
 function parseKeywords(keywords) {
@@ -317,10 +327,9 @@ async function displayArtSelect(name, obj, isActor, ignoreFilterMSRD = false) {
         allButtons[search] = buttons;
     }
 
-    let searchAndDisplay = (search) => {
-        console.log(search);
+    let searchAndDisplay = ((search) => {
         displayArtSelect(search, obj, isActor, true);
-    };
+    });
 
     if (artFound) {
         let artSelect = new ArtSelect(allButtons, name, searchAndDisplay);
