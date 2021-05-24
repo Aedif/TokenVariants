@@ -26,6 +26,12 @@ let foundTokens = new Set();
 // Tracks if module has been initialized
 let initialized = false;
 
+const callbackType = {
+    ACTOR: 1,
+    TOKEN: 2,
+    TOKEN_CONFIG: 3,
+}
+
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -104,8 +110,10 @@ function initialize() {
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
 
     // Handle actor/token art replacement
-    Hooks.on("createActor", replaceActorArtwork);
+    Hooks.on("createActor", onCreateActor);
+    Hooks.on("createToken", onCreateToken);
     Hooks.on("renderTokenConfig", modTokenConfig);
+    Hooks.on("renderActorSheet", modActorSheet);
 
     // Cache tokens if not disabled
     cacheTokens();
@@ -135,6 +143,44 @@ function modTokenConfig(tokenConfig, html, _) {
             return;
         }
     }
+}
+
+/**
+ * Displays pop-up on drag-in from the Actor Directory.
+ */
+async function onCreateToken(op1, tokenData, op3, op4) {
+    if (!keyboard.isDown("Control")) return;
+    let token = canvas.tokens.get(tokenData._id);
+    displayArtSelect(tokenData.name, token.actor, callbackType.ACTOR);
+}
+
+/**
+ * Adds right-click listener to Actor Sheet profile image to open up
+ * the 'Art Select' screen.
+ * @param actorSheet 
+ * @param html 
+ * @param options 
+ * @returns 
+ */
+function modActorSheet(actorSheet, html, options) {
+    if (!options.editable) return;
+
+    let profile = null;
+    let profileClassNames = ["profile", "profile-img"];
+
+    for (let className of profileClassNames) {
+        profile = html[0].getElementsByClassName(className)[0];
+        if (profile) break;
+    }
+
+    if (!profile) {
+        console.log(game.i18n.localize("token-variants.ProfileListenerError"));
+        return;
+    }
+
+    profile.addEventListener('contextmenu', function (ev) {
+        displayArtSelect(actorSheet.object.name, actorSheet.object, callbackType.ACTOR);
+    }, false);
 }
 
 function getSearchPaths() {
@@ -258,18 +304,18 @@ function getFileName(path) {
  * If a particular art is selected, the path to it is assigned to the html element.
  */
 async function replaceTokenConfigImage(token, element) {
-    displayArtSelect(token.data.name, element, false);
+    displayArtSelect(token.data.name, element, callbackType.TOKEN_CONFIG);
 }
 
 /**
  * Replace the artwork for a NPC actor with the variant version.
  */
-async function replaceActorArtwork(actor, options, userId) {
+async function onCreateActor(actor, options, userId) {
     // Display 'Art Select' to the user only if they have created the token
     if (userId && game.user.id != userId)
         return;
 
-    displayArtSelect(actor._data.name, actor, true);
+    displayArtSelect(actor._data.name, actor, callbackType.ACTOR);
 }
 
 /**
@@ -279,9 +325,9 @@ async function replaceActorArtwork(actor, options, userId) {
  * @param isActor boolean to indicate what type obj is
  * @returns 
  */
-async function displayArtSelect(name, obj, isActor, ignoreFilterMSRD = false) {
+async function displayArtSelect(name, obj, callbackFor, ignoreFilterMSRD = false) {
     if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
-        if (!isActor) {
+        if (callbackFor != callbackType.ACTOR) {
             Dialog.prompt({
                 title: game.i18n.localize("token-variants.FilterMSRDName"),
                 content: `<p>${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b></p>`,
@@ -311,13 +357,27 @@ async function displayArtSelect(name, obj, isActor, ignoreFilterMSRD = false) {
         // Generate buttons for each token art
         let buttons = [];
         tokens.forEach((tokenSrc) => {
+
+            let cb = null;
+            switch (callbackFor) {
+                case callbackType.ACTOR:
+                    cb = () => setTokenImage(obj, tokenSrc);
+                    break;
+                case callbackType.TOKEN_CONFIG:
+                    cb = () => obj.value = tokenSrc;
+                    break;
+                case callbackType.TOKEN:
+                    cb = () => obj.update({ "img": tokenSrc });
+                    break;
+            }
+
             if (!usedTokens.has(tokenSrc)) {
                 usedTokens.add(tokenSrc);
                 buttons.push({
                     id: ++buttonId,
                     path: tokenSrc,
                     label: getFileName(tokenSrc),
-                    callback: isActor ? () => setTokenImage(obj, tokenSrc) : () => obj.value = tokenSrc,
+                    callback: cb,
                 });
             }
         });
@@ -328,7 +388,7 @@ async function displayArtSelect(name, obj, isActor, ignoreFilterMSRD = false) {
     }
 
     let searchAndDisplay = ((search) => {
-        displayArtSelect(search, obj, isActor, true);
+        displayArtSelect(search, obj, callbackFor, true);
     });
 
     if (artFound) {
@@ -345,10 +405,41 @@ async function displayArtSelect(name, obj, isActor, ignoreFilterMSRD = false) {
  */
 function setTokenImage(actor, tokenSrc) {
     actor.update({ "_id": actor.id, "img": tokenSrc, "token.img": tokenSrc });
-    actor.getActiveTokens().forEach((token) => {
-        token.update({ "img": tokenSrc });
-    });
+
+    if (actor.token) {
+        actor.token.update({ "img": tokenSrc });
+    } else if (actor.getActiveTokens().length > 1) {
+        let d = new Dialog({
+            title: "Multiple Active Tokens",
+            content: `<p>There are multiple active tokens for this actor: ${actor.getActiveTokens().length}</p>`,
+            buttons: {
+                one: {
+                    label: "Update all tokens",
+                    callback: () => {
+                        actor.getActiveTokens().forEach((token) => {
+                            token.update({ "img": tokenSrc });
+                        });
+                    }
+                },
+                two: {
+                    label: "Update actor only",
+                    callback: () => { }
+                }
+            },
+            default: "two",
+        });
+        d.render(true);
+    } else {
+        actor.getActiveTokens().forEach((token) => {
+            token.update({ "img": tokenSrc });
+        });
+    }
 }
 
 // Initialize module
 Hooks.on("canvasInit", initialize);
+
+//CONFIG.debug.hooks = true;
+
+//html.find('img[data-edit]').click(ev => this._onEditImage(ev));
+// renderActorSheet 
