@@ -26,6 +26,10 @@ let foundTokens = new Set();
 // Tracks if module has been initialized
 let initialized = false;
 
+// Keyboard key controlling the pop-up when dragging in a token from the
+// Actor Directory
+let actorDirKey = "";
+
 const callbackType = {
     ACTOR: 1,
     TOKEN: 2,
@@ -105,13 +109,37 @@ function initialize() {
         onChange: keywords => excludedKeywords = parseKeywords(keywords)
     });
 
+    game.settings.register("token-variants", "actorDirectoryKey", {
+        name: "Actor Directory drag key",
+        hint: "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory.",
+        scope: "world",
+        config: true,
+        type: String,
+        choices: {
+            "Control": "Ctrl",
+            "Shift": "Shift",
+            "Alt": "Alt"
+        },
+        default: "Control",
+        onChange: key => actorDirKey = key
+    });
+
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
+    actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
 
     // Handle actor/token art replacement
-    Hooks.on("createActor", onCreateActor);
-    Hooks.on("createToken", onCreateToken);
+    Hooks.on("createActor", async (actor, options, userId) => {
+        if (userId && game.user.id != userId)
+            return;
+        displayArtSelect(actor._data.name, actor, callbackType.ACTOR);
+    });
+    Hooks.on("createToken", async (op1, tokenData, op3, op4) => {
+        if (!keyboard.isDown(actorDirKey)) return;
+        let token = canvas.tokens.get(tokenData._id);
+        displayArtSelect(tokenData.name, token.actor, callbackType.ACTOR);
+    });
     Hooks.on("renderTokenConfig", modTokenConfig);
     Hooks.on("renderActorSheet", modActorSheet);
 
@@ -138,7 +166,7 @@ function modTokenConfig(tokenConfig, html, _) {
             el.title = game.i18n.localize("token-variants.TokenConfigButtonTitle");
             el.innerHTML = '<i class="fas fa-images"></i>';
             el.tabIndex = -1;
-            el.onclick = () => replaceTokenConfigImage(tokenConfig.object, field);
+            el.onclick = async () => displayArtSelect(tokenConfig.object.data.name, field, callbackType.TOKEN_CONFIG);
             field.parentNode.append(el);
             return;
         }
@@ -146,21 +174,8 @@ function modTokenConfig(tokenConfig, html, _) {
 }
 
 /**
- * Displays pop-up on drag-in from the Actor Directory.
- */
-async function onCreateToken(op1, tokenData, op3, op4) {
-    if (!keyboard.isDown("Control")) return;
-    let token = canvas.tokens.get(tokenData._id);
-    displayArtSelect(tokenData.name, token.actor, callbackType.ACTOR);
-}
-
-/**
  * Adds right-click listener to Actor Sheet profile image to open up
  * the 'Art Select' screen.
- * @param actorSheet 
- * @param html 
- * @param options 
- * @returns 
  */
 function modActorSheet(actorSheet, html, options) {
     if (!options.editable) return;
@@ -183,6 +198,10 @@ function modActorSheet(actorSheet, html, options) {
     }, false);
 }
 
+/**
+ * Parses the searchPaths setting into a Map, distinguishing s3 buckets from local paths
+ * @returns 
+ */
 function getSearchPaths() {
     const regexpBucket = /s3:(.*):(.*)/;
     let searchPathList = game.settings.get("token-variants", "searchPaths")[0];
@@ -297,25 +316,6 @@ function simplifyTokenName(tokenName) {
  */
 function getFileName(path) {
     return decodeURI(path).split('\\').pop().split('/').pop().split('.')[0]
-}
-
-/**
- * Retrieves and displays all of the art found for the given token.
- * If a particular art is selected, the path to it is assigned to the html element.
- */
-async function replaceTokenConfigImage(token, element) {
-    displayArtSelect(token.data.name, element, callbackType.TOKEN_CONFIG);
-}
-
-/**
- * Replace the artwork for a NPC actor with the variant version.
- */
-async function onCreateActor(actor, options, userId) {
-    // Display 'Art Select' to the user only if they have created the token
-    if (userId && game.user.id != userId)
-        return;
-
-    displayArtSelect(actor._data.name, actor, callbackType.ACTOR);
 }
 
 /**
