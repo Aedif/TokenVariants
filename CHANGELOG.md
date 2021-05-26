@@ -1,3 +1,11 @@
+# v 1.5.1
+* Added a right-click listener to the Actor Sheet portrait to bring up the module's Art Select screen.
+* New Configurations:
+    * Art Select screen can now also be brought up when dragging in actors from the Actor Directory if Ctrl or another key (set in **Art Directory Popup key** configuration) is held.
+    * **Display Separate pop-ups for Portrait and Token art**: If enabled the user will be prompted with 2 windows every time a new actor or token is created. One for selecting the portrait and another for selecting the art for the token.
+    * **Portrait art filter**: Pop-ups opened up for portrait selection will be filtered to only show files containing the text set here. e.g. if all of your portraits have an identifier such as '[Portrait]' or '.avatar.' it can be entered here to show only these files.
+    * **Token art filter**: Same as the previous configuration, but is used when pop-up is displayed to select token art.
+
 # v 1.4.3
 * Removed a bug that caused multiple 'Art Select' screens to be displayed after switching between scenes
 
