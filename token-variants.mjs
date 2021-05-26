@@ -376,6 +376,7 @@ function getFileNameWithExt(path) {
  * Performs searches and displays the Art Select screen with the results.
  * @param name The name to be used as the search criteria
  * @param callback function that will be called with the user selected image path as argument
+ * @param searchType (token|portrait|both) indicates whether the window is being displayed for a token search or portrait search or both
  * @param ignoreFilterMSRD boolean that if set to true will ignore the filterMSRD setting
  */
 async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false) {
@@ -487,6 +488,13 @@ function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
     }
 }
 
+
 // Initialize module
 Hooks.on("canvasInit", initialize);
 
+// Make displayArtSelect function accessible through game
+Hooks.on("init", function () {
+    game.TokenVariants = {
+        displayArtSelect: displayArtSelect
+    };
+});

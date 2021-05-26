@@ -1,3 +1,11 @@
+# 1.5.3
+
+* Exposing **displayArtSelect** function used to render the **Art Select** popup through **game**.TokenVariants.displayArtSelect
+    * async function displayArtSelect(name, callback, searchType)
+        * **name**: The actor name to be used as the search criteria
+        * **callback** function that will be called with the user selected art path as the argument
+        * **searchType** ("token"|"portrait"|"both") string indicating whether the window is being displayed for a token search, portrait search, or both
+
 # 1.5.2
 
 * Added 'profile-image' class as a potential target to attach Right-click listener to which opens the Art Select window. Makes the module slightly more compatible with MonsterBlocks. 
