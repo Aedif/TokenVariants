@@ -236,7 +236,6 @@ function modActorSheet(actorSheet, html, options) {
     }
 
     profile.addEventListener('contextmenu', function (ev) {
-        console.log(actorSheet.object);
         displayArtSelect(actorSheet.object.name, (imgSrc) => setActorImage(actorSheet.object, imgSrc, true), SEARCH_TYPE.PORTRAIT);
     }, false);
 }
@@ -451,7 +450,6 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
  * Assign new artwork to the actor
  */
 function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
-    console.log("in setActorImage", actor);
     actor.update({ "img": tokenSrc });
 
     if (updateActorOnly)
