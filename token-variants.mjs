@@ -29,7 +29,19 @@ let initialized = false;
 // Keyboard key controlling the pop-up when dragging in a token from the Actor Directory
 let actorDirKey = "";
 
+// Controls whether separate popups are displayed for portrait and token art
 let twoPopups = false;
+
+// Strings used to filter portrait and token art
+let portraitFilter = "";
+let tokenFilter = "";
+
+// Obj used for indicating what title and filter should be used in the Art Select screen
+let SEARCH_TYPE = {
+    PORTRAIT: "portrait",
+    TOKEN: "token",
+    BOTH: "both"
+}
 
 /**
  * Initialize the Token Variants module on Foundry VTT init
@@ -105,8 +117,8 @@ function initialize() {
     });
 
     game.settings.register("token-variants", "actorDirectoryKey", {
-        name: "Actor Directory Popup key",
-        hint: "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory.",
+        name: game.i18n.localize("token-variants.ActorDirectoryKeyName"),
+        hint: game.i18n.localize("token-variants.ActorDirectoryKeyHint"),
         scope: "world",
         config: true,
         type: String,
@@ -120,8 +132,8 @@ function initialize() {
     });
 
     game.settings.register("token-variants", "twoPopups", {
-        name: "Display separate pop-ups for Portrait and Token art",
-        hint: "When enabled 2 separate pop-ups will be displayed upon Actor/Token creation, first to select the Portrait art, and second to select the Token art.",
+        name: game.i18n.localize("token-variants.TwoPopupsName"),
+        hint: game.i18n.localize("token-variants.TwoPopupsHint"),
         scope: "world",
         config: true,
         type: Boolean,
@@ -129,24 +141,46 @@ function initialize() {
         onChange: val => twoPopups = val
     });
 
+    game.settings.register("token-variants", "portraitFilter", {
+        name: game.i18n.localize("token-variants.PortraitFilterName"),
+        hint: game.i18n.localize("token-variants.PortraitFilterHint"),
+        scope: "world",
+        config: true,
+        type: String,
+        default: "",
+        onChange: val => portraitFilter = val
+    });
+
+    game.settings.register("token-variants", "tokenFilter", {
+        name: game.i18n.localize("token-variants.TokenFilterName"),
+        hint: game.i18n.localize("token-variants.TokenFilterHint"),
+        scope: "world",
+        config: true,
+        type: String,
+        default: "",
+        onChange: val => tokenFilter = val
+    });
+
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
     twoPopups = game.settings.get("token-variants", "twoPopups");
+    portraitFilter = game.settings.get("token-variants", "portraitFilter");
+    tokenFilter = game.settings.get("token-variants", "tokenFilter");
 
     // Handle actor/token art replacement
     Hooks.on("createActor", async (actor, options, userId) => {
         if (userId && game.user.id != userId)
             return;
-        let title = twoPopups ? "Select Portrait Art" : game.i18n.localize("token-variants.SelectScreenTitle");
-        displayArtSelect(actor._data.name, (imgSrc) => setActorImage(actor, imgSrc), false, title);
+        let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
+        displayArtSelect(actor._data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
     });
     Hooks.on("createToken", async (op1, tokenData, op3, op4) => {
         if (!keyboard.isDown(actorDirKey)) return;
         let token = canvas.tokens.get(tokenData._id);
-        let title = twoPopups ? "Select Portrait Art" : game.i18n.localize("token-variants.SelectScreenTitle");
-        displayArtSelect(tokenData.name, (imgSrc) => setActorImage(token.actor, imgSrc, false, token), false, title);
+        let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
+        displayArtSelect(tokenData.name, (imgSrc) => setActorImage(token.actor, imgSrc, false, token), searchType);
     });
     Hooks.on("renderTokenConfig", modTokenConfig);
     Hooks.on("renderActorSheet", modActorSheet);
@@ -174,7 +208,7 @@ function modTokenConfig(tokenConfig, html, _) {
             el.title = game.i18n.localize("token-variants.TokenConfigButtonTitle");
             el.innerHTML = '<i class="fas fa-images"></i>';
             el.tabIndex = -1;
-            el.onclick = async () => displayArtSelect(tokenConfig.object.data.name, (imgSrc) => field.value = imgSrc);
+            el.onclick = async () => displayArtSelect(tokenConfig.object.data.name, (imgSrc) => field.value = imgSrc, SEARCH_TYPE.TOKEN);
             field.parentNode.append(el);
             return;
         }
@@ -203,7 +237,7 @@ function modActorSheet(actorSheet, html, options) {
 
     profile.addEventListener('contextmenu', function (ev) {
         console.log(actorSheet.object);
-        displayArtSelect(actorSheet.object.name, (imgSrc) => setActorImage(actorSheet.object, imgSrc, true));
+        displayArtSelect(actorSheet.object.name, (imgSrc) => setActorImage(actorSheet.object, imgSrc, true), SEARCH_TYPE.PORTRAIT);
     }, false);
 }
 
@@ -261,7 +295,7 @@ async function cacheTokens() {
 /**
  * Search for tokens matching the supplied name
  */
-async function findTokens(name) {
+async function findTokens(name, mustContain = "") {
     foundTokens = new Set();
     const simpleName = simplifyTokenName(name);
 
@@ -269,17 +303,19 @@ async function findTokens(name) {
         cachedTokens.forEach((tokenSrc) => {
             const simpleTokenName = simplifyTokenName(getFileName(tokenSrc));
             if (simpleTokenName.includes(simpleName)) {
-                foundTokens.add(tokenSrc);
+                if (!mustContain || getFileNameWithExt(tokenSrc).includes(mustContain)) {
+                    foundTokens.add(tokenSrc);
+                }
             }
         });
     } else {
         let searchPaths = getSearchPaths();
         for (let path of searchPaths.get("data")) {
-            await walkFindTokens(path, simpleName);
+            await walkFindTokens(path, simpleName, "", mustContain);
         }
         for (let [bucket, paths] of searchPaths.get("s3")) {
             for (let path of paths) {
-                await walkFindTokens(path, simpleName, bucket);
+                await walkFindTokens(path, simpleName, bucket, mustContain);
             }
         }
     }
@@ -289,7 +325,7 @@ async function findTokens(name) {
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "", bucket = "") {
+async function walkFindTokens(path, name = "", bucket = "", mustContain = "") {
     if (!bucket && !path) return;
 
     let files = [];
@@ -306,10 +342,13 @@ async function walkFindTokens(path, name = "", bucket = "") {
         const cleanTokenName = simplifyTokenName(tokenName);
 
         if (name && !cleanTokenName.includes(name)) continue;
-        foundTokens.add(token);
+
+        if (!mustContain || getFileNameWithExt(path).includes(mustContain)) {
+            foundTokens.add(token);
+        }
     }
     for (let dir of files.dirs) {
-        await walkFindTokens(dir, name, bucket);
+        await walkFindTokens(dir, name, bucket, mustContain);
     }
 }
 
@@ -328,15 +367,36 @@ function getFileName(path) {
 }
 
 /**
+ * Extracts the file name including the extension from the given path.
+ */
+function getFileNameWithExt(path) {
+    return decodeURI(path).split('\\').pop().split('/').pop();
+}
+
+/**
  * Performs searches and displays the Art Select screen with the results.
  * @param name The name to be used as the search criteria
  * @param callback function that will be called with the user selected image path as argument
  * @param ignoreFilterMSRD boolean that if set to true will ignore the filterMSRD setting
  */
-async function displayArtSelect(name, callback, ignoreFilterMSRD = false, title = game.i18n.localize("token-variants.SelectScreenTitle")) {
+async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false) {
     if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
         console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);
         return;
+    }
+
+    // Set Art Select screen title
+    let title = game.i18n.localize("token-variants.SelectScreenTitle");
+    let fileMustContain = "";
+    switch (searchType) {
+        case SEARCH_TYPE.TOKEN:
+            title = game.i18n.localize("token-variants.SelectScreenTitleToken");
+            fileMustContain = tokenFilter;
+            break;
+        case SEARCH_TYPE.PORTRAIT:
+            title = game.i18n.localize("token-variants.SelectScreenTitlePortrait");
+            fileMustContain = portraitFilter;
+            break;
     }
 
     let searches = [name];
@@ -352,7 +412,7 @@ async function displayArtSelect(name, callback, ignoreFilterMSRD = false, title 
     let artFound = false;
     for (let search of searches) {
         if (allButtons[search] !== undefined) continue;
-        let tokens = await findTokens(search);
+        let tokens = await findTokens(search, fileMustContain);
         if (!tokens) continue;
 
         // Generate buttons for each token art
@@ -375,7 +435,7 @@ async function displayArtSelect(name, callback, ignoreFilterMSRD = false, title 
     }
 
     let searchAndDisplay = ((search) => {
-        displayArtSelect(search, callback, true);
+        displayArtSelect(search, callback, searchType, true);
     });
 
     if (artFound) {
@@ -390,7 +450,7 @@ async function displayArtSelect(name, callback, ignoreFilterMSRD = false, title 
 /**
  * Assign new artwork to the actor
  */
-function setActorImage(actor, tokenSrc, updateActorOnly = false, a_token = null) {
+function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
     console.log("in setActorImage", actor);
     actor.update({ "img": tokenSrc });
 
@@ -408,16 +468,16 @@ function setActorImage(actor, tokenSrc, updateActorOnly = false, a_token = null)
     if (twoPopups) {
         let d = new Dialog({
             title: "Portrait -> Token",
-            content: `<p>Apply the same art to the token?</p>`,
+            content: `<p>${game.i18n.localize("token-variants.TwoPopupsDialogQuestion")}</p>`,
             buttons: {
                 one: {
                     icon: '<i class="fas fa-check"></i>',
-                    callback: () => updateToken(actor, a_token, tokenSrc),
+                    callback: () => updateToken(actor, token, tokenSrc),
                 },
                 two: {
                     icon: '<i class="fas fa-times"></i>',
                     callback: () => {
-                        displayArtSelect(actor.name, (imgSrc) => updateToken(actor, a_token, imgSrc), false, "Select Token Art");
+                        displayArtSelect(actor.name, (imgSrc) => updateToken(actor, token, imgSrc), SEARCH_TYPE.TOKEN);
                     }
                 }
             },
@@ -425,11 +485,10 @@ function setActorImage(actor, tokenSrc, updateActorOnly = false, a_token = null)
         });
         d.render(true);
     } else {
-        updateToken(actor, null, tokenSrc)
+        updateToken(actor, token, tokenSrc)
     }
 }
 
 // Initialize module
 Hooks.on("canvasInit", initialize);
 
-//CONFIG.debug.hooks = true;
