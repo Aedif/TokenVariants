@@ -22,7 +22,7 @@ The only requirement is that the full name of the Actor is present in the file n
 - '**Half-Red Dragon Veteran**' will NOT match **RedDragon.png**, **HalfRedDragon.png**
 
 
-The 'Art Select' screen can also be opened up from the 'Token Configuration' window's 'Image' tab. A new button is added right next to the File Picker:
+The 'Art Select' screen can also be opened up from the Actor Sheet by right-clicking on the portrait or the 'Token Configuration' window's 'Image' tab. A new button is added right next to the File Picker:
 
 !["Token Configuration Button"](./docs/token_config_button.png)
 
@@ -57,6 +57,20 @@ When enabled the art search will be done using both the Actor/Token full name as
 
 Words within this list will be excluded from the keywords search:
 !["Excluded Keywords"](./docs/excluded_keywords.png)
+
+### Display separate pop-ups for Portrait and Token art
+
+When enabled the Art Select pop-up will be shown twice upon actor/token creation. Once for the portrait, and then again for the token art.
+
+### Portrait art filter
+
+The string entered here will be used to filter the art shown in the portrait Art Select window. 
+
+For example if you wish the module to only pick up on files containing some sort of identifier in their name e.g. **Dragon[Portrait].png** and **Smith[Portrait].jpg**; by entering "\[Portrait\]" here only these images will be displayed in the pop-up.
+
+### Token art filter
+
+Same as 'Portrait art filter', but is instead used when Art Select pop-up is opened to select token art.
 
 ## Installation
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.
