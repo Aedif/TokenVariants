@@ -223,7 +223,7 @@ function modActorSheet(actorSheet, html, options) {
     if (!options.editable) return;
 
     let profile = null;
-    let profileClassNames = ["profile", "profile-img"];
+    let profileClassNames = ["profile", "profile-img", "profile-image"];
 
     for (let className of profileClassNames) {
         profile = html[0].getElementsByClassName(className)[0];

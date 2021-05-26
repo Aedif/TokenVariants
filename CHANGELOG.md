@@ -1,4 +1,8 @@
+# 1.5.2
+
+* Added 'profile-image' class as a potential target to attach Right-click listener to which opens the Art Select window. Makes the module slightly more compatible with MonsterBlocks. 
 # v 1.5.1
+
 * Added a right-click listener to the Actor Sheet portrait to bring up the module's Art Select screen.
 * New Configurations:
     * Art Select screen can now also be brought up when dragging in actors from the Actor Directory if Ctrl or another key (set in **Art Directory Popup key** configuration) is held.
@@ -7,12 +11,14 @@
     * **Token art filter**: Same as the previous configuration, but is used when pop-up is displayed to select token art.
 
 # v 1.4.3
+
 * Removed a bug that caused multiple 'Art Select' screens to be displayed after switching between scenes
 
 # v 1.4.2
 * Removed system limitation to dnd5e
 
 # v 1.4.1
+
 * Added a search field to 'Art Select' screen to allow for custom name searches.
 
 # v 1.3.2
