@@ -6,7 +6,7 @@
     "token-variants.DisableCachingHint": "Disables caching of token art paths. Saves some memory but greatly impacts the search speed.",
     "token-variants.FilterMSRDName": "Filter by D&D 5e Monster (SRD)",
     "token-variants.FilterMSRDHint": "Excludes token variants for tokens with names not included in the D&D 5e Monster (SRD) list.",
-    "token-variants.FilterMSRDError": "Token name is not part of D&D 5e Monster (SRD): ",
+    "token-variants.FilterMSRDError": "Token-Variant-Art: Token name is not part of D&D 5e Monster (SRD): ",
     "token-variants.TokenConfigPrompt": "No art found containing",
     "token-variants.TokenConfigButtonTitle": "Select variant",
     "token-variants.SelectScreenTitle": "Select variant",

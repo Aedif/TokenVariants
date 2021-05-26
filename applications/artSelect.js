@@ -23,8 +23,8 @@ function getStartingHeight(allButtons) {
 }
 
 export default class ArtSelect extends FormApplication {
-    constructor(allButtons, search, performSearch) {
-        super({}, { closeOnSubmit: false, width: getStartingWidth(allButtons), height: getStartingHeight(allButtons) });
+    constructor(allButtons, search, performSearch, title) {
+        super({}, { closeOnSubmit: false, width: getStartingWidth(allButtons), height: getStartingHeight(allButtons), title: title });
         this.allButtons = allButtons;
         this.search = search;
         this.performSearch = performSearch;
@@ -37,7 +37,6 @@ export default class ArtSelect extends FormApplication {
             template: "modules/token-variants/templates/artSelect.html",
             resizable: true,
             minimizable: false,
-            title: game.i18n.localize("token-variants.SelectScreenTitle"),
         });
     }
 
