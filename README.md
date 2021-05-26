@@ -58,6 +58,10 @@ When enabled the art search will be done using both the Actor/Token full name as
 Words within this list will be excluded from the keywords search:
 !["Excluded Keywords"](./docs/excluded_keywords.png)
 
+### Actor Directory Popup key
+
+Controls the key used to trigger a popup when dragging an actor from the 'Actor Directory'.
+
 ### Display separate pop-ups for Portrait and Token art
 
 When enabled the Art Select pop-up will be shown twice upon actor/token creation. Once for the portrait, and then again for the token art.
