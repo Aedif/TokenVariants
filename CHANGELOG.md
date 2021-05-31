@@ -1,3 +1,7 @@
+# 1.5.4
+
+* Compatibility changes to make the module work with FVT Version 0.8.x
+
 # 1.5.3
 
 * Exposing **displayArtSelect** function used to render the **Art Select** popup through **game**.TokenVariants.displayArtSelect
