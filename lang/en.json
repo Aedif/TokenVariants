@@ -25,5 +25,6 @@
     "token-variants.KeywordSearchHint": "Searches both using full name and individual words in the name of the actor/token. Words less than 3 characters are ignored.",
     "token-variants.ExcludedKeywordsName": "Excluded Keywords",
     "token-variants.ExcludedKeywordsHint": "This is a list of keywords that will not be included in the search when 'Search by Keyword' is on.",
-    "token-variants.ProfileListenerError": "Token-Variant-Art: Unable to find profile image to assign right-click listener."
+    "token-variants.ProfileListenerError": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
+    "token-variant.PathNotFoundError": "Unable to find path: "
 }

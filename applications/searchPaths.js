@@ -17,7 +17,7 @@ export default class SearchPaths extends FormApplication {
 
     async getData(options) {
         const data = super.getData(options);
-        data.paths = game.settings.get("token-variants", "searchPaths")[0].join('\n');
+        data.paths = game.settings.get("token-variants", "searchPaths").flat().join('\n');
         return data;
     }
 

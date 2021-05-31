@@ -174,13 +174,19 @@ function initialize() {
         if (userId && game.user.id != userId)
             return;
         let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-        displayArtSelect(actor._data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
+        displayArtSelect(actor.data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
     });
-    Hooks.on("createToken", async (op1, tokenData, op3, op4) => {
+    Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
         if (!keyboard.isDown(actorDirKey)) return;
-        let token = canvas.tokens.get(tokenData._id);
         let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-        displayArtSelect(tokenData.name, (imgSrc) => setActorImage(token.actor, imgSrc, false, token), searchType);
+        // Check to support both 0.7.x and 0.8.x
+        if (op4) {
+            let token = canvas.tokens.get(options._id);
+            displayArtSelect(options.name, (imgSrc) => setActorImage(token.actor, imgSrc, false, token), searchType);
+        } else {
+            let token = tokenDoc._object;
+            displayArtSelect(token.name, (imgSrc) => setActorImage(tokenDoc._actor, imgSrc, false, token), searchType);
+        }
     });
     Hooks.on("renderTokenConfig", modTokenConfig);
     Hooks.on("renderActorSheet", modActorSheet);
@@ -246,8 +252,7 @@ function modActorSheet(actorSheet, html, options) {
  */
 function getSearchPaths() {
     const regexpBucket = /s3:(.*):(.*)/;
-    let searchPathList = game.settings.get("token-variants", "searchPaths")[0];
-    searchPathList = searchPathList.flat(); // To fix the problem seen in https://github.com/Aedif/TokenVariants/issues/2 for users still using DEFAULT search path
+    let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
@@ -328,10 +333,15 @@ async function walkFindTokens(path, name = "", bucket = "", mustContain = "") {
     if (!bucket && !path) return;
 
     let files = [];
-    if (bucket) {
-        files = await FilePicker.browse("s3", path, { bucket: bucket });
-    } else {
-        files = await FilePicker.browse("data", path);
+    try {
+        if (bucket) {
+            files = await FilePicker.browse("s3", path, { bucket: bucket });
+        } else {
+            files = await FilePicker.browse("data", path);
+        }
+    } catch (err) {
+        console.log(`${game.i18n.localize("token-variant.PathNotFoundError")} ${path}`);
+        return;
     }
 
     if (files.target == ".") return;
@@ -451,17 +461,19 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
  * Assign new artwork to the actor
  */
 function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
-    actor.update({ "img": tokenSrc });
+
+    let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
+    updateDoc(actor, { "img": tokenSrc });
 
     if (updateActorOnly)
         return;
 
     function updateToken(actorToUpdate, tokenToUpdate, imgSrc) {
-        actorToUpdate.update({ "token.img": imgSrc });
-        if (tokenToUpdate)
-            tokenToUpdate.update({ "img": imgSrc });
-        else if (actorToUpdate.getActiveTokens().length == 1)
-            actorToUpdate.getActiveTokens()[0].update({ "img": imgSrc });
+        updateDoc(actorToUpdate, { "token.img": imgSrc });
+        if (tokenToUpdate) {
+            updateDoc(tokenToUpdate, { "img": imgSrc });
+        } else if (actorToUpdate.getActiveTokens().length == 1)
+            updateDoc(actorToUpdate.getActiveTokens()[0], { "img": imgSrc });
     }
 
     if (twoPopups) {
