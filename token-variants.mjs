@@ -1,5 +1,6 @@
 import SearchPaths from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
+import { getFileName, getFileNameWithExt, simplifyTokenName, parseSearchPaths, parseKeywords } from "./scripts/utils.js"
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = ["modules/caeora-maps-tokens-assets/assets/tokens/"];
@@ -197,10 +198,6 @@ function initialize() {
     initialized = true;
 }
 
-function parseKeywords(keywords) {
-    return keywords.split(/\W/).map(word => simplifyTokenName(word)).filter(word => word != "")
-}
-
 /**
  * Adds a button to 'Token Configuration' window's 'Image' tab which opens
  * ArtSelect using the token's name.
@@ -247,38 +244,6 @@ function modActorSheet(actorSheet, html, options) {
 }
 
 /**
- * Parses the searchPaths setting into a Map, distinguishing s3 buckets from local paths
- * @returns 
- */
-function getSearchPaths() {
-    const regexpBucket = /s3:(.*):(.*)/;
-    let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
-    let searchPaths = new Map();
-    searchPaths.set("data", []);
-    searchPaths.set("s3", new Map());
-
-    searchPathList.forEach((path) => {
-        if (path.startsWith("s3:")) {
-            const match = path.match(regexpBucket);
-            if (match[1]) {
-                let bucket = match[1];
-                let bPath = match[2];
-                let buckets = searchPaths.get("s3");
-
-                if (buckets.has(bucket)) {
-                    buckets.get(bucket).push(bPath);
-                } else {
-                    buckets.set(bucket, [bPath]);
-                }
-            }
-        } else {
-            searchPaths.get("data").push(path);
-        }
-    });
-    return searchPaths;
-}
-
-/**
  * Search for and cache all the found token art
  */
 async function cacheTokens() {
@@ -313,7 +278,7 @@ async function findTokens(name, mustContain = "") {
             }
         });
     } else {
-        let searchPaths = getSearchPaths();
+        let searchPaths = parseSearchPaths();
         for (let path of searchPaths.get("data")) {
             await walkFindTokens(path, simpleName, "", mustContain);
         }
@@ -359,27 +324,6 @@ async function walkFindTokens(path, name = "", bucket = "", mustContain = "") {
     for (let dir of files.dirs) {
         await walkFindTokens(dir, name, bucket, mustContain);
     }
-}
-
-/**
- * Simplifies token and monster names.
- */
-function simplifyTokenName(tokenName) {
-    return tokenName.replace(/\W/g, '').toLowerCase();
-}
-
-/**
- * Extracts the file name from the given path.
- */
-function getFileName(path) {
-    return decodeURI(path).split('\\').pop().split('/').pop().split('.')[0]
-}
-
-/**
- * Extracts the file name including the extension from the given path.
- */
-function getFileNameWithExt(path) {
-    return decodeURI(path).split('\\').pop().split('/').pop();
 }
 
 /**
