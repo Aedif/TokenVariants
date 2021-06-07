@@ -54,7 +54,9 @@ export default class ArtSelect extends FormApplication {
         super.activateListeners(html);
         for (let k in this.allButtons) {
             for (let button of this.allButtons[k]) {
-                html.find(`input#${button.id}`).on("click", button.callback);
+                html.find(`img#${button.id}`).on("click", () => { button.callback(); this.close() });
+                html.find(`video#${button.id}`).on("click", () => { button.callback(); this.close() });
+                html.find(`span#${button.id}`).on("click", () => { button.callback(); this.close() });
             }
         }
 

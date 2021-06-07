@@ -1,0 +1,23 @@
+<div class="control-icon token-variants-side-selector">
+    <img src="modules/token-variants/img/token-images.svg" width="36" height="36"
+        title="{{localize token-variants.SelectScreenTitle}}" />
+    <div class="token-variants-wrap {{#unless imageDisplay}}list{{/unless}}">
+        {{#each imagesParsed as |image|}}
+        <button
+            class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}">
+            {{#if ../imageDisplay}}
+            {{#if image.img}}
+            <img class="token-variants-button-image" src="{{image.route}}" alt="{{image.name}}"
+                data-name="{{image.route}}" style="opacity:{{../imageOpacity}};" />
+            {{/if}}
+            {{#if image.vid}}
+            <video class="token-variants-button-image" src="{{image.route}}" alt="{{image.name}}"
+                data-name="{{image.route}}" style="opacity:{{../imageOpacity}};" autoplay loop />
+            {{/if}}
+            {{else}}
+            <span data-name="{{image.route}}">{{image.name}}</span>
+            {{/if}}
+        </button>
+        {{/each}}
+    </div>
+</div>

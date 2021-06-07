@@ -14,7 +14,15 @@
     <div class="token-variants-grid">
         {{#each this}}
         <div>
-            <input type="image" src="{{path}}" id="{{id}}" />
+            {{#if img}}
+            <img class="token-variants-box" src="{{path}}" id="{{id}}" />
+            {{/if}}
+            {{#if vid}}
+            <video class="token-variants-box" src="{{path}}" id="{{id}}" alt="{{label}}" autoplay loop></video>
+            {{/if}}
+            {{#unless type}}
+            <span class="token-variants-box" alt="{{label}}">{{path}}</span>
+            {{/unless}}
             <p>{{label}}</p>
         </div>
         {{/each}}

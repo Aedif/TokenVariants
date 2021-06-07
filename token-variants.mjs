@@ -1,6 +1,6 @@
 import SearchPaths from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
-import { getFileName, getFileNameWithExt, simplifyTokenName, parseSearchPaths, parseKeywords } from "./scripts/utils.js"
+import { getFileName, getFileNameWithExt, simplifyTokenName, parseSearchPaths, parseKeywords, isImage, isVideo } from "./scripts/utils.js"
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = ["modules/caeora-maps-tokens-assets/assets/tokens/"];
@@ -44,22 +44,7 @@ let SEARCH_TYPE = {
     BOTH: "both"
 }
 
-/**
- * Initialize the Token Variants module on Foundry VTT init
- */
-function initialize() {
-
-    // Initialization should only be performed once
-    if (initialized) {
-        return;
-    }
-
-    // Perform initialization only if the user is a GM
-    if (!game.user.isGM) {
-        return;
-    }
-
-    // Settings 
+function registerSettings() {
     game.settings.registerMenu("token-variants", "searchPaths", {
         name: game.i18n.localize("token-variants.searchPathsTitle"),
         label: game.i18n.localize("token-variants.searchPathsLabel"),
@@ -169,6 +154,24 @@ function initialize() {
     twoPopups = game.settings.get("token-variants", "twoPopups");
     portraitFilter = game.settings.get("token-variants", "portraitFilter");
     tokenFilter = game.settings.get("token-variants", "tokenFilter");
+}
+
+/**
+ * Initialize the Token Variants module on Foundry VTT init
+ */
+function initialize() {
+
+    // Initialization should only be performed once
+    if (initialized) {
+        return;
+    }
+
+    // Perform initialization only if the user is a GM
+    if (!game.user.isGM) {
+        return;
+    }
+
+    registerSettings();
 
     // Handle actor/token art replacement
     Hooks.on("createActor", async (actor, options, userId) => {
@@ -334,6 +337,7 @@ async function walkFindTokens(path, name = "", bucket = "", mustContain = "") {
  * @param ignoreFilterMSRD boolean that if set to true will ignore the filterMSRD setting
  */
 async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false) {
+
     if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
         console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);
         return;
@@ -374,9 +378,14 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
         tokens.forEach((tokenSrc) => {
             if (!usedTokens.has(tokenSrc)) {
                 usedTokens.add(tokenSrc);
+                const vid = isVideo(tokenSrc);
+                const img = isImage(tokenSrc);
                 buttons.push({
                     id: ++buttonId,
                     path: tokenSrc,
+                    img: img,
+                    vid: vid,
+                    type: vid || img,
                     label: getFileName(tokenSrc),
                     callback: () => callback(tokenSrc),
                 });
@@ -392,6 +401,8 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
         displayArtSelect(search, callback, searchType, true);
     });
 
+    if (!callback) return allButtons;
+
     if (artFound) {
         let artSelect = new ArtSelect(allButtons, name, searchAndDisplay, title);
         artSelect.render(true);
@@ -399,6 +410,7 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
         let artSelect = new ArtSelect(null, name, searchAndDisplay, title);
         artSelect.render(true);
     }
+
 }
 
 /**
@@ -407,7 +419,7 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
 function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
 
     let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
-    updateDoc(actor, { "img": tokenSrc });
+    updateDoc(actor, { img: tokenSrc });
 
     if (updateActorOnly)
         return;
@@ -415,9 +427,9 @@ function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
     function updateToken(actorToUpdate, tokenToUpdate, imgSrc) {
         updateDoc(actorToUpdate, { "token.img": imgSrc });
         if (tokenToUpdate) {
-            updateDoc(tokenToUpdate, { "img": imgSrc });
+            updateDoc(tokenToUpdate, { img: imgSrc });
         } else if (actorToUpdate.getActiveTokens().length == 1)
-            updateDoc(actorToUpdate.getActiveTokens()[0], { "img": imgSrc });
+            updateDoc(actorToUpdate.getActiveTokens()[0], { img: imgSrc });
     }
 
     if (twoPopups) {
@@ -448,9 +460,62 @@ function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
 // Initialize module
 Hooks.on("canvasInit", initialize);
 
-// Make displayArtSelect function accessible through game
+// Make displayArtSelect function accessible through 'game'
 Hooks.on("init", function () {
     game.TokenVariants = {
         displayArtSelect: displayArtSelect
     };
+});
+
+// Incorporating 'FVTT-TokenHUDWildcard' token hud button 
+Hooks.on('renderTokenHUD', async (hud, html, token) => {
+
+    let dasButtons = await displayArtSelect(token.name, null);
+    dasButtons = dasButtons[token.name]
+
+    if (dasButtons.length < 2) return;
+
+    let imagesParsed = dasButtons.map(btn => {
+        const img = isImage(btn.path);
+        const vid = isVideo(btn.path);
+        return { route: btn.path, name: btn.label, used: btn.path === token.img, img, vid, type: img || vid }
+    });
+
+    const imageDisplay = true;
+    const opacity = 1.0;
+
+    const wildcardDisplay = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, opacity })
+
+    html.find('div.right')
+        .append(wildcardDisplay)
+        .click((event) => {
+            const buttonFind = html.find('.control-icon.token-variants-side-selector')
+            const cList = event.target.parentElement.classList
+            const correctButton = cList.contains('token-variants-side-selector')
+            const active = cList.contains('active')
+
+            if (correctButton && !active) {
+                buttonFind[0].classList.add('active')
+                html.find('.token-variants-wrap')[0].classList.add('active')
+
+                html.find('.control-icon.effects')[0].classList.remove('active')
+                html.find('.status-effects')[0].classList.remove('active')
+            } else {
+                buttonFind[0].classList.remove('active')
+                html.find('.token-variants-wrap')[0].classList.remove('active')
+            }
+        });
+
+    const buttons = html.find('.token-variants-button-select')
+
+    buttons.map((button) => {
+        buttons[button].addEventListener('click', function (event) {
+            event.preventDefault()
+            event.stopPropagation()
+            const controlled = canvas.tokens.controlled
+            const index = controlled.findIndex(x => x.data._id === token._id)
+            const tokenToChange = controlled[index]
+            tokenToChange.update({ img: event.target.dataset.name })
+        })
+    })
 });

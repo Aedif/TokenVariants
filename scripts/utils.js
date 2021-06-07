@@ -56,3 +56,22 @@ export function parseSearchPaths() {
 export function parseKeywords(keywords) {
     return keywords.split(/\W/).map(word => simplifyTokenName(word)).filter(word => word != "")
 }
+
+/**
+ * Returns true of provided path points to an image
+ */
+export function isImage(path) {
+    var extension = path.split('.')
+    extension = extension[extension.length - 1]
+    return ['jpg', 'jpeg', 'png', 'svg', 'webp'].includes(extension)
+    const vid = ['webm', 'mp4', 'm4v'].includes(extension)
+}
+
+/**
+ * Returns true of provided path points to a video
+ */
+export function isVideo(path) {
+    var extension = path.split('.')
+    extension = extension[extension.length - 1]
+    return ['webm', 'mp4', 'm4v'].includes(extension)
+}

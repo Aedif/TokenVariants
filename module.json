@@ -22,7 +22,8 @@
     ],
     "scripts": [],
     "styles": [
-        "styles/artSelect.css"
+        "styles/artSelect.css",
+        "styles/sideSelect.css"
     ],
     "languages": [
         {
