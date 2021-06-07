@@ -5,25 +5,27 @@
             Search
         </button>
     </div>
-    {{#if allButtons}}
-    {{#each allButtons}}
+    {{#if allImages}}
+
+    {{#each allImages as |search index|}}
     <div>
-        <h2><b>{{{@key}}}</b></h2>
+        <h2><b>{{search.[0]}}</b></h2>
     </div>
     <hr />
     <div class="token-variants-grid">
-        {{#each this}}
+        {{#each search.[1] as |image|}}
         <div>
-            {{#if img}}
-            <img class="token-variants-box" src="{{path}}" id="{{id}}" />
+            {{#if image.img}}
+            <img class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" />
             {{/if}}
-            {{#if vid}}
-            <video class="token-variants-box" src="{{path}}" id="{{id}}" alt="{{label}}" autoplay loop></video>
+            {{#if image.vid}}
+            <video class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" alt="{{image.label}}"
+                autoplay loop></video>
             {{/if}}
-            {{#unless type}}
-            <span class="token-variants-box" alt="{{label}}">{{path}}</span>
+            {{#unless image.type}}
+            <span class="token-variants-box" data-name="{{image.path}}" alt="{{image.label}}">{{image.path}}</span>
             {{/unless}}
-            <p>{{label}}</p>
+            <p>{{image.label}}</p>
         </div>
         {{/each}}
     </div>

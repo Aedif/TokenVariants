@@ -291,7 +291,7 @@ async function findTokens(name, mustContain = "") {
             }
         }
     }
-    return Array.from(foundTokens);
+    return foundTokens;
 }
 
 /**
@@ -345,72 +345,78 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
 
     // Set Art Select screen title
     let title = game.i18n.localize("token-variants.SelectScreenTitle");
-    let fileMustContain = "";
-    switch (searchType) {
-        case SEARCH_TYPE.TOKEN:
-            title = game.i18n.localize("token-variants.SelectScreenTitleToken");
-            fileMustContain = tokenFilter;
-            break;
-        case SEARCH_TYPE.PORTRAIT:
-            title = game.i18n.localize("token-variants.SelectScreenTitlePortrait");
-            fileMustContain = portraitFilter;
-            break;
-    }
+    if (searchType == SEARCH_TYPE.TOKEN)
+        title = game.i18n.localize("token-variants.SelectScreenTitleToken");
+    else if (searchType == SEARCH_TYPE.PORTRAIT)
+        title = game.i18n.localize("token-variants.SelectScreenTitlePortrait");
 
-    let searches = [name];
-    let allButtons = {};
-    let usedTokens = new Set();
+    let allImages = await doArtSearch(name, searchType, ignoreFilterMSRD);
+    if (!allImages) return;
 
-    if (keywordSearch) {
-        excludedKeywords = parseKeywords(game.settings.get("token-variants", "excludedKeywords"));
-        searches = searches.concat(name.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word.toLowerCase())).reverse());
-    }
-
-    let buttonId = 0;
     let artFound = false;
-    for (let search of searches) {
-        if (allButtons[search] !== undefined) continue;
-        let tokens = await findTokens(search, fileMustContain);
-        if (!tokens) continue;
-
-        // Generate buttons for each token art
+    let allButtons = new Map();
+    allImages.forEach((tokens, search) => {
         let buttons = [];
-        tokens.forEach((tokenSrc) => {
-            if (!usedTokens.has(tokenSrc)) {
-                usedTokens.add(tokenSrc);
-                const vid = isVideo(tokenSrc);
-                const img = isImage(tokenSrc);
-                buttons.push({
-                    id: ++buttonId,
-                    path: tokenSrc,
-                    img: img,
-                    vid: vid,
-                    type: vid || img,
-                    label: getFileName(tokenSrc),
-                    callback: () => callback(tokenSrc),
-                });
-            }
-        });
-        if (buttons.length > 0) {
+        tokens.forEach(token => {
             artFound = true;
-        }
-        allButtons[search] = buttons;
-    }
+            const vid = isVideo(token);
+            const img = isImage(token);
+            buttons.push({
+                path: token,
+                img: img,
+                vid: vid,
+                type: vid || img,
+                label: getFileName(token),
+            })
+        })
+        allButtons.set(search, buttons);
+    });
 
     let searchAndDisplay = ((search) => {
         displayArtSelect(search, callback, searchType, true);
     });
 
-    if (!callback) return allButtons;
-
     if (artFound) {
-        let artSelect = new ArtSelect(allButtons, name, searchAndDisplay, title);
+        let artSelect = new ArtSelect(title, name, allButtons, callback, searchAndDisplay);
         artSelect.render(true);
     } else {
-        let artSelect = new ArtSelect(null, name, searchAndDisplay, title);
+        let artSelect = new ArtSelect(title, name, null, callback, searchAndDisplay);
         artSelect.render(true);
     }
 
+}
+
+async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false, ignoreKeywords = false) {
+
+    if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
+        console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);
+        return null;
+    }
+
+    let fileMustContain = "";
+    if (searchType == SEARCH_TYPE.TOKEN)
+        fileMustContain = tokenFilter;
+    else if (searchType == SEARCH_TYPE.PORTRAIT)
+        fileMustContain = portraitFilter;
+
+    let searches = [name];
+    let allImages = new Map();
+    let usedTokens = new Set();
+
+    if (keywordSearch && !ignoreKeywords) {
+        excludedKeywords = parseKeywords(game.settings.get("token-variants", "excludedKeywords"));
+        searches = searches.concat(name.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word.toLowerCase())).reverse());
+    }
+
+    for (let search of searches) {
+        if (allImages.get(search) !== undefined) continue;
+        let tokens = await findTokens(search, fileMustContain);
+        tokens = Array.from(tokens).filter(token => !usedTokens.has(token))
+        tokens.forEach(token => usedTokens.add(token));
+        allImages.set(search, tokens);
+    }
+
+    return allImages;
 }
 
 /**
@@ -470,15 +476,15 @@ Hooks.on("init", function () {
 // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
 Hooks.on('renderTokenHUD', async (hud, html, token) => {
 
-    let dasButtons = await displayArtSelect(token.name, null);
-    dasButtons = dasButtons[token.name]
+    let images = await doArtSearch(token.name, SEARCH_TYPE.TOKEN, false, true);
+    images = images.get(token.name);
 
-    if (dasButtons.length < 2) return;
+    if (images.length < 2) return;
 
-    let imagesParsed = dasButtons.map(btn => {
-        const img = isImage(btn.path);
-        const vid = isVideo(btn.path);
-        return { route: btn.path, name: btn.label, used: btn.path === token.img, img, vid, type: img || vid }
+    let imagesParsed = images.map(path => {
+        const img = isImage(path);
+        const vid = isVideo(path);
+        return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid }
     });
 
     const imageDisplay = true;
