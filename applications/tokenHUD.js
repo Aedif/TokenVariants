@@ -35,8 +35,6 @@ export default class TokenHUDSettings extends FormApplication {
      * @param {Object} formData
      */
     async _updateObject(event, formData) {
-        console.log(formData);
-        console.log(formData["token-variants-HUDImageOpacity"])
         game.settings.set("token-variants", "enableTokenHUD", formData["enableTokenHUD"]);
         game.settings.set("token-variants", "HUDDisplayImage", formData["HUDDisplayImage"]);
         game.settings.set("token-variants", "HUDImageOpacity", formData["HUDImageOpacity"]);
