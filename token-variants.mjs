@@ -1,5 +1,6 @@
 import SearchPaths from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
+import TokenHUDSettings from "./applications/tokenHUD.js";
 import { getFileName, getFileNameWithExt, simplifyTokenName, parseSearchPaths, parseKeywords, isImage, isVideo } from "./scripts/utils.js"
 
 // Default path where the script will look for token art
@@ -47,7 +48,6 @@ let SEARCH_TYPE = {
 function registerSettings() {
     game.settings.registerMenu("token-variants", "searchPaths", {
         name: game.i18n.localize("token-variants.searchPathsTitle"),
-        label: game.i18n.localize("token-variants.searchPathsLabel"),
         hint: game.i18n.localize("token-variants.SearchPathsHint"),
         icon: "fas fa-exchange-alt",
         type: SearchPaths,
@@ -70,6 +70,15 @@ function registerSettings() {
         type: Boolean,
         default: false,
         onChange: disable => { disableCaching = disable; cacheTokens(); }
+    });
+
+    game.settings.register("token-variants", "disableAutomaticPopup", {
+        name: game.i18n.localize("token-variants.DisableAutomaticPopupName"),
+        hint: game.i18n.localize("token-variants.DisableAutomaticPopupHint"),
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false,
     });
 
     game.settings.register("token-variants", "filterMSRD", {
@@ -147,6 +156,38 @@ function registerSettings() {
         onChange: val => tokenFilter = val
     });
 
+    game.settings.registerMenu("token-variants", "tokenHUDSettings", {
+        name: "Token HUD Settings",
+        hint: "Settings for the Token HUD button.",
+        icon: "fas fa-exchange-alt",
+        type: TokenHUDSettings,
+        restricted: true,
+    });
+
+
+    game.settings.register("token-variants", "enableTokenHUD", {
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+    });
+
+    game.settings.register("token-variants", "HUDDisplayImage", {
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: true,
+    });
+
+    game.settings.register("token-variants", "HUDImageOpacity", {
+        scope: "world",
+        config: false,
+        range: { min: 0, max: 100, step: 1 },
+        type: Number,
+        default: 50
+    });
+
+
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
@@ -176,6 +217,8 @@ function initialize() {
     // Handle actor/token art replacement
     Hooks.on("createActor", async (actor, options, userId) => {
         if (userId && game.user.id != userId)
+            return;
+        else if (game.settings.get("token-variants", "disableAutomaticPopup") && !keyboard.isDown(actorDirKey))
             return;
         let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
         displayArtSelect(actor.data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
@@ -476,6 +519,8 @@ Hooks.on("init", function () {
 // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
 Hooks.on('renderTokenHUD', async (hud, html, token) => {
 
+    if (!game.settings.get("token-variants", "enableTokenHUD")) return;
+
     let images = await doArtSearch(token.name, SEARCH_TYPE.TOKEN, false, true);
     images = images.get(token.name);
 
@@ -487,30 +532,36 @@ Hooks.on('renderTokenHUD', async (hud, html, token) => {
         return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid }
     });
 
-    const imageDisplay = true;
-    const opacity = 1.0;
+    const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
+    const imageOpacity = game.settings.get("token-variants", "HUDImageOpacity") / 100;
 
-    const wildcardDisplay = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, opacity })
+    const wildcardDisplay = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
+
+    const is080 = !isNewerVersion("0.8.0", game.data.version)
 
     html.find('div.right')
         .append(wildcardDisplay)
         .click((event) => {
-            const buttonFind = html.find('.control-icon.token-variants-side-selector')
-            const cList = event.target.parentElement.classList
-            const correctButton = cList.contains('token-variants-side-selector')
-            const active = cList.contains('active')
 
-            if (correctButton && !active) {
-                buttonFind[0].classList.add('active')
-                html.find('.token-variants-wrap')[0].classList.add('active')
-
-                html.find('.control-icon.effects')[0].classList.remove('active')
-                html.find('.status-effects')[0].classList.remove('active')
-            } else {
-                buttonFind[0].classList.remove('active')
-                html.find('.token-variants-wrap')[0].classList.remove('active')
+            let activeButton, clickedButton, tokenButton;
+            for (const button of html.find('div.control-icon')) {
+                if (button.classList.contains('active')) activeButton = button;
+                if (button === event.target.parentElement) clickedButton = button;
+                if (button.dataset.action === 'token-variants-side-selector') tokenButton = button;
             }
-        });
+
+            if (clickedButton === tokenButton && activeButton !== tokenButton) {
+                tokenButton.classList.add('active');
+
+                html.find('.token-variants-wrap')[0].classList.add('active');
+                const effectSelector = is080 ? '[data-action="effects"]' : '.effects';
+                html.find(`.control-icon${effectSelector}`)[0].classList.remove('active');
+                html.find('.status-effects')[0].classList.remove('active');
+            } else {
+                tokenButton.classList.remove('active');
+                html.find('.token-variants-wrap')[0].classList.remove('active');
+            }
+        })
 
     const buttons = html.find('.token-variants-button-select')
 
@@ -521,7 +572,8 @@ Hooks.on('renderTokenHUD', async (hud, html, token) => {
             const controlled = canvas.tokens.controlled
             const index = controlled.findIndex(x => x.data._id === token._id)
             const tokenToChange = controlled[index]
-            tokenToChange.update({ img: event.target.dataset.name })
+            const updateTarget = is080 ? tokenToChange.document : tokenToChange
+            updateTarget.update({ img: event.target.dataset.name })
         })
     })
 });

@@ -1,9 +1,10 @@
 {
     "token-variants.searchPathsTitle": "Variant art search paths",
-    "token-variants.searchPathsLabel": "Open",
     "token-variants.SearchPathsHint": "Place all the paths to the folders you want to be included in the token art search.",
     "token-variants.DisableCachingName": "Disable Caching",
     "token-variants.DisableCachingHint": "Disables caching of token art paths. Saves some memory but greatly impacts the search speed.",
+    "token-variants.DisableAutomaticPopupName": "Disable Automatic Popups",
+    "token-variants.DisableAutomaticPopupHint": "Check to disable automatic popups upon actor creation.",
     "token-variants.FilterMSRDName": "Filter by D&D 5e Monster (SRD)",
     "token-variants.FilterMSRDHint": "Excludes token variants for tokens with names not included in the D&D 5e Monster (SRD) list.",
     "token-variants.FilterMSRDError": "Token-Variant-Art: Token name is not part of D&D 5e Monster (SRD): ",

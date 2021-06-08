@@ -45,6 +45,7 @@
     width: 100px;
     height: 100px;
     margin: 2px;
+    object-fit: contain;
 }
 
 #token-hud .token-variants-button-disabled span, #token-hud .token-variants-button-disabled img, #token-hud .token-variants-button-disabled video {
