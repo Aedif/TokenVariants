@@ -40,9 +40,30 @@ By default 'Token Variants' will attempt to search [Caeora's Maps, Tokens, and A
 To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket you can use the following format:
 
 **s3:{bucket-name}:{path}**
+
+### Token HUD Settings
+
+A SubMenu with the following settings:
+
+#### Enable Token HUD Button
+Enables extra button in the Token HUD which brings up all of the found art in a small preview to the right: 
+
+!["Keyword Search"](./docs/token_hud.png)
+
+#### Display as image?
+
+Controls whether the art in the preview is rendered as images or file names.
+
+#### Opacity of token preview
+
+Controls the opacity of the tokens in the preview before being hovered over.
 ### Disable Caching
 
 By default the module will search the directories defined in 'Variant art search paths' only when the world is loaded or when the module settings have changed. If new art is added while the world is still open it will not be found by the module. 'Disable Caching' will force the search to be performed every time a new actor is created at a significant cost to speed at which the art is displayed to the user.
+
+### Disable Automatic Popups
+
+If checked will prevent automatic popups from being triggered upon Actor creation. The popup can still be brought up if Ctrl key is held while dragging the Token/Actor.
 
 ### Filter by D&D 5e Monster (SRD)
 
@@ -75,6 +96,10 @@ For example if you wish the module to only pick up on files containing some sort
 ### Token art filter
 
 Same as 'Portrait art filter', but is instead used when Art Select pop-up is opened to select token art.
+
+### Enable Token HUD button for everyone?
+
+If checked will allow all players to access the new Token HUD button.
 
 ## Installation
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.

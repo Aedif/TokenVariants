@@ -1,3 +1,10 @@
+# 1.6.0
+
+* Added a 'FVTT-TokenHUDWildcard' like button to the Token HUD
+    * Uses token name as the search criteria
+    * Can be enabled for all players
+* Added support for video in the 'Art Select' window
+* New setting to disable auto popups. Popups can still be triggered if 'Ctrl' key is held while dragging in the Token/Actor.
 # 1.5.4
 
 * Compatibility changes to make the module work with FVT Version 0.8.x

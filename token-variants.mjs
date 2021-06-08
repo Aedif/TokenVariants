@@ -308,7 +308,6 @@ function initialize() {
         registerHUD();
         cacheTokens();
     } else if (game.settings.get("token-variants", "enableTokenHUDButtonForAll")) {
-        console.log("I AM HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
         registerHUD();
         cacheTokens();
     }
