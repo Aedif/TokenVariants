@@ -45,7 +45,7 @@ let SEARCH_TYPE = {
     BOTH: "both"
 }
 
-function registerSettings() {
+function registerWorldSettings() {
     game.settings.registerMenu("token-variants", "searchPaths", {
         name: game.i18n.localize("token-variants.searchPathsTitle"),
         hint: game.i18n.localize("token-variants.SearchPathsHint"),
@@ -156,37 +156,14 @@ function registerSettings() {
         onChange: val => tokenFilter = val
     });
 
-    game.settings.registerMenu("token-variants", "tokenHUDSettings", {
-        name: "Token HUD Settings",
-        hint: "Settings for the Token HUD button.",
-        icon: "fas fa-exchange-alt",
-        type: TokenHUDSettings,
-        restricted: true,
-    });
-
-
-    game.settings.register("token-variants", "enableTokenHUD", {
+    game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
+        name: "Enable Token HUD button for everyone?",
+        hint: "If checked will add the Token HUD button for all players.",
         scope: "world",
-        config: false,
+        config: true,
         type: Boolean,
-        default: true,
+        default: false,
     });
-
-    game.settings.register("token-variants", "HUDDisplayImage", {
-        scope: "world",
-        config: false,
-        type: Boolean,
-        default: true,
-    });
-
-    game.settings.register("token-variants", "HUDImageOpacity", {
-        scope: "world",
-        config: false,
-        range: { min: 0, max: 100, step: 1 },
-        type: Number,
-        default: 50
-    });
-
 
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
@@ -195,6 +172,101 @@ function registerSettings() {
     twoPopups = game.settings.get("token-variants", "twoPopups");
     portraitFilter = game.settings.get("token-variants", "portraitFilter");
     tokenFilter = game.settings.get("token-variants", "tokenFilter");
+}
+
+function registerHUD() {
+    game.settings.registerMenu("token-variants", "tokenHUDSettings", {
+        name: "Token HUD Settings",
+        hint: "Settings for the Token HUD button.",
+        scope: "client",
+        icon: "fas fa-exchange-alt",
+        type: TokenHUDSettings,
+        restricted: false,
+    });
+
+    game.settings.register("token-variants", "enableTokenHUD", {
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+    });
+
+    game.settings.register("token-variants", "HUDDisplayImage", {
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: true,
+    });
+
+    game.settings.register("token-variants", "HUDImageOpacity", {
+        scope: "client",
+        config: false,
+        range: { min: 0, max: 100, step: 1 },
+        type: Number,
+        default: 50
+    });
+
+    // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
+    Hooks.on('renderTokenHUD', async (hud, html, token) => {
+
+        if (!game.settings.get("token-variants", "enableTokenHUD")) return;
+
+        let images = await doArtSearch(token.name, SEARCH_TYPE.TOKEN, false, true);
+        images = images.get(token.name);
+
+        if (images.length < 2) return;
+
+        let imagesParsed = images.map(path => {
+            const img = isImage(path);
+            const vid = isVideo(path);
+            return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid }
+        });
+
+        const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
+        const imageOpacity = game.settings.get("token-variants", "HUDImageOpacity") / 100;
+
+        const wildcardDisplay = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
+
+        const is080 = !isNewerVersion("0.8.0", game.data.version)
+
+        html.find('div.right')
+            .append(wildcardDisplay)
+            .click((event) => {
+
+                let activeButton, clickedButton, tokenButton;
+                for (const button of html.find('div.control-icon')) {
+                    if (button.classList.contains('active')) activeButton = button;
+                    if (button === event.target.parentElement) clickedButton = button;
+                    if (button.dataset.action === 'token-variants-side-selector') tokenButton = button;
+                }
+
+                if (clickedButton === tokenButton && activeButton !== tokenButton) {
+                    tokenButton.classList.add('active');
+
+                    html.find('.token-variants-wrap')[0].classList.add('active');
+                    const effectSelector = is080 ? '[data-action="effects"]' : '.effects';
+                    html.find(`.control-icon${effectSelector}`)[0].classList.remove('active');
+                    html.find('.status-effects')[0].classList.remove('active');
+                } else {
+                    tokenButton.classList.remove('active');
+                    html.find('.token-variants-wrap')[0].classList.remove('active');
+                }
+            })
+
+        const buttons = html.find('.token-variants-button-select')
+
+        buttons.map((button) => {
+            buttons[button].addEventListener('click', function (event) {
+                event.preventDefault()
+                event.stopPropagation()
+                const controlled = canvas.tokens.controlled
+                const index = controlled.findIndex(x => x.data._id === token._id)
+                const tokenToChange = controlled[index]
+                const updateTarget = is080 ? tokenToChange.document : tokenToChange
+                updateTarget.update({ img: event.target.dataset.name })
+            })
+        })
+    });
 }
 
 /**
@@ -207,39 +279,39 @@ function initialize() {
         return;
     }
 
-    // Perform initialization only if the user is a GM
-    if (!game.user.isGM) {
-        return;
+    registerWorldSettings();
+
+    if (game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE")) {
+        // Handle actor/token art replacement
+        Hooks.on("createActor", async (actor, options, userId) => {
+            if (userId && game.user.id != userId)
+                return;
+            else if (game.settings.get("token-variants", "disableAutomaticPopup") && !keyboard.isDown(actorDirKey))
+                return;
+            let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
+            displayArtSelect(actor.data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
+        });
+        Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
+            if (!keyboard.isDown(actorDirKey)) return;
+            let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
+            // Check to support both 0.7.x and 0.8.x
+            if (op4) {
+                let token = canvas.tokens.get(options._id);
+                displayArtSelect(options.name, (imgSrc) => setActorImage(token.actor, imgSrc, false, token), searchType);
+            } else {
+                let token = tokenDoc._object;
+                displayArtSelect(token.name, (imgSrc) => setActorImage(tokenDoc._actor, imgSrc, false, token), searchType);
+            }
+        });
+        Hooks.on("renderTokenConfig", modTokenConfig);
+        Hooks.on("renderActorSheet", modActorSheet);
+        registerHUD();
+        cacheTokens();
+    } else if (game.settings.get("token-variants", "enableTokenHUDButtonForAll")) {
+        console.log("I AM HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE");
+        registerHUD();
+        cacheTokens();
     }
-
-    registerSettings();
-
-    // Handle actor/token art replacement
-    Hooks.on("createActor", async (actor, options, userId) => {
-        if (userId && game.user.id != userId)
-            return;
-        else if (game.settings.get("token-variants", "disableAutomaticPopup") && !keyboard.isDown(actorDirKey))
-            return;
-        let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-        displayArtSelect(actor.data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
-    });
-    Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
-        if (!keyboard.isDown(actorDirKey)) return;
-        let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-        // Check to support both 0.7.x and 0.8.x
-        if (op4) {
-            let token = canvas.tokens.get(options._id);
-            displayArtSelect(options.name, (imgSrc) => setActorImage(token.actor, imgSrc, false, token), searchType);
-        } else {
-            let token = tokenDoc._object;
-            displayArtSelect(token.name, (imgSrc) => setActorImage(tokenDoc._actor, imgSrc, false, token), searchType);
-        }
-    });
-    Hooks.on("renderTokenConfig", modTokenConfig);
-    Hooks.on("renderActorSheet", modActorSheet);
-
-    // Cache tokens if not disabled
-    cacheTokens();
 
     initialized = true;
 }
@@ -514,66 +586,4 @@ Hooks.on("init", function () {
     game.TokenVariants = {
         displayArtSelect: displayArtSelect
     };
-});
-
-// Incorporating 'FVTT-TokenHUDWildcard' token hud button 
-Hooks.on('renderTokenHUD', async (hud, html, token) => {
-
-    if (!game.settings.get("token-variants", "enableTokenHUD")) return;
-
-    let images = await doArtSearch(token.name, SEARCH_TYPE.TOKEN, false, true);
-    images = images.get(token.name);
-
-    if (images.length < 2) return;
-
-    let imagesParsed = images.map(path => {
-        const img = isImage(path);
-        const vid = isVideo(path);
-        return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid }
-    });
-
-    const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
-    const imageOpacity = game.settings.get("token-variants", "HUDImageOpacity") / 100;
-
-    const wildcardDisplay = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
-
-    const is080 = !isNewerVersion("0.8.0", game.data.version)
-
-    html.find('div.right')
-        .append(wildcardDisplay)
-        .click((event) => {
-
-            let activeButton, clickedButton, tokenButton;
-            for (const button of html.find('div.control-icon')) {
-                if (button.classList.contains('active')) activeButton = button;
-                if (button === event.target.parentElement) clickedButton = button;
-                if (button.dataset.action === 'token-variants-side-selector') tokenButton = button;
-            }
-
-            if (clickedButton === tokenButton && activeButton !== tokenButton) {
-                tokenButton.classList.add('active');
-
-                html.find('.token-variants-wrap')[0].classList.add('active');
-                const effectSelector = is080 ? '[data-action="effects"]' : '.effects';
-                html.find(`.control-icon${effectSelector}`)[0].classList.remove('active');
-                html.find('.status-effects')[0].classList.remove('active');
-            } else {
-                tokenButton.classList.remove('active');
-                html.find('.token-variants-wrap')[0].classList.remove('active');
-            }
-        })
-
-    const buttons = html.find('.token-variants-button-select')
-
-    buttons.map((button) => {
-        buttons[button].addEventListener('click', function (event) {
-            event.preventDefault()
-            event.stopPropagation()
-            const controlled = canvas.tokens.controlled
-            const index = controlled.findIndex(x => x.data._id === token._id)
-            const tokenToChange = controlled[index]
-            const updateTarget = is080 ? tokenToChange.document : tokenToChange
-            updateTarget.update({ img: event.target.dataset.name })
-        })
-    })
 });
