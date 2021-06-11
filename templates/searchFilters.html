@@ -1,0 +1,69 @@
+<form>
+    <label>Portrait Art Filters</label>
+    <div class="form-group">
+        <label>Include</label>
+        <div class="form-fields">
+            <input type="text" name="portraitFilterInclude" value="{{portraitFilterInclude}}" data-dtype="String">
+        </div>
+        &nbsp;&nbsp;
+        <label>Exclude</label>
+        <div class="form-fields">
+            <input type="text" name="portraitFilterExclude" value="{{portraitFilterExclude}}" data-dtype="String">
+        </div>
+        &nbsp;&nbsp;
+        <label>Regex</label>
+        <div class="form-fields">
+            <input type="text" name="portraitFilterRegex" value="{{portraitFilterRegex}}" data-dtype="String">
+        </div>
+        <p class="notes">Portrait art will be limited to files that include/exclude these pieces of text or match the
+            provided regular expression.</p>
+    </div>
+
+    <hr />
+
+    <label>Token Art Filters</label>
+    <div class="form-group">
+        <label>Include</label>
+        <div class="form-fields">
+            <input type="text" name="tokenFilterInclude" value="{{tokenFilterInclude}}" data-dtype="String">
+        </div>
+        &nbsp;&nbsp;
+        <label>Exclude</label>
+        <div class="form-fields">
+            <input type="text" name="tokenFilterExclude" value="{{tokenFilterExclude}}" data-dtype="String">
+        </div>
+        &nbsp;&nbsp;
+        <label>Regex</label>
+        <div class="form-fields">
+            <input type="text" name="tokenFilterRegex" value="{{tokenFilterRegex}}" data-dtype="String">
+        </div>
+        <p class="notes">Token art will be limited to files that include/exclude these pieces of text or match the
+            provided regular expression.</p>
+    </div>
+
+    <hr />
+
+    <label>General Art Filters</label>
+    <div class="form-group">
+        <label>Include</label>
+        <div class="form-fields">
+            <input type="text" name="generalFilterInclude" value="{{generalFilterInclude}}" data-dtype="String">
+        </div>
+        &nbsp;&nbsp;
+        <label>Exclude</label>
+        <div class="form-fields">
+            <input type="text" name="generalFilterExclude" value="{{generalFilterExclude}}" data-dtype="String">
+        </div>
+        &nbsp;&nbsp;
+        <label>Regex</label>
+        <div class="form-fields">
+            <input type="text" name="generalFilterRegex" value="{{generalFilterRegex}}" data-dtype="String">
+        </div>
+        <p class="notes">These filters will be used when the search is being performed irrespective of the art type
+            (token/portrait).</p>
+    </div>
+
+    <div class="button-container">
+        <button type="submit">Apply</button>
+    </div>
+</form>

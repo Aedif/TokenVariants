@@ -1,6 +1,7 @@
 import SearchPaths from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
 import TokenHUDSettings from "./applications/tokenHUD.js";
+import FilterSettings from "./applications/searchFilters.js";
 import { getFileName, getFileNameWithExt, simplifyTokenName, parseSearchPaths, parseKeywords, isImage, isVideo } from "./scripts/utils.js"
 
 // Default path where the script will look for token art
@@ -34,10 +35,6 @@ let actorDirKey = "";
 // Controls whether separate popups are displayed for portrait and token art
 let twoPopups = false;
 
-// Strings used to filter portrait and token art
-let portraitFilter = "";
-let tokenFilter = "";
-
 // Obj used for indicating what title and filter should be used in the Art Select screen
 let SEARCH_TYPE = {
     PORTRAIT: "portrait",
@@ -46,6 +43,7 @@ let SEARCH_TYPE = {
 }
 
 function registerWorldSettings() {
+
     game.settings.registerMenu("token-variants", "searchPaths", {
         name: game.i18n.localize("token-variants.searchPathsTitle"),
         hint: game.i18n.localize("token-variants.SearchPathsHint"),
@@ -136,28 +134,50 @@ function registerWorldSettings() {
         onChange: val => twoPopups = val
     });
 
+    // Legacy filter setting, retained in case some users have used this setting
     game.settings.register("token-variants", "portraitFilter", {
-        name: game.i18n.localize("token-variants.PortraitFilterName"),
-        hint: game.i18n.localize("token-variants.PortraitFilterHint"),
         scope: "world",
-        config: true,
+        config: false,
         type: String,
         default: "",
-        onChange: val => portraitFilter = val
     });
 
+    // Legacy filter setting, retained in case some users have used this setting
     game.settings.register("token-variants", "tokenFilter", {
-        name: game.i18n.localize("token-variants.TokenFilterName"),
-        hint: game.i18n.localize("token-variants.TokenFilterHint"),
         scope: "world",
-        config: true,
+        config: false,
         type: String,
         default: "",
-        onChange: val => tokenFilter = val
+    });
+
+    game.settings.registerMenu("token-variants", "searchFilterMenu", {
+        name: "Search Filter Settings",
+        hint: "Assign filters to Portrait and Token art searches..",
+        scope: "world",
+        icon: "fas fa-exchange-alt",
+        type: FilterSettings,
+        restricted: true,
+    });
+
+    game.settings.register('token-variants', 'searchFilterSettings', {
+        scope: 'world',
+        config: false,
+        type: Object,
+        default: {
+            portraitFilterInclude: game.settings.get("token-variants", "portraitFilter"),
+            portraitFilterExclude: "",
+            portraitFilterRegex: "",
+            tokenFilterInclude: game.settings.get("token-variants", "tokenFilter"),
+            tokenFilterExclude: "",
+            tokenFilterRegex: "",
+            generalFilterInclude: "",
+            generalFilterExclude: "",
+            generalFilterRegex: "",
+        },
     });
 
     game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
-        name: "Enable Token HUD button for everyone?",
+        name: "Enable Token HUD button for everyone",
         hint: "If checked will add the Token HUD button for all players.",
         scope: "world",
         config: true,
@@ -170,8 +190,6 @@ function registerWorldSettings() {
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
     twoPopups = game.settings.get("token-variants", "twoPopups");
-    portraitFilter = game.settings.get("token-variants", "portraitFilter");
-    tokenFilter = game.settings.get("token-variants", "tokenFilter");
 }
 
 function registerHUD() {
@@ -272,7 +290,7 @@ function registerHUD() {
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
-function initialize() {
+async function initialize() {
 
     // Initialization should only be performed once
     if (initialized) {
@@ -378,10 +396,58 @@ async function cacheTokens() {
     foundTokens = new Set();
 }
 
+function checkAgainstFilters(src, filters) {
+    const filename = getFileNameWithExt(src);
+    if (filters.regex) {
+        return filters.regex.test(filename);
+    }
+    if (filters.include) {
+        if (!filename.includes(filters.include)) return false;
+    }
+    if (filters.exclude) {
+        if (filename.includes(filters.exclude)) return false;
+    }
+    return true;
+}
+
 /**
  * Search for tokens matching the supplied name
  */
-async function findTokens(name, mustContain = "") {
+async function findTokens(name, searchType = "") {
+
+    // Select filters based on type of search
+    let filters = game.settings.get("token-variants", "searchFilterSettings");
+    switch (searchType) {
+        case SEARCH_TYPE.BOTH:
+            filters = {
+                include: filters.generalFilterInclude,
+                exclude: filters.generalFilterExclude,
+                regex: filters.generalFilterRegex
+            }
+            break;
+        case SEARCH_TYPE.PORTRAIT:
+            filters = {
+                include: filters.portraitFilterInclude,
+                exclude: filters.portraitFilterExclude,
+                regex: filters.portraitFilterRegex
+            }
+            break;
+        case SEARCH_TYPE.TOKEN:
+            filters = {
+                include: filters.tokenFilterInclude,
+                exclude: filters.tokenFilterExclude,
+                regex: filters.tokenFilterRegex
+            }
+            break;
+        default:
+            filters = {
+                include: "",
+                exclude: "",
+                regex: ""
+            }
+    }
+    if (filters.regex) filters.regex = new RegExp(filters.regex);
+
     foundTokens = new Set();
     const simpleName = simplifyTokenName(name);
 
@@ -389,7 +455,7 @@ async function findTokens(name, mustContain = "") {
         cachedTokens.forEach((tokenSrc) => {
             const simpleTokenName = simplifyTokenName(getFileName(tokenSrc));
             if (simpleTokenName.includes(simpleName)) {
-                if (!mustContain || getFileNameWithExt(tokenSrc).includes(mustContain)) {
+                if (!filters || checkAgainstFilters(tokenSrc, filters)) {
                     foundTokens.add(tokenSrc);
                 }
             }
@@ -397,11 +463,11 @@ async function findTokens(name, mustContain = "") {
     } else {
         let searchPaths = parseSearchPaths();
         for (let path of searchPaths.get("data")) {
-            await walkFindTokens(path, simpleName, "", mustContain);
+            await walkFindTokens(path, simpleName, "", filters);
         }
         for (let [bucket, paths] of searchPaths.get("s3")) {
             for (let path of paths) {
-                await walkFindTokens(path, simpleName, bucket, mustContain);
+                await walkFindTokens(path, simpleName, bucket, filters);
             }
         }
     }
@@ -411,7 +477,7 @@ async function findTokens(name, mustContain = "") {
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "", bucket = "", mustContain = "") {
+async function walkFindTokens(path, name = "", bucket = "", filters = null) {
     if (!bucket && !path) return;
 
     let files = [];
@@ -434,12 +500,12 @@ async function walkFindTokens(path, name = "", bucket = "", mustContain = "") {
 
         if (name && !cleanTokenName.includes(name)) continue;
 
-        if (!mustContain || getFileNameWithExt(path).includes(mustContain)) {
+        if (!filters || checkAgainstFilters(token, filters)) {
             foundTokens.add(token);
         }
     }
     for (let dir of files.dirs) {
-        await walkFindTokens(dir, name, bucket, mustContain);
+        await walkFindTokens(dir, name, bucket, filters);
     }
 }
 
@@ -507,12 +573,6 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
         return null;
     }
 
-    let fileMustContain = "";
-    if (searchType == SEARCH_TYPE.TOKEN)
-        fileMustContain = tokenFilter;
-    else if (searchType == SEARCH_TYPE.PORTRAIT)
-        fileMustContain = portraitFilter;
-
     let searches = [name];
     let allImages = new Map();
     let usedTokens = new Set();
@@ -524,7 +584,7 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
 
     for (let search of searches) {
         if (allImages.get(search) !== undefined) continue;
-        let tokens = await findTokens(search, fileMustContain);
+        let tokens = await findTokens(search, searchType);
         tokens = Array.from(tokens).filter(token => !usedTokens.has(token))
         tokens.forEach(token => usedTokens.add(token));
         allImages.set(search, tokens);
