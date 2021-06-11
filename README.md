@@ -41,6 +41,12 @@ To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS
 
 **s3:{bucket-name}:{path}**
 
+### Filter Settings
+
+!["Filter Settings"](./docs/filter_settings.png)
+
+There are 3 types of searches. Portrait, Token, and General (Token+Portrait). Each of these searches can be configured with filters to exclude files that include or exclude certain text, or match some regular expression.
+
 ### Token HUD Settings
 
 A SubMenu with the following settings:
@@ -57,6 +63,10 @@ Controls whether the art in the preview is rendered as images or file names.
 #### Opacity of token preview
 
 Controls the opacity of the tokens in the preview before being hovered over.
+
+### Enable Token HUD button for everyone
+
+If checked will allow all players to access the new Token HUD button.
 ### Disable Caching
 
 By default the module will search the directories defined in 'Variant art search paths' only when the world is loaded or when the module settings have changed. If new art is added while the world is still open it will not be found by the module. 'Disable Caching' will force the search to be performed every time a new actor is created at a significant cost to speed at which the art is displayed to the user.
@@ -86,20 +96,6 @@ Controls the key used to trigger a popup when dragging an actor from the 'Actor 
 ### Display separate pop-ups for Portrait and Token art
 
 When enabled the Art Select pop-up will be shown twice upon actor/token creation. Once for the portrait, and then again for the token art.
-
-### Portrait art filter
-
-The string entered here will be used to filter the art shown in the portrait Art Select window. 
-
-For example if you wish the module to only pick up on files containing some sort of identifier in their name e.g. **Dragon[Portrait].png** and **Smith[Portrait].jpg**; by entering "\[Portrait\]" here only these images will be displayed in the pop-up.
-
-### Token art filter
-
-Same as 'Portrait art filter', but is instead used when Art Select pop-up is opened to select token art.
-
-### Enable Token HUD button for everyone?
-
-If checked will allow all players to access the new Token HUD button.
 
 ## Installation
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.

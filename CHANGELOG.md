@@ -1,3 +1,8 @@
+# 1.7.0
+
+* Added a new setting to disable the prompt displayed in-between Portrait and Token art pop-ups.
+* Expanded on search filter settings:
+    * Portrait and Token art searches can now be individually configured to include and exclude files with certain strings, or have them match a regular expression.
 # 1.6.0
 
 * Added a 'FVTT-TokenHUDWildcard' like button to the Token HUD
