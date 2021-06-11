@@ -58,9 +58,9 @@ export default class ArtSelect extends FormApplication {
 
         const boxes = html.find(`.token-variants-box`);
         boxes.map((box) => {
-            boxes[box].addEventListener('click', function (event) {
+            boxes[box].addEventListener('click', async function (event) {
+                await close();
                 callback(event.target.dataset.name);
-                close();
             })
         });
 

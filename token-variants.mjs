@@ -34,6 +34,7 @@ let actorDirKey = "";
 
 // Controls whether separate popups are displayed for portrait and token art
 let twoPopups = false;
+let noTwoPopupsPrompt = false;
 
 // Obj used for indicating what title and filter should be used in the Art Select screen
 let SEARCH_TYPE = {
@@ -58,6 +59,15 @@ function registerWorldSettings() {
         type: Array,
         default: DEFAULT_TOKEN_PATHS,
         onChange: _ => disableCaching || cacheTokens()
+    });
+
+    game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
+        name: "Enable Token HUD button for everyone",
+        hint: "If checked will add the Token HUD button for all players.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false,
     });
 
     game.settings.register("token-variants", "disableCaching", {
@@ -134,6 +144,16 @@ function registerWorldSettings() {
         onChange: val => twoPopups = val
     });
 
+    game.settings.register("token-variants", "twoPopupsNoDialog", {
+        name: "Disable prompt between Portrait and Token art select",
+        hint: "Will disable the prompt displayed upon Token/Actor creation when two separate pop-ups setting is enabled.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: val => noTwoPopupsPrompt = val
+    });
+
     // Legacy filter setting, retained in case some users have used this setting
     game.settings.register("token-variants", "portraitFilter", {
         scope: "world",
@@ -176,20 +196,12 @@ function registerWorldSettings() {
         },
     });
 
-    game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
-        name: "Enable Token HUD button for everyone",
-        hint: "If checked will add the Token HUD button for all players.",
-        scope: "world",
-        config: true,
-        type: Boolean,
-        default: false,
-    });
-
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
     twoPopups = game.settings.get("token-variants", "twoPopups");
+    noTwoPopupsPrompt = game.settings.get("token-variants", "twoPopupsNoDialog");
 }
 
 function registerHUD() {
@@ -596,7 +608,7 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
 /**
  * Assign new artwork to the actor
  */
-function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
+async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
 
     let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
     updateDoc(actor, { img: tokenSrc });
@@ -612,7 +624,9 @@ function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
             updateDoc(actorToUpdate.getActiveTokens()[0], { img: imgSrc });
     }
 
-    if (twoPopups) {
+    if (twoPopups && noTwoPopupsPrompt) {
+        displayArtSelect(actor.name, (imgSrc) => updateToken(actor, token, imgSrc), SEARCH_TYPE.TOKEN);
+    } else if (twoPopups) {
         let d = new Dialog({
             title: "Portrait -> Token",
             content: `<p>${game.i18n.localize("token-variants.TwoPopupsDialogQuestion")}</p>`,
