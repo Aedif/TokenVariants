@@ -1,3 +1,7 @@
+# 1.8.1
+
+* Resolved issue with 'shared' icon not showing up on video tokens
+
 # 1.8.0
 
 * Implemented a workaround for Forge VTT Asset Folder search paths not being accessible to anyone beside the owner.
