@@ -22,14 +22,34 @@ export function simplifyTokenName(tokenName) {
 /**
  * Parses the searchPaths setting into a Map, distinguishing s3 buckets from local paths
  */
-export function parseSearchPaths() {
+export async function parseSearchPaths() {
+
     const regexpBucket = /s3:(.*):(.*)/;
+    const regexpForge = /.*assets\.forge\-vtt\.com\/\w*\/.*/;
     let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
 
-    searchPathList.forEach((path) => {
+    let allForgePaths = [];
+    async function walkForgePaths(path, currDir) {
+        allForgePaths.push(`${path}${currDir}/*`);
+        let files;
+        try {
+            files = await FilePicker.browse("", path + currDir);
+        } catch (err) {
+            return;
+        }
+
+        if (files.target == ".") return;
+
+        for (let dir of files.dirs) {
+            if (dir !== currDir)
+                await walkForgePaths(path, dir);
+        }
+    }
+
+    for (const path of searchPathList) {
         if (path.startsWith("s3:")) {
             const match = path.match(regexpBucket);
             if (match[1]) {
@@ -44,9 +64,20 @@ export function parseSearchPaths() {
                 }
             }
         } else {
-            searchPaths.get("data").push(path);
+            const match = path.match(regexpForge);
+            if (match) {
+                await walkForgePaths(path, "");
+            } else {
+                searchPaths.get("data").push(path);
+            }
         }
-    });
+    }
+
+    let forgePathsSetting = game.settings.get("token-variants", "forgevttPaths").flat();
+    searchPaths.set("forge", [...new Set(forgePathsSetting.concat(allForgePaths))]);
+    if (game.user.can("SETTINGS_MODIFY"))
+        game.settings.set("token-variants", "forgevttPaths", searchPaths.get("forge"));
+
     return searchPaths;
 }
 
@@ -64,7 +95,6 @@ export function isImage(path) {
     var extension = path.split('.')
     extension = extension[extension.length - 1]
     return ['jpg', 'jpeg', 'png', 'svg', 'webp'].includes(extension)
-    const vid = ['webm', 'mp4', 'm4v'].includes(extension)
 }
 
 /**

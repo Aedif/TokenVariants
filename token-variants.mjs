@@ -43,7 +43,7 @@ let SEARCH_TYPE = {
     BOTH: "both"
 }
 
-function registerWorldSettings() {
+async function registerWorldSettings() {
 
     game.settings.registerMenu("token-variants", "searchPaths", {
         name: game.i18n.localize("token-variants.searchPathsTitle"),
@@ -58,7 +58,12 @@ function registerWorldSettings() {
         config: false,
         type: Array,
         default: DEFAULT_TOKEN_PATHS,
-        onChange: _ => disableCaching || cacheTokens()
+        onChange: async function (_) {
+            if (game.user.can("SETTINGS_MODIFY"))
+                await game.settings.set("token-variants", "forgevttPaths", []);
+            await parseSearchPaths();
+            if (!disableCaching) cacheTokens()
+        }
     });
 
     game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
@@ -196,6 +201,13 @@ function registerWorldSettings() {
         },
     });
 
+    game.settings.register("token-variants", "forgevttPaths", {
+        scope: "world",
+        config: false,
+        type: Array,
+        default: [],
+    });
+
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     disableCaching = game.settings.get("token-variants", "disableCaching");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
@@ -238,7 +250,6 @@ function registerHUD() {
 
     // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
     Hooks.on('renderTokenHUD', async (hud, html, token) => {
-
         if (!game.settings.get("token-variants", "enableTokenHUD")) return;
 
         let images = await doArtSearch(token.name, SEARCH_TYPE.TOKEN, false, true);
@@ -309,7 +320,7 @@ async function initialize() {
         return;
     }
 
-    registerWorldSettings();
+    await registerWorldSettings();
 
     if (game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE")) {
         // Handle actor/token art replacement
@@ -473,7 +484,7 @@ async function findTokens(name, searchType = "") {
             }
         });
     } else {
-        let searchPaths = parseSearchPaths();
+        let searchPaths = await parseSearchPaths();
         for (let path of searchPaths.get("data")) {
             await walkFindTokens(path, simpleName, "", filters);
         }
@@ -482,6 +493,9 @@ async function findTokens(name, searchType = "") {
                 await walkFindTokens(path, simpleName, bucket, filters);
             }
         }
+        for (let path of searchPaths.get("forge")) {
+            await walkFindTokens(path, simpleName, "", filters, true);
+        }
     }
     return foundTokens;
 }
@@ -489,13 +503,15 @@ async function findTokens(name, searchType = "") {
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "", bucket = "", filters = null) {
+async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false) {
     if (!bucket && !path) return;
 
     let files = [];
     try {
         if (bucket) {
             files = await FilePicker.browse("s3", path, { bucket: bucket });
+        } else if (forge) {
+            files = await FilePicker.browse("", path, { wildcard: true });
         } else {
             files = await FilePicker.browse("data", path);
         }
@@ -517,7 +533,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null) {
         }
     }
     for (let dir of files.dirs) {
-        await walkFindTokens(dir, name, bucket, filters);
+        await walkFindTokens(dir, name, bucket, filters, forge);
     }
 }
 
