@@ -696,7 +696,7 @@ async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = n
 
 
 // Initialize module
-Hooks.on("canvasInit", initialize);
+Hooks.once("ready", initialize);
 
 // Make displayArtSelect function accessible through 'game'
 Hooks.on("init", function () {

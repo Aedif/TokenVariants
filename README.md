@@ -56,6 +56,8 @@ Enables extra button in the Token HUD which brings up all of the found art in a 
 
 !["Keyword Search"](./docs/token_hud.png)
 
+This art can be shared with players by right-clicking on the images, which makes them available in the Token HUD side menu without the need to enable the **Enable Token HUD button for everyone** setting. Shared artwork is indicated by a green arrow.
+
 #### Display as image?
 
 Controls whether the art in the preview is rendered as images or file names.

@@ -1,3 +1,7 @@
+# 1.8.0
+
+* Implemented a workaround for Forge VTT Asset Folder search paths not being accessible to anyone beside the owner.
+* Token art variants in the Token HUD side menu can now be individually shared by right-clicking on them; making the art accessible to players without having to enable the '**Enable Token HUD button for everyone**' setting.
 # 1.7.0
 
 * Added a new setting to disable the prompt displayed in-between Portrait and Token art pop-ups.
