@@ -17,6 +17,7 @@
             {{else}}
             <span data-name="{{image.route}}">{{image.name}}</span>
             {{/if}}
+            <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
         </button>
         {{/each}}
     </div>

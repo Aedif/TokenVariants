@@ -28,6 +28,18 @@
     padding: 0 !important;
     margin: 0 !important;
     line-height: 0 !important;
+    position: relative;
+}
+
+#token-hud .token-variants-button-select .fa-share {
+    position: absolute;
+    left: 0;
+    color: green;
+    opacity: 0;
+}
+
+#token-hud .token-variants-button-select .fa-share.active{
+    opacity: 1;
 }
 
 #token-hud .token-variants-button-select:hover .token-variants-button-image{

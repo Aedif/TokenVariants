@@ -251,16 +251,25 @@ function registerHUD() {
     // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
     Hooks.on('renderTokenHUD', async (hud, html, token) => {
         if (!game.settings.get("token-variants", "enableTokenHUD")) return;
+        const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
         let images = await doArtSearch(token.name, SEARCH_TYPE.TOKEN, false, true);
         images = images.get(token.name);
 
-        if (images.length < 2) return;
+        let actorVariants = [];
+        const tokenActor = game.actors.get(token.actorId);
+        if (tokenActor) {
+            actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
+            images = [...new Set(images.concat(actorVariants))]
+        }
+
+        if (images.length < 2 && actorVariants.length == 0) return;
 
         let imagesParsed = images.map(path => {
             const img = isImage(path);
             const vid = isVideo(path);
-            return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid }
+            const shared = userHasConfigRights ? actorVariants.includes(path) : false;
+            return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid, shared: shared }
         });
 
         const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
@@ -298,14 +307,34 @@ function registerHUD() {
 
         buttons.map((button) => {
             buttons[button].addEventListener('click', function (event) {
-                event.preventDefault()
-                event.stopPropagation()
+                event.preventDefault();
+                event.stopPropagation();
                 const controlled = canvas.tokens.controlled
                 const index = controlled.findIndex(x => x.data._id === token._id)
                 const tokenToChange = controlled[index]
                 const updateTarget = is080 ? tokenToChange.document : tokenToChange
                 updateTarget.update({ img: event.target.dataset.name })
-            })
+            });
+            if (userHasConfigRights) {
+                buttons[button].addEventListener('contextmenu', function (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const controlled = canvas.tokens.controlled;
+                    const index = controlled.findIndex(x => x.data._id === token._id);
+                    const tokenToChange = controlled[index];
+                    const updateTarget = is080 ? tokenToChange.document : tokenToChange;
+                    const variantSelected = event.target.dataset.name;
+                    let tokenActor = game.actors.get(updateTarget.actor.id);
+                    let variants = tokenActor.getFlag('token-variants', 'variants') || [];
+                    if (variants.includes(variantSelected)) {
+                        variants.splice(variants.indexOf(variantSelected), 1);
+                    } else {
+                        variants.push(variantSelected);
+                    }
+                    tokenActor.setFlag('token-variants', 'variants', variants);
+                    event.target.parentNode.querySelector('.fa-share').classList.toggle("active")
+                });
+            }
         })
     });
 }
@@ -346,12 +375,11 @@ async function initialize() {
         });
         Hooks.on("renderTokenConfig", modTokenConfig);
         Hooks.on("renderActorSheet", modActorSheet);
-        registerHUD();
-        cacheTokens();
+        await cacheTokens();
     } else if (game.settings.get("token-variants", "enableTokenHUDButtonForAll")) {
-        registerHUD();
-        cacheTokens();
+        await cacheTokens();
     }
+    registerHUD();
 
     initialized = true;
 }
@@ -414,7 +442,7 @@ async function cacheTokens() {
 
     if (disableCaching) return;
 
-    await findTokens("");
+    await findTokens("", "", true);
     cachedTokens = foundTokens;
     foundTokens = new Set();
 }
@@ -436,7 +464,7 @@ function checkAgainstFilters(src, filters) {
 /**
  * Search for tokens matching the supplied name
  */
-async function findTokens(name, searchType = "") {
+async function findTokens(name, searchType = "", caching = false) {
 
     // Select filters based on type of search
     let filters = game.settings.get("token-variants", "searchFilterSettings");
@@ -483,7 +511,7 @@ async function findTokens(name, searchType = "") {
                 }
             }
         });
-    } else {
+    } else if (caching || disableCaching) {
         let searchPaths = await parseSearchPaths();
         for (let path of searchPaths.get("data")) {
             await walkFindTokens(path, simpleName, "", filters);
