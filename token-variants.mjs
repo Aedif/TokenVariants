@@ -260,6 +260,7 @@ function registerHUD() {
         const tokenActor = game.actors.get(token.actorId);
         if (tokenActor) {
             actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
+            actorVariants = actorVariants.filter(path => Boolean(path));
             images = [...new Set(images.concat(actorVariants))]
         }
 
@@ -282,7 +283,6 @@ function registerHUD() {
         html.find('div.right')
             .append(wildcardDisplay)
             .click((event) => {
-
                 let activeButton, clickedButton, tokenButton;
                 for (const button of html.find('div.control-icon')) {
                     if (button.classList.contains('active')) activeButton = button;
@@ -325,14 +325,16 @@ function registerHUD() {
                     const updateTarget = is080 ? tokenToChange.document : tokenToChange;
                     const variantSelected = event.target.dataset.name;
                     let tokenActor = game.actors.get(updateTarget.actor.id);
-                    let variants = tokenActor.getFlag('token-variants', 'variants') || [];
-                    if (variants.includes(variantSelected)) {
-                        variants.splice(variants.indexOf(variantSelected), 1);
-                    } else {
-                        variants.push(variantSelected);
+                    if (tokenActor) {
+                        let variants = tokenActor.getFlag('token-variants', 'variants') || [];
+                        if (variants.includes(variantSelected)) {
+                            variants.splice(variants.indexOf(variantSelected), 1);
+                        } else {
+                            variants.push(variantSelected);
+                        }
+                        tokenActor.setFlag('token-variants', 'variants', variants);
+                        event.target.parentNode.querySelector('.fa-share').classList.toggle("active")
                     }
-                    tokenActor.setFlag('token-variants', 'variants', variants);
-                    event.target.parentNode.querySelector('.fa-share').classList.toggle("active")
                 });
             }
         })

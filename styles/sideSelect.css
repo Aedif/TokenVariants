@@ -36,6 +36,7 @@
     left: 0;
     color: green;
     opacity: 0;
+    pointer-events: none;
 }
 
 #token-hud .token-variants-button-select .fa-share.active{

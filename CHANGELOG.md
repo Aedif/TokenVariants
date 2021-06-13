@@ -1,3 +1,8 @@
+# 1.8.2
+
+* Fixed a bug caused by clicking on the 'shared' icon in the Token HUD side image
+* INCLUDE/EXCLUDE filters are now properly disabled when re-opening the **Search Filter Settings** and valid Regex present.
+
 # 1.8.1
 
 * Resolved issue with 'shared' icon not showing up on video tokens

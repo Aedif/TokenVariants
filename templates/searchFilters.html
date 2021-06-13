@@ -3,12 +3,14 @@
     <div class="form-group">
         <label>Include</label>
         <div class="form-fields">
-            <input type="text" name="portraitFilterInclude" value="{{portraitFilterInclude}}" data-dtype="String">
+            <input type="text" name="portraitFilterInclude" value="{{portraitFilterInclude}}" data-dtype="String" {{#if
+                portraitFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
         <label>Exclude</label>
         <div class="form-fields">
-            <input type="text" name="portraitFilterExclude" value="{{portraitFilterExclude}}" data-dtype="String">
+            <input type="text" name="portraitFilterExclude" value="{{portraitFilterExclude}}" data-dtype="String" {{#if
+                portraitFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
         <label>Regex</label>
@@ -25,12 +27,14 @@
     <div class="form-group">
         <label>Include</label>
         <div class="form-fields">
-            <input type="text" name="tokenFilterInclude" value="{{tokenFilterInclude}}" data-dtype="String">
+            <input type="text" name="tokenFilterInclude" value="{{tokenFilterInclude}}" data-dtype="String" {{#if
+                tokenFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
         <label>Exclude</label>
         <div class="form-fields">
-            <input type="text" name="tokenFilterExclude" value="{{tokenFilterExclude}}" data-dtype="String">
+            <input type="text" name="tokenFilterExclude" value="{{tokenFilterExclude}}" data-dtype="String" {{#if
+                tokenFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
         <label>Regex</label>
@@ -47,12 +51,14 @@
     <div class="form-group">
         <label>Include</label>
         <div class="form-fields">
-            <input type="text" name="generalFilterInclude" value="{{generalFilterInclude}}" data-dtype="String">
+            <input type="text" name="generalFilterInclude" value="{{generalFilterInclude}}" data-dtype="String" {{#if
+                generalFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
         <label>Exclude</label>
         <div class="form-fields">
-            <input type="text" name="generalFilterExclude" value="{{generalFilterExclude}}" data-dtype="String">
+            <input type="text" name="generalFilterExclude" value="{{generalFilterExclude}}" data-dtype="String" {{#if
+                generalFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
         <label>Regex</label>
