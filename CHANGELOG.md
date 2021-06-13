@@ -1,3 +1,8 @@
+# 1.8.3
+
+* Fixed a bug causing an infinite loop when running Foundry on Forge and Forge search path is not found.
+* Added debug logs protected behind **debug** setting
+
 # 1.8.2
 
 * Fixed a bug caused by clicking on the 'shared' icon in the Token HUD side image
