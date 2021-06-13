@@ -43,7 +43,17 @@ let SEARCH_TYPE = {
     BOTH: "both"
 }
 
+let debug = false;
+
 async function registerWorldSettings() {
+
+    game.settings.register("token-variants", "debug", {
+        scope: "world",
+        config: false,
+        type: Boolean,
+        default: false,
+        onChange: val => debug = val
+    });
 
     game.settings.registerMenu("token-variants", "searchPaths", {
         name: game.i18n.localize("token-variants.searchPathsTitle"),
@@ -61,7 +71,7 @@ async function registerWorldSettings() {
         onChange: async function (_) {
             if (game.user.can("SETTINGS_MODIFY"))
                 await game.settings.set("token-variants", "forgevttPaths", []);
-            await parseSearchPaths();
+            await parseSearchPaths(debug);
             if (!disableCaching) cacheTokens()
         }
     });
@@ -214,6 +224,7 @@ async function registerWorldSettings() {
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
     twoPopups = game.settings.get("token-variants", "twoPopups");
     noTwoPopupsPrompt = game.settings.get("token-variants", "twoPopupsNoDialog");
+    debug = game.settings.get("token-variants", "debug");
 }
 
 function registerHUD() {
@@ -435,6 +446,7 @@ function modActorSheet(actorSheet, html, options) {
  * Search for and cache all the found token art
  */
 async function cacheTokens() {
+    if (debug) console.log("STARTING: Token Caching");
     cachedTokens.clear();
 
     if (filterMSRD) {
@@ -442,11 +454,15 @@ async function cacheTokens() {
         monsterNameList = monsterNameList.map(name => simplifyTokenName(name));
     }
 
-    if (disableCaching) return;
+    if (disableCaching) {
+        if (debug) console.log("ENDING: Token Caching (DISABLED)");
+        return;
+    }
 
     await findTokens("", "", true);
     cachedTokens = foundTokens;
     foundTokens = new Set();
+    if (debug) console.log("ENDING: Token Caching");
 }
 
 function checkAgainstFilters(src, filters) {
@@ -467,6 +483,7 @@ function checkAgainstFilters(src, filters) {
  * Search for tokens matching the supplied name
  */
 async function findTokens(name, searchType = "", caching = false) {
+    if (debug) console.log("STARTING: Token Search", name, searchType, caching);
 
     // Select filters based on type of search
     let filters = game.settings.get("token-variants", "searchFilterSettings");
@@ -514,7 +531,7 @@ async function findTokens(name, searchType = "", caching = false) {
             }
         });
     } else if (caching || disableCaching) {
-        let searchPaths = await parseSearchPaths();
+        let searchPaths = await parseSearchPaths(debug);
         for (let path of searchPaths.get("data")) {
             await walkFindTokens(path, simpleName, "", filters);
         }
@@ -527,6 +544,7 @@ async function findTokens(name, searchType = "", caching = false) {
             await walkFindTokens(path, simpleName, "", filters, true);
         }
     }
+    if (debug) console.log("ENDING: Token Search", foundTokens);
     return foundTokens;
 }
 
@@ -625,7 +643,7 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
 }
 
 async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false, ignoreKeywords = false) {
-
+    if (debug) console.log("STARTING: Art Search", name, searchType);
     if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
         console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);
         return null;
@@ -648,6 +666,7 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
         allImages.set(search, tokens);
     }
 
+    if (debug) console.log("ENDING: Art Search");
     return allImages;
 }
 

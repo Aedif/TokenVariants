@@ -22,10 +22,12 @@ export function simplifyTokenName(tokenName) {
 /**
  * Parses the searchPaths setting into a Map, distinguishing s3 buckets from local paths
  */
-export async function parseSearchPaths() {
+export async function parseSearchPaths(debug = false) {
+
+    if (debug) console.log("STARTING: Search Path Parse");
 
     const regexpBucket = /s3:(.*):(.*)/;
-    const regexpForge = /.*assets\.forge\-vtt\.com\/\w*\/.*/;
+    const regexpForge = /(.*assets\.forge\-vtt\.com\/\w+\/)(.*)/;
     let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
     let searchPaths = new Map();
     searchPaths.set("data", []);
@@ -33,10 +35,10 @@ export async function parseSearchPaths() {
 
     let allForgePaths = [];
     async function walkForgePaths(path, currDir) {
-        allForgePaths.push(`${path}${currDir}/*`);
         let files;
         try {
-            files = await FilePicker.browse("", path + currDir);
+            files = await FilePicker.browse(path, currDir);
+            allForgePaths.push(`${path}${currDir}/*`);
         } catch (err) {
             return;
         }
@@ -44,8 +46,7 @@ export async function parseSearchPaths() {
         if (files.target == ".") return;
 
         for (let dir of files.dirs) {
-            if (dir !== currDir)
-                await walkForgePaths(path, dir);
+            await walkForgePaths(path, dir);
         }
     }
 
@@ -65,19 +66,27 @@ export async function parseSearchPaths() {
             }
         } else {
             const match = path.match(regexpForge);
-            if (match) {
-                await walkForgePaths(path, "");
+            if (match && match[2]) {
+                await walkForgePaths(match[1], match[2]);
+            } else if (match) {
+                console.log("Unsupported ForgeVTT Asset Folder format. Cannot point to the root, must target a directory within it.");
             } else {
                 searchPaths.get("data").push(path);
             }
         }
     }
 
-    let forgePathsSetting = game.settings.get("token-variants", "forgevttPaths").flat();
-    searchPaths.set("forge", [...new Set(forgePathsSetting.concat(allForgePaths))]);
+    let forgePathsSetting = (game.settings.get("token-variants", "forgevttPaths")).flat();
+    for (let path of allForgePaths) {
+        if (!forgePathsSetting.includes(path)) {
+            forgePathsSetting.push(path);
+        }
+    }
+    searchPaths.set("forge", forgePathsSetting);
     if (game.user.can("SETTINGS_MODIFY"))
-        game.settings.set("token-variants", "forgevttPaths", searchPaths.get("forge"));
+        game.settings.set("token-variants", "forgevttPaths", forgePathsSetting);
 
+    if (debug) console.log("ENDING: Search Path Parse", searchPaths);
     return searchPaths;
 }
 
