@@ -27,7 +27,7 @@ export async function parseSearchPaths(debug = false) {
     if (debug) console.log("STARTING: Search Path Parse");
 
     const regexpBucket = /s3:(.*):(.*)/;
-    const regexpForge = /(.*assets\.forge\-vtt\.com\/\w+\/)(.*)/;
+    const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
     let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
     let searchPaths = new Map();
     searchPaths.set("data", []);
@@ -37,7 +37,7 @@ export async function parseSearchPaths(debug = false) {
     async function walkForgePaths(path, currDir) {
         let files;
         try {
-            files = await FilePicker.browse(path, currDir);
+            files = await FilePicker.browse(path, currDir, {});
             allForgePaths.push(`${path}${currDir}/*`);
         } catch (err) {
             return;
@@ -66,10 +66,17 @@ export async function parseSearchPaths(debug = false) {
             }
         } else {
             const match = path.match(regexpForge);
-            if (match && match[2]) {
-                await walkForgePaths(match[1], match[2]);
-            } else if (match) {
-                console.log("Unsupported ForgeVTT Asset Folder format. Cannot point to the root, must target a directory within it.");
+            if (match) {
+                const forgeURL = match[1];
+                const userId = match[2];
+                const fPath = match[3];
+                if (typeof ForgeAPI !== 'undefined') {
+                    if (userId == await ForgeAPI.getUserId()) {
+                        await walkForgePaths(forgeURL + userId, fPath);
+                    } else {
+                        allForgePaths.push(path + "/*");
+                    }
+                }
             } else {
                 searchPaths.get("data").push(path);
             }

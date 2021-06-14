@@ -8,7 +8,7 @@ export default class SearchPaths extends FormApplication {
             id: "token-variants-search-paths",
             classes: ["sheet"],
             template: "modules/token-variants/templates/searchPaths.html",
-            resizable: false,
+            resizable: true,
             minimizable: false,
             title: "",
             width: 500
