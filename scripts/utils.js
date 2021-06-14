@@ -38,7 +38,8 @@ export async function parseSearchPaths(debug = false) {
         let files;
         try {
             files = await FilePicker.browse(path, currDir, {});
-            allForgePaths.push(`${path}${currDir}/*`);
+            if (!currDir.endsWith('/')) currDir += "/";
+            allForgePaths.push(`${path}${currDir}*`);
         } catch (err) {
             return;
         }
@@ -72,7 +73,7 @@ export async function parseSearchPaths(debug = false) {
                 const fPath = match[3];
                 if (typeof ForgeAPI !== 'undefined') {
                     if (userId == await ForgeAPI.getUserId()) {
-                        await walkForgePaths(forgeURL + userId, fPath);
+                        await walkForgePaths(forgeURL + userId + "/", fPath);
                     } else {
                         allForgePaths.push(path + "/*");
                     }

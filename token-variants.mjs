@@ -259,21 +259,24 @@ function registerHUD() {
         default: 50
     });
 
-    // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
-    Hooks.on('renderTokenHUD', async (hud, html, token) => {
+    async function renderHud(hud, html, token, searchText) {
         if (!game.settings.get("token-variants", "enableTokenHUD")) return;
         const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
-        let images = await doArtSearch(token.name, SEARCH_TYPE.TOKEN, false, true);
-        images = images.get(token.name);
+        const search = searchText ? searchText : token.name;
+
+        let images = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
+        images = images.get(search) || [];
 
         let actorVariants = [];
         const tokenActor = game.actors.get(token.actorId);
         if (tokenActor) {
             actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
             actorVariants = actorVariants.filter(path => Boolean(path));
-            images = [...new Set(images.concat(actorVariants))]
+            if (!searchText)
+                images = [...new Set(images.concat(actorVariants))]
         }
+
 
         if (images.length < 2 && actorVariants.length == 0) return;
 
@@ -291,9 +294,10 @@ function registerHUD() {
 
         const is080 = !isNewerVersion("0.8.0", game.data.version)
 
-        html.find('div.right')
-            .append(wildcardDisplay)
-            .click((event) => {
+        let divR = html.find('div.right')
+            .append(wildcardDisplay);
+        if (!searchText)
+            divR.click((event) => {
                 let activeButton, clickedButton, tokenButton;
                 for (const button of html.find('div.control-icon')) {
                     if (button.classList.contains('active')) activeButton = button;
@@ -308,11 +312,28 @@ function registerHUD() {
                     const effectSelector = is080 ? '[data-action="effects"]' : '.effects';
                     html.find(`.control-icon${effectSelector}`)[0].classList.remove('active');
                     html.find('.status-effects')[0].classList.remove('active');
+                } else if (event.target.id && event.target.id == "token-variants-side-search") {
+                    // Do nothing
                 } else {
                     tokenButton.classList.remove('active');
                     html.find('.token-variants-wrap')[0].classList.remove('active');
                 }
-            })
+            });
+
+        html.find('#token-variants-side-search').on('keyup', (event) => {
+            if (event.key === 'Enter' || event.keyCode === 13) {
+                html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
+                renderHud(hud, html, token, event.target.value);
+                console.log(event.target.value);
+            }
+        });
+
+        if (userHasConfigRights) {
+            html.find('#token-variants-side-button').on("contextmenu", () => {
+                html.find('.token-variants-button-select').remove();
+                html.find('#token-variants-side-search').toggle("active")
+            });
+        }
 
         const buttons = html.find('.token-variants-button-select')
 
@@ -348,8 +369,16 @@ function registerHUD() {
                     }
                 });
             }
-        })
-    });
+        });
+
+        if (searchText) {
+            html.find('#token-variants-side-button')[0].parentNode.classList.add('active');
+            html.find('.token-variants-wrap')[0].classList.add('active');
+        }
+    }
+
+    // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
+    Hooks.on('renderTokenHUD', renderHud);
 }
 
 /**

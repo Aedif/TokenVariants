@@ -43,6 +43,10 @@
     opacity: 1;
 }
 
+#token-hud #token-variants-side-search{
+    display: none;
+}
+
 #token-hud .token-variants-button-select:hover .token-variants-button-image{
     opacity: 1!important;
 }
