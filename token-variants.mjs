@@ -322,9 +322,10 @@ function registerHUD() {
 
         html.find('#token-variants-side-search').on('keyup', (event) => {
             if (event.key === 'Enter' || event.keyCode === 13) {
-                html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
-                renderHud(hud, html, token, event.target.value);
-                console.log(event.target.value);
+                if (event.target.value.length >= 3) {
+                    html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
+                    renderHud(hud, html, token, event.target.value);
+                }
             }
         });
 

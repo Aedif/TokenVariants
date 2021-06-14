@@ -1,3 +1,8 @@
+# 1.9.0
+
+* Added a search feature to the Token HUD art side menu. With the menu open right-clicking on the button again will open up a search box.
+* ForgeVTT search paths will now only be recursively explored if the current users ID matches the user ID in the link. Prevents complications with ForgeVTT defaulting to the current user's asset folder when searching inaccessible links of other users.
+
 # 1.8.3
 
 * Fixed a bug causing an infinite loop when running Foundry on Forge and Forge search path is not found.

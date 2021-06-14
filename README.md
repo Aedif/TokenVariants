@@ -54,9 +54,13 @@ A SubMenu with the following settings:
 #### Enable Token HUD Button
 Enables extra button in the Token HUD which brings up all of the found art in a small preview to the right: 
 
-!["Keyword Search"](./docs/token_hud.png)
+!["Token Hud"](./docs/token_hud.png)
 
 This art can be shared with players by right-clicking on the images, which makes them available in the Token HUD side menu without the need to enable the **Enable Token HUD button for everyone** setting. Shared artwork is indicated by a green arrow.
+
+By default the side menu uses the token's name as the search criteria. However a custom search can be performed by right-clicking on the new Token HUD button while the side menu is open:
+
+!["Token Hud Search"](./docs/token_hud_search.png)
 
 #### Display as image?
 
