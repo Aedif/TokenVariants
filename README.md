@@ -6,7 +6,10 @@
 
 This module provides a pop-up window upon token creation which displays all the available variants of the token art it could find in the customizable list of directories.
 
-!["Art Select"](./docs/art_select.gif)
+
+https://user-images.githubusercontent.com/7693704/121926941-69aff780-cd36-11eb-864b-b2a9640baeea.mp4
+
+
 
 The search is done using the Actor's name, and will ignore special characters, case, or spaces in the files
 
