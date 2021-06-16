@@ -1,27 +1,27 @@
 <form>
     <div class="form-group">
-        <label>Enable Token HUD Button</label>
+        <label>{{localize "token-variants.enableTokenHUDName"}}</label>
         <div class="form-fields">
             <input type="checkbox" name="enableTokenHUD" data-dtype="Boolean" {{#if enableTokenHUD}}checked{{/if}}>
         </div>
-        <p class="notes">Enable extra Token HUD button for selecting token art.</p>
+        <p class="notes">{{localize "token-variants.enableTokenHUDHint"}}</p>
     </div>
 
     <div class="form-group">
-        <label>Display as Image?</label>
+        <label>{{localize "token-variants.HUDDisplayImageName"}}</label>
         <div class="form-fields">
             <input type="checkbox" name="HUDDisplayImage" data-dtype="Boolean" {{#if displayImage}}checked{{/if}}>
         </div>
-        <p class="notes">Disable to display images as a list of their filenames in the HUD.</p>
+        <p class="notes">{{localize "token-variants.HUDDisplayImageHint"}}</p>
     </div>
 
     <div class="form-group">
-        <label>Opacity of token preview</label>
+        <label>{{localize "token-variants.HUDImageOpacityName"}}</label>
         <div class="form-fields">
             <input type="range" name="HUDImageOpacity" data-dtype="Number" value="{{opacity}}" min="0" max="100"
                 step="1">
         </div>
-        <p class="notes">The opacity of the token previews in the HUD before hovering over them.</p>
+        <p class="notes">{{localize "token-variants.HUDImageOpacityHint"}}</p>
     </div>
 
     <div class="button-container">

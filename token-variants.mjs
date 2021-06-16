@@ -79,8 +79,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
-        name: "Enable Token HUD button for everyone",
-        hint: "If checked will add the Token HUD button for all players.",
+        name: game.i18n.localize("token-variants.enableTokenHUDButtonForAllName"),
+        hint: game.i18n.localize("token-variants.enableTokenHUDButtonForAllHint"),
         scope: "world",
         config: true,
         type: Boolean,
@@ -162,8 +162,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "twoPopupsNoDialog", {
-        name: "Disable prompt between Portrait and Token art select",
-        hint: "Will disable the prompt displayed upon Token/Actor creation when two separate pop-ups setting is enabled.",
+        name: game.i18n.localize("token-variants.twoPopupsNoDialogName"),
+        hint: game.i18n.localize("token-variants.twoPopupsNoDialogHint"),
         scope: "world",
         config: true,
         type: Boolean,
@@ -172,8 +172,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "runSearchOnPath", {
-        name: "Match name to folder",
-        hint: "Whe enabled art searches will check both file names as well as folder names along their path for a match.",
+        name: game.i18n.localize("token-variants.runSearchOnPathName"),
+        hint: game.i18n.localize("token-variants.runSearchOnPathHint"),
         scope: "world",
         config: true,
         type: Boolean,
@@ -198,8 +198,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.registerMenu("token-variants", "searchFilterMenu", {
-        name: "Search Filter Settings",
-        hint: "Assign filters to Portrait and Token art searches..",
+        name: game.i18n.localize("token-variants.searchFilterMenuName"),
+        hint: game.i18n.localize("token-variants.searchFilterMenuHint"),
         scope: "world",
         icon: "fas fa-exchange-alt",
         type: FilterSettings,
