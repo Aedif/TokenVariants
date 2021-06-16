@@ -511,15 +511,16 @@ async function cacheTokens() {
 }
 
 function checkAgainstFilters(src, filters) {
-    const filename = getFileNameWithExt(src);
+    const text = runSearchOnPath ? decodeURIComponent(src) : getFileNameWithExt(src);
+
     if (filters.regex) {
-        return filters.regex.test(filename);
+        return filters.regex.test(text);
     }
     if (filters.include) {
-        if (!filename.includes(filters.include)) return false;
+        if (!text.includes(filters.include)) return false;
     }
     if (filters.exclude) {
-        if (filename.includes(filters.exclude)) return false;
+        if (text.includes(filters.exclude)) return false;
     }
     return true;
 }
