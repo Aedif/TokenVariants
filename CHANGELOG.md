@@ -1,3 +1,9 @@
+# 1.10.0
+
+* Added a new setting '**Match name to folder**'. When enabled all searches will be done both on the file names as well as the file path:
+    * e.g. 'Dragon' will match "token_art/**dragon**s/red/avatar.png"
+    * Not that with this setting ON filters will also be applied to the paths.
+    
 # 1.9.0
 
 * Added a search feature to the Token HUD art side menu. With the menu open right-clicking on the button again will open up a search box.

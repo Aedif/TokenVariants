@@ -106,5 +106,11 @@ Controls the key used to trigger a popup when dragging an actor from the 'Actor 
 
 When enabled the Art Select pop-up will be shown twice upon actor/token creation. Once for the portrait, and then again for the token art.
 
+### Match name to folder
+
+When enabled all searches will be done both on the file names as well as the file path:
+
+e.g. '**Dragon**' will match "token_art/**dragon**s/red/avatar.png" as well as "tokens/monsters/Red**Dragon**.png"
+
 ## Installation
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.
