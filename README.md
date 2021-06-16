@@ -75,7 +75,8 @@ Controls the opacity of the tokens in the preview before being hovered over.
 
 ### Enable Token HUD button for everyone
 
-If checked will allow all players to access the new Token HUD button.
+If checked will allow all players to access the new Token HUD button. Note that this may potentially reveal art that the players are not supposed to see. For a more controlled way of allowing your players to switch between different variants consider "sharing" it via right-clicking the art in the new Token HUD menu.
+
 ### Disable Caching
 
 By default the module will search the directories defined in 'Variant art search paths' only when the world is loaded or when the module settings have changed. If new art is added while the world is still open it will not be found by the module. 'Disable Caching' will force the search to be performed every time a new actor is created at a significant cost to speed at which the art is displayed to the user.
