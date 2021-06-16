@@ -1,3 +1,5 @@
+const simplifyRegex = new RegExp(/[^A-Za-z0-9/]/g);
+
 /**
  * Extracts the file name from the given path.
  */
@@ -16,7 +18,11 @@ export function getFileNameWithExt(path) {
  * Simplifies token and monster names.
  */
 export function simplifyTokenName(tokenName) {
-    return tokenName.replace(/\W/g, '').toLowerCase();
+    return tokenName.replace(simplifyRegex, '').toLowerCase();
+}
+
+export function simplifyPath(path) {
+    return path.replace(simplifyRegex, '').toLowerCase();
 }
 
 /**

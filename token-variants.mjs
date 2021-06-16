@@ -2,7 +2,7 @@ import SearchPaths from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
 import TokenHUDSettings from "./applications/tokenHUD.js";
 import FilterSettings from "./applications/searchFilters.js";
-import { getFileName, getFileNameWithExt, simplifyTokenName, parseSearchPaths, parseKeywords, isImage, isVideo } from "./scripts/utils.js"
+import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo } from "./scripts/utils.js"
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = ["modules/caeora-maps-tokens-assets/assets/tokens/"];
@@ -44,6 +44,8 @@ let SEARCH_TYPE = {
 }
 
 let debug = false;
+
+let runSearchOnPath = false;
 
 async function registerWorldSettings() {
 
@@ -169,6 +171,16 @@ async function registerWorldSettings() {
         onChange: val => noTwoPopupsPrompt = val
     });
 
+    game.settings.register("token-variants", "runSearchOnPath", {
+        name: "Match name to folder",
+        hint: "Whe enabled art searches will check both file names as well as folder names along their path for a match.",
+        scope: "world",
+        config: true,
+        type: Boolean,
+        default: false,
+        onChange: val => runSearchOnPath = val
+    });
+
     // Legacy filter setting, retained in case some users have used this setting
     game.settings.register("token-variants", "portraitFilter", {
         scope: "world",
@@ -225,6 +237,7 @@ async function registerWorldSettings() {
     twoPopups = game.settings.get("token-variants", "twoPopups");
     noTwoPopupsPrompt = game.settings.get("token-variants", "twoPopupsNoDialog");
     debug = game.settings.get("token-variants", "debug");
+    runSearchOnPath = game.settings.get("token-variants", "runSearchOnPath");
 }
 
 function registerHUD() {
@@ -261,9 +274,11 @@ function registerHUD() {
 
     async function renderHud(hud, html, token, searchText) {
         if (!game.settings.get("token-variants", "enableTokenHUD")) return;
-        const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
         const search = searchText ? searchText : token.name;
+        if (!search || search.length < 3) return;
+
+        const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
         let images = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
         images = images.get(search) || [];
@@ -553,8 +568,8 @@ async function findTokens(name, searchType = "", caching = false) {
 
     if (cachedTokens.size != 0) {
         cachedTokens.forEach((tokenSrc) => {
-            const simpleTokenName = simplifyTokenName(getFileName(tokenSrc));
-            if (simpleTokenName.includes(simpleName)) {
+            const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(getFileName(tokenSrc));
+            if (simplified.includes(simpleName)) {
                 if (!filters || checkAgainstFilters(tokenSrc, filters)) {
                     foundTokens.add(tokenSrc);
                 }
@@ -600,14 +615,16 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
 
     if (files.target == ".") return;
 
-    for (let token of files.files) {
-        let tokenName = getFileName(token);
-        const cleanTokenName = simplifyTokenName(tokenName);
-
-        if (name && !cleanTokenName.includes(name)) continue;
-
-        if (!filters || checkAgainstFilters(token, filters)) {
-            foundTokens.add(token);
+    for (let tokenSrc of files.files) {
+        if (!name) {
+            foundTokens.add(tokenSrc);
+        } else {
+            const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(getFileName(tokenSrc));
+            if (simplified.includes(name)) {
+                if (!filters || checkAgainstFilters(tokenSrc, filters)) {
+                    foundTokens.add(tokenSrc);
+                }
+            }
         }
     }
     for (let dir of files.dirs) {
