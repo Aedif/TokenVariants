@@ -1,3 +1,7 @@
+# 1.11.0
+
+* Added a new setting '**Always show HUD Button**'. When enabled the new button in the Token HUD will be shown even when no matching art has been found. This makes searches directly from the Token HUD to always be possible. 
+
 # 1.10.0
 
 * Added a new setting '**Match name to folder**'. When enabled all searches will be done both on the file names as well as the file path:
