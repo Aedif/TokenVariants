@@ -257,6 +257,13 @@ function registerHUD() {
         default: true,
     });
 
+    game.settings.register("token-variants", "alwaysShowHUD", {
+        scope: "client",
+        config: false,
+        type: Boolean,
+        default: false,
+    });
+
     game.settings.register("token-variants", "HUDDisplayImage", {
         scope: "client",
         config: false,
@@ -292,8 +299,8 @@ function registerHUD() {
                 images = [...new Set(images.concat(actorVariants))]
         }
 
-
-        if (images.length < 2 && actorVariants.length == 0) return;
+        const alwaysShowHUD = game.settings.get("token-variants", "alwaysShowHUD");
+        if (!alwaysShowHUD && images.length < 2 && actorVariants.length == 0) return;
 
         let imagesParsed = images.map(path => {
             const img = isImage(path);

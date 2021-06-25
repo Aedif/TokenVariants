@@ -20,6 +20,7 @@ export default class TokenHUDSettings extends FormApplication {
         data.enableTokenHUD = game.settings.get("token-variants", "enableTokenHUD");
         data.displayImage = game.settings.get("token-variants", "HUDDisplayImage");
         data.opacity = game.settings.get("token-variants", "HUDImageOpacity");
+        data.alwaysShowHUD = game.settings.get("token-variants", "alwaysShowHUD");
         return data;
     }
 
@@ -38,5 +39,6 @@ export default class TokenHUDSettings extends FormApplication {
         game.settings.set("token-variants", "enableTokenHUD", formData["enableTokenHUD"]);
         game.settings.set("token-variants", "HUDDisplayImage", formData["HUDDisplayImage"]);
         game.settings.set("token-variants", "HUDImageOpacity", formData["HUDImageOpacity"]);
+        game.settings.set("token-variants", "alwaysShowHUD", formData["alwaysShowHUD"]);
     }
 }

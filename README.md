@@ -65,6 +65,10 @@ By default the side menu uses the token's name as the search criteria. However a
 
 !["Token Hud Search"](./docs/token_hud_search.png)
 
+#### Always show HUD Button
+
+If enabled the HUD Button will be shown even when no matches have been found.
+
 #### Display as image?
 
 Controls whether the art in the preview is rendered as images or file names.

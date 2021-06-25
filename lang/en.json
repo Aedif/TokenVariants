@@ -32,6 +32,8 @@
     "token-variants.searchFilterMenuHint": "Assign filters to Portrait and Token art searches...",
     "token-variants.enableTokenHUDName": "Enable Token HUD Button",
     "token-variants.enableTokenHUDHint": "Enable extra Token HUD button for selecting token art.",
+    "token-variants.alwaysShowHUDName": "Always show HUD Button",
+    "token-variants.alwaysShowHUDHint": "The HUD Button will be shown even when no matches have been found.",
     "token-variants.HUDDisplayImageName": "Display as Image",
     "token-variants.HUDDisplayImageHint": "Disable to display images as a list of their filenames in the HUD.",
     "token-variants.HUDImageOpacityName": "Opacity of token preview",
