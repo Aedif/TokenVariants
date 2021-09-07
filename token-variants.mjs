@@ -777,6 +777,7 @@ Hooks.once("ready", initialize);
 // Make displayArtSelect function accessible through 'game'
 Hooks.on("init", function () {
     game.TokenVariants = {
-        displayArtSelect: displayArtSelect
+        displayArtSelect: displayArtSelect,
+        cacheTokens: cacheTokens
     };
 });

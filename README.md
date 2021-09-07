@@ -119,3 +119,23 @@ e.g. '**Dragon**' will match "token_art/**dragon**s/red/avatar.png" as well as "
 
 ## Installation
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.
+
+## API
+
+### **game.TokenVariants.displayArtSelect(name, callback, searchType = 'both', ignoreFilterMSRD = false)**
+
+Displays the token art select window.
+
+Parameters:
+ * **name**: The name to be used as the search criteria
+ * **callback**: function that will be called with the user selected image path as argument
+ * **searchType** (token|portrait|both) which filters are to be used in the art search
+ * **ignoreFilterMSRD** if set to true will ignore the filterMSRD setting
+
+e.g. 
+* game.TokenVariants.displayArtSelect("")
+* game.TokenVariants.displayArtSelect("dragon", (selectedImg) => console.log(selectedImg))
+
+## **game.TokenVariants.cacheTokens()**
+
+When called will trigger the refresh of the token cache.
