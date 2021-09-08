@@ -1,3 +1,7 @@
+# 1.12.1
+
+* Fixed variant select not showing up on portrait right-click in the PF2E actor sheets.
+
 # 1.12.0
 
 * Exposed the caching function through **game.TokenVariants.cacheTokens()** to be used as part of macros for more convenient way of refreshing the cache.

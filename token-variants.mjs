@@ -477,11 +477,21 @@ function modActorSheet(actorSheet, html, options) {
     if (!options.editable) return;
 
     let profile = null;
-    let profileClassNames = ["profile", "profile-img", "profile-image"];
+    let profileQueries = {
+        all: [".profile", ".profile-img", ".profile-image"],
+        pf2e: [".player-image", ".actor-icon", ".sheet-header img", ".actor-image"]
+    }
 
-    for (let className of profileClassNames) {
-        profile = html[0].getElementsByClassName(className)[0];
+    for (let query of profileQueries.all) {
+        profile = html[0].querySelector(query);
         if (profile) break;
+    }
+
+    if(!profile && game.system.id in profileQueries){
+        for (let query of profileQueries[game.system.id]) {
+            profile = html[0].querySelector(query);
+            if (profile) break;
+        }
     }
 
     if (!profile) {
