@@ -427,7 +427,7 @@ async function initialize() {
             displayArtSelect(actor.data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
         });
         Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
-            if (!keyboard.isDown(actorDirKey)) return;
+            if (!(keyboard.isDown(actorDirKey) && !keyboard.isDown("v"))) return;
             let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
             // Check to support both 0.7.x and 0.8.x
             if (op4) {

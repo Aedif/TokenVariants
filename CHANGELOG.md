@@ -1,3 +1,7 @@
+# 1.12.2
+
+* Copying tokens via Ctrl+C/Ctrl+V should no longer trigger the display of art select window.
+
 # 1.12.1
 
 * Fixed variant select not showing up on portrait right-click in the PF2E actor sheets.
