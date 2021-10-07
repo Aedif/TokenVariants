@@ -400,7 +400,7 @@ function registerHUD() {
         }
     }
 
-    // Incorporating 'FVTT-TokenHUDWildcard' token hud button
+    // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
     Hooks.on('renderTokenHUD', renderHud);
 }
 
