@@ -294,9 +294,7 @@ function registerHUD() {
         const tokenActor = game.actors.get(token.actorId);
         if (tokenActor) {
             actorVariants = tokenActor.getFlag('token-variants', 'variants') || new Map();
-            //actorVariants = actorVariants.filter(path => Boolean(path));
             if (!searchText){
-                //images = [...new Set(images.concat(actorVariants))]
                 actorVariants.forEach((path, key) => {
                     if(path){
                         images.set(key,path)
@@ -318,9 +316,7 @@ function registerHUD() {
         images.forEach((path, key) => {
             const img = isImage(path);
             const vid = isVideo(path);
-            //const shared = userHasConfigRights ? actorVariants.includes(path) : false;
-            //return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid, shared: shared }
-            let shared = userHasConfigRights ? Array.from(actorVariants.values()).includes(path) : false;
+            const shared = userHasConfigRights ? Array.from(actorVariants.values()).includes(path) : false;
             let newName = (key && key != path) ? key : getFileName(path)
             imagesParsed.push({ route: path, name: newName, used: path === token.img, img, vid, type: img || vid, shared: shared });         
         });
@@ -655,7 +651,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
         } else if (forge) {
             files = await FilePicker.browse("", path, { wildcard: true });
         } else if (rollTableElementName) {
-            // maybe we can do this
+            // maybe we can do better than this
             files = {};
             files.files = [];
             files.dirs = [];
@@ -765,16 +761,12 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
 
     for (let search of searches) {
         if (allImages.get(search) !== undefined) continue;
-        
-        //let tokens = map.values();
-        //tokens = Array.from(tokens).filter(token => !usedTokens.has(token))
-        //tokens.forEach(token => usedTokens.add(token));
         let map = await findTokens(search, searchType);
         let tokens = new Map();   
         for (let k of map.keys()) {
             const token = map.get(k);
             if(!usedTokens.has(token)){
-                usedTokens.add(token);                
+                usedTokens.add(token);
                 tokens.set(k, token);
             }
         }
