@@ -38,7 +38,7 @@ export async function parseSearchPaths(debug = false) {
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
-
+    searchPaths.set("rolltable", new Map());
     let allForgePaths = [];
     async function walkForgePaths(path, currDir) {
         let files;
@@ -96,6 +96,29 @@ export async function parseSearchPaths(debug = false) {
             forgePathsSetting.push(path);
         }
     }
+
+    let tableId = (game.settings.get("token-variants", "rollTable")).flat();
+    const table = game.tables.get(tableId);
+		if (!table){
+      //ui.notifications.warn(game.i18n.format("token-variants.notifications.warn.invalidTable", { tableId }));
+    } else {
+      // TODO ADD A RANDOMIZER ?
+      //const roll = await table.draw({
+      //	displayChat: "Here the roll text"
+      //});
+      // const result = roll.results[0];
+      for (let baseTableData of table.data) {
+        const path = baseTableData.data.img;
+        const name = baseTableData.data.text;
+        if (searchPaths.get("rolltable").has(name)) {
+          searchPaths.get("rolltable").get(name).push(path);
+        } else {
+          searchPaths.get("rolltable").set(name, path);
+        }
+      }
+    }
+
+
     searchPaths.set("forge", forgePathsSetting);
     if (game.user.can("SETTINGS_MODIFY"))
         game.settings.set("token-variants", "forgevttPaths", forgePathsSetting);

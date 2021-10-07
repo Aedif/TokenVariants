@@ -400,7 +400,7 @@ function registerHUD() {
         }
     }
 
-    // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
+    // Incorporating 'FVTT-TokenHUDWildcard' token hud button
     Hooks.on('renderTokenHUD', renderHud);
 }
 
@@ -596,15 +596,18 @@ async function findTokens(name, searchType = "", caching = false) {
     } else if (caching || disableCaching) {
         let searchPaths = await parseSearchPaths(debug);
         for (let path of searchPaths.get("data")) {
-            await walkFindTokens(path, simpleName, "", filters);
+            await walkFindTokens(path, simpleName, "", filters, false, "");
         }
         for (let [bucket, paths] of searchPaths.get("s3")) {
             for (let path of paths) {
-                await walkFindTokens(path, simpleName, bucket, filters);
+                await walkFindTokens(path, simpleName, bucket, filters, false, "");
             }
         }
         for (let path of searchPaths.get("forge")) {
-            await walkFindTokens(path, simpleName, "", filters, true);
+            await walkFindTokens(path, simpleName, "", filters, true, "");
+        }
+        for (let [rollTableElementName, path] of searchPaths.get("rolltable")) {
+            await walkFindTokens(path, simpleName, "", filters, false, rollTableElementName);
         }
     }
     if (debug) console.log("ENDING: Token Search", foundTokens);
@@ -614,7 +617,7 @@ async function findTokens(name, searchType = "", caching = false) {
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false) {
+async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false, rollTableElementName = "") {
     if (!bucket && !path) return;
 
     let files = [];
@@ -623,6 +626,8 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
             files = await FilePicker.browse("s3", path, { bucket: bucket });
         } else if (forge) {
             files = await FilePicker.browse("", path, { wildcard: true });
+        } else if (rollTable) {
+            files = await FilePicker.browse("", path, { name: rollTableElementName }); // Is the user who made the rollTable
         } else {
             files = await FilePicker.browse("data", path);
         }
@@ -646,7 +651,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
         }
     }
     for (let dir of files.dirs) {
-        await walkFindTokens(dir, name, bucket, filters, forge);
+        await walkFindTokens(dir, name, bucket, filters, forge, rollTable);
     }
 }
 
