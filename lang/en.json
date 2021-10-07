@@ -42,6 +42,6 @@
     "token-variants.portraitArtFilterHint": "Portrait art will be limited to files that include/exclude these pieces of text or match the provided regular expression.",
     "token-variants.generalArtFilterHint": "These filters will be used when the search is being performed irrespective of the art type (token/portrait).",
     "token-variants.ProfileListenerError": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
-    "token-variant.PathNotFoundError": "Unable to find path: ",
-    "token-variant.notifications.warn.invalidTable": "The table \"{tableId}\" could not be found"
+    "token-variants.PathNotFoundError": "Unable to find path: ",
+    "token-variants.notifications.warn.invalidTable": "The table \"{tableId}\" could not be found"
 }

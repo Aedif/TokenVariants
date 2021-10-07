@@ -33,7 +33,7 @@ export async function parseSearchPaths(debug = false) {
     if (debug) console.log("STARTING: Search Path Parse");
 
     const regexpBucket = /s3:(.*):(.*)/;
-    const regexpRollTable = /rolltable:(.*):(.*)/;
+    const regexpRollTable = /rolltable:(.*)/;
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
     let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
     let searchPaths = new Map();
@@ -74,10 +74,10 @@ export async function parseSearchPaths(debug = false) {
             }
         }else if (path.startsWith("rolltable:")) {
             const match = path.match(regexpRollTable);
-            if (match[1]) {
-                let tableId = match[1];
+            if (match[0]) {
+                let tableId = match[0].split(":")[1];
                 let tables = searchPaths.get("rolltable");
-                const table = game.tables.get(tableId);
+                const table = game.tables.contents.find((t) => t.name === tableId);
                 if (!table){
                   ui.notifications.warn(game.i18n.format("token-variants.notifications.warn.invalidTable", { tableId }));
                 } else {
@@ -86,11 +86,12 @@ export async function parseSearchPaths(debug = false) {
                   //	displayChat: "Here the roll text"
                   //});
                   // const result = roll.results[0];
-                  for (let baseTableData of table.data) {
+                  const dataTable = table.data;
+                  for (let baseTableData of dataTable.results) {
                     const path = baseTableData.data.img;
                     const name = baseTableData.data.text;
                     if (tables.has(name)) {
-                      // DO NOTHING CAN't HAPPENED
+                      // DO NOTHING CAN'T BE HAPPENING
                     } else {
                       tables.set(name, path);
                     }
