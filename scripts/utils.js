@@ -33,12 +33,13 @@ export async function parseSearchPaths(debug = false) {
     if (debug) console.log("STARTING: Search Path Parse");
 
     const regexpBucket = /s3:(.*):(.*)/;
+    const regexpRollTable = /rolltable:(.*)/;
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
     let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
-
+    searchPaths.set("rolltable", new Map());
     let allForgePaths = [];
     async function walkForgePaths(path, currDir) {
         let files;
@@ -69,6 +70,32 @@ export async function parseSearchPaths(debug = false) {
                     buckets.get(bucket).push(bPath);
                 } else {
                     buckets.set(bucket, [bPath]);
+                }
+            }
+        }else if (path.startsWith("rolltable:")) {
+            const match = path.match(regexpRollTable);
+            if (match[0]) {
+                let tableId = match[0].split(":")[1];
+                let tables = searchPaths.get("rolltable");
+                const table = game.tables.contents.find((t) => t.name === tableId);
+                if (!table){
+                  ui.notifications.warn(game.i18n.format("token-variants.notifications.warn.invalidTable", { tableId }));
+                } else {
+                  // TODO ADD A RANDOMIZER ?
+                  //const roll = await table.draw({
+                  //	displayChat: "Here the roll text"
+                  //});
+                  // const result = roll.results[0];
+                  const dataTable = table.data;
+                  for (let baseTableData of dataTable.results) {
+                    const path = baseTableData.data.img;
+                    const name = baseTableData.data.text;
+                    if (tables.has(name)) {
+                      // DO NOTHING CAN'T BE HAPPENING
+                    } else {
+                      tables.set(name, path);
+                    }
+                  }
                 }
             }
         } else {

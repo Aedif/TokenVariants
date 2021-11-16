@@ -21,10 +21,10 @@ let excludedKeywords = [];
 let disableCaching = false;
 
 // A cached map of all the found tokens
-let cachedTokens = new Set();
+let cachedTokens = new Map();
 
 // Tokens found with caching disabled
-let foundTokens = new Set();
+let foundTokens = new Map();
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -287,26 +287,38 @@ function registerHUD() {
 
         const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
-        let images = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
-        images = images.get(search) || [];
+        let mapArtSearch = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
+        let images = mapArtSearch.get(search) || new Map();
 
-        let actorVariants = [];
+        let actorVariants = new Map();
         const tokenActor = game.actors.get(token.actorId);
         if (tokenActor) {
-            actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
-            actorVariants = actorVariants.filter(path => Boolean(path));
-            if (!searchText)
-                images = [...new Set(images.concat(actorVariants))]
+            actorVariants = tokenActor.getFlag('token-variants', 'variants') || new Map();
+            if (!searchText){
+                actorVariants.forEach((path, key) => {
+                    if(path){
+                        images.set(key,path)
+                    }
+                });
+            }else{
+                actorVariants.forEach((path, key) => {
+                    if(path){
+                        images.set(key,path)
+                    }
+                });
+            }
         }
 
         const alwaysShowHUD = game.settings.get("token-variants", "alwaysShowHUD");
         if (!alwaysShowHUD && images.length < 2 && actorVariants.length == 0) return;
 
-        let imagesParsed = images.map(path => {
+        let imagesParsed = [];
+        images.forEach((path, key) => {
             const img = isImage(path);
             const vid = isVideo(path);
-            const shared = userHasConfigRights ? actorVariants.includes(path) : false;
-            return { route: path, name: getFileName(path), used: path === token.img, img, vid, type: img || vid, shared: shared }
+            const shared = userHasConfigRights ? Array.from(actorVariants.values()).includes(path) : false;
+            let newName = (key && key != path) ? key : getFileName(path)
+            imagesParsed.push({ route: path, name: newName, used: path === token.img, img, vid, type: img || vid, shared: shared });         
         });
 
         const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
@@ -381,13 +393,17 @@ function registerHUD() {
                     const variantSelected = event.target.dataset.name;
                     let tokenActor = game.actors.get(updateTarget.actor.id);
                     if (tokenActor) {
-                        let variants = tokenActor.getFlag('token-variants', 'variants') || [];
-                        if (variants.includes(variantSelected)) {
-                            variants.splice(variants.indexOf(variantSelected), 1);
-                        } else {
-                            variants.push(variantSelected);
-                        }
-                        tokenActor.setFlag('token-variants', 'variants', variants);
+                        let variants = tokenActor.getFlag('token-variants', 'variants') || new Map();
+                        //variants.splice(variants.indexOf(variantSelected), 1);
+                        let newVariants = new Map();
+                        variants.forEach((variant, key) => {
+                            if (variant.includes(variantSelected)) {
+                                //
+                            } else {
+                                newVariants.push(key, variant);
+                            }
+                        });
+                        tokenActor.setFlag('token-variants', 'variants', newVariants);
                         event.target.parentNode.querySelector('.fa-share').classList.toggle("active")
                     }
                 });
@@ -523,7 +539,7 @@ async function cacheTokens() {
 
     await findTokens("", "", true);
     cachedTokens = foundTokens;
-    foundTokens = new Set();
+    foundTokens = new Map();
     if (debug) console.log("ENDING: Token Caching");
 }
 
@@ -581,30 +597,41 @@ async function findTokens(name, searchType = "", caching = false) {
     }
     if (filters.regex) filters.regex = new RegExp(filters.regex);
 
-    foundTokens = new Set();
+    foundTokens = new Map();
     const simpleName = simplifyTokenName(name);
 
     if (cachedTokens.size != 0) {
-        cachedTokens.forEach((tokenSrc) => {
+        cachedTokens.forEach((tokenSrc,name)=>{
             const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(getFileName(tokenSrc));
             if (simplified.includes(simpleName)) {
                 if (!filters || checkAgainstFilters(tokenSrc, filters)) {
-                    foundTokens.add(tokenSrc);
+                    if(name){
+                        foundTokens.set(name,tokenSrc);
+                    }else{
+                        foundTokens.set(tokenSrc,tokenSrc);
+                    }
+                }
+            }else if(name && name != tokenSrc){
+                if (!filters || checkAgainstFilters(name, filters)) {
+                    foundTokens.set(name,tokenSrc);
                 }
             }
         });
     } else if (caching || disableCaching) {
         let searchPaths = await parseSearchPaths(debug);
         for (let path of searchPaths.get("data")) {
-            await walkFindTokens(path, simpleName, "", filters);
+            await walkFindTokens(path, simpleName, "", filters, false, "");
         }
         for (let [bucket, paths] of searchPaths.get("s3")) {
             for (let path of paths) {
-                await walkFindTokens(path, simpleName, bucket, filters);
+                await walkFindTokens(path, simpleName, bucket, filters, false, "");
             }
         }
         for (let path of searchPaths.get("forge")) {
-            await walkFindTokens(path, simpleName, "", filters, true);
+            await walkFindTokens(path, simpleName, "", filters, true, "");
+        }
+        for (let [rollTableElementName, path] of searchPaths.get("rolltable")) {
+            await walkFindTokens(path, simpleName, "", filters, false, rollTableElementName);
         }
     }
     if (debug) console.log("ENDING: Token Search", foundTokens);
@@ -614,7 +641,7 @@ async function findTokens(name, searchType = "", caching = false) {
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false) {
+async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false, rollTableElementName = "") {
     if (!bucket && !path) return;
 
     let files = [];
@@ -623,11 +650,18 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
             files = await FilePicker.browse("s3", path, { bucket: bucket });
         } else if (forge) {
             files = await FilePicker.browse("", path, { wildcard: true });
+        } else if (rollTableElementName) {
+            // maybe we can do better than this
+            files = {};
+            files.files = [];
+            files.dirs = [];
+            files.files.push(path);
+            name = rollTableElementName;
         } else {
             files = await FilePicker.browse("data", path);
         }
     } catch (err) {
-        console.log(`${game.i18n.localize("token-variant.PathNotFoundError")} ${path}`);
+        console.log(`${game.i18n.localize("token-variants.PathNotFoundError")} ${path}`);
         return;
     }
 
@@ -635,18 +669,20 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
 
     for (let tokenSrc of files.files) {
         if (!name) {
-            foundTokens.add(tokenSrc);
+            foundTokens.set(tokenSrc,tokenSrc);
         } else {
             const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(getFileName(tokenSrc));
             if (simplified.includes(name)) {
                 if (!filters || checkAgainstFilters(tokenSrc, filters)) {
-                    foundTokens.add(tokenSrc);
+                    foundTokens.set(name,tokenSrc);
                 }
+            }else if(rollTableElementName){
+                foundTokens.set(name,tokenSrc);
             }
         }
     }
     for (let dir of files.dirs) {
-        await walkFindTokens(dir, name, bucket, filters, forge);
+        await walkFindTokens(dir, name, bucket, filters, forge, "");
     }
 }
 
@@ -678,7 +714,7 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
     let allButtons = new Map();
     allImages.forEach((tokens, search) => {
         let buttons = [];
-        tokens.forEach(token => {
+        tokens.forEach((token,name) => {
             artFound = true;
             const vid = isVideo(token);
             const img = isImage(token);
@@ -687,7 +723,7 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
                 img: img,
                 vid: vid,
                 type: vid || img,
-                label: getFileName(token),
+                label: (name && name != token) ? name : getFileName(token),
             })
         })
         allButtons.set(search, buttons);
@@ -725,9 +761,15 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
 
     for (let search of searches) {
         if (allImages.get(search) !== undefined) continue;
-        let tokens = await findTokens(search, searchType);
-        tokens = Array.from(tokens).filter(token => !usedTokens.has(token))
-        tokens.forEach(token => usedTokens.add(token));
+        let map = await findTokens(search, searchType);
+        let tokens = new Map();   
+        for (let k of map.keys()) {
+            const token = map.get(k);
+            if(!usedTokens.has(token)){
+                usedTokens.add(token);
+                tokens.set(k, token);
+            }
+        }
         allImages.set(search, tokens);
     }
 
