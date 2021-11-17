@@ -287,23 +287,35 @@ function registerHUD() {
 
         const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
-        let mapArtSearch = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
-        let images = mapArtSearch.get(search) || new Map();
+        let artSearch = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
+        let images = artSearch.get(search) || new Map();
 
         let actorVariants = new Map();
         const tokenActor = game.actors.get(token.actorId);
+
         if (tokenActor) {
-            actorVariants = tokenActor.getFlag('token-variants', 'variants') || new Map();
-            if (!searchText){
-                actorVariants.forEach((path, key) => {
-                    if(path){
-                        images.set(key,path)
-                    }
+            actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
+
+            // To maintain compatibility with previous versions
+            if (!(actorVariants instanceof Array)){
+                actorVariants = [];
+            } else if (actorVariants.length != 0 && !(actorVariants[0] instanceof Object)){
+                actorVariants.forEach((src, i) => {
+                    actorVariants[i] = {imgSrc: src, names: [getFileName(src)]};
                 });
-            }else{
-                actorVariants.forEach((path, key) => {
-                    if(path){
-                        images.set(key,path)
+            } 
+            // end of compatibility code
+
+            // Merge images found through search with variants shared through 'variant' flag
+            if (!searchText){
+                actorVariants.forEach(variant => {
+                    for(let name of variant.names){
+                        if(images.has(variant.imgSrc)){
+                            if(!images.get(variant.imgSrc).includes(name))
+                                images.get(variant.imgSrc).push(name);
+                        } else {
+                            images.set(variant.imgSrc, [name]);
+                        }
                     }
                 });
             }
@@ -313,12 +325,20 @@ function registerHUD() {
         if (!alwaysShowHUD && images.length < 2 && actorVariants.length == 0) return;
 
         let imagesParsed = [];
-        images.forEach((path, key) => {
-            const img = isImage(path);
-            const vid = isVideo(path);
-            const shared = userHasConfigRights ? Array.from(actorVariants.values()).includes(path) : false;
-            let newName = (key && key != path) ? key : getFileName(path)
-            imagesParsed.push({ route: path, name: newName, used: path === token.img, img, vid, type: img || vid, shared: shared });         
+        images.forEach((names, tokenSrc) => {
+            const img = isImage(tokenSrc);
+            const vid = isVideo(tokenSrc);
+            for(let name of names){
+                let shared = false;
+                if(userHasConfigRights){
+                    actorVariants.forEach(variant => {
+                        if(variant.imgSrc === tokenSrc && variant.names.includes(name)) {
+                            shared = true;
+                        }
+                    });
+                }
+                imagesParsed.push({ route: tokenSrc, name: name, used: tokenSrc === token.img, img, vid, type: img || vid, shared: shared }); 
+            }  
         });
 
         const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
@@ -391,19 +411,45 @@ function registerHUD() {
                     const tokenToChange = controlled[index];
                     const updateTarget = is080 ? tokenToChange.document : tokenToChange;
                     const variantSelected = event.target.dataset.name;
+                    const variantSelectedName = event.target.dataset.filename;
                     let tokenActor = game.actors.get(updateTarget.actor.id);
                     if (tokenActor) {
-                        let variants = tokenActor.getFlag('token-variants', 'variants') || new Map();
-                        //variants.splice(variants.indexOf(variantSelected), 1);
-                        let newVariants = new Map();
-                        variants.forEach((variant, key) => {
-                            if (variant.includes(variantSelected)) {
-                                //
-                            } else {
-                                newVariants.push(key, variant);
+                        let variants = tokenActor.getFlag('token-variants', 'variants') || [];
+
+                        // To maintain compatibility with previous versions
+                        if (!(variants instanceof Array)){
+                            variants = [];
+                        } else if (variants.length != 0 && !(variants[0] instanceof Object)){
+                            variants.forEach((src, i) => {
+                                variants[i] = {imgSrc: src, names: [getFileName(src)]};
+                            });
+                        } 
+                        // end of compatibility code
+
+                        // Remove selected variant if present in the flag, add otherwise
+                        let del = false;
+                        let updated = false;
+                        for(let variant of variants){
+                            if(variant.imgSrc === variantSelected){
+                                let fNames = variant.names.filter(name => name !== variantSelectedName);
+                                if(fNames.length === 0){
+                                    del = true;
+                                } else if(fNames.length === variant.names.length){
+                                    fNames.push(variantSelectedName);
+                                }
+                                variant.names = fNames;
+                                updated = true;
+                                break;
                             }
-                        });
-                        tokenActor.setFlag('token-variants', 'variants', newVariants);
+                        }
+                        if(del) variants = variants.filter(variant => variant.imgSrc !== variantSelected);
+                        else if (!updated) variants.push({imgSrc: variantSelected, names: [variantSelectedName]});
+
+                        // Set shared variants as an actor flag
+                        tokenActor.unsetFlag('token-variants', 'variants');
+                        if(variants.length > 0){
+                            tokenActor.setFlag('token-variants', 'variants', variants);
+                        }
                         event.target.parentNode.querySelector('.fa-share').classList.toggle("active")
                     }
                 });
@@ -541,10 +587,23 @@ async function cacheTokens() {
     cachedTokens = foundTokens;
     foundTokens = new Map();
     if (debug) console.log("ENDING: Token Caching");
+
 }
 
-function checkAgainstFilters(src, filters) {
-    const text = runSearchOnPath ? decodeURIComponent(src) : getFileNameWithExt(src);
+function searchMatchesToken(search, tokenSrc, tokenSrcNames, filters) {
+    let include = false;
+    for (let name of tokenSrcNames){
+        const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(name);
+        if (simplified.includes(search)) {
+            include = true;
+            break;
+        }
+    }
+
+    if(!include) return false;
+    else if (!filters) return true;
+
+    const text = runSearchOnPath ? decodeURIComponent(tokenSrc) : getFileNameWithExt(tokenSrc);
 
     if (filters.regex) {
         return filters.regex.test(text);
@@ -601,19 +660,10 @@ async function findTokens(name, searchType = "", caching = false) {
     const simpleName = simplifyTokenName(name);
 
     if (cachedTokens.size != 0) {
-        cachedTokens.forEach((tokenSrc,name)=>{
-            const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(getFileName(tokenSrc));
-            if (simplified.includes(simpleName)) {
-                if (!filters || checkAgainstFilters(tokenSrc, filters)) {
-                    if(name){
-                        foundTokens.set(name,tokenSrc);
-                    }else{
-                        foundTokens.set(tokenSrc,tokenSrc);
-                    }
-                }
-            }else if(name && name != tokenSrc){
-                if (!filters || checkAgainstFilters(name, filters)) {
-                    foundTokens.set(name,tokenSrc);
+        cachedTokens.forEach((names,tokenSrc)=>{
+            if(searchMatchesToken(simpleName, tokenSrc, names, filters)){
+                for (let n of names) {
+                    addTokenToFound(tokenSrc, n);
                 }
             }
         });
@@ -630,18 +680,28 @@ async function findTokens(name, searchType = "", caching = false) {
         for (let path of searchPaths.get("forge")) {
             await walkFindTokens(path, simpleName, "", filters, true, "");
         }
-        for (let [rollTableElementName, path] of searchPaths.get("rolltable")) {
-            await walkFindTokens(path, simpleName, "", filters, false, rollTableElementName);
+        for (let rollTableName of searchPaths.get("rolltable")) {
+            await walkFindTokens(rollTableName, simpleName, "", filters, false, rollTableName);
         }
     }
     if (debug) console.log("ENDING: Token Search", foundTokens);
     return foundTokens;
 }
 
+function addTokenToFound(tokenSrc, name){
+    if(foundTokens.has(tokenSrc)){
+        if (!foundTokens.get(tokenSrc).includes(name)){
+            foundTokens.get(tokenSrc).push(name);
+        }
+    } else {
+        foundTokens.set(tokenSrc, [name]);
+    }
+}
+
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false, rollTableElementName = "") {
+async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false, rollTableName = "") {
     if (!bucket && !path) return;
 
     let files = [];
@@ -650,13 +710,24 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
             files = await FilePicker.browse("s3", path, { bucket: bucket });
         } else if (forge) {
             files = await FilePicker.browse("", path, { wildcard: true });
-        } else if (rollTableElementName) {
-            // maybe we can do better than this
-            files = {};
-            files.files = [];
-            files.dirs = [];
-            files.files.push(path);
-            name = rollTableElementName;
+        } else if (rollTableName) {
+            const table = game.tables.contents.find((t) => t.name === rollTableName);
+            if (!table){
+              ui.notifications.warn(game.i18n.format("token-variants.notifications.warn.invalidTable", { tableId }));
+            } else {
+                for (let baseTableData of table.data.results) {
+                    const path = baseTableData.data.img;
+                    const rtName = baseTableData.data.text;
+                    if (!name) {
+                        addTokenToFound(path, rtName);
+                    } else {
+                        if(searchMatchesToken(simplifyTokenName(name), path, rtName, filters)){
+                            addTokenToFound(path, rtName);
+                        }
+                    }
+                }
+            }
+            return;
         } else {
             files = await FilePicker.browse("data", path);
         }
@@ -669,15 +740,10 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
 
     for (let tokenSrc of files.files) {
         if (!name) {
-            foundTokens.set(tokenSrc,tokenSrc);
+            addTokenToFound(tokenSrc, getFileName(tokenSrc));
         } else {
-            const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(getFileName(tokenSrc));
-            if (simplified.includes(name)) {
-                if (!filters || checkAgainstFilters(tokenSrc, filters)) {
-                    foundTokens.set(name,tokenSrc);
-                }
-            }else if(rollTableElementName){
-                foundTokens.set(name,tokenSrc);
+            if(searchMatchesToken(simplifyTokenName(name), tokenSrc, getFileName(tokenSrc), filters)){
+                addTokenToFound(tokenSrc, getFileName(tokenSrc));
             }
         }
     }
@@ -714,17 +780,19 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
     let allButtons = new Map();
     allImages.forEach((tokens, search) => {
         let buttons = [];
-        tokens.forEach((token,name) => {
+        tokens.forEach((names,tokenSrc) => {
             artFound = true;
-            const vid = isVideo(token);
-            const img = isImage(token);
-            buttons.push({
-                path: token,
-                img: img,
-                vid: vid,
-                type: vid || img,
-                label: (name && name != token) ? name : getFileName(token),
-            })
+            const vid = isVideo(tokenSrc);
+            const img = isImage(tokenSrc);
+            for(let name of names){
+                buttons.push({
+                    path: tokenSrc,
+                    img: img,
+                    vid: vid,
+                    type: vid || img,
+                    label: name,
+                })
+            }
         })
         allButtons.set(search, buttons);
     });
@@ -763,11 +831,10 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
         if (allImages.get(search) !== undefined) continue;
         let map = await findTokens(search, searchType);
         let tokens = new Map();   
-        for (let k of map.keys()) {
-            const token = map.get(k);
-            if(!usedTokens.has(token)){
-                usedTokens.add(token);
-                tokens.set(k, token);
+        for (let tokenSrc of map.keys()) {
+            if(!usedTokens.has(tokenSrc)){
+                usedTokens.add(tokenSrc);
+                tokens.set(tokenSrc, map.get(tokenSrc));
             }
         }
         allImages.set(search, tokens);
