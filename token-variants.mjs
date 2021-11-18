@@ -590,20 +590,31 @@ async function cacheTokens() {
 
 }
 
-function searchMatchesToken(search, tokenSrc, tokenSrcNames, filters) {
-    let include = false;
-    for (let name of tokenSrcNames){
-        const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(name);
-        if (simplified.includes(search)) {
-            include = true;
-            break;
-        }
+/**
+ * Checks if token image path and name match the provided search text and filters
+ * @param search search text
+ * @param tokenSrc token image path
+ * @param name name of the token
+ * @param filters filters to be applied
+ * @returns true|false
+ */
+function searchMatchesToken(search, tokenSrc, name, filters) {
+
+    // Is the search text contained in name/path
+    const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(name);
+    if (!simplified.includes(search)) return false;
+    
+    if (!filters) return true;
+
+    // Filters are applied to path depending on the 'runSearchOnPath' setting, and actual or custom rolltable name
+    let text;
+    if(runSearchOnPath){
+        text = decodeURIComponent(tokenSrc);
+    } else if (getFileName(tokenSrc) === name){
+        text = getFileNameWithExt(tokenSrc);
+    } else {
+        text = name;
     }
-
-    if(!include) return false;
-    else if (!filters) return true;
-
-    const text = runSearchOnPath ? decodeURIComponent(tokenSrc) : getFileNameWithExt(tokenSrc);
 
     if (filters.regex) {
         return filters.regex.test(text);
@@ -661,8 +672,8 @@ async function findTokens(name, searchType = "", caching = false) {
 
     if (cachedTokens.size != 0) {
         cachedTokens.forEach((names,tokenSrc)=>{
-            if(searchMatchesToken(simpleName, tokenSrc, names, filters)){
-                for (let n of names) {
+            for(let n of names){
+                if(searchMatchesToken(simpleName, tokenSrc, n, filters)){
                     addTokenToFound(tokenSrc, n);
                 }
             }
@@ -739,11 +750,12 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
     if (files.target == ".") return;
 
     for (let tokenSrc of files.files) {
+        const tName = getFileName(tokenSrc);
         if (!name) {
-            addTokenToFound(tokenSrc, getFileName(tokenSrc));
+            addTokenToFound(tokenSrc, tName);
         } else {
-            if(searchMatchesToken(simplifyTokenName(name), tokenSrc, getFileName(tokenSrc), filters)){
-                addTokenToFound(tokenSrc, getFileName(tokenSrc));
+            if(searchMatchesToken(simplifyTokenName(name), tokenSrc, tName, filters)){
+                addTokenToFound(tokenSrc, tName);
             }
         }
     }
