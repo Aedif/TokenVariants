@@ -4,7 +4,7 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/Aedif/TokenVariants/token-variants.zip)
 # Token Variant Art
 
-This module provides a pop-up window upon token creation which displays all the available variants of the token art it could find in the customizable list of directories.
+This module searches a customisable list of directories and displays art variants for tokens/actors through pop-ups and a new Token HUD button. Variants can be individually shared with players allowing them to switch out their token art on the fly.
 
 
 https://user-images.githubusercontent.com/7693704/121926941-69aff780-cd36-11eb-864b-b2a9640baeea.mp4
