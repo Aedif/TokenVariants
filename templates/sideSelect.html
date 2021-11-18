@@ -9,14 +9,14 @@
             {{#if ../imageDisplay}}
             {{#if image.img}}
             <img class="token-variants-button-image" src="{{image.route}}" alt="{{image.name}}"
-                data-name="{{image.route}}" style="opacity:{{../imageOpacity}};" />
+                data-name="{{image.route}}" data-filename="{{image.name}}" style="opacity:{{../imageOpacity}};" />
             {{/if}}
             {{#if image.vid}}
             <video class="token-variants-button-image" src="{{image.route}}" alt="{{image.name}}"
-                data-name="{{image.route}}" style="opacity:{{../imageOpacity}};" autoplay loop></video>
+                data-name="{{image.route}}" data-filename="{{image.name}}" style="opacity:{{../imageOpacity}};" autoplay loop></video>
             {{/if}}
             {{else}}
-            <span data-name="{{image.route}}">{{image.name}}</span>
+            <span data-name="{{image.route}}" data-filename="{{image.name}}">{{image.name}}</span>
             {{/if}}
             <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
         </button>

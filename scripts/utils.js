@@ -33,12 +33,13 @@ export async function parseSearchPaths(debug = false) {
     if (debug) console.log("STARTING: Search Path Parse");
 
     const regexpBucket = /s3:(.*):(.*)/;
+    const regexpRollTable = /rolltable:(.*)/;
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
     let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
-
+    searchPaths.set("rolltable", []);
     let allForgePaths = [];
     async function walkForgePaths(path, currDir) {
         let files;
@@ -70,6 +71,12 @@ export async function parseSearchPaths(debug = false) {
                 } else {
                     buckets.set(bucket, [bPath]);
                 }
+            }
+        }else if (path.startsWith("rolltable:")) {
+            const match = path.match(regexpRollTable);
+            if (match[0]) {
+                let tableId = match[0].split(":")[1];
+                searchPaths.get("rolltable").push(tableId);
             }
         } else {
             const match = path.match(regexpForge);
