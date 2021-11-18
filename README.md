@@ -40,9 +40,11 @@ The root of these paths is assumed to be Foundry VTT's local Data folder. The sa
 
 By default 'Token Variants' will attempt to search [Caeora's Maps, Tokens, and Assets](https://foundryvtt.com/packages/caeora-maps-tokens-assets) asset folder if installed.
 
-To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket you can use the following format: **s3:{bucket-name}:{path}**
+In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, and Rolltables as image sources:
 
-For your ForgeVTT asset foler the format is this: **https://assets.forge-vtt.com/{userId}/path/to/token/art**
+* To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket use the following format: **s3:{bucket-name}:{path}**
+* For your ForgeVTT asset folder the format is as follows: **https://assets.forge-vtt.com/{userId}/path/to/token/art**
+* Rolltables can be added using: **rolltable:{rolltable name}**
 
 ### Filter Settings
 

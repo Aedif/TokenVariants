@@ -1,3 +1,10 @@
+# 1.13.1
+
+* Rolltables can now be added as image sources via 'searchPaths' setting by using the following format:
+    * rolltable:{rolltable name} (e.g. rolltable:GoblinVariants)
+* Because of rolltables the same image path may now be assigned multiple names. Each of these names will appear as seperate images that can be selected in the ArtSelect pop-up and the TokenHUD side menu.
+
+
 # 1.12.2
 
 * Copying tokens via Ctrl+C/Ctrl+V should no longer trigger the display of art select window.
