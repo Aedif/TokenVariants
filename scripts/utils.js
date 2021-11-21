@@ -37,6 +37,16 @@ export async function parseSearchPaths(debug = false) {
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
 
     let searchPathList = game.settings.get("token-variants", "searchPaths");
+
+    // To maintain compatibility with previous versions
+    const defaultCaching = !game.settings.get("token-variants", "disableCaching");
+    if(searchPathList.length > 0 && !(searchPathList[0] instanceof Object)){
+        searchPathList.forEach((path, i) => {
+            searchPathList[i] = {text: path, cache: defaultCaching};
+        });
+    }
+    // end of compatibility code
+
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
@@ -102,7 +112,6 @@ export async function parseSearchPaths(debug = false) {
     let forgePathsSetting = (game.settings.get("token-variants", "forgevttPaths")).flat();
 
     // To maintain compatibility with previous versions
-    const defaultCaching = !game.settings.get("token-variants", "disableCaching");
     if(forgePathsSetting.length > 0 && !(forgePathsSetting[0] instanceof Object)){
         forgePathsSetting.forEach((path, i) => {
             forgePathsSetting[i] = {text: path, cache: defaultCaching};

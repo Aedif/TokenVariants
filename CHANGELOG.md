@@ -1,3 +1,7 @@
+# 1.14.2
+
+* Fixed compatibility issue with Search Paths setting from the previous version
+
 # 1.14.1
 
 * Removed '**Disable Caching**' setting, it has been replaced by a new window for the '**Search Paths**' setting which now allows caching enablement per each image source.

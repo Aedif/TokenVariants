@@ -5,7 +5,7 @@ import FilterSettings from "./applications/searchFilters.js";
 import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo } from "./scripts/utils.js"
 
 // Default path where the script will look for token art
-const DEFAULT_TOKEN_PATHS = ["modules/caeora-maps-tokens-assets/assets/tokens/"];
+const DEFAULT_TOKEN_PATHS = [{text: "modules/caeora-maps-tokens-assets/assets/tokens/", cache: true}];
 
 // List of all accepted monster names
 let monsterNameList = [];
