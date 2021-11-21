@@ -17,9 +17,6 @@ let filterMSRD = true;
 let keywordSearch = false;
 let excludedKeywords = [];
 
-// Disables storing of token paths in a cache
-let disableCaching = false;
-
 // True if in the middle of caching image paths
 let caching = false;
 
@@ -77,7 +74,7 @@ async function registerWorldSettings() {
             if (game.user.can("SETTINGS_MODIFY"))
                 await game.settings.set("token-variants", "forgevttPaths", []);
             await parseSearchPaths(debug);
-            if (!disableCaching) cacheTokens()
+            cacheTokens();
         }
     });
 
@@ -90,14 +87,11 @@ async function registerWorldSettings() {
         default: false,
     });
 
+    // Deprecated, caching is now controlled on per image source basis
     game.settings.register("token-variants", "disableCaching", {
-        name: game.i18n.localize("token-variants.DisableCachingName"),
-        hint: game.i18n.localize("token-variants.DisableCachingHint"),
         scope: "world",
-        config: true,
         type: Boolean,
         default: false,
-        onChange: disable => { disableCaching = disable; cacheTokens(); }
     });
 
     game.settings.register("token-variants", "disableAutomaticPopup", {
@@ -234,7 +228,6 @@ async function registerWorldSettings() {
     });
 
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
-    disableCaching = game.settings.get("token-variants", "disableCaching");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
     twoPopups = game.settings.get("token-variants", "twoPopups");
@@ -586,11 +579,6 @@ async function cacheTokens() {
         monsterNameList = monsterNameList.map(name => simplifyTokenName(name));
     }
 
-    if (disableCaching) {
-        if (debug) console.log("ENDING: Token Caching (DISABLED)");
-        return;
-    }
-
     await findTokens("", "");
     cachedTokens = foundTokens;
     foundTokens = new Map();
@@ -680,31 +668,35 @@ async function findTokens(name, searchType = "") {
     foundTokens = new Map();
     const simpleName = simplifyTokenName(name);
 
-    if (cachedTokens.size != 0) {
-        cachedTokens.forEach((names,tokenSrc)=>{
-            for(let n of names){
-                if(searchMatchesToken(simpleName, tokenSrc, n, filters)){
-                    addTokenToFound(tokenSrc, n);
-                }
-            }
-        });
-    } else if (caching || disableCaching) {
-        let searchPaths = await parseSearchPaths(debug);
-        for (let path of searchPaths.get("data")) {
-            await walkFindTokens(path, simpleName, "", filters, false, "");
-        }
-        for (let [bucket, paths] of searchPaths.get("s3")) {
-            for (let path of paths) {
-                await walkFindTokens(path, simpleName, bucket, filters, false, "");
+    cachedTokens.forEach((names,tokenSrc)=>{
+        for(let n of names){
+            if(searchMatchesToken(simpleName, tokenSrc, n, filters)){
+                addTokenToFound(tokenSrc, n);
             }
         }
-        for (let path of searchPaths.get("forge")) {
-            await walkFindTokens(path, simpleName, "", filters, true, "");
-        }
-        for (let rollTableName of searchPaths.get("rolltable")) {
-            await walkFindTokens(rollTableName, simpleName, "", filters, false, rollTableName);
+    });
+
+    let searchPaths = await parseSearchPaths(debug);
+
+    for (let path of searchPaths.get("data")) {
+        if((path.cache && caching) || (!path.cache && !caching))
+            await walkFindTokens(path.text, simpleName, "", filters, false, "");
+    }
+    for (let [bucket, paths] of searchPaths.get("s3")) {
+        for (let path of paths) {
+            if((path.cache && caching) || (!path.cache && !caching))
+                await walkFindTokens(path.text, simpleName, bucket, filters, false, "");
         }
     }
+    for (let path of searchPaths.get("forge")) {
+        if((path.cache && caching) || (!path.cache && !caching))
+            await walkFindTokens(path.text, simpleName, "", filters, true, "");
+    }
+    for (let path of searchPaths.get("rolltable")) {
+        if((path.cache && caching) || (!path.cache && !caching))
+            await walkFindTokens(path.text, simpleName, "", filters, false, path.text);
+    }
+
     if (debug) console.log("ENDING: Token Search", foundTokens);
     return foundTokens;
 }

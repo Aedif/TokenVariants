@@ -131,7 +131,16 @@ export default class SearchPaths extends FormApplication {
 
     async close(options={}) {
         await this._onSubmit(event);
-        game.settings.set("token-variants", "searchPaths", this.object.paths.filter(path => Boolean(path.text)))
+
+        // Cleanup empty and duplicate paths
+        let uniquePaths = new Set();
+        let paths = this.object.paths.filter(path => {
+            if (!path.text || uniquePaths.has(path.text)) return false;
+            uniquePaths.add(path.text);
+            return true;
+        });
+
+        game.settings.set("token-variants", "searchPaths", paths)
         return super.close(options)
     }
 }
