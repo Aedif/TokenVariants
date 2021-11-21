@@ -1,6 +1,6 @@
 {
-    "token-variants.searchPathsTitle": "Variant art search paths",
-    "token-variants.SearchPathsHint": "Place all the paths to the folders you want to be included in the token art search.",
+    "token-variants.searchPathsTitle": "Search Paths",
+    "token-variants.SearchPathsHint": "Configure folders, Rolltables and s3 buckets to be searched for art here.",
     "token-variants.DisableAutomaticPopupName": "Disable Automatic Popups",
     "token-variants.DisableAutomaticPopupHint": "Check to disable automatic popups upon actor creation.",
     "token-variants.FilterMSRDName": "Filter by D&D 5e Monster (SRD)",

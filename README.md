@@ -30,7 +30,7 @@ The 'Art Select' screen can also be opened up from the Actor Sheet by right-clic
 !["Token Configuration Button"](./docs/token_config_button.png)
 
 ## Settings
-### Variant art search paths
+### Search Paths
 
 The directories that will be scanned for art can be set here. All of the sub-directories will be searched as well so feel free to organise your art as you wish.
 
@@ -45,6 +45,10 @@ In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, 
 * To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket use the following format: **s3:{bucket-name}:{path}**
 * For your ForgeVTT asset folder the format is as follows: **https://assets.forge-vtt.com/{userId}/path/to/token/art**
 * Rolltables can be added using: **rolltable:{rolltable name}**
+
+By default the module will scan these sources only when the world is loaded or when the **Search Paths** settings have changed. If new art is added while the world is still open it will not be found by the module. Disabling '**Cache**' will force the scan to be done every time an art search is performed at a potentially significant cost to speed at which the art is displayed to the user depending on the number of images. 
+
+For small directories and rolltables the performance hit is negligible so experiment with the convenience/performance trade-offs until you find the right balance.
 
 ### Filter Settings
 

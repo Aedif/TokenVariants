@@ -1,3 +1,7 @@
+# 1.14.1
+
+* Removed '**Disable Caching**' setting, it has been replaced by a new window for the '**Search Paths**' setting which now allows caching enablement per each image source.
+
 # 1.13.1
 
 * Rolltables can now be added as image sources via 'searchPaths' setting by using the following format:
