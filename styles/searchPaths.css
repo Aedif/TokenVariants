@@ -1,0 +1,65 @@
+/* ---------------------------------------- */
+/* Search Paths Sheet                       */
+/* ---------------------------------------- */
+
+.search-paths-config textarea {
+    resize: none;
+    min-height: 44px;
+}
+.search-paths-config ol.table-paths {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 600px;
+    overflow-y: auto;
+}
+.search-paths-config ol.table-paths .table-path {
+    padding: 2px 0;
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+}
+.search-paths-config ol.table-paths .table-path input[type="text"] {
+    width: 100%;
+    height: 28px;
+}
+.search-paths-config ol.table-paths .table-path input[type="checkbox"] {
+    width: 100%;
+    margin-top: 7px;
+}
+.search-paths-config ol.table-paths .table-path > div {
+    line-height: 36px;
+    margin-right: 5px;
+}
+.search-paths-config ol.table-paths .table-path .path-image {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    margin: 0;
+}
+.search-paths-config ol.table-paths .table-path .path-image img {
+    border: none;
+    object-fit: cover;
+    object-position: 50% 0;
+}
+.search-paths-config ol.table-paths .table-path .path-text {
+    flex: 1;
+}
+.search-paths-config ol.table-paths .table-path .path-cache {
+    flex: 0 0 50px;
+    text-align: center;
+}
+.search-paths-config ol.table-paths .table-path .path-controls {
+    flex: 0 0 40px;
+    margin: 0;
+    text-align: center;
+}
+.search-paths-config ol.table-paths .table-path .path-controls i {
+    width: 20px;
+}
+.search-paths-config ol.table-paths .table-header {
+    background: rgba(0, 0, 0, 0.05);
+    border: 1px solid #7a7971;
+    line-height: 24px;
+    font-weight: bold;
+}

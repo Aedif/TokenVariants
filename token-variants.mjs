@@ -20,6 +20,9 @@ let excludedKeywords = [];
 // Disables storing of token paths in a cache
 let disableCaching = false;
 
+// True if in the middle of caching image paths
+let caching = false;
+
 // A cached map of all the found tokens
 let cachedTokens = new Map();
 
@@ -280,6 +283,7 @@ function registerHUD() {
     });
 
     async function renderHud(hud, html, token, searchText) {
+        if (caching) return;
         if (!game.settings.get("token-variants", "enableTokenHUD")) return;
 
         const search = searchText ? searchText : token.name;
@@ -570,6 +574,10 @@ function modActorSheet(actorSheet, html, options) {
  * Search for and cache all the found token art
  */
 async function cacheTokens() {
+    if (caching) return;
+    caching = true;
+    ui.notifications.info(game.i18n.format("token-variants.notifications.info.cachingStarted"));
+
     if (debug) console.log("STARTING: Token Caching");
     cachedTokens.clear();
 
@@ -583,11 +591,13 @@ async function cacheTokens() {
         return;
     }
 
-    await findTokens("", "", true);
+    await findTokens("", "");
     cachedTokens = foundTokens;
     foundTokens = new Map();
     if (debug) console.log("ENDING: Token Caching");
 
+    caching = false;
+    ui.notifications.info(game.i18n.format("token-variants.notifications.info.cachingFinished", {imageCount: cachedTokens.size}));
 }
 
 /**
@@ -631,7 +641,7 @@ function searchMatchesToken(search, tokenSrc, name, filters) {
 /**
  * Search for tokens matching the supplied name
  */
-async function findTokens(name, searchType = "", caching = false) {
+async function findTokens(name, searchType = "") {
     if (debug) console.log("STARTING: Token Search", name, searchType, caching);
 
     // Select filters based on type of search
@@ -772,6 +782,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
  * @param ignoreFilterMSRD boolean that if set to true will ignore the filterMSRD setting
  */
 async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false) {
+    if (caching) return;
 
     if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
         console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);
@@ -824,6 +835,7 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
 }
 
 async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false, ignoreKeywords = false) {
+    if (caching) return;
     if (debug) console.log("STARTING: Art Search", name, searchType);
     if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
         console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);

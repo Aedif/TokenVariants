@@ -23,7 +23,8 @@
     "scripts": [],
     "styles": [
         "styles/artSelect.css",
-        "styles/sideSelect.css"
+        "styles/sideSelect.css",
+        "styles/searchPaths.css"
     ],
     "languages": [
         {

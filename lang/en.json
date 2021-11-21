@@ -43,5 +43,8 @@
     "token-variants.generalArtFilterHint": "These filters will be used when the search is being performed irrespective of the art type (token/portrait).",
     "token-variants.ProfileListenerError": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
     "token-variants.PathNotFoundError": "Unable to find path: ",
-    "token-variants.notifications.warn.invalidTable": "The table \"{tableId}\" could not be found"
+    "token-variants.notifications.warn.invalidTable": "The table \"{tableId}\" could not be found",
+    "token-variants.notifications.info.cachingStarted": "Token Variant Art: Caching Started",
+    "token-variants.notifications.info.cachingFinished": "Token Variant Art: Caching Finished ({imageCount} images found)",
+    "token-variants.title.searchPaths": "Search Paths"
 }

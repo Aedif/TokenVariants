@@ -35,7 +35,7 @@ export async function parseSearchPaths(debug = false) {
     const regexpBucket = /s3:(.*):(.*)/;
     const regexpRollTable = /rolltable:(.*)/;
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
-    let searchPathList = game.settings.get("token-variants", "searchPaths").flat();
+    let searchPathList = game.settings.get("token-variants", "searchPaths");
     let searchPaths = new Map();
     searchPaths.set("data", []);
     searchPaths.set("s3", new Map());
@@ -59,8 +59,8 @@ export async function parseSearchPaths(debug = false) {
     }
 
     for (const path of searchPathList) {
-        if (path.startsWith("s3:")) {
-            const match = path.match(regexpBucket);
+        if (path.text.startsWith("s3:")) {
+            const match = path.text.match(regexpBucket);
             if (match[1]) {
                 let bucket = match[1];
                 let bPath = match[2];
@@ -72,14 +72,14 @@ export async function parseSearchPaths(debug = false) {
                     buckets.set(bucket, [bPath]);
                 }
             }
-        }else if (path.startsWith("rolltable:")) {
-            const match = path.match(regexpRollTable);
+        }else if (path.text.startsWith("rolltable:")) {
+            const match = path.text.match(regexpRollTable);
             if (match[0]) {
                 let tableId = match[0].split(":")[1];
                 searchPaths.get("rolltable").push(tableId);
             }
         } else {
-            const match = path.match(regexpForge);
+            const match = path.text.match(regexpForge);
             if (match) {
                 const forgeURL = match[1];
                 const userId = match[2];
@@ -88,11 +88,11 @@ export async function parseSearchPaths(debug = false) {
                     if (userId == await ForgeAPI.getUserId()) {
                         await walkForgePaths(forgeURL + userId + "/", fPath);
                     } else {
-                        allForgePaths.push(path + "/*");
+                        allForgePaths.push(path.text + "/*");
                     }
                 }
             } else {
-                searchPaths.get("data").push(path);
+                searchPaths.get("data").push(path.text);
             }
         }
     }
