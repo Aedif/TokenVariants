@@ -2,7 +2,8 @@ import SearchPaths from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
 import TokenHUDSettings from "./applications/tokenHUD.js";
 import FilterSettings from "./applications/searchFilters.js";
-import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo } from "./scripts/utils.js"
+import TokenConfig from "./applications/tokenConfig.js";
+import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfig} from "./scripts/utils.js"
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = [{text: "modules/caeora-maps-tokens-assets/assets/tokens/", cache: true}];
@@ -227,6 +228,13 @@ async function registerWorldSettings() {
         default: [],
     });
 
+    game.settings.register("token-variants", "tokenConfigs", {
+        scope: "world",
+        config: false,
+        type: Array,
+        default: [],
+    });
+
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
@@ -397,7 +405,12 @@ function registerHUD() {
                 const index = controlled.findIndex(x => x.data._id === token._id)
                 const tokenToChange = controlled[index]
                 const updateTarget = is080 ? tokenToChange.document : tokenToChange
-                updateTarget.update({ img: event.target.dataset.name })
+                if(keyboard.isDown("Shift")){
+                    let tokenConfig = new TokenConfig(event.target.dataset.filename, event.target.dataset.name, updateTarget.data);
+                    tokenConfig.render(true);
+                } else {
+                    updateTokenImage(null, updateTarget, event.target.dataset.name, event.target.dataset.filename);
+                }
             });
             if (userHasConfigRights) {
                 buttons[button].addEventListener('contextmenu', function (event) {
@@ -483,7 +496,7 @@ async function initialize() {
             else if (game.settings.get("token-variants", "disableAutomaticPopup") && !keyboard.isDown(actorDirKey))
                 return;
             let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-            displayArtSelect(actor.data.name, (imgSrc) => setActorImage(actor, imgSrc), searchType);
+            displayArtSelect(actor.data.name, (imgSrc, name) => setActorImage(actor, imgSrc, false, null, name), searchType, false, actor.data);
         });
         Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
             if (!(keyboard.isDown(actorDirKey) && !keyboard.isDown("v"))) return;
@@ -491,10 +504,10 @@ async function initialize() {
             // Check to support both 0.7.x and 0.8.x
             if (op4) {
                 let token = canvas.tokens.get(options._id);
-                displayArtSelect(options.name, (imgSrc) => setActorImage(token.actor, imgSrc, false, token), searchType);
+                displayArtSelect(options.name, (imgSrc, name) => setActorImage(token.actor, imgSrc, false, token, name), searchType, false, token.data);
             } else {
                 let token = tokenDoc._object;
-                displayArtSelect(token.name, (imgSrc) => setActorImage(tokenDoc._actor, imgSrc, false, token), searchType);
+                displayArtSelect(token.name, (imgSrc, name) => setActorImage(tokenDoc._actor, imgSrc, false, token, name), searchType, false, token.data);
             }
         });
         Hooks.on("renderTokenConfig", modTokenConfig);
@@ -521,7 +534,22 @@ function modTokenConfig(tokenConfig, html, _) {
             el.title = game.i18n.localize("token-variants.TokenConfigButtonTitle");
             el.innerHTML = '<i class="fas fa-images"></i>';
             el.tabIndex = -1;
-            el.onclick = async () => displayArtSelect(tokenConfig.object.data.name, (imgSrc) => field.value = imgSrc, SEARCH_TYPE.TOKEN);
+            el.onclick = async () => {
+                displayArtSelect(tokenConfig.object.data.name, (imgSrc, name) => {
+                    field.value = imgSrc;
+                    const tokenConfig = getTokenConfig(imgSrc, name);
+                    if(tokenConfig){
+                        const tokenConfigHTML = $(html[0]).find('.tab[data-tab="image"]')[0];
+                        $(tokenConfigHTML).find('[name="width"]').val(tokenConfig.width);
+                        $(tokenConfigHTML).find('[name="height"]').val(tokenConfig.height);
+                        $(tokenConfigHTML).find('[name="scale"]').val(tokenConfig.scale).trigger( "change" );
+                        $(tokenConfigHTML).find('[name="mirrorX"]').prop('checked', tokenConfig.mirrorX);
+                        $(tokenConfigHTML).find('[name="mirrorY"]').prop('checked', tokenConfig.mirrorY);
+                        $(tokenConfigHTML).find('[data-edit="tint"]').val(tokenConfig.tint).trigger("change");
+                        $(tokenConfigHTML).find('[name="alpha"]').val(tokenConfig.alpha).trigger("change");
+                    }
+                }, SEARCH_TYPE.TOKEN, false, tokenConfig.object.data);
+            };
             field.parentNode.append(el);
             return;
         }
@@ -559,7 +587,7 @@ function modActorSheet(actorSheet, html, options) {
     }
 
     profile.addEventListener('contextmenu', function (ev) {
-        displayArtSelect(actorSheet.object.name, (imgSrc) => setActorImage(actorSheet.object, imgSrc, true), SEARCH_TYPE.PORTRAIT);
+        displayArtSelect(actorSheet.object.name, (imgSrc, name) => setActorImage(actorSheet.object, imgSrc, true, null, name), SEARCH_TYPE.PORTRAIT, false, actorSheet.object.data.token);
     }, false);
 }
 
@@ -772,8 +800,9 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
  * @param callback function that will be called with the user selected image path as argument
  * @param searchType (token|portrait|both) indicates whether the window is being displayed for a token search or portrait search or both
  * @param ignoreFilterMSRD boolean that if set to true will ignore the filterMSRD setting
+ * @param actorData dict to be used to source token image data from such as (width, height, scale, etc.)
  */
-async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false) {
+async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false, actorData = {}) {
     if (caching) return;
 
     if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
@@ -813,14 +842,14 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
     });
 
     let searchAndDisplay = ((search) => {
-        displayArtSelect(search, callback, searchType, true);
+        displayArtSelect(search, callback, searchType, true, actorData);
     });
 
     if (artFound) {
-        let artSelect = new ArtSelect(title, name, allButtons, callback, searchAndDisplay);
+        let artSelect = new ArtSelect(title, name, allButtons, callback, searchAndDisplay, actorData);
         artSelect.render(true);
     } else {
-        let artSelect = new ArtSelect(title, name, null, callback, searchAndDisplay);
+        let artSelect = new ArtSelect(title, name, null, callback, searchAndDisplay, actorData);
         artSelect.render(true);
     }
 
@@ -860,27 +889,58 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
     return allImages;
 }
 
+function updateTokenImage(actor, token, imgSrc, name){
+    let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
+    let tokenActor = actor ? actor : game.actors.get(token.actor.id);
+    const defaultConfig = tokenActor.getFlag('token-variants', 'defaultConfig') || [];
+
+    let tokenUpdateObj = { img: imgSrc };
+    const tokenConfig = getTokenConfig(imgSrc, name);
+    if(tokenConfig){
+        delete tokenConfig.imgSrc;
+        delete tokenConfig.name;
+        tokenUpdateObj = mergeObject(tokenUpdateObj, tokenConfig);
+
+        if(defaultConfig.length == 0){
+            const data = token.data;
+            tokenActor.unsetFlag('token-variants', 'defaultConfig');
+            tokenActor.setFlag('token-variants', 'defaultConfig', Object.entries({
+                alpha: data.alpha,
+                height: data.height,
+                width: data.width,
+                scale: data.scale,
+                tint: data.tint,
+                mirrorX: data.mirrorX,
+                mirrorY: data.mirrorY
+            }));
+        }
+    } else if (defaultConfig.length != 0){
+        tokenUpdateObj = mergeObject(tokenUpdateObj, Object.fromEntries(defaultConfig));
+        tokenActor.unsetFlag('token-variants', 'defaultConfig');
+    }
+
+    if(actor)
+        updateDoc(actor, { "token.img": imgSrc });
+
+    if (token) {
+        updateDoc(token, tokenUpdateObj);
+    } else if (actor && actor.getActiveTokens().length == 1){
+        updateDoc(actor.getActiveTokens()[0], tokenUpdateObj);
+    }
+}
+
 /**
  * Assign new artwork to the actor
  */
-async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null) {
+async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = null, fileName = "") {
 
     let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
     updateDoc(actor, { img: tokenSrc });
-
     if (updateActorOnly)
         return;
 
-    function updateToken(actorToUpdate, tokenToUpdate, imgSrc) {
-        updateDoc(actorToUpdate, { "token.img": imgSrc });
-        if (tokenToUpdate) {
-            updateDoc(tokenToUpdate, { img: imgSrc });
-        } else if (actorToUpdate.getActiveTokens().length == 1)
-            updateDoc(actorToUpdate.getActiveTokens()[0], { img: imgSrc });
-    }
-
     if (twoPopups && noTwoPopupsPrompt) {
-        displayArtSelect(actor.name, (imgSrc) => updateToken(actor, token, imgSrc), SEARCH_TYPE.TOKEN);
+        displayArtSelect(actor.name, (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name), SEARCH_TYPE.TOKEN, false, actor.data);
     } else if (twoPopups) {
         let d = new Dialog({
             title: "Portrait -> Token",
@@ -888,12 +948,12 @@ async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = n
             buttons: {
                 one: {
                     icon: '<i class="fas fa-check"></i>',
-                    callback: () => updateToken(actor, token, tokenSrc),
+                    callback: () => updateTokenImage(actor, token, tokenSrc, fileName),
                 },
                 two: {
                     icon: '<i class="fas fa-times"></i>',
                     callback: () => {
-                        displayArtSelect(actor.name, (imgSrc) => updateToken(actor, token, imgSrc), SEARCH_TYPE.TOKEN);
+                        displayArtSelect(actor.name, (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name), SEARCH_TYPE.TOKEN, false, actor.data);
                     }
                 }
             },
@@ -901,7 +961,7 @@ async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = n
         });
         d.render(true);
     } else {
-        updateToken(actor, token, tokenSrc)
+        updateTokenImage(actor, token, tokenSrc, fileName);
     }
 }
 

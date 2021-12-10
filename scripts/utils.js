@@ -1,6 +1,15 @@
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/]/g);
 
 /**
+ * Retrieves a custom token configuration if one exists for the given image
+ */
+export function getTokenConfig(imgSrc, name){
+    const tokenConfigs = game.settings.get("token-variants", "tokenConfigs");
+    return tokenConfigs.find(config => config.imgSrc == imgSrc && config.name == name);
+}
+
+
+/**
  * Extracts the file name from the given path.
  */
 export function getFileName(path) {

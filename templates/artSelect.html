@@ -16,14 +16,14 @@
         {{#each search.[1] as |image|}}
         <div>
             {{#if image.img}}
-            <img class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" />
+            <img class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" data-filename="{{image.label}}" />
             {{/if}}
             {{#if image.vid}}
-            <video class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" alt="{{image.label}}"
+            <video class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" data-filename="{{image.label}}" alt="{{image.label}}"
                 autoplay loop></video>
             {{/if}}
             {{#unless image.type}}
-            <span class="token-variants-box" data-name="{{image.path}}" alt="{{image.label}}">{{image.path}}</span>
+            <span class="token-variants-box" data-name="{{image.path}}" data-filename="{{image.label}}" alt="{{image.label}}">{{image.path}}</span>
             {{/unless}}
             <p>{{image.label}}</p>
         </div>

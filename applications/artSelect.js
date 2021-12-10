@@ -1,3 +1,5 @@
+import TokenConfig from "./tokenConfig.js";
+
 function getStartingWidth(allImages) {
     let maxLength = 0;
     if (allImages)
@@ -23,12 +25,13 @@ function getStartingHeight(allImages) {
 }
 
 export default class ArtSelect extends FormApplication {
-    constructor(title, search, allImages, callback, performSearch) {
+    constructor(title, search, allImages, callback, performSearch, actorData) {
         super({}, { closeOnSubmit: false, width: getStartingWidth(allImages), height: getStartingHeight(allImages), title: title });
         this.search = search;
         this.allImages = allImages;
         this.callback = callback;
         this.performSearch = performSearch;
+        this.actorData = actorData;
     }
 
     static get defaultOptions() {
@@ -55,12 +58,22 @@ export default class ArtSelect extends FormApplication {
         super.activateListeners(html);
         const callback = this.callback;
         const close = () => this.close();
+        const actorData = this.actorData;
 
         const boxes = html.find(`.token-variants-box`);
         boxes.map((box) => {
             boxes[box].addEventListener('click', async function (event) {
-                await close();
-                callback(event.target.dataset.name);
+                if(keyboard.isDown("Shift")){
+                    let tokenConfig = new TokenConfig(event.target.dataset.filename, event.target.dataset.name, actorData);
+                    tokenConfig.render(true);
+                } else {
+                    await close();
+                    if(actorData){
+                        callback(event.target.dataset.name, event.target.dataset.filename);
+                    } else {
+                        callback(event.target.dataset.name);
+                    }
+                }
             })
         });
 
