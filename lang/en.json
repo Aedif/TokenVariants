@@ -44,5 +44,9 @@
     "token-variants.notifications.warn.invalidTable": "The table \"{tableId}\" could not be found",
     "token-variants.notifications.info.cachingStarted": "Token Variant Art: Caching Started",
     "token-variants.notifications.info.cachingFinished": "Token Variant Art: Caching Finished ({imageCount} images found)",
-    "token-variants.title.searchPaths": "Search Paths"
+    "token-variants.title.searchPaths": "Search Paths",
+    "token-variants.disableActorPortraitArtSelectName": "Disable right-click pop-up on the character sheet portrait",
+    "token-variants.disableActorPortraitArtSelectHint": "Will disable the Art Select window popping up when right clicking the portrait on the character sheet.",
+    "token-variants.randomizerMenuName": "Randomizer Settings",
+    "token-variants.randomizerMenuHint": "Enable randomization of images upon actor and token creation."
 }

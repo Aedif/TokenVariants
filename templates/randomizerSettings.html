@@ -1,0 +1,39 @@
+<form>
+    <div class="form-group">
+        <label>Randomize portrait image on Actor Create</label>
+        <input type="checkbox" name="actorCreate" data-dtype="Boolean" {{#if actorCreate}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>Randomize Token image on Token Create</label>
+        <input type="checkbox" name="tokenCreate" data-dtype="Boolean" {{#if tokenCreate}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>Randomize Token image on Token copy+paste</label>
+        <input type="checkbox" name="tokenCopyPaste" data-dtype="Boolean" {{#if tokenCopyPaste}}checked{{/if}}>
+    </div>
+    
+    <hr>
+
+    <p><b>Select which searches are to be included in the randomizer:</b> </p>
+
+    <div class="form-group">
+        <label>Name</label>
+        <input type="checkbox" name="tokenName" data-dtype="Boolean" {{#if tokenName}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>Keywords</label>
+        <input type="checkbox" name="keywords" data-dtype="Boolean" {{#if keywords}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>Shared</label>
+        <input type="checkbox" name="shared" data-dtype="Boolean" {{#if shared}}checked{{/if}}>
+    </div>
+
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit" value="1"><i class="far fa-save"></i>Apply</button>
+    </footer>
+</form>
