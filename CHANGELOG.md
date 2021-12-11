@@ -1,3 +1,13 @@
+# 1.15.1
+
+* Added randomization
+    * Can be configured through the new setting: '**Randomizer Settings**'.
+    * If enabled random images will be assigned based on the name and/or keywords of the Actor/Token.
+* Added means to assign custom configuration for each image
+    * Accessed by shift+left-clicking on any image in the **Art Select** or **Token HUD** side menu windows.
+    * Once custom configuration is applied swapping between these images using the module will auto-apply the configuration to the token.
+* Added a new setting to disable right-click pop-up on the character sheet portrait. 
+
 # 1.14.2
 
 * Fixed compatibility issue with Search Paths setting from the previous version

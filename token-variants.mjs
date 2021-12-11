@@ -460,8 +460,8 @@ function registerHUD() {
                     const updateTarget = is080 ? tokenToChange.document : tokenToChange;
                     const variantSelected = event.target.dataset.name;
                     const variantSelectedName = event.target.dataset.filename;
-                    let tokenActor = game.actors.get(updateTarget.actor.id);
-                    if (tokenActor) {
+                    if (updateTarget.actor) {
+                        let tokenActor = game.actors.get(updateTarget.actor.id);
                         let variants = tokenActor.getFlag('token-variants', 'variants') || [];
 
                         // To maintain compatibility with previous versions
@@ -555,7 +555,7 @@ async function initialize() {
             let token = op4 ? canvas.tokens.get(options._id) : tokenDoc._object;
             const callback = (imgSrc, name) => setActorImage(token.actor, imgSrc, false, token, name);
             if(randSettings.tokenCreate || tokenCopyPaste){
-                doRandomSearch(randSettings, token.actor, callback, op4 ? options.name : token.name, SEARCH_TYPE.TOKEN, false);
+                doRandomSearch(randSettings, token.actor, (imgSrc, name) => updateTokenImage(token.actor, token, imgSrc, name), op4 ? options.name : token.name, SEARCH_TYPE.TOKEN, false);
             } else {
                 let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
                 displayArtSelect(op4 ? options.name : token.name, callback, searchType, false, token.data);
@@ -915,14 +915,12 @@ async function doRandomSearch(randSettings, actor, callback, name, searchType = 
     if(!randSettings.tokenName){
         results.delete(name);
     }
-    if(randSettings.shared){
+    if(randSettings.shared && actor){
         let sharedVariants = actor.getFlag('token-variants', 'variants') || [];
         if(sharedVariants.length != 0){
             results.set("variants95436723", new Map(sharedVariants.map(v => [v.imgSrc, v.names])));
         }
     }
-
-    console.log(results);
 
     // Pick random image
     let total = 0;
@@ -980,32 +978,36 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
 
 function updateTokenImage(actor, token, imgSrc, name){
     let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
-    let tokenActor = actor ? actor : game.actors.get(token.actor.id);
-    const defaultConfig = tokenActor.getFlag('token-variants', 'defaultConfig') || [];
+    let tokenActor = null;
+    if(actor){tokenActor = actor}
+    else if(token.actor){tokenActor = game.actors.get(token.actor.id)}
 
     let tokenUpdateObj = { img: imgSrc };
-    const tokenConfig = getTokenConfig(imgSrc, name);
-    if(tokenConfig){
-        delete tokenConfig.imgSrc;
-        delete tokenConfig.name;
-        tokenUpdateObj = mergeObject(tokenUpdateObj, tokenConfig);
-
-        if(defaultConfig.length == 0){
-            const data = token.data;
+    if(tokenActor){
+        const defaultConfig = tokenActor.getFlag('token-variants', 'defaultConfig') || [];
+        const tokenConfig = getTokenConfig(imgSrc, name);
+        if(tokenConfig){
+            delete tokenConfig.imgSrc;
+            delete tokenConfig.name;
+            tokenUpdateObj = mergeObject(tokenUpdateObj, tokenConfig);
+    
+            if(defaultConfig.length == 0){
+                const data = token.data;
+                tokenActor.unsetFlag('token-variants', 'defaultConfig');
+                tokenActor.setFlag('token-variants', 'defaultConfig', Object.entries({
+                    alpha: data.alpha,
+                    height: data.height,
+                    width: data.width,
+                    scale: data.scale,
+                    tint: data.tint,
+                    mirrorX: data.mirrorX,
+                    mirrorY: data.mirrorY
+                }));
+            }
+        } else if (defaultConfig.length != 0){
+            tokenUpdateObj = mergeObject(tokenUpdateObj, Object.fromEntries(defaultConfig));
             tokenActor.unsetFlag('token-variants', 'defaultConfig');
-            tokenActor.setFlag('token-variants', 'defaultConfig', Object.entries({
-                alpha: data.alpha,
-                height: data.height,
-                width: data.width,
-                scale: data.scale,
-                tint: data.tint,
-                mirrorX: data.mirrorX,
-                mirrorY: data.mirrorY
-            }));
         }
-    } else if (defaultConfig.length != 0){
-        tokenUpdateObj = mergeObject(tokenUpdateObj, Object.fromEntries(defaultConfig));
-        tokenActor.unsetFlag('token-variants', 'defaultConfig');
     }
 
     if(actor)

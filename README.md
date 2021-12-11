@@ -123,6 +123,19 @@ When enabled all searches will be done both on the file names as well as the fil
 
 e.g. '**Dragon**' will match "token_art/**dragon**s/red/avatar.png" as well as "tokens/monsters/Red**Dragon**.png"
 
+### Randomizer Settings
+!["Randomizer Settings"](./docs/randomizer_settings.png)
+
+If enabled will automatically assign random images to Tokens and Actor portraits. The images picked will be chosen from searches performed using the actor/token name and/or keywords. Additionally you may also include images shared through the TokenHUD side menu.
+
+## Image configuration
+
+Images displayed in the **Art Select** window or the **TokenHUD** side menu can be shift+left-clicked to open a configuration pop-up:
+
+!["Image Configuration"](./docs/image_config.png)
+
+Once configured these settings will be applied to the token every time you switch to these images using the **Token Variant Art** module.
+
 ## Installation
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.
 
