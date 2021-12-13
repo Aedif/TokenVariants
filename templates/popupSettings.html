@@ -1,0 +1,49 @@
+<form>
+
+    <div class="form-group">
+        <label>{{localize "token-variants.DisableAutomaticPopupName"}}</label>
+        <input type="checkbox" name="disableAutomaticPopup" data-dtype="Boolean" {{#if disableAutomaticPopup}}checked{{/if}}>
+        <p class="notes">{{localize "token-variants.DisableAutomaticPopupHint"}}</p>
+    </div>
+
+    <div class="form-group">
+        <label>{{localize "token-variants.TwoPopupsName"}}</label>
+        <input type="checkbox" name="twoPopups" data-dtype="Boolean" {{#if twoPopups}}checked{{/if}}>
+        <p class="notes">{{localize "token-variants.TwoPopupsHint"}}</p>
+    </div>
+
+    <div class="form-group">
+        <label>{{localize "token-variants.twoPopupsNoDialogName"}}</label>
+        <input type="checkbox" name="twoPopupsNoDialog" data-dtype="Boolean" {{#if twoPopupsNoDialog}}checked{{/if}}>
+        <p class="notes">{{localize "token-variants.twoPopupsNoDialogHint"}}</p>
+    </div>
+
+    <div class="form-group">
+        <label>{{localize "token-variants.disableActorPortraitArtSelectName"}}</label>
+        <input type="checkbox" name="disableActorPortraitArtSelect" data-dtype="Boolean" {{#if disableActorPortraitArtSelect}}checked{{/if}}>
+        <p class="notes">{{localize "token-variants.disableActorPortraitArtSelectHint"}}</p>
+    </div>
+
+    <div class="form-group">
+        <label>Disable Pop-ups for:</label>
+    </div>
+
+    <header class="table-header flexrow">
+        <label class="index">Player Characters</label>
+        <label>Non-Player Characters</label>
+        <label>Vehicles</label>
+    </header>
+    <ul class="setting-list">
+        <li class="setting form-group">
+            <div class="form-fields">
+                <input type="checkbox" name="pcDisable" data-dtype="Boolean" {{#if pcDisable}}checked{{/if}}>
+                <input type="checkbox" name="npcDisable" data-dtype="Boolean" {{#if npcDisable}}checked{{/if}}>
+                <input type="checkbox" name="vehicleDisable" data-dtype="Boolean" {{#if vehicleDisable}}checked{{/if}}>
+            </div>
+        </li>
+    </ul>
+
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit" value="1"><i class="far fa-save"></i>Apply</button>
+    </footer>
+</form>

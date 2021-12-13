@@ -1,18 +1,18 @@
-export default class RandomizerSettings extends FormApplication {
+export default class PopUpSettings extends FormApplication {
 
     constructor() {
-        super({}, {title: `Randomizer Settings`});
+        super({}, {title: `Pop-up Settings`});
     }
 
     static get defaultOptions() {
         return mergeObject(super.defaultOptions, {
-            id: "token-variants-randomizer-settings",
+            id: "token-variants-popup-settings",
             classes: ["sheet"],
-            template: "modules/token-variants/templates/randomizerSettings.html",
+            template: "modules/token-variants/templates/popupSettings.html",
             resizable: false,
             minimizable: false,
             closeOnSubmit: true,
-            width: 480,
+            width: 600,
             height: "auto",
             dragDrop: [{dragSelector: null, dropSelector: null}]
         });
@@ -20,10 +20,10 @@ export default class RandomizerSettings extends FormApplication {
 
     async getData(options) {
         const data = super.getData(options);
-        return mergeObject(data, game.settings.get("token-variants", "randomizerSettings"));
+        return mergeObject(data, game.settings.get("token-variants", "popupSettings"));
     }
 
     async _updateObject(event, formData) {
-        game.settings.set("token-variants", "randomizerSettings", formData);
+        game.settings.set("token-variants", "popupSettings", formData);
     }
 }

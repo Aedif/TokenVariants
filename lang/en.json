@@ -1,8 +1,8 @@
 {
     "token-variants.searchPathsTitle": "Search Paths",
     "token-variants.SearchPathsHint": "Configure folders, Rolltables and s3 buckets to be searched for art here.",
-    "token-variants.DisableAutomaticPopupName": "Disable Automatic Popups",
-    "token-variants.DisableAutomaticPopupHint": "Check to disable automatic popups upon actor creation.",
+    "token-variants.DisableAutomaticPopupName": "Disable Automatic Pop-ups",
+    "token-variants.DisableAutomaticPopupHint": "Check to disable all automatic pop-ups upon actor/token creation.",
     "token-variants.FilterMSRDName": "Filter by D&D 5e Monster (SRD)",
     "token-variants.FilterMSRDHint": "Excludes token variants for tokens with names not included in the D&D 5e Monster (SRD) list.",
     "token-variants.FilterMSRDError": "Token-Variant-Art: Token name is not part of D&D 5e Monster (SRD): ",
@@ -48,5 +48,7 @@
     "token-variants.disableActorPortraitArtSelectName": "Disable right-click pop-up on the character sheet portrait",
     "token-variants.disableActorPortraitArtSelectHint": "Will disable the Art Select window popping up when right clicking the portrait on the character sheet.",
     "token-variants.randomizerMenuName": "Randomizer Settings",
-    "token-variants.randomizerMenuHint": "Enable randomization of images upon actor and token creation."
+    "token-variants.randomizerMenuHint": "Enable randomization of images upon actor and token creation.",
+    "token-variants.popupMenuName": "Pop-up Settings",
+    "token-variants.popupMenuHint": "Enable/disable pop-up features"
 }

@@ -1,3 +1,13 @@
+# 1.16.1
+
+* Added more settings to the randomizer
+    * Disable for Tokens with **Represented Actor** or **Linked Actor Data**
+    * Disable for PC/NPC/Vehicle
+    * Show **Art Select** pop-up if disabled due to above ^
+* Reorganised pop-up settings
+    * Are now all grouped under a single setting
+    * Pop-ups can now also be disabled based on Actor type (PC/NPC/Vehicle)
+
 # 1.15.1
 
 * Added randomization

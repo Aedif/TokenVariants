@@ -4,6 +4,7 @@ import TokenHUDSettings from "./applications/tokenHUD.js";
 import FilterSettings from "./applications/searchFilters.js";
 import TokenConfig from "./applications/tokenConfig.js";
 import RandomizerSettings from "./applications/randomizerSettings.js";
+import PopUpSettings from "./applications/popupSettings.js";
 import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfig} from "./scripts/utils.js"
 
 // Default path where the script will look for token art
@@ -37,6 +38,7 @@ let actorDirKey = "";
 // Controls whether separate popups are displayed for portrait and token art
 let twoPopups = false;
 let noTwoPopupsPrompt = false;
+let disableAutomaticPopup = false;
 
 // Prevent registering of right-click listener on the character sheet
 let disableActorPortraitListener = false;
@@ -99,11 +101,9 @@ async function registerWorldSettings() {
         default: false,
     });
 
+    // Deprecated
     game.settings.register("token-variants", "disableAutomaticPopup", {
-        name: game.i18n.localize("token-variants.DisableAutomaticPopupName"),
-        hint: game.i18n.localize("token-variants.DisableAutomaticPopupHint"),
         scope: "world",
-        config: true,
         type: Boolean,
         default: false,
     });
@@ -153,24 +153,18 @@ async function registerWorldSettings() {
         onChange: key => actorDirKey = key
     });
 
+    // Deprecated
     game.settings.register("token-variants", "twoPopups", {
-        name: game.i18n.localize("token-variants.TwoPopupsName"),
-        hint: game.i18n.localize("token-variants.TwoPopupsHint"),
         scope: "world",
-        config: true,
         type: Boolean,
         default: false,
-        onChange: val => twoPopups = val
     });
 
+    // Deprecated
     game.settings.register("token-variants", "twoPopupsNoDialog", {
-        name: game.i18n.localize("token-variants.twoPopupsNoDialogName"),
-        hint: game.i18n.localize("token-variants.twoPopupsNoDialogHint"),
         scope: "world",
-        config: true,
         type: Boolean,
         default: false,
-        onChange: val => noTwoPopupsPrompt = val
     });
 
     game.settings.register("token-variants", "runSearchOnPath", {
@@ -239,14 +233,11 @@ async function registerWorldSettings() {
         default: [],
     });
 
+    // Deprecated
     game.settings.register("token-variants", "disableActorPortraitArtSelect", {
-        name: game.i18n.localize("token-variants.disableActorPortraitArtSelectName"),
-        hint: game.i18n.localize("token-variants.disableActorPortraitArtSelectHint"),
         scope: "world",
-        config: true,
         type: Boolean,
         default: false,
-        onChange: val => disableActorPortraitListener = val
     });
 
     game.settings.registerMenu("token-variants", "randomizerMenu", {
@@ -269,17 +260,56 @@ async function registerWorldSettings() {
             tokenName: true,
             keywords: false,
             shared: false,
+            representedActorDisable: false,
+            linkedActorDisable: true,
+            pcDisable: true,
+            npcDisable: false,
+            vehicleDisable: false,
+            popupOnDisable: false
         },
     });
+
+    game.settings.registerMenu("token-variants", "popupMenu", {
+        name: game.i18n.localize("token-variants.popupMenuName"),
+        hint: game.i18n.localize("token-variants.popupMenuHint"),
+        scope: "world",
+        icon: "fas fa-exchange-alt",
+        type: PopUpSettings,
+        restricted: true,
+    });
+
+    game.settings.register('token-variants', 'popupSettings', {
+        scope: 'world',
+        config: false,
+        type: Object,
+        default: {
+            disableAutomaticPopup: game.settings.get("token-variants", "disableAutomaticPopup"),
+            twoPopups: game.settings.get("token-variants", "twoPopups"),
+            twoPopupsNoDialog: game.settings.get("token-variants", "twoPopupsNoDialog"),
+            disableActorPortraitArtSelect: game.settings.get("token-variants", "disableActorPortraitArtSelect"),
+            pcDisable: true,
+            npcDisable: false,
+            vehicleDisable: false
+        },
+        onChange: settings => {
+            twoPopups = settings.twoPopups;
+            noTwoPopupsPrompt = settings.twoPopupsNoDialog;
+            disableActorPortraitListener = settings.disableActorPortraitArtSelect;
+            disableAutomaticPopup = settings.disableAutomaticPopup;
+        }
+    });
+
+    const popupSettings = game.settings.get("token-variants", "popupSettings");
+    twoPopups = popupSettings.twoPopups;
+    noTwoPopupsPrompt = popupSettings.twoPopupsNoDialog;
+    disableActorPortraitListener = popupSettings.disableActorPortraitArtSelect;
+    disableAutomaticPopup = popupSettings.disableAutomaticPopup;
 
     filterMSRD = game.settings.get("token-variants", "filterMSRD");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
-    twoPopups = game.settings.get("token-variants", "twoPopups");
-    noTwoPopupsPrompt = game.settings.get("token-variants", "twoPopupsNoDialog");
     debug = game.settings.get("token-variants", "debug");
     runSearchOnPath = game.settings.get("token-variants", "runSearchOnPath");
-    disableActorPortraitListener = game.settings.get("token-variants", "disableActorPortraitArtSelect");
 }
 
 function registerHUD() {
@@ -331,7 +361,7 @@ function registerHUD() {
         const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
         let artSearch = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
-        let images = artSearch.get(search) || new Map();
+        let images = artSearch ? artSearch.get(search) : new Map();
 
         let actorVariants = new Map();
         const tokenActor = game.actors.get(token.actorId);
@@ -527,39 +557,95 @@ async function initialize() {
     await registerWorldSettings();
 
     if (game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE")) {
+
+        const disableRandomSearchForType = (randSettings, actor) => {
+            if(!actor) return false;
+            if(actor.type == "character") return randSettings.pcDisable;
+            if(actor.type == "npc") return randSettings.npcDisable;
+            if(actor.type == "vehicle") return randSettings.vehicleDisable;
+        }
+
+        const disablePopupForType = (actor) => {
+            const popupSettings = game.settings.get("token-variants", "popupSettings");
+            if(!actor) return false;
+            if(actor.type == "character") return popupSettings.pcDisable;
+            if(actor.type == "npc") return popupSettings.npcDisable;
+            if(actor.type == "vehicle") return popupSettings.vehicleDisable;
+        }
+
         // Handle actor/token art replacement
         Hooks.on("createActor", async (actor, options, userId) => {
-            const randSettings = game.settings.get("token-variants", "randomizerSettings");
             if (userId && game.user.id != userId)
                 return;
-            else if (!randSettings.actorCreate && game.settings.get("token-variants", "disableAutomaticPopup") && !keyboard.isDown(actorDirKey))
-                return;
 
-            const callback = (imgSrc, name) => setActorImage(actor, imgSrc, false, null, name);
-
+            // Check if random search is enabled and if so perform it 
+            
+            const randSettings = game.settings.get("token-variants", "randomizerSettings");
             if(randSettings.actorCreate){
-                doRandomSearch(randSettings, actor, callback, actor.data.name, SEARCH_TYPE.PORTRAIT, false);
-            } else {
-                const searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-                displayArtSelect(actor.data.name, callback, searchType, false, actor.data); 
+                let performRandomSearch = true;
+                if(randSettings.linkedActorDisable && actor.data.token.actorLink) performRandomSearch = false;
+                if(disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
+
+                if(performRandomSearch){
+                    doRandomSearch(randSettings, actor, (imgSrc, name) => setActorImage(actor, imgSrc, true, null, name), actor.data.name, SEARCH_TYPE.PORTRAIT, false);
+                    return;
+                }
+                if(!randSettings.popupOnDisable){
+                    return;
+                }
             }
+
+            // Check if pop-up is enabled and if so open it
+
+            if(disableAutomaticPopup && !keyboard.isDown(actorDirKey)){
+                return;
+            } else if (disablePopupForType(actor)){
+                return;
+            }
+
+            const searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
+            displayArtSelect(actor.data.name, (imgSrc, name) => setActorImage(actor, imgSrc, false, null, name), searchType, false, actor.data);   
         });
         Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
-            const randSettings = game.settings.get("token-variants", "randomizerSettings");
-
-            if (!(keyboard.isDown(actorDirKey) && !keyboard.isDown("v"))){
-                if(!randSettings.tokenCopyPaste) return;
-            }
+            if (userId && game.user.id != userId)
+                return;
 
             // op4 check to support both 0.7.x and 0.8.x
             let token = op4 ? canvas.tokens.get(options._id) : tokenDoc._object;
-            const callback = (imgSrc, name) => setActorImage(token.actor, imgSrc, false, token, name);
-            if(randSettings.tokenCreate || tokenCopyPaste){
-                doRandomSearch(randSettings, token.actor, (imgSrc, name) => updateTokenImage(token.actor, token, imgSrc, name), op4 ? options.name : token.name, SEARCH_TYPE.TOKEN, false);
-            } else {
-                let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-                displayArtSelect(op4 ? options.name : token.name, callback, searchType, false, token.data);
+
+            const callback = (imgSrc, name) => updateTokenImage(token.actor, token, imgSrc, name);
+
+
+            // Check if random search is enabled and if so perform it 
+
+            const randSettings = game.settings.get("token-variants", "randomizerSettings");
+            if((keyboard.isDown("v") && randSettings.tokenCopyPaste) || (!keyboard.isDown("v") && randSettings.tokenCreate)){
+                let performRandomSearch = true;
+                if(randSettings.representedActorDisable && token.actor) performRandomSearch = false;
+                if(randSettings.linkedActorDisable && token.data.actorLink) performRandomSearch = false;
+                if(disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
+
+                if(performRandomSearch){
+                    doRandomSearch(randSettings, token.actor, callback, op4 ? options.name : token.name, SEARCH_TYPE.TOKEN, false);
+                    return;
+                }
+                if(!randSettings.popupOnDisable){
+                    return;
+                }
+            } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste){
+                return;
             }
+
+            // Check if pop-up is enabled and if so open it
+
+            if(disableAutomaticPopup && !keyboard.isDown(actorDirKey)){
+                return;
+            } else if (disablePopupForType(token.actor)){
+                return;
+            }
+
+            let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
+            displayArtSelect(op4 ? options.name : token.name, callback, searchType, false, token.data);
         });
         Hooks.on("renderTokenConfig", modTokenConfig);
         Hooks.on("renderActorSheet", modActorSheet);
@@ -907,10 +993,12 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
 }
 
 async function doRandomSearch(randSettings, actor, callback, name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false){
+    if (caching) return;
     if(!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return;
 
     // Gather all images
     let results = randSettings.tokenName || randSettings.keywords ? await doArtSearch(name, searchType, ignoreFilterMSRD, !randSettings.keywords) : new Map();
+    if(!results) return;
 
     if(!randSettings.tokenName){
         results.delete(name);
