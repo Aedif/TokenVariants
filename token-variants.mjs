@@ -10,12 +10,6 @@ import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parse
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = [{text: "modules/caeora-maps-tokens-assets/assets/tokens/", cache: true}];
 
-// List of all accepted monster names
-let monsterNameList = [];
-
-// Controls whether found art should be filtered by 5e monster srd
-let filterMSRD = true;
-
 // Controls whether a keyword search is to be performed in addition to full-name search
 let keywordSearch = false;
 let excludedKeywords = [];
@@ -108,14 +102,10 @@ async function registerWorldSettings() {
         default: false,
     });
 
+    // Deprecated
     game.settings.register("token-variants", "filterMSRD", {
-        name: game.i18n.localize("token-variants.FilterMSRDName"),
-        hint: game.i18n.localize("token-variants.FilterMSRDHint"),
         scope: "world",
-        config: true,
         type: Boolean,
-        default: false,
-        onChange: filter => { filterMSRD = filter; cacheTokens(); }
     });
 
     game.settings.register("token-variants", "keywordSearch", {
@@ -305,7 +295,6 @@ async function registerWorldSettings() {
     disableActorPortraitListener = popupSettings.disableActorPortraitArtSelect;
     disableAutomaticPopup = popupSettings.disableAutomaticPopup;
 
-    filterMSRD = game.settings.get("token-variants", "filterMSRD");
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
     debug = game.settings.get("token-variants", "debug");
@@ -360,7 +349,7 @@ function registerHUD() {
 
         const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
 
-        let artSearch = await doArtSearch(search, SEARCH_TYPE.TOKEN, false, true);
+        let artSearch = await doImageSearch(search, {searchType: SEARCH_TYPE.TOKEN, ignoreKeywords: true});
         let images = artSearch ? artSearch.get(search) : new Map();
 
         let actorVariants = new Map();
@@ -587,7 +576,11 @@ async function initialize() {
                 if(disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
 
                 if(performRandomSearch){
-                    doRandomSearch(randSettings, actor, (imgSrc, name) => setActorImage(actor, imgSrc, true, null, name), actor.data.name, SEARCH_TYPE.PORTRAIT, false);
+                    doRandomSearch(actor.data.name, {
+                            searchType: SEARCH_TYPE.PORTRAIT, 
+                            actor: actor, 
+                            callback: (imgSrc, name) => setActorImage(actor, imgSrc, true, null, name)
+                        });
                     return;
                 }
                 if(!randSettings.popupOnDisable){
@@ -604,7 +597,7 @@ async function initialize() {
             }
 
             const searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-            displayArtSelect(actor.data.name, (imgSrc, name) => setActorImage(actor, imgSrc, false, null, name), searchType, false, actor.data);   
+            displayArtSelect(actor.data.name, (imgSrc, name) => setActorImage(actor, imgSrc, false, null, name), searchType, actor.data);   
         });
         Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
             if (userId && game.user.id != userId)
@@ -626,7 +619,11 @@ async function initialize() {
                 if(disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
 
                 if(performRandomSearch){
-                    doRandomSearch(randSettings, token.actor, callback, op4 ? options.name : token.name, SEARCH_TYPE.TOKEN, false);
+                    doRandomSearch(op4 ? options.name : token.name, {
+                        searchType: SEARCH_TYPE.TOKEN,
+                        actor: token.actor,
+                        callback: callback
+                    });
                     return;
                 }
                 if(!randSettings.popupOnDisable){
@@ -645,7 +642,7 @@ async function initialize() {
             }
 
             let searchType = twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH;
-            displayArtSelect(op4 ? options.name : token.name, callback, searchType, false, token.data);
+            displayArtSelect(op4 ? options.name : token.name, callback, searchType, token.data);
         });
         Hooks.on("renderTokenConfig", modTokenConfig);
         Hooks.on("renderActorSheet", modActorSheet);
@@ -685,7 +682,7 @@ function modTokenConfig(tokenConfig, html, _) {
                         $(tokenConfigHTML).find('[data-edit="tint"]').val(tokenConfig.tint).trigger("change");
                         $(tokenConfigHTML).find('[name="alpha"]').val(tokenConfig.alpha).trigger("change");
                     }
-                }, SEARCH_TYPE.TOKEN, false, tokenConfig.object.data);
+                }, SEARCH_TYPE.TOKEN, tokenConfig.object.data);
             };
             field.parentNode.append(el);
             return;
@@ -724,7 +721,7 @@ function modActorSheet(actorSheet, html, options) {
     }
 
     profile.addEventListener('contextmenu', function (ev) {
-        displayArtSelect(actorSheet.object.name, (imgSrc, name) => setActorImage(actorSheet.object, imgSrc, true, null, name), SEARCH_TYPE.PORTRAIT, false, actorSheet.object.data.token);
+        displayArtSelect(actorSheet.object.name, (imgSrc, name) => setActorImage(actorSheet.object, imgSrc, true, null, name), SEARCH_TYPE.PORTRAIT, actorSheet.object.data.token);
     }, false);
 }
 
@@ -738,11 +735,6 @@ async function cacheTokens() {
 
     if (debug) console.log("STARTING: Token Caching");
     cachedTokens.clear();
-
-    if (filterMSRD) {
-        await jQuery.getJSON("modules/token-variants/data/monster_srd_names.json", (json) => (monsterNameList = json));
-        monsterNameList = monsterNameList.map(name => simplifyTokenName(name));
-    }
 
     await findTokens("", "");
     cachedTokens = foundTokens;
@@ -933,19 +925,13 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
 
 /**
  * Performs searches and displays the Art Select screen with the results.
- * @param name The name to be used as the search criteria
+ * @param search The text to be used as the search criteria
  * @param callback function that will be called with the user selected image path as argument
  * @param searchType (token|portrait|both) indicates whether the window is being displayed for a token search or portrait search or both
- * @param ignoreFilterMSRD boolean that if set to true will ignore the filterMSRD setting
  * @param actorData dict to be used to source token image data from such as (width, height, scale, etc.)
  */
-async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false, actorData = {}) {
+async function displayArtSelect(search, callback, searchType = SEARCH_TYPE.BOTH, actorData = {}) {
     if (caching) return;
-
-    if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
-        console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);
-        return;
-    }
 
     // Set Art Select screen title
     let title = game.i18n.localize("token-variants.SelectScreenTitle");
@@ -954,8 +940,7 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
     else if (searchType == SEARCH_TYPE.PORTRAIT)
         title = game.i18n.localize("token-variants.SelectScreenTitlePortrait");
 
-    let allImages = await doArtSearch(name, searchType, ignoreFilterMSRD);
-    if (!allImages) return;
+    let allImages = await doImageSearch(search, {searchType: searchType});
 
     let artFound = false;
     let allButtons = new Map();
@@ -979,29 +964,38 @@ async function displayArtSelect(name, callback, searchType = SEARCH_TYPE.BOTH, i
     });
 
     let searchAndDisplay = ((search) => {
-        displayArtSelect(search, callback, searchType, true, actorData);
+        displayArtSelect(search, callback, searchType, actorData);
     });
 
     if (artFound) {
-        let artSelect = new ArtSelect(title, name, allButtons, callback, searchAndDisplay, actorData);
+        let artSelect = new ArtSelect(title, search, allButtons, callback, searchAndDisplay, actorData);
         artSelect.render(true);
     } else {
-        let artSelect = new ArtSelect(title, name, null, callback, searchAndDisplay, actorData);
+        let artSelect = new ArtSelect(title, search, null, callback, searchAndDisplay, actorData);
         artSelect.render(true);
     }
 
 }
 
-async function doRandomSearch(randSettings, actor, callback, name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false){
-    if (caching) return;
-    if(!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return;
+/**
+ * @param {*} search Text to be used as the search criteria
+ * @param {object} [options={}] Options which customize the search
+ * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
+ * @param {Actor} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
+ * @param {Function[]} [options.callback] Function to be called with the random image
+ * @returns {Array<string>|null} Image path and name
+ */
+async function doRandomSearch(search, { searchType = SEARCH_TYPE.BOTH, actor = null, callback = null } = {}){
+    if (caching) return null;
+
+    const randSettings = game.settings.get("token-variants", "randomizerSettings");
+    if(!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return null;
 
     // Gather all images
-    let results = randSettings.tokenName || randSettings.keywords ? await doArtSearch(name, searchType, ignoreFilterMSRD, !randSettings.keywords) : new Map();
-    if(!results) return;
+    let results = randSettings.tokenName || randSettings.keywords ? await doImageSearch(search, {searchType: searchType, ignoreKeywords: !randSettings.keywords}) : new Map();
 
     if(!randSettings.tokenName){
-        results.delete(name);
+        results.delete(search);
     }
     if(randSettings.shared && actor){
         let sharedVariants = actor.getFlag('token-variants', 'variants') || [];
@@ -1019,8 +1013,10 @@ async function doRandomSearch(randSettings, actor, callback, name, searchType = 
             for (let src of images.keys()) {
                 if (randImageNum == 0) {
                     const names = images.get(src);
-                    callback(src, names[Math.floor(Math.random()*names.length)]);
-                    return;
+                    const result = [src, names[Math.floor(Math.random()*names.length)]];
+                    if(callback)
+                        callback(result[0], result[1]);
+                    return result;
                 }
                 randImageNum--;
             }
@@ -1028,23 +1024,29 @@ async function doRandomSearch(randSettings, actor, callback, name, searchType = 
             randImageNum -= images.size;
         }
     }
+    return null;
 }
 
-async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD = false, ignoreKeywords = false) {
+/**
+ * @param {*} search Text to be used as the search criteria
+ * @param {object} [options={}] Options which customize the search
+ * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
+ * @param {Boolean} [options.ignoreKeywords] Ignores keywords search setting
+ * @param {Boolean} [options.simpleResults] Results will be returned as an array of all image paths found
+ * @param {Function[]} [options.callback] Function to be called with the found images
+ * @returns {Map<string, Map<string, Map<string, Array<string>>>>|Array<String>|null} All images found split by original criteria and keywords
+ */
+async function doImageSearch(search, {searchType = SEARCH_TYPE.BOTH, ignoreKeywords = false, simpleResults = false, callback = null}={}) {
     if (caching) return;
-    if (debug) console.log("STARTING: Art Search", name, searchType);
-    if (filterMSRD && !ignoreFilterMSRD && !monsterNameList.includes(simplifyTokenName(name))) {
-        console.log(`${game.i18n.localize("token-variants.FilterMSRDError")} <b>${name}</b>`);
-        return null;
-    }
+    if (debug) console.log("STARTING: Art Search", search, searchType);
 
-    let searches = [name];
+    let searches = [search];
     let allImages = new Map();
     let usedTokens = new Set();
 
     if (keywordSearch && !ignoreKeywords) {
         excludedKeywords = parseKeywords(game.settings.get("token-variants", "excludedKeywords"));
-        searches = searches.concat(name.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word.toLowerCase())).reverse());
+        searches = searches.concat(search.split(/\W/).filter(word => word.length > 2 && !excludedKeywords.includes(word.toLowerCase())).reverse());
     }
 
     for (let search of searches) {
@@ -1061,6 +1063,12 @@ async function doArtSearch(name, searchType = SEARCH_TYPE.BOTH, ignoreFilterMSRD
     }
 
     if (debug) console.log("ENDING: Art Search");
+
+    if(simpleResults){
+        allImages = Array.from(usedTokens);
+    }
+
+    if(callback) callback(allImages)
     return allImages;
 }
 
@@ -1119,7 +1127,7 @@ async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = n
         return;
 
     if (twoPopups && noTwoPopupsPrompt) {
-        displayArtSelect(actor.name, (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name), SEARCH_TYPE.TOKEN, false, actor.data);
+        displayArtSelect(actor.name, (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name), SEARCH_TYPE.TOKEN, actor.data);
     } else if (twoPopups) {
         let d = new Dialog({
             title: "Portrait -> Token",
@@ -1132,7 +1140,7 @@ async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = n
                 two: {
                     icon: '<i class="fas fa-times"></i>',
                     callback: () => {
-                        displayArtSelect(actor.name, (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name), SEARCH_TYPE.TOKEN, false, actor.data);
+                        displayArtSelect(actor.name, (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name), SEARCH_TYPE.TOKEN, actor.data);
                     }
                 }
             },
@@ -1144,7 +1152,6 @@ async function setActorImage(actor, tokenSrc, updateActorOnly = false, token = n
     }
 }
 
-
 // Initialize module
 Hooks.once("ready", initialize);
 
@@ -1152,6 +1159,8 @@ Hooks.once("ready", initialize);
 Hooks.on("init", function () {
     game.TokenVariants = {
         displayArtSelect: displayArtSelect,
-        cacheTokens: cacheTokens
+        cacheTokens: cacheTokens,
+        doImageSearch: doImageSearch,
+        doRandomSearch
     };
 });
