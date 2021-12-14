@@ -386,6 +386,14 @@ function registerHUD() {
         const alwaysShowHUD = game.settings.get("token-variants", "alwaysShowHUD");
         if (!alwaysShowHUD && images.length < 2 && actorVariants.length == 0) return;
 
+        // Retrieving the possibly custom name attached as a flag to the token
+        let tokenImageName = "";
+        if(token.flags["token-variants"] && token.flags["token-variants"]["name"]){
+            tokenImageName = token.flags["token-variants"]["name"];
+        } else {
+            tokenImageName = getFileName(token.img);
+        }
+
         let imagesParsed = [];
         images.forEach((names, tokenSrc) => {
             const img = isImage(tokenSrc);
@@ -399,19 +407,19 @@ function registerHUD() {
                         }
                     });
                 }
-                imagesParsed.push({ route: tokenSrc, name: name, used: tokenSrc === token.img, img, vid, type: img || vid, shared: shared }); 
+                imagesParsed.push({ route: tokenSrc, name: name, used: tokenSrc === token.img && name === tokenImageName, img, vid, type: img || vid, shared: shared }); 
             }  
         });
 
         const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
         const imageOpacity = game.settings.get("token-variants", "HUDImageOpacity") / 100;
 
-        const wildcardDisplay = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
+        const sideSelect = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
 
         const is080 = !isNewerVersion("0.8.0", game.data.version)
 
         let divR = html.find('div.right')
-            .append(wildcardDisplay);
+            .append(sideSelect);
         if (!searchText)
             divR.click((event) => {
                 let activeButton, clickedButton, tokenButton;
@@ -462,9 +470,17 @@ function registerHUD() {
                 const index = controlled.findIndex(x => x.data._id === token._id)
                 const tokenToChange = controlled[index]
                 const updateTarget = is080 ? tokenToChange.document : tokenToChange
+                console.log(updateTarget, updateTarget.data.img, event.target.dataset.name)
                 if(keyboard.isDown("Shift")){
                     let tokenConfig = new TokenConfig(event.target.dataset.filename, event.target.dataset.name, updateTarget.data);
                     tokenConfig.render(true);
+                } else if(updateTarget.data.img === event.target.dataset.name){
+                    let tokenImageName = updateTarget.getFlag("token-variants", "name");
+                    if(!tokenImageName) tokenImageName = getFileName(updateTarget.data.img);
+                    if(tokenImageName !== event.target.dataset.filename){
+                        updateTokenImage(null, updateTarget, event.target.dataset.name, event.target.dataset.filename);
+                        canvas.tokens.hud.clear();
+                    }
                 } else {
                     updateTokenImage(null, updateTarget, event.target.dataset.name, event.target.dataset.filename);
                 }
@@ -1073,7 +1089,11 @@ async function doImageSearch(search, {searchType = SEARCH_TYPE.BOTH, ignoreKeywo
 }
 
 function updateTokenImage(actor, token, imgSrc, name){
-    let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
+    let updateDoc = (obj, data) => {
+        const objDoc = obj.document ? obj.document : obj;
+        objDoc.update(data);
+        objDoc.setFlag("token-variants", "name", name);
+    };
     let tokenActor = null;
     if(actor){tokenActor = actor}
     else if(token.actor){tokenActor = game.actors.get(token.actor.id)}
