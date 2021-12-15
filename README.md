@@ -173,7 +173,7 @@ e.g.
 * game.TokenVariants.doImageSearch("Dragon")
 * game.TokenVariants.doImageSearch("Dragon", {simpleResults: true})
 
-### **game.TokenVariants.doRandomSearch(search, { searchType = SEARCH_TYPE.BOTH, actor = null, callback = null } = {})**
+### **game.TokenVariants.doRandomSearch(search, { searchType='both', actor=null, callback=null } = {})**
 
 Performs a random image search and returns the results.
 
