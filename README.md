@@ -141,19 +141,53 @@ To install, import this [manifest](https://raw.githubusercontent.com/Aedif/Token
 
 ## API
 
-### **game.TokenVariants.displayArtSelect(name, callback, searchType = 'both', ignoreFilterMSRD = false)**
+### **game.TokenVariants.showArtSelect(search, {callback, searchType='both', tokenConfig={}}={})**
 
-Displays the token art select window.
+Displays the art select window.
 
 Parameters:
- * **name**: The name to be used as the search criteria
- * **callback**: function that will be called with the user selected image path as argument
- * **searchType** (token|portrait|both) which filters are to be used in the art search
- * **ignoreFilterMSRD** if set to true will ignore the filterMSRD setting
+ * **{string}** **search** The text to be used as the search criteria
+ * **{object}** Options which customize the search
+    * {Function[]} [callback] Function to be called with the user selected image path
+    * {string} [searchType] (token|portrait|both) Controls filters applied to the search results
+    * {Token|object} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
 
 e.g. 
-* game.TokenVariants.displayArtSelect("")
-* game.TokenVariants.displayArtSelect("dragon", (selectedImg) => console.log(selectedImg))
+* game.TokenVariants.showArtSelect("")
+* game.TokenVariants.showArtSelect("dragon", {callback: (selectedImg) => console.log(selectedImg)})
+
+### **game.TokenVariants.doImageSearch(search, {searchType = 'both', ignoreKeywords = false, simpleResults = false, callback = null}={})**
+
+Performs an image search and returns the results.
+
+Parameters:
+ * **{string}** **search**: Text to be used as the search criteria
+ * **{object}** Options which customize the search
+    * {string} [searchType] (token|portrait|both) Controls filters applied to the search results
+    * {Boolean} [ignoreKeywords] Ignores keywords search setting
+    * {Boolean} [simpleResults] Results will be returned as an array of all image paths found
+    * {Boolean} [callback] Function to be called with the found images
+ * **returns**: {Map<string, Map<string, Map<string, Array<string>>>>|Array<String>|null} All images found split by original criteria and keywords
+
+e.g. 
+* game.TokenVariants.doImageSearch("Dragon")
+* game.TokenVariants.doImageSearch("Dragon", {simpleResults: true})
+
+### **game.TokenVariants.doRandomSearch(search, { searchType = SEARCH_TYPE.BOTH, actor = null, callback = null } = {})**
+
+Performs a random image search and returns the results.
+
+Parameters:
+ * **search**: Text to be used as the search criteria
+ * **{object}** Options which customize the search
+    * {string} [searchType] (token|portrait|both) Controls filters applied to the search results
+    * {Actor} [actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
+    * {Function[]} [callback] Function to be called with the random image
+ * **returns**: {Array<string>|null} Image path and name
+
+e.g. 
+* game.TokenVariants.doRandomSearch("Goblin")
+* game.TokenVariants.doRandomSearch("Goblin", {callback: (result) => console.log(result)})
 
 ## **game.TokenVariants.cacheTokens()**
 

@@ -1,8 +1,6 @@
 {
     "token-variants.searchPathsTitle": "Search Paths",
     "token-variants.SearchPathsHint": "Configure folders, Rolltables and s3 buckets to be searched for art here.",
-    "token-variants.DisableAutomaticPopupName": "Disable Automatic Pop-ups",
-    "token-variants.DisableAutomaticPopupHint": "Check to disable all automatic pop-ups upon actor/token creation.", 
     "token-variants.ActorDirectoryKeyName": "Actor Directory Popup key",
     "token-variants.ActorDirectoryKeyHint": "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory.",
     "token-variants.TwoPopupsName": "Display separate pop-ups for Portrait and Token art",

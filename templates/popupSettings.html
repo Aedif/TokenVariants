@@ -1,11 +1,4 @@
 <form>
-
-    <div class="form-group">
-        <label>{{localize "token-variants.DisableAutomaticPopupName"}}</label>
-        <input type="checkbox" name="disableAutomaticPopup" data-dtype="Boolean" {{#if disableAutomaticPopup}}checked{{/if}}>
-        <p class="notes">{{localize "token-variants.DisableAutomaticPopupHint"}}</p>
-    </div>
-
     <div class="form-group">
         <label>{{localize "token-variants.TwoPopupsName"}}</label>
         <input type="checkbox" name="twoPopups" data-dtype="Boolean" {{#if twoPopups}}checked{{/if}}>
@@ -25,7 +18,7 @@
     </div>
 
     <div class="form-group">
-        <label>Disable Pop-ups for:</label>
+        <label>Disable Automatic Pop-ups</label>
     </div>
 
     <header class="table-header flexrow">
@@ -39,6 +32,21 @@
                 <input type="checkbox" name="pcDisable" data-dtype="Boolean" {{#if pcDisable}}checked{{/if}}>
                 <input type="checkbox" name="npcDisable" data-dtype="Boolean" {{#if npcDisable}}checked{{/if}}>
                 <input type="checkbox" name="vehicleDisable" data-dtype="Boolean" {{#if vehicleDisable}}checked{{/if}}>
+            </div>
+        </li>
+    </ul>
+
+    <header class="table-header flexrow">
+        <label class="index">On Actor Create</label>
+        <label>On Token Create</label>
+        <label>On Token Copy+Paste</label>
+    </header>
+    <ul class="setting-list">
+        <li class="setting form-group">
+            <div class="form-fields">
+                <input type="checkbox" name="disableAutoPopupOnActorCreate" data-dtype="Boolean" {{#if disableAutoPopupOnActorCreate}}checked{{/if}}>
+                <input type="checkbox" name="disableAutoPopupOnTokenCreate" data-dtype="Boolean" {{#if disableAutoPopupOnTokenCreate}}checked{{/if}}>
+                <input type="checkbox" name="disableAutoPopupOnTokenCopyPaste" data-dtype="Boolean" {{#if disableAutoPopupOnTokenCopyPaste}}checked{{/if}}>
             </div>
         </li>
     </ul>

@@ -1,3 +1,14 @@
+# 1.17.1
+
+* API
+    * Deprecating **displayArtSelect(...)**. **showArtSelect(...)** is to be used instead
+    * Exposed **doArtSearch** and **doRandomSearch** through **game.TokenVariants**
+* Removed 'Filter by D&D 5e Monster (SRD)' setting
+* Fixed a bug with Token HUD side menu being unresponsive when selecting an image with the same path as the current token image
+* Custom image configs will now default to Prototype Token settings if the token being updated has a represented actor
+* Added more options to disable automatic pop-ups with:
+    * Disable on **Actor Create**, **Token Create** and **Token Copy+Paste**
+
 # 1.16.1
 
 * Added more settings to the randomizer

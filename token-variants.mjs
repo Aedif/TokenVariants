@@ -32,7 +32,6 @@ let actorDirKey = "";
 // Controls whether separate popups are displayed for portrait and token art
 let twoPopups = false;
 let noTwoPopupsPrompt = false;
-let disableAutomaticPopup = false;
 
 // Prevent registering of right-click listener on the character sheet
 let disableActorPortraitListener = false;
@@ -273,7 +272,9 @@ async function registerWorldSettings() {
         config: false,
         type: Object,
         default: {
-            disableAutomaticPopup: game.settings.get("token-variants", "disableAutomaticPopup"),
+            disableAutoPopupOnActorCreate: game.settings.get("token-variants", "disableAutomaticPopup"),
+            disableAutoPopupOnTokenCreate: game.settings.get("token-variants", "disableAutomaticPopup"),
+            disableAutoPopupOnTokenCopyPaste: game.settings.get("token-variants", "disableAutomaticPopup"),
             twoPopups: game.settings.get("token-variants", "twoPopups"),
             twoPopupsNoDialog: game.settings.get("token-variants", "twoPopupsNoDialog"),
             disableActorPortraitArtSelect: game.settings.get("token-variants", "disableActorPortraitArtSelect"),
@@ -285,7 +286,6 @@ async function registerWorldSettings() {
             twoPopups = settings.twoPopups;
             noTwoPopupsPrompt = settings.twoPopupsNoDialog;
             disableActorPortraitListener = settings.disableActorPortraitArtSelect;
-            disableAutomaticPopup = settings.disableAutomaticPopup;
         }
     });
 
@@ -293,7 +293,6 @@ async function registerWorldSettings() {
     twoPopups = popupSettings.twoPopups;
     noTwoPopupsPrompt = popupSettings.twoPopupsNoDialog;
     disableActorPortraitListener = popupSettings.disableActorPortraitArtSelect;
-    disableAutomaticPopup = popupSettings.disableAutomaticPopup;
 
     keywordSearch = game.settings.get("token-variants", "keywordSearch");
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
@@ -469,8 +468,7 @@ function registerHUD() {
                 const controlled = canvas.tokens.controlled
                 const index = controlled.findIndex(x => x.data._id === token._id)
                 const tokenToChange = controlled[index]
-                const updateTarget = is080 ? tokenToChange.document : tokenToChange
-                console.log(updateTarget, updateTarget.data.img, event.target.dataset.name)
+                const updateTarget = is080 ? tokenToChange.document : tokenToChange;
                 if(keyboard.isDown("Shift")){
                     let tokenConfig = new TokenConfig(event.target.dataset.filename, event.target.dataset.name, updateTarget.data);
                     tokenConfig.render(true);
@@ -605,8 +603,8 @@ async function initialize() {
             }
 
             // Check if pop-up is enabled and if so open it
-
-            if(disableAutomaticPopup && !keyboard.isDown(actorDirKey)){
+            const popupSettings = game.settings.get("token-variants", "popupSettings");
+            if(popupSettings.disableAutoPopupOnActorCreate && !keyboard.isDown(actorDirKey)){
                 return;
             } else if (disablePopupForType(actor)){
                 return;
@@ -653,8 +651,11 @@ async function initialize() {
             }
 
             // Check if pop-up is enabled and if so open it
+            const popupSettings = game.settings.get("token-variants", "popupSettings");
 
-            if(disableAutomaticPopup && !keyboard.isDown(actorDirKey)){
+            if(keyboard.isDown("v") && popupSettings.disableAutoPopupOnTokenCopyPaste){
+                return;
+            } else if(popupSettings.disableAutoPopupOnTokenCreate && !keyboard.isDown(actorDirKey)){
                 return;
             } else if (disablePopupForType(token.actor)){
                 return;
@@ -955,7 +956,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
 
 /**
  * Performs searches and displays the Art Select pop-up with the results
- * @param search The text to be used as the search criteria
+ * @param {string} search The text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
  * @param {Function[]} [options.callback] Function to be called with the user selected image path
  * @param {string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
@@ -1018,7 +1019,7 @@ async function displayArtSelect(search, callback, searchType = SEARCH_TYPE.BOTH,
  * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
  * @param {Actor} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
  * @param {Function[]} [options.callback] Function to be called with the random image
- * @returns {Array<string>|null} Image path and name
+ * @returns Array<string>|null} Image path and name
  */
 async function doRandomSearch(search, { searchType = SEARCH_TYPE.BOTH, actor = null, callback = null } = {}){
     if (caching) return null;
@@ -1194,10 +1195,6 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
  * Assign new artwork to the actor
  */
 async function setActorImage(actor, image, imageName, {updateActorOnly = true}={}) {
-
-
-    console.log(actor)
-    let token = null; // TODO
     let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
     updateDoc(actor, { img: image });
     if (updateActorOnly)
@@ -1205,7 +1202,7 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
 
     if (twoPopups && noTwoPopupsPrompt) {
         showArtSelect(actor.name, {
-            callback: (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name),
+            callback: (imgSrc, name) => updateTokenImage(actor, null, imgSrc, name),
             searchType: SEARCH_TYPE.TOKEN,
             tokenConfig: token ? token.data : actor.data.token
         });
@@ -1216,13 +1213,13 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
             buttons: {
                 one: {
                     icon: '<i class="fas fa-check"></i>',
-                    callback: () => updateTokenImage(actor, token, image, imageName),
+                    callback: () => updateTokenImage(actor, null, image, imageName),
                 },
                 two: {
                     icon: '<i class="fas fa-times"></i>',
                     callback: () => {
                         showArtSelect(actor.name, {
-                            callback: (imgSrc, name) => updateTokenImage(actor, token, imgSrc, name),
+                            callback: (imgSrc, name) => updateTokenImage(actor, null, imgSrc, name),
                             searchType: SEARCH_TYPE.TOKEN,
                             tokenConfig: token ? token.data : actor.data.token
                         });
