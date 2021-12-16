@@ -983,7 +983,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
  * @param {string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
  * @param {Token|object} [options.tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
 */
-async function showArtSelect(search, {callback, searchType = SEARCH_TYPE.BOTH, tokenConfig = {}}={}){
+async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.BOTH, tokenConfig = {}}={}){
     if (caching) return;
 
     // Set Art Select screen title

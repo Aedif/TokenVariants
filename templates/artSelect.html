@@ -15,15 +15,16 @@
     <div class="token-variants-grid">
         {{#each search.[1] as |image|}}
         <div>
+            <span class="token-variants-grid-box" data-name="{{image.path}}" data-filename="{{image.label}}"></span>
             {{#if image.img}}
-            <img class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" data-filename="{{image.label}}" />
+            <img class="token-variants-grid-image" src="{{image.path}}" />
             {{/if}}
             {{#if image.vid}}
-            <video class="token-variants-box" src="{{image.path}}" data-name="{{image.path}}" data-filename="{{image.label}}" alt="{{image.label}}"
+            <video class="token-variants-grid-image" src="{{image.path}}" alt="{{image.label}}"
                 autoplay loop></video>
             {{/if}}
             {{#unless image.type}}
-            <span class="token-variants-box" data-name="{{image.path}}" data-filename="{{image.label}}" alt="{{image.label}}">{{image.path}}</span>
+            <span class="token-variants-grid-image" alt="{{image.label}}">{{image.path}}</span>
             {{/unless}}
             <p>{{image.label}}</p>
         </div>

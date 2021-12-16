@@ -1,3 +1,7 @@
+# 1.18.2
+
+* Fixed **Art Select** window grid breaking when displaying images that skew heavily from 1:1 aspect ratio
+
 # 1.18.1
 
 * New setting under **Token HUD Settings** to update the character sheet portrait when selecting an image on the Token HUD.

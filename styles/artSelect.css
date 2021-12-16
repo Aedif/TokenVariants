@@ -12,12 +12,12 @@
   display: grid;
 }
 
-.token-variants-grid > div::before,
-.token-variants-grid > div > .token-variants-box {
+.token-variants-grid > div > .token-variants-grid-box,
+.token-variants-grid > div > .token-variants-grid-image {
   grid-area: 1 / 1 / 2 / 2;
 }
 
-.token-variants-grid > div::before {
+.token-variants-grid > div > .token-variants-grid-box {
   content: "";
   padding-bottom: 100%;
   display: block;
@@ -25,14 +25,16 @@
   border-width: 1px;
 }
 
-.token-variants-box {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.token-variants-grid-image {
+  max-width: 98%;
+  max-height: 113px;
+  border: none;
+  display: block;
+  margin: auto;
+  pointer-events: none;
 }
 
-.token-variants-box:hover {
-  /* border-color: #66afe9; */
+.token-variants-grid > div > .token-variants-grid-box:hover {
   box-shadow: 0 0 8px rgba(255,0,0, 0.6);
 }
 

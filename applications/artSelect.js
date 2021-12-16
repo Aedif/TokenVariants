@@ -60,7 +60,7 @@ export default class ArtSelect extends FormApplication {
         const close = () => this.close();
         const actorData = this.actorData;
 
-        const boxes = html.find(`.token-variants-box`);
+        const boxes = html.find(`.token-variants-grid-box`);
         boxes.map((box) => {
             boxes[box].addEventListener('click', async function (event) {
                 if(keyboard.isDown("Shift")){
@@ -68,10 +68,8 @@ export default class ArtSelect extends FormApplication {
                     tokenConfig.render(true);
                 } else {
                     await close();
-                    if(actorData){
+                    if(callback){
                         callback(event.target.dataset.name, event.target.dataset.filename);
-                    } else {
-                        callback(event.target.dataset.name);
                     }
                 }
             })

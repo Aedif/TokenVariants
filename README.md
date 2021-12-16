@@ -145,7 +145,7 @@ To install, import this [manifest](https://raw.githubusercontent.com/Aedif/Token
 
 ## API
 
-### **game.TokenVariants.showArtSelect(search, {callback, searchType='both', tokenConfig={}}={})**
+### **game.TokenVariants.showArtSelect(search, {callback = null, searchType='both', tokenConfig={}}={})**
 
 Displays the art select window.
 
