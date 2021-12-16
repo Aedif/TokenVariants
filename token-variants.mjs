@@ -79,10 +79,7 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
-        name: game.i18n.localize("token-variants.enableTokenHUDButtonForAllName"),
-        hint: game.i18n.localize("token-variants.enableTokenHUDButtonForAllHint"),
         scope: "world",
-        config: true,
         type: Boolean,
         default: false,
     });
@@ -310,6 +307,7 @@ function registerHUD() {
         restricted: false,
     });
 
+    // Deprecated
     game.settings.register("token-variants", "enableTokenHUD", {
         scope: "client",
         config: false,
@@ -317,6 +315,7 @@ function registerHUD() {
         default: true,
     });
 
+    // Deprecated
     game.settings.register("token-variants", "alwaysShowHUD", {
         scope: "client",
         config: false,
@@ -324,6 +323,7 @@ function registerHUD() {
         default: false,
     });
 
+    // Deprecated
     game.settings.register("token-variants", "HUDDisplayImage", {
         scope: "client",
         config: false,
@@ -331,6 +331,7 @@ function registerHUD() {
         default: true,
     });
 
+    // Deprecated
     game.settings.register("token-variants", "HUDImageOpacity", {
         scope: "client",
         config: false,
@@ -339,9 +340,23 @@ function registerHUD() {
         default: 50
     });
 
+    game.settings.register('token-variants', 'hudSettings', {
+        scope: 'client',
+        config: false,
+        type: Object,
+        default: {
+            enableSideMenu: game.settings.get("token-variants", "enableTokenHUD"),
+            displayAsImage: game.settings.get("token-variants", "HUDDisplayImage"),
+            imageOpacity: game.settings.get("token-variants", "HUDImageOpacity"),
+            alwaysShowButton: game.settings.get("token-variants", "alwaysShowHUD"),
+            updateActorImage: false
+        },
+    });
     async function renderHud(hud, html, token, searchText) {
         if (caching) return;
-        if (!game.settings.get("token-variants", "enableTokenHUD")) return;
+
+        const hudSettings = game.settings.get("token-variants", "hudSettings");
+        if (!hudSettings.enableSideMenu) return;
 
         const search = searchText ? searchText : token.name;
         if (!search || search.length < 3) return;
@@ -382,8 +397,7 @@ function registerHUD() {
             }
         }
 
-        const alwaysShowHUD = game.settings.get("token-variants", "alwaysShowHUD");
-        if (!alwaysShowHUD && images.length < 2 && actorVariants.length == 0) return;
+        if (!hudSettings.alwaysShowButton && images.length < 2 && actorVariants.length == 0) return;
 
         // Retrieving the possibly custom name attached as a flag to the token
         let tokenImageName = "";
@@ -410,8 +424,8 @@ function registerHUD() {
             }  
         });
 
-        const imageDisplay = game.settings.get("token-variants", "HUDDisplayImage");
-        const imageOpacity = game.settings.get("token-variants", "HUDImageOpacity") / 100;
+        const imageDisplay = hudSettings.displayAsImage;
+        const imageOpacity = hudSettings.imageOpacity / 100;
 
         const sideSelect = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
 
@@ -469,6 +483,7 @@ function registerHUD() {
                 const index = controlled.findIndex(x => x.data._id === token._id)
                 const tokenToChange = controlled[index]
                 const updateTarget = is080 ? tokenToChange.document : tokenToChange;
+                const hudSettings = game.settings.get("token-variants", "hudSettings");
                 if(keyboard.isDown("Shift")){
                     let tokenConfig = new TokenConfig(event.target.dataset.filename, event.target.dataset.name, updateTarget.data);
                     tokenConfig.render(true);
@@ -478,9 +493,15 @@ function registerHUD() {
                     if(tokenImageName !== event.target.dataset.filename){
                         updateTokenImage(null, updateTarget, event.target.dataset.name, event.target.dataset.filename);
                         canvas.tokens.hud.clear();
+                        if(updateTarget.actor && game.settings.get("token-variants", "hudSettings").updateActorImage){
+                            setActorImage(game.actors.get(updateTarget.actor.id), event.target.dataset.name, event.target.dataset.filename, {updateActorOnly: true});
+                        }
                     }
                 } else {
                     updateTokenImage(null, updateTarget, event.target.dataset.name, event.target.dataset.filename);
+                    if(updateTarget.actor && game.settings.get("token-variants", "hudSettings").updateActorImage){
+                        setActorImage(game.actors.get(updateTarget.actor.id), event.target.dataset.name, event.target.dataset.filename, {updateActorOnly: true});
+                    }
                 }
             });
             if (userHasConfigRights) {

@@ -2,15 +2,25 @@
     <div class="form-group">
         <label>{{localize "token-variants.enableTokenHUDName"}}</label>
         <div class="form-fields">
-            <input type="checkbox" name="enableTokenHUD" data-dtype="Boolean" {{#if enableTokenHUD}}checked{{/if}}>
+            <input type="checkbox" name="enableSideMenu" data-dtype="Boolean" {{#if enableSideMenu}}checked{{/if}}>
         </div>
         <p class="notes">{{localize "token-variants.enableTokenHUDHint"}}</p>
     </div>
 
+    {{#if enableWorldSettings}}
+        <div class="form-group">
+            <label>{{localize "token-variants.enableTokenHUDButtonForAllName"}}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="enableSideMenuForAll" data-dtype="Boolean" {{#if enableSideMenuForAll}}checked{{/if}}>
+            </div>
+            <p class="notes">{{localize "token-variants.enableTokenHUDButtonForAllHint"}}</p>
+        </div>
+    {{/if}}
+
     <div class="form-group">
         <label>{{localize "token-variants.alwaysShowHUDName"}}</label>
         <div class="form-fields">
-            <input type="checkbox" name="alwaysShowHUD" data-dtype="Boolean" {{#if alwaysShowHUD}}checked{{/if}}>
+            <input type="checkbox" name="alwaysShowButton" data-dtype="Boolean" {{#if alwaysShowButton}}checked{{/if}}>
         </div>
         <p class="notes">{{localize "token-variants.alwaysShowHUDHint"}}</p>
     </div>
@@ -18,7 +28,7 @@
     <div class="form-group">
         <label>{{localize "token-variants.HUDDisplayImageName"}}</label>
         <div class="form-fields">
-            <input type="checkbox" name="HUDDisplayImage" data-dtype="Boolean" {{#if displayImage}}checked{{/if}}>
+            <input type="checkbox" name="displayAsImage" data-dtype="Boolean" {{#if displayAsImage}}checked{{/if}}>
         </div>
         <p class="notes">{{localize "token-variants.HUDDisplayImageHint"}}</p>
     </div>
@@ -26,13 +36,21 @@
     <div class="form-group">
         <label>{{localize "token-variants.HUDImageOpacityName"}}</label>
         <div class="form-fields">
-            <input type="range" name="HUDImageOpacity" data-dtype="Number" value="{{opacity}}" min="0" max="100"
+            <input type="range" name="imageOpacity" data-dtype="Number" value="{{imageOpacity}}" min="0" max="100"
                 step="1">
         </div>
         <p class="notes">{{localize "token-variants.HUDImageOpacityHint"}}</p>
     </div>
 
+    <div class="form-group">
+        <label>{{localize "token-variants.HUDUpdateActorImageName"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="updateActorImage" data-dtype="Boolean" {{#if updateActorImage}}checked{{/if}}>
+        </div>
+        <p class="notes">{{localize "token-variants.HUDUpdateActorImageHint"}}</p>
+    </div>
+
     <div class="button-container">
-        <button type="submit">Apply</button>
+        <button type="submit"><i class="far fa-save"></i>Apply</button>
     </div>
 </form>

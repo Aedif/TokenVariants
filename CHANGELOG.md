@@ -1,3 +1,7 @@
+# 1.18.1
+
+* New setting under **Token HUD Settings** to update the character sheet portrait when selecting an image on the Token HUD.
+
 # 1.17.1
 
 * API

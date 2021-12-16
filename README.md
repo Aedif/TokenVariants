@@ -50,15 +50,36 @@ By default the module will scan these sources only when the world is loaded or w
 
 For small directories and rolltables the performance hit is negligible so experiment with the convenience/performance trade-offs until you find the right balance.
 
-### Filter Settings
+### Search Filter Settings
 
 !["Filter Settings"](./docs/filter_settings.png)
 
 There are 3 types of searches. Portrait, Token, and General (Token+Portrait). Each of these searches can be configured with filters to exclude files that include or exclude certain text, or match some regular expression.
 
-### Token HUD Settings
+### Randomizer Settings
+!["Randomizer Settings"](./docs/randomizer_settings.png)
 
-A SubMenu with the following settings:
+If enabled will automatically assign random images to Actor portraits and Tokens. The images will be chosen from searches performed using the actor/token name and/or keywords. Additionally you may also include images shared through the TokenHUD side menu.
+
+### Pop-up Settings
+
+#### Disable separate pop-ups for Portrait and Token art
+
+When enabled two separate pop-ups will be displayed upon Actor/Token creation, first to select the portrait art and second to select the Token art.
+
+#### Disable prompt between Portrait and Token art select
+
+Will disable the confirmation prompt displayed when the **Disable separate pop-ups for Portrait and Token art** is enabled. Two pop-ups will always be shown.
+
+#### Disable right-click pop-up on the character sheet portrait
+
+Will disable the Art Select window popping up when right-clicking the portrait on the character sheet.
+
+#### Disable Automatic Pop-ups
+
+Automatic pop-ups can be disabled for type of actor (PC, NPC, Vehicle) and the type of event (Actor Create, Token Create, Token Copy+Paste).
+
+### Token HUD Settings
 
 #### Enable Token HUD Button
 Enables extra button in the Token HUD which brings up all of the found art in a small preview to the right: 
@@ -71,62 +92,45 @@ By default the side menu uses the token's name as the search criteria. However a
 
 !["Token Hud Search"](./docs/token_hud_search.png)
 
+### Enable Token HUD button for everyone
+
+If checked will allow all players to access the new Token HUD button. Note that this may potentially reveal art that the players are not supposed to see. For a more controlled way of allowing your players to switch between different variants consider "sharing" it via right-clicking the art in the new Token HUD menu.
+
 #### Always show HUD Button
 
 If enabled the HUD Button will be shown even when no matches have been found.
 
 #### Display as image?
 
-Controls whether the art in the preview is rendered as images or file names.
+Controls whether the art in the preview is rendered as images or a list of file names.
 
 #### Opacity of token preview
 
 Controls the opacity of the tokens in the preview before being hovered over.
 
-### Enable Token HUD button for everyone
+#### Update Actor portrait
 
-If checked will allow all players to access the new Token HUD button. Note that this may potentially reveal art that the players are not supposed to see. For a more controlled way of allowing your players to switch between different variants consider "sharing" it via right-clicking the art in the new Token HUD menu.
-
-### Disable Caching
-
-By default the module will search the directories defined in 'Variant art search paths' only when the world is loaded or when the module settings have changed. If new art is added while the world is still open it will not be found by the module. 'Disable Caching' will force the search to be performed every time a new actor is created at a significant cost to speed at which the art is displayed to the user.
-
-### Disable Automatic Popups
-
-If checked will prevent automatic popups from being triggered upon Actor creation. The popup can still be brought up if Ctrl key is held while dragging the Token/Actor.
-
-### Filter by D&D 5e Monster (SRD)
-
-Can be enabled if you want variant art to not be retrieved for actors with names not found in D&D 5e Monster (SRD) list.
+When enabled selecting an image from the Token HUD will also apply it to the character sheet.
 
 ### Search by Keyword
 
 When enabled the art search will be done using both the Actor/Token full name as well as individual words within the name:
 
 !["Keyword Search"](./docs/keyword_search.png)
+
 ### Excluded Keywords
 
-Words within this list will be excluded from the keywords search:
-!["Excluded Keywords"](./docs/excluded_keywords.png)
+Words within this list will be excluded from the keywords search. By default "and,for" are ignored in token/actor names.
 
 ### Actor Directory Popup key
 
-Controls the key used to trigger a popup when dragging an actor from the 'Actor Directory'.
-
-### Display separate pop-ups for Portrait and Token art
-
-When enabled the Art Select pop-up will be shown twice upon actor/token creation. Once for the portrait, and then again for the token art.
+Controls the key used to trigger a pop-up when dragging in an actor from the 'Actor Directory'.
 
 ### Match name to folder
 
 When enabled all searches will be done both on the file names as well as the file path:
 
 e.g. '**Dragon**' will match "token_art/**dragon**s/red/avatar.png" as well as "tokens/monsters/Red**Dragon**.png"
-
-### Randomizer Settings
-!["Randomizer Settings"](./docs/randomizer_settings.png)
-
-If enabled will automatically assign random images to Tokens and Actor portraits. The images picked will be chosen from searches performed using the actor/token name and/or keywords. Additionally you may also include images shared through the TokenHUD side menu.
 
 ## Image configuration
 

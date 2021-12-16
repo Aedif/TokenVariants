@@ -45,5 +45,7 @@
     "token-variants.randomizerMenuName": "Randomizer Settings",
     "token-variants.randomizerMenuHint": "Enable randomization of images upon actor and token creation.",
     "token-variants.popupMenuName": "Pop-up Settings",
-    "token-variants.popupMenuHint": "Enable/disable pop-up features"
+    "token-variants.popupMenuHint": "Enable/disable pop-up features",
+    "token-variants.HUDUpdateActorImageName": "Update Actor portrait",
+    "token-variants.HUDUpdateActorImageHint": "When enabled selecting an image from the Token HUD will also apply it to the character sheet."
 }

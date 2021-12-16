@@ -1,6 +1,6 @@
 export default class TokenHUDSettings extends FormApplication {
     constructor() {
-        super({}, {});
+        super({}, {title: `Token HUD Settings`});
     }
 
     static get defaultOptions() {
@@ -17,11 +17,12 @@ export default class TokenHUDSettings extends FormApplication {
 
     async getData(options) {
         const data = super.getData(options);
-        data.enableTokenHUD = game.settings.get("token-variants", "enableTokenHUD");
-        data.displayImage = game.settings.get("token-variants", "HUDDisplayImage");
-        data.opacity = game.settings.get("token-variants", "HUDImageOpacity");
-        data.alwaysShowHUD = game.settings.get("token-variants", "alwaysShowHUD");
-        return data;
+        const settings = game.settings.get("token-variants", "hudSettings");
+        settings.enableWorldSettings = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
+        if(settings.enableWorldSettings){
+            settings.enableSideMenuForAll = game.settings.get("token-variants", "enableTokenHUDButtonForAll");
+        }
+        return mergeObject(data, settings);
     }
 
     /**
@@ -36,9 +37,10 @@ export default class TokenHUDSettings extends FormApplication {
      * @param {Object} formData
      */
     async _updateObject(event, formData) {
-        game.settings.set("token-variants", "enableTokenHUD", formData["enableTokenHUD"]);
-        game.settings.set("token-variants", "HUDDisplayImage", formData["HUDDisplayImage"]);
-        game.settings.set("token-variants", "HUDImageOpacity", formData["HUDImageOpacity"]);
-        game.settings.set("token-variants", "alwaysShowHUD", formData["alwaysShowHUD"]);
+        if("enableSideMenuForAll" in formData){
+            game.settings.set("token-variants", "enableTokenHUDButtonForAll", formData.enableSideMenuForAll);
+            delete formData.enableSideMenuForAll;
+        }
+        game.settings.set("token-variants", "hudSettings", formData);
     }
 }
