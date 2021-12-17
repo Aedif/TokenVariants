@@ -34,6 +34,10 @@
     position: relative;
 }
 
+#token-hud .token-variants-button-select.hide {
+    display: none;
+}
+
 #token-hud .token-variants-button-select .fa-share {
     position: absolute;
     left: 0;
@@ -46,8 +50,12 @@
     opacity: 1;
 }
 
-#token-hud #token-variants-side-search{
+#token-hud .token-variants-side-search{
     display: none;
+}
+
+#token-hud .token-variants-side-search.active{
+    display: block;
 }
 
 #token-hud .token-variants-button-select:hover .token-variants-button-image{

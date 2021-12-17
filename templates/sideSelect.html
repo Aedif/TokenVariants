@@ -2,7 +2,7 @@
     <img id="token-variants-side-button" src="modules/token-variants/img/token-images.svg" width="36" height="36"
         title="{{localize token-variants.SelectScreenTitle}}" />
     <div class="token-variants-wrap {{#unless imageDisplay}}list{{/unless}}">
-        <input id="token-variants-side-search" type="text" />
+        <input class="token-variants-side-search" type="text" />
         {{#each imagesParsed as |image|}}
         <button
             class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}">

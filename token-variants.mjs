@@ -1,11 +1,11 @@
 import SearchPaths from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
-import TokenHUDSettings from "./applications/tokenHUD.js";
+import TokenHUDSettings from "./applications/tokenHUDSettings.js";
 import FilterSettings from "./applications/searchFilters.js";
-import TokenConfig from "./applications/tokenConfig.js";
 import RandomizerSettings from "./applications/randomizerSettings.js";
 import PopUpSettings from "./applications/popupSettings.js";
-import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfig} from "./scripts/utils.js"
+import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfig, SEARCH_TYPE} from "./scripts/utils.js"
+import { renderHud } from "./applications/tokenHUD.js"
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = [{text: "modules/caeora-maps-tokens-assets/assets/tokens/", cache: true}];
@@ -35,13 +35,6 @@ let noTwoPopupsPrompt = false;
 
 // Prevent registering of right-click listener on the character sheet
 let disableActorPortraitListener = false;
-
-// Obj used for indicating what title and filter should be used in the Art Select screen
-let SEARCH_TYPE = {
-    PORTRAIT: "portrait",
-    TOKEN: "token",
-    BOTH: "both"
-}
 
 let debug = false;
 
@@ -352,220 +345,13 @@ function registerHUD() {
             updateActorImage: false
         },
     });
-    async function renderHud(hud, html, token, searchText) {
-        if (caching) return;
-
-        const hudSettings = game.settings.get("token-variants", "hudSettings");
-        if (!hudSettings.enableSideMenu) return;
-
-        const search = searchText ? searchText : token.name;
-        if (!search || search.length < 3) return;
-
-        const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
-
-        let artSearch = await doImageSearch(search, {searchType: SEARCH_TYPE.TOKEN, ignoreKeywords: true});
-        let images = artSearch ? artSearch.get(search) : new Map();
-
-        let actorVariants = new Map();
-        const tokenActor = game.actors.get(token.actorId);
-
-        if (tokenActor) {
-            actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
-
-            // To maintain compatibility with previous versions
-            if (!(actorVariants instanceof Array)){
-                actorVariants = [];
-            } else if (actorVariants.length != 0 && !(actorVariants[0] instanceof Object)){
-                actorVariants.forEach((src, i) => {
-                    actorVariants[i] = {imgSrc: src, names: [getFileName(src)]};
-                });
-            } 
-            // end of compatibility code
-
-            // Merge images found through search with variants shared through 'variant' flag
-            if (!searchText){
-                actorVariants.forEach(variant => {
-                    for(let name of variant.names){
-                        if(images.has(variant.imgSrc)){
-                            if(!images.get(variant.imgSrc).includes(name))
-                                images.get(variant.imgSrc).push(name);
-                        } else {
-                            images.set(variant.imgSrc, [name]);
-                        }
-                    }
-                });
-            }
-        }
-
-        if (!hudSettings.alwaysShowButton && images.length < 2 && actorVariants.length == 0) return;
-
-        // Retrieving the possibly custom name attached as a flag to the token
-        let tokenImageName = "";
-        if(token.flags["token-variants"] && token.flags["token-variants"]["name"]){
-            tokenImageName = token.flags["token-variants"]["name"];
-        } else {
-            tokenImageName = getFileName(token.img);
-        }
-
-        let imagesParsed = [];
-        images.forEach((names, tokenSrc) => {
-            const img = isImage(tokenSrc);
-            const vid = isVideo(tokenSrc);
-            for(let name of names){
-                let shared = false;
-                if(userHasConfigRights){
-                    actorVariants.forEach(variant => {
-                        if(variant.imgSrc === tokenSrc && variant.names.includes(name)) {
-                            shared = true;
-                        }
-                    });
-                }
-                imagesParsed.push({ route: tokenSrc, name: name, used: tokenSrc === token.img && name === tokenImageName, img, vid, type: img || vid, shared: shared }); 
-            }  
-        });
-
-        const imageDisplay = hudSettings.displayAsImage;
-        const imageOpacity = hudSettings.imageOpacity / 100;
-
-        const sideSelect = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
-
-        const is080 = !isNewerVersion("0.8.0", game.data.version)
-
-        let divR = html.find('div.right')
-            .append(sideSelect);
-        if (!searchText)
-            divR.click((event) => {
-                let activeButton, clickedButton, tokenButton;
-                for (const button of html.find('div.control-icon')) {
-                    if (button.classList.contains('active')) activeButton = button;
-                    if (button === event.target.parentElement) clickedButton = button;
-                    if (button.dataset.action === 'token-variants-side-selector') tokenButton = button;
-                }
-
-                if (clickedButton === tokenButton && activeButton !== tokenButton) {
-                    tokenButton.classList.add('active');
-
-                    html.find('.token-variants-wrap')[0].classList.add('active');
-                    const effectSelector = is080 ? '[data-action="effects"]' : '.effects';
-                    html.find(`.control-icon${effectSelector}`)[0].classList.remove('active');
-                    html.find('.status-effects')[0].classList.remove('active');
-                } else if (event.target.id && event.target.id == "token-variants-side-search") {
-                    // Do nothing
-                } else {
-                    tokenButton.classList.remove('active');
-                    html.find('.token-variants-wrap')[0].classList.remove('active');
-                }
-            });
-
-        html.find('#token-variants-side-search').on('keyup', (event) => {
-            if (event.key === 'Enter' || event.keyCode === 13) {
-                if (event.target.value.length >= 3) {
-                    html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
-                    renderHud(hud, html, token, event.target.value);
-                }
-            }
-        });
-
-        if (userHasConfigRights) {
-            html.find('#token-variants-side-button').on("contextmenu", () => {
-                html.find('.token-variants-button-select').remove();
-                html.find('#token-variants-side-search').toggle("active")
-            });
-        }
-
-        const buttons = html.find('.token-variants-button-select')
-
-        buttons.map((button) => {
-            buttons[button].addEventListener('click', function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-                const controlled = canvas.tokens.controlled
-                const index = controlled.findIndex(x => x.data._id === token._id)
-                const tokenToChange = controlled[index]
-                const updateTarget = is080 ? tokenToChange.document : tokenToChange;
-                const hudSettings = game.settings.get("token-variants", "hudSettings");
-                if(keyboard.isDown("Shift")){
-                    let tokenConfig = new TokenConfig(event.target.dataset.filename, event.target.dataset.name, updateTarget.data);
-                    tokenConfig.render(true);
-                } else if(updateTarget.data.img === event.target.dataset.name){
-                    let tokenImageName = updateTarget.getFlag("token-variants", "name");
-                    if(!tokenImageName) tokenImageName = getFileName(updateTarget.data.img);
-                    if(tokenImageName !== event.target.dataset.filename){
-                        updateTokenImage(null, updateTarget, event.target.dataset.name, event.target.dataset.filename);
-                        canvas.tokens.hud.clear();
-                        if(updateTarget.actor && game.settings.get("token-variants", "hudSettings").updateActorImage){
-                            setActorImage(game.actors.get(updateTarget.actor.id), event.target.dataset.name, event.target.dataset.filename, {updateActorOnly: true});
-                        }
-                    }
-                } else {
-                    updateTokenImage(null, updateTarget, event.target.dataset.name, event.target.dataset.filename);
-                    if(updateTarget.actor && game.settings.get("token-variants", "hudSettings").updateActorImage){
-                        setActorImage(game.actors.get(updateTarget.actor.id), event.target.dataset.name, event.target.dataset.filename, {updateActorOnly: true});
-                    }
-                }
-            });
-            if (userHasConfigRights) {
-                buttons[button].addEventListener('contextmenu', function (event) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    const controlled = canvas.tokens.controlled;
-                    const index = controlled.findIndex(x => x.data._id === token._id);
-                    const tokenToChange = controlled[index];
-                    const updateTarget = is080 ? tokenToChange.document : tokenToChange;
-                    const variantSelected = event.target.dataset.name;
-                    const variantSelectedName = event.target.dataset.filename;
-                    if (updateTarget.actor) {
-                        let tokenActor = game.actors.get(updateTarget.actor.id);
-                        let variants = tokenActor.getFlag('token-variants', 'variants') || [];
-
-                        // To maintain compatibility with previous versions
-                        if (!(variants instanceof Array)){
-                            variants = [];
-                        } else if (variants.length != 0 && !(variants[0] instanceof Object)){
-                            variants.forEach((src, i) => {
-                                variants[i] = {imgSrc: src, names: [getFileName(src)]};
-                            });
-                        } 
-                        // end of compatibility code
-
-                        // Remove selected variant if present in the flag, add otherwise
-                        let del = false;
-                        let updated = false;
-                        for(let variant of variants){
-                            if(variant.imgSrc === variantSelected){
-                                let fNames = variant.names.filter(name => name !== variantSelectedName);
-                                if(fNames.length === 0){
-                                    del = true;
-                                } else if(fNames.length === variant.names.length){
-                                    fNames.push(variantSelectedName);
-                                }
-                                variant.names = fNames;
-                                updated = true;
-                                break;
-                            }
-                        }
-                        if(del) variants = variants.filter(variant => variant.imgSrc !== variantSelected);
-                        else if (!updated) variants.push({imgSrc: variantSelected, names: [variantSelectedName]});
-
-                        // Set shared variants as an actor flag
-                        tokenActor.unsetFlag('token-variants', 'variants');
-                        if(variants.length > 0){
-                            tokenActor.setFlag('token-variants', 'variants', variants);
-                        }
-                        event.target.parentNode.querySelector('.fa-share').classList.toggle("active")
-                    }
-                });
-            }
-        });
-
-        if (searchText) {
-            html.find('#token-variants-side-button')[0].parentNode.classList.add('active');
-            html.find('.token-variants-wrap')[0].classList.add('active');
-        }
+    
+    async function renderHudButton(hud, html, token, searchText){
+        renderHud(hud, html, token, searchText, doImageSearch, updateTokenImage, setActorImage);
     }
 
     // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
-    Hooks.on('renderTokenHUD', renderHud);
+    Hooks.on('renderTokenHUD', renderHudButton);
 }
 
 /**
