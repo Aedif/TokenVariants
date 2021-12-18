@@ -1,5 +1,5 @@
 /* ---------------------------------------- */
-/* Token HUD Sheet                          */
+/* Token HUD Settings                          */
 /* ---------------------------------------- */
 #token-hud .token-variants-wrap {
     position: absolute;
@@ -81,7 +81,6 @@
     filter: grayscale(100%);
 }
 #token-hud .token-variants-button-disabled span, #token-hud .token-variants-button-disabled:hover img, #token-hud .token-variants-button-disabled:hover video {
-    /* opacity: 0.7 !important; */
     color: #CCC;
 }
 

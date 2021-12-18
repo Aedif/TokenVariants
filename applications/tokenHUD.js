@@ -8,7 +8,6 @@ function render(){
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText, doImageSearch, updateTokenImage, setActorImage) {
-    console.log(searchText)
     const hudSettings = game.settings.get("token-variants", "hudSettings");
 
     if (!hudSettings.enableSideMenu) return;
@@ -128,7 +127,7 @@ function _onSideButtonRightClick(event){
     // Display side menu if button is not active yet
     const variantsControlIcon = $(event.target.parentElement);
     if(!variantsControlIcon.hasClass('active')){
-        variantsControlIcon.find('img').trigger('click');
+        variantsControlIcon.find('#token-variants-side-button').trigger('click');
     }
 
     // Display/hide buttons and search input
@@ -184,7 +183,6 @@ function _onImageClick(event, tokenId, updateTokenImage, setActorImage){ //TODO
 }
 
 function _onImageRightClick(event, tokenId){
-    console.log(event)
     event.preventDefault();
     event.stopPropagation();
 

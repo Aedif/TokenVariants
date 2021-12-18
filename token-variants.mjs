@@ -490,12 +490,12 @@ async function initialize() {
  * ArtSelect using the token's name.
  */
 function modTokenConfig(tokenConfig, html, _) {
-    let fields = html[0].getElementsByClassName("image");
+    let fields = html[0].getElementsByClassName('image');
     for (let field of fields) {
-        if (field.getAttribute("name") == "img") {
-            let el = document.createElement("button");
+        if (field.getAttribute('name') == 'img') {
+            let el = document.createElement('button');
             el.type = "button";
-            el.title = game.i18n.localize("token-variants.TokenConfigButtonTitle");
+            el.title = game.i18n.localize('token-variants.TokenConfigButtonTitle');
             el.innerHTML = '<i class="fas fa-images"></i>';
             el.tabIndex = -1;
             el.onclick = async () => {
@@ -507,11 +507,11 @@ function modTokenConfig(tokenConfig, html, _) {
                             const tokenConfigHTML = $(html[0]).find('.tab[data-tab="image"]')[0];
                             $(tokenConfigHTML).find('[name="width"]').val(tokenConfig.width);
                             $(tokenConfigHTML).find('[name="height"]').val(tokenConfig.height);
-                            $(tokenConfigHTML).find('[name="scale"]').val(tokenConfig.scale).trigger( "change" );
+                            $(tokenConfigHTML).find('[name="scale"]').val(tokenConfig.scale).trigger( 'change' );
                             $(tokenConfigHTML).find('[name="mirrorX"]').prop('checked', tokenConfig.mirrorX);
                             $(tokenConfigHTML).find('[name="mirrorY"]').prop('checked', tokenConfig.mirrorY);
-                            $(tokenConfigHTML).find('[data-edit="tint"]').val(tokenConfig.tint).trigger("change");
-                            $(tokenConfigHTML).find('[name="alpha"]').val(tokenConfig.alpha).trigger("change");
+                            $(tokenConfigHTML).find('[data-edit="tint"]').val(tokenConfig.tint).trigger( 'change' );
+                            $(tokenConfigHTML).find('[name="alpha"]').val(tokenConfig.alpha).trigger( 'change' );
                         }
                     },
                     searchType: SEARCH_TYPE.TOKEN,
