@@ -1,5 +1,13 @@
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/]/g);
 
+// Types of searches
+export const SEARCH_TYPE = {
+    PORTRAIT: "portrait",
+    TOKEN: "token",
+    BOTH: "both"
+}
+
+
 /**
  * Retrieves a custom token configuration if one exists for the given image
  */

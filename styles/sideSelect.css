@@ -1,5 +1,5 @@
 /* ---------------------------------------- */
-/* Token HUD Sheet                          */
+/* Token HUD Settings                          */
 /* ---------------------------------------- */
 #token-hud .token-variants-wrap {
     position: absolute;
@@ -34,6 +34,10 @@
     position: relative;
 }
 
+#token-hud .token-variants-button-select.hide {
+    display: none;
+}
+
 #token-hud .token-variants-button-select .fa-share {
     position: absolute;
     left: 0;
@@ -46,8 +50,12 @@
     opacity: 1;
 }
 
-#token-hud #token-variants-side-search{
+#token-hud .token-variants-side-search{
     display: none;
+}
+
+#token-hud .token-variants-side-search.active{
+    display: block;
 }
 
 #token-hud .token-variants-button-select:hover .token-variants-button-image{
@@ -73,7 +81,6 @@
     filter: grayscale(100%);
 }
 #token-hud .token-variants-button-disabled span, #token-hud .token-variants-button-disabled:hover img, #token-hud .token-variants-button-disabled:hover video {
-    /* opacity: 0.7 !important; */
     color: #CCC;
 }
 
