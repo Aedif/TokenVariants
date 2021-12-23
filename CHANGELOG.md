@@ -1,3 +1,7 @@
+# 1.19.1
+
+* The module now supports all '**Token Configuration**' window settings when assigning custom config to images.
+
 # 1.18.2
 
 * Fixed **Art Select** window grid breaking when displaying images that skew heavily from 1:1 aspect ratio
