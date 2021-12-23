@@ -1,4 +1,4 @@
-import TokenConfig from "./tokenConfig.js";
+import TokenCustomConfig from "./tokenCustomConfig.js";
 
 function getStartingWidth(allImages) {
     let maxLength = 0;
@@ -25,13 +25,13 @@ function getStartingHeight(allImages) {
 }
 
 export default class ArtSelect extends FormApplication {
-    constructor(title, search, allImages, callback, performSearch, actorData) {
+    constructor(title, search, allImages, callback, performSearch, object) {
         super({}, { closeOnSubmit: false, width: getStartingWidth(allImages), height: getStartingHeight(allImages), title: title });
         this.search = search;
         this.allImages = allImages;
         this.callback = callback;
         this.performSearch = performSearch;
-        this.actorData = actorData;
+        this.object = object;
     }
 
     static get defaultOptions() {
@@ -58,14 +58,14 @@ export default class ArtSelect extends FormApplication {
         super.activateListeners(html);
         const callback = this.callback;
         const close = () => this.close();
-        const actorData = this.actorData;
+        const object = this.object;
 
         const boxes = html.find(`.token-variants-grid-box`);
         boxes.map((box) => {
             boxes[box].addEventListener('click', async function (event) {
                 if(keyboard.isDown("Shift")){
-                    let tokenConfig = new TokenConfig(event.target.dataset.filename, event.target.dataset.name, actorData);
-                    tokenConfig.render(true);
+                    if(object)
+                        new TokenCustomConfig(object, {}, event.target.dataset.name, event.target.dataset.filename).render(true);
                 } else {
                     await close();
                     if(callback){

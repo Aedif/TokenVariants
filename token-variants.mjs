@@ -4,7 +4,8 @@ import TokenHUDSettings from "./applications/tokenHUDSettings.js";
 import FilterSettings from "./applications/searchFilters.js";
 import RandomizerSettings from "./applications/randomizerSettings.js";
 import PopUpSettings from "./applications/popupSettings.js";
-import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfig, SEARCH_TYPE} from "./scripts/utils.js"
+import TokenCustomConfig from "./applications/tokenCustomConfig.js";
+import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfigForUpdate, SEARCH_TYPE} from "./scripts/utils.js"
 import { renderHud } from "./applications/tokenHUD.js"
 
 // Default path where the script will look for token art
@@ -279,6 +280,20 @@ async function registerWorldSettings() {
         }
     });
 
+    // Backwards compatibility for setting format used in versions <=1.18.2
+    const tokenConfigs = game.settings.get("token-variants", "tokenConfigs");
+    tokenConfigs.forEach((config) => {
+        if(!config.hasOwnProperty('tvImgSrc')){
+            config['tvImgSrc'] = config.imgSrc;
+            config['tvImgName'] = config.name;
+            config['tvTab_image'] = true;
+            delete config.imgSrc;
+            delete config.name;
+        }
+    });
+    game.settings.set("token-variants", "tokenConfigs", tokenConfigs);
+    // end of compatibility code
+
     const popupSettings = game.settings.get("token-variants", "popupSettings");
     twoPopups = popupSettings.twoPopups;
     noTwoPopupsPrompt = popupSettings.twoPopupsNoDialog;
@@ -420,7 +435,7 @@ async function initialize() {
             showArtSelect(actor.data.name, {
                 callback: (imgSrc, name) => setActorImage(actor, imgSrc, name, {updateActorOnly: false}),
                 searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
-                tokenConfig: actor.data.token
+                object: actor
             }); 
         });
         Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
@@ -471,7 +486,7 @@ async function initialize() {
             showArtSelect(op4 ? options.name : token.name, {
                 callback: callback, 
                 searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH, 
-                tokenConfig: token.data
+                object: token
             });
         });
         Hooks.on("renderTokenConfig", modTokenConfig);
@@ -493,29 +508,28 @@ function modTokenConfig(tokenConfig, html, _) {
     let fields = html[0].getElementsByClassName('image');
     for (let field of fields) {
         if (field.getAttribute('name') == 'img') {
+            console.log(tokenConfig)
             let el = document.createElement('button');
             el.type = "button";
             el.title = game.i18n.localize('token-variants.TokenConfigButtonTitle');
+            el.className = "token-variants-image-select-button"; 
             el.innerHTML = '<i class="fas fa-images"></i>';
             el.tabIndex = -1;
+            el.setAttribute('data-type', 'imagevideo');
+            el.setAttribute('data-target', 'img');
             el.onclick = async () => {
                 showArtSelect(tokenConfig.object.data.name, {
                     callback: (imgSrc, name) => {
                         field.value = imgSrc;
-                        const tokenConfig = getTokenConfig(imgSrc, name);
+                        const tokenConfig = getTokenConfigForUpdate(imgSrc, name);
                         if(tokenConfig){
-                            const tokenConfigHTML = $(html[0]).find('.tab[data-tab="image"]')[0];
-                            $(tokenConfigHTML).find('[name="width"]').val(tokenConfig.width);
-                            $(tokenConfigHTML).find('[name="height"]').val(tokenConfig.height);
-                            $(tokenConfigHTML).find('[name="scale"]').val(tokenConfig.scale).trigger( 'change' );
-                            $(tokenConfigHTML).find('[name="mirrorX"]').prop('checked', tokenConfig.mirrorX);
-                            $(tokenConfigHTML).find('[name="mirrorY"]').prop('checked', tokenConfig.mirrorY);
-                            $(tokenConfigHTML).find('[data-edit="tint"]').val(tokenConfig.tint).trigger( 'change' );
-                            $(tokenConfigHTML).find('[name="alpha"]').val(tokenConfig.alpha).trigger( 'change' );
+                            for (var key in tokenConfig) {   
+                                $(html).find(`[name="${key}"]`).val(tokenConfig[key]);
+                            }
                         }
                     },
                     searchType: SEARCH_TYPE.TOKEN,
-                    tokenConfig: tokenConfig.object.data
+                    object: tokenConfig.object
                 });
             };
             field.parentNode.append(el);
@@ -558,7 +572,7 @@ function modActorSheet(actorSheet, html, options) {
         showArtSelect(actorSheet.object.name, {
             callback: (imgSrc, name) => setActorImage(actorSheet.object, imgSrc, name),
             searchType: SEARCH_TYPE.PORTRAIT,
-            tokenConfig: actorSheet.object.data.token
+            object: actorSheet.object
         })
     }, false);
 }
@@ -767,9 +781,9 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
  * @param {object} [options={}] Options which customize the search
  * @param {Function[]} [options.callback] Function to be called with the user selected image path
  * @param {string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
- * @param {Token|object} [options.tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
+ * @param {Token|Actor} [options.object] Token/Actor used when displaying Custom Token Config prompt
 */
-async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.BOTH, tokenConfig = {}}={}){
+async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.BOTH, object = null}={}){
     if (caching) return;
 
     // Set Art Select screen title
@@ -803,21 +817,21 @@ async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.
     });
 
     let searchAndDisplay = ((search) => {
-        showArtSelect(search, {callback: callback, searchType: searchType, tokenConfig: tokenConfig});
+        showArtSelect(search, {callback: callback, searchType: searchType, object: object});
     });
 
     if (artFound) {
-        let artSelect = new ArtSelect(title, search, allButtons, callback, searchAndDisplay, tokenConfig);
+        let artSelect = new ArtSelect(title, search, allButtons, callback, searchAndDisplay, object);
         artSelect.render(true);
     } else {
-        let artSelect = new ArtSelect(title, search, null, callback, searchAndDisplay, tokenConfig);
+        let artSelect = new ArtSelect(title, search, null, callback, searchAndDisplay, object);
         artSelect.render(true);
     }
 }
 
 // Deprecated
-async function displayArtSelect(search, callback, searchType = SEARCH_TYPE.BOTH, tokenConfig = {}) {
-    showArtSelect(search, {callback: callback, searchType: searchType, tokenConfig: tokenConfig})
+async function displayArtSelect(search, callback, searchType = SEARCH_TYPE.BOTH, object = {}) {
+    showArtSelect(search, {callback: callback, searchType: searchType, object: object})
 }
 
 /**
@@ -938,11 +952,9 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
 
     if(token && tokenActor){
         const usingCustomConfig = token.getFlag('token-variants', 'usingCustomConfig') || false;
-        const tokenCustomConfig = getTokenConfig(imgSrc, imgName);
+        const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
 
         if(tokenCustomConfig){
-            delete tokenCustomConfig.imgSrc;
-            delete tokenCustomConfig.name;
             tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
             await token.setFlag('token-variants', 'usingCustomConfig', true);
         } else if(usingCustomConfig) {
@@ -951,21 +963,17 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
             await token.setFlag('token-variants', 'usingCustomConfig', false);
         }
     } else if(actor && !token){
-        const tokenCustomConfig = getTokenConfig(imgSrc, imgName);
+        const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
         if(tokenCustomConfig){
-            delete tokenCustomConfig.imgSrc;
-            delete tokenCustomConfig.name;
             tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
             tokenUpdateObj.flags = {"token-variants": {"usingCustomConfig": true}};
         }
     } else if (token) {
         const usingCustomConfig = token.getFlag('token-variants', 'usingCustomConfig') || false;
-        const tokenCustomConfig = getTokenConfig(imgSrc, imgName);
+        const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
         const defaultConfig = token.getFlag('token-variants', 'defaultConfig') || [];
 
         if(tokenCustomConfig){
-            delete tokenCustomConfig.imgSrc;
-            delete tokenCustomConfig.name;
             tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
 
             if(!usingCustomConfig) {
@@ -1011,7 +1019,7 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
         showArtSelect(actor.name, {
             callback: (imgSrc, name) => updateTokenImage(actor, null, imgSrc, name),
             searchType: SEARCH_TYPE.TOKEN,
-            tokenConfig: token ? token.data : actor.data.token
+            object: token ? token : actor
         });
     } else if (twoPopups) {
         let d = new Dialog({
@@ -1028,7 +1036,7 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
                         showArtSelect(actor.name, {
                             callback: (imgSrc, name) => updateTokenImage(actor, null, imgSrc, name),
                             searchType: SEARCH_TYPE.TOKEN,
-                            tokenConfig: token ? token.data : actor.data.token
+                            object: token ? token : actor
                         });
                     }
                 }

@@ -11,9 +11,50 @@ export const SEARCH_TYPE = {
 /**
  * Retrieves a custom token configuration if one exists for the given image
  */
-export function getTokenConfig(imgSrc, name){
+export function getTokenConfig(imgSrc, imgName){
     const tokenConfigs = game.settings.get("token-variants", "tokenConfigs");
-    return tokenConfigs.find(config => config.imgSrc == imgSrc && config.name == name);
+    return tokenConfigs.find(config => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
+}
+
+/**
+ * Retrieves a custom token configuration if one exists for the given image and removes control keys
+ * returning a clean config that can be used in token update.
+ */
+export function getTokenConfigForUpdate(imgSrc, imgName){
+    const tokenConfig = getTokenConfig(imgSrc, imgName);
+    if(tokenConfig){
+        delete tokenConfig.tvImgSrc;
+        delete tokenConfig.tvImgName;
+        for (var key in tokenConfig){
+            if(key.startsWith('tvTab_')){
+                delete tokenConfig[key]
+            }
+        }
+    }
+    return tokenConfig;
+}
+
+/**
+ * Adds or removes a custom token configuration
+ */
+export function setTokenConfig(imgSrc, imgName, tokenConfig){
+    const tokenConfigs = game.settings.get("token-variants", "tokenConfigs");
+    const tcIndex = tokenConfigs.findIndex(config => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
+
+    let deleteConfig = !tokenConfig || Object.keys(tokenConfig).length === 0;
+    if(!deleteConfig){
+        tokenConfig['tvImgSrc'] = imgSrc;
+        tokenConfig['tvImgName'] = imgName;
+    }
+
+    if(tcIndex != -1 && !deleteConfig){
+        tokenConfigs[tcIndex] = tokenConfig;
+    } else if(tcIndex != -1 && deleteConfig) {
+        tokenConfigs.splice(tcIndex, 1);
+    } else if(!deleteConfig){
+        tokenConfigs.push(tokenConfig);
+    }
+    game.settings.set("token-variants", "tokenConfigs", tokenConfigs);
 }
 
 

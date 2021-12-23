@@ -23,3 +23,12 @@
     overflow: hidden auto;
     scrollbar-width: thin;
 }
+
+.token-variants-config-control {
+    background: rgba(0, 0, 0, 0.40);
+    padding: 2px;
+    border: 1px solid #191813;
+    color: #f0f0e0;
+    font-weight: bold;
+    text-shadow: 1px 1px #000;
+}

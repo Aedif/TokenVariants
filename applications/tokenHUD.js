@@ -1,10 +1,5 @@
 import { getFileName, isImage, isVideo, SEARCH_TYPE} from "../scripts/utils.js"
-import TokenConfig from "./tokenConfig.js";
-
-function render(){
-    
-}
-
+import TokenCustomConfig from "./tokenCustomConfig.js";
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText, doImageSearch, updateTokenImage, setActorImage) {
@@ -163,7 +158,7 @@ function _onImageClick(event, tokenId, updateTokenImage, setActorImage){ //TODO
     const imgSrc = event.target.dataset.name;
 
     if(keyboard.isDown("Shift")){
-        new TokenConfig(name, imgSrc, token.data).render(true);
+        new TokenCustomConfig(token, {}, imgSrc, name).render(true);
     } else if(token.data.img === imgSrc){
         let tokenImageName = token.getFlag("token-variants", "name");
         if(!tokenImageName) tokenImageName = getFileName(token.data.img);
