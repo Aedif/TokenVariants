@@ -936,57 +936,49 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
     if(actor){tokenActor = actor}
     else if(token && token.actor){tokenActor = game.actors.get(token.actor.id)}
 
-    const extractConfig = (data) => {
-        return {
-            alpha: data.alpha,
-            height: data.height,
-            width: data.width,
-            scale: data.scale,
-            tint: data.tint ? data.tint : "",
-            mirrorX: data.mirrorX,
-            mirrorY: data.mirrorY
+    const getDefaultConfig = (token, actor) => {
+        let configEntries = [];
+        if(token)
+            configEntries = token.getFlag('token-variants', 'defaultConfig') || [];
+        else if(actor){
+            const tokenData = actor.data.token;
+            if('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
+                configEntries = tokenData['token-variants']['defaultConfig'];
         }
+        return expandObject(Object.fromEntries(configEntries));
+    }
+
+    const constructDefaultConfig = (origData, customConfig) => {
+        return Object.entries(flattenObject(filterObject(origData, customConfig)));
     }
 
     let tokenUpdateObj = { img: imgSrc };
+    const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
+    const usingCustomConfig = token && token.getFlag('token-variants', 'usingCustomConfig');
+    const defaultConfig = getDefaultConfig(token);
 
-    if(token && tokenActor){
-        const usingCustomConfig = token.getFlag('token-variants', 'usingCustomConfig') || false;
-        const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
-
-        if(tokenCustomConfig){
-            tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
-            await token.setFlag('token-variants', 'usingCustomConfig', true);
-        } else if(usingCustomConfig) {
-            const protoToken = tokenActor.data.token;
-            tokenUpdateObj = mergeObject(tokenUpdateObj, extractConfig(protoToken));
-            await token.setFlag('token-variants', 'usingCustomConfig', false);
-        }
-    } else if(actor && !token){
-        const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
-        if(tokenCustomConfig){
-            tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
+    if(tokenCustomConfig || usingCustomConfig){
+        tokenUpdateObj = mergeObject(tokenUpdateObj, defaultConfig);
+    }
+    
+    if(tokenCustomConfig){
+        if(token){
+            await token.setFlag('token-variants', 'usingCustomConfig', true); 
+            const defConf = constructDefaultConfig(mergeObject(token.data.toObject(), defaultConfig), tokenCustomConfig);
+            await token.setFlag('token-variants', 'defaultConfig', defConf);
+        } else if(actor && !token){
             tokenUpdateObj.flags = {"token-variants": {"usingCustomConfig": true}};
+            const defConf = constructDefaultConfig(tokenActor.data.token.toObject(), tokenCustomConfig);
+            tokenUpdateObj.flags = {"token-variants": {"defaultConfig": defConf}};
         }
-    } else if (token) {
-        const usingCustomConfig = token.getFlag('token-variants', 'usingCustomConfig') || false;
-        const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
-        const defaultConfig = token.getFlag('token-variants', 'defaultConfig') || [];
 
-        if(tokenCustomConfig){
-            tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
-
-            if(!usingCustomConfig) {
-                const data = token.data;
-                await token.unsetFlag('token-variants', 'defaultConfig');
-                await token.setFlag('token-variants', 'defaultConfig', Object.entries(extractConfig(data)));
-            }
-            token.setFlag('token-variants', 'usingCustomConfig', true);
-        } else if(usingCustomConfig) {
-            if(defaultConfig.length != 0){
-                tokenUpdateObj = mergeObject(tokenUpdateObj, Object.fromEntries(defaultConfig));
-            }
+        tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
+    } else if (usingCustomConfig){
+        if(token){
             await token.setFlag('token-variants', 'usingCustomConfig', false);
+            await token.unsetFlag('token-variants', 'defaultConfig');
+        } else if(actor && !token){
+            tokenUpdateObj.flags = {"token-variants": {"usingCustomConfig": false, 'defaultConfig': []}};
         }
     }
 
@@ -995,7 +987,7 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
     }
 
     if(actor && !token){
-        tokenUpdateObj.flags = {"token-variants": {"name": imgName}};
+        tokenUpdateObj = mergeObject(tokenUpdateObj, {flags: {"token-variants": {name: imgName}}})
         await actor.data.token.update(tokenUpdateObj);
     }
 

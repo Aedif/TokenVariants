@@ -35,15 +35,10 @@ export default class TokenCustomConfig extends TokenConfig {
     }
 
     async getData(options) {
-
       let data = await super.getData(options);
-      
       const tokenConfig = getTokenConfig(this.imgSrc, this.imgName);
       if(tokenConfig){
-        console.log("Found token config")
-        console.log(data, tokenConfig);
         mergeObject(data.object, tokenConfig, { inplace: true });
-        console.log(data)
       }
       return data;
     }
@@ -54,10 +49,7 @@ export default class TokenCustomConfig extends TokenConfig {
     
 
     async activateListeners(html) {
-      console.log("do stuff")
       await super.activateListeners(html);
-
-      // Add additional controls
 
       // Disable image path controls
       $(html).find('.token-variants-image-select-button').prop('disabled', true);
@@ -82,8 +74,10 @@ export default class TokenCustomConfig extends TokenConfig {
       // Add 'update' and 'remove' config buttons
       $(html).find('.sheet-footer > button').remove();
       $(html).find('.sheet-footer').append('<button type="submit" value="1"><i class="far fa-save"></i> Save Config</button>');
-      $(html).find('.sheet-footer').append('<button type="button" class="remove-config"><i class="fas fa-trash"></i> Remove Config</button>');
-      html.find(".remove-config").click(this._onRemoveConfig.bind(this));
+      if(tokenConfig){
+        $(html).find('.sheet-footer').append('<button type="button" class="remove-config"><i class="fas fa-trash"></i> Remove Config</button>');
+        html.find(".remove-config").click(this._onRemoveConfig.bind(this));
+      }
 
       // Pre-select image tab
       $(html).find('.tabs > .item[data-tab="image"] > i').trigger('click');
