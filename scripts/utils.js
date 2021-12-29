@@ -95,6 +95,7 @@ export async function parseSearchPaths(debug = false) {
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
 
     let searchPathList = game.settings.get("token-variants", "searchPaths");
+    if(searchPathList) searchPathList = searchPathList.flat();
 
     // To maintain compatibility with previous versions
     const defaultCaching = !game.settings.get("token-variants", "disableCaching");

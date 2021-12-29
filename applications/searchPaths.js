@@ -1,5 +1,6 @@
 function getPaths(){
     let paths = game.settings.get("token-variants", "searchPaths");
+    if(paths) paths = paths.flat();
 
     // To maintain compatibility with previous versions
     const defaultCaching = !game.settings.get("token-variants", "disableCaching");
@@ -119,7 +120,7 @@ export default class SearchPaths extends FormApplication {
     }
 
     async _updateObject(event, formData) {
-        const expanded = foundry.utils.expandObject(formData);
+        const expanded = expandObject(formData);
         expanded.paths = expanded.hasOwnProperty("paths") ? Object.values(expanded.paths) : [];
         expanded.paths.forEach((path, index)=> {
             this.object.paths[index] = {
