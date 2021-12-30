@@ -31,7 +31,7 @@ export default class ArtSelect extends FormApplication {
         this.allImages = allImages;
         this.callback = callback;
         this.performSearch = performSearch;
-        this.object = object;
+        this.doc = object;
     }
 
     static get defaultOptions() {
@@ -58,7 +58,7 @@ export default class ArtSelect extends FormApplication {
         super.activateListeners(html);
         const callback = this.callback;
         const close = () => this.close();
-        const object = this.object;
+        const object = this.doc;
 
         const boxes = html.find(`.token-variants-grid-box`);
         boxes.map((box) => {

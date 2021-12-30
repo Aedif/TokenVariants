@@ -1,6 +1,5 @@
 function getPaths(){
-    let paths = game.settings.get("token-variants", "searchPaths");
-    if(paths) paths = paths.flat();
+    const paths = (game.settings.get("token-variants", "searchPaths") || []).flat();
 
     // To maintain compatibility with previous versions
     const defaultCaching = !game.settings.get("token-variants", "disableCaching");

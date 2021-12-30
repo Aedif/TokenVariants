@@ -7,12 +7,11 @@ export const SEARCH_TYPE = {
     BOTH: "both"
 }
 
-
 /**
  * Retrieves a custom token configuration if one exists for the given image
  */
 export function getTokenConfig(imgSrc, imgName){
-    const tokenConfigs = game.settings.get("token-variants", "tokenConfigs");
+    const tokenConfigs = (game.settings.get("token-variants", "tokenConfigs") || []).flat();
     return tokenConfigs.find(config => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
 }
 
@@ -38,7 +37,7 @@ export function getTokenConfigForUpdate(imgSrc, imgName){
  * Adds or removes a custom token configuration
  */
 export function setTokenConfig(imgSrc, imgName, tokenConfig){
-    const tokenConfigs = game.settings.get("token-variants", "tokenConfigs");
+    const tokenConfigs = (game.settings.get("token-variants", "tokenConfigs") || []).flat();
     const tcIndex = tokenConfigs.findIndex(config => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
 
     let deleteConfig = !tokenConfig || Object.keys(tokenConfig).length === 0;
@@ -94,8 +93,7 @@ export async function parseSearchPaths(debug = false) {
     const regexpRollTable = /rolltable:(.*)/;
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
 
-    let searchPathList = game.settings.get("token-variants", "searchPaths");
-    if(searchPathList) searchPathList = searchPathList.flat();
+    const searchPathList = (game.settings.get("token-variants", "searchPaths") || []).flat();
 
     // To maintain compatibility with previous versions
     const defaultCaching = !game.settings.get("token-variants", "disableCaching");
@@ -168,7 +166,7 @@ export async function parseSearchPaths(debug = false) {
         }
     }
 
-    let forgePathsSetting = (game.settings.get("token-variants", "forgevttPaths")).flat();
+    let forgePathsSetting = (game.settings.get("token-variants", "forgevttPaths") || []).flat();
 
     // To maintain compatibility with previous versions
     if(forgePathsSetting.length > 0 && !(forgePathsSetting[0] instanceof Object)){

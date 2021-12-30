@@ -149,8 +149,7 @@ function _onImageClick(event, tokenId, updateTokenImage, setActorImage){ //TODO
     let token = canvas.tokens.controlled.find(t => t.data._id === tokenId)
     if(!token) return;
     else {
-        const is080 = !isNewerVersion("0.8.0", game.data.version);
-        token = is080 ? token.document : token;
+        token = token.document ?? token;
     }
 
     const hudSettings = game.settings.get("token-variants", "hudSettings");
@@ -184,8 +183,7 @@ function _onImageRightClick(event, tokenId){
     let token = canvas.tokens.controlled.find(t => t.data._id === tokenId)
     if(!token) return;
     else {
-        const is080 = !isNewerVersion("0.8.0", game.data.version);
-        token = is080 ? token.document : token;
+        token = token.document ?? token;
     }
 
     const imgSrc = event.target.dataset.name;

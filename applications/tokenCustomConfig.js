@@ -4,11 +4,19 @@ export default class TokenCustomConfig extends TokenConfig {
 
     constructor(object, options, imgSrc, imgName) {
       let token;
-      if(object instanceof Actor)
-        token = new TokenDocument(object.data.token, {actor: object});
-      else
-        token = new TokenDocument(object.data, {actor: object.actor});
-
+      if(object instanceof Actor) {
+        if(isNewerVersion(game.version ?? game.data.version, "0.7.10")){
+          token = new TokenDocument(object.data.token, {actor: object});
+        } else {
+          token = new Token(object.data.token, {actor: object});
+        }
+      } else {
+        if(isNewerVersion(game.version ?? game.data.version, "0.7.10")){
+          token = new TokenDocument(object.data, {actor: object.actor});
+        } else {
+          token = new Token(object.data, {actor: object});
+        }
+      }
       super(token, options);
       this.imgSrc = imgSrc;
       this.imgName = imgName;

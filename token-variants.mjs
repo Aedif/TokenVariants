@@ -438,14 +438,27 @@ async function initialize() {
                 object: actor
             }); 
         });
-        Hooks.on("createToken", async (tokenDoc, options, userId, op4) => {
+        Hooks.on("createToken", async (op1, op2, op3, op4) => {
+
+            // console.log("op1", op1);
+            // console.log("op2", op2);
+            // console.log("op3", op3);
+            // console.log("op4", op4);
+            // console.log("USER ID: ", game.user.id)
+
+            let tokenDoc = op1;
+            let options = op2;
+            let userId = op3;
+
+            // Compatability for 0.7.x
+            if(op4) userId = op4;
+
             if (userId && game.user.id != userId)
                 return;
 
-            // op4 check to support both 0.7.x and 0.8.x
-            let token = op4 ? canvas.tokens.get(options._id) : tokenDoc._object;
+            let token = canvas.tokens.get(options._id);
 
-            const callback = (imgSrc, name) => updateTokenImage(token.actor, token, imgSrc, name);
+            const updateTokenCallback = (imgSrc, name) => updateTokenImage(token.actor, token, imgSrc, name);
 
 
             // Check if random search is enabled and if so perform it 
@@ -458,10 +471,10 @@ async function initialize() {
                 if(disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
 
                 if(performRandomSearch){
-                    doRandomSearch(op4 ? options.name : token.name, {
+                    doRandomSearch(token.data.name, {
                         searchType: SEARCH_TYPE.TOKEN,
                         actor: token.actor,
-                        callback: callback
+                        callback: updateTokenCallback
                     });
                     return;
                 }
@@ -483,11 +496,16 @@ async function initialize() {
                 return;
             }
 
-            showArtSelect(op4 ? options.name : token.name, {
-                callback: callback, 
+            showArtSelect(token.data.name, {
+                callback: updateTokenCallback, 
                 searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH, 
                 object: token
             });
+            // showArtSelect(op4 ? options.name : token.name, {
+            //     callback: updateTokenCallback, 
+            //     searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH, 
+            //     object: token
+            // });
         });
         Hooks.on("renderTokenConfig", modTokenConfig);
         Hooks.on("renderActorSheet", modActorSheet);
@@ -508,7 +526,6 @@ function modTokenConfig(tokenConfig, html, _) {
     let fields = html[0].getElementsByClassName('image');
     for (let field of fields) {
         if (field.getAttribute('name') == 'img') {
-            console.log(tokenConfig)
             let el = document.createElement('button');
             el.type = "button";
             el.title = game.i18n.localize('token-variants.TokenConfigButtonTitle');
@@ -963,12 +980,14 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
     
     if(tokenCustomConfig){
         if(token){
-            await token.setFlag('token-variants', 'usingCustomConfig', true); 
-            const defConf = constructDefaultConfig(mergeObject(token.data.toObject(), defaultConfig), tokenCustomConfig);
+            await token.setFlag('token-variants', 'usingCustomConfig', true);
+            const tokenData = token.data instanceof Object ? token.data : token.data.toObject();
+            const defConf = constructDefaultConfig(mergeObject(tokenData, defaultConfig), tokenCustomConfig);
             await token.setFlag('token-variants', 'defaultConfig', defConf);
         } else if(actor && !token){
             tokenUpdateObj.flags = {"token-variants": {"usingCustomConfig": true}};
-            const defConf = constructDefaultConfig(tokenActor.data.token.toObject(), tokenCustomConfig);
+            const tokenData = tokenActor.data.token instanceof Object ? tokenActor.data.token : tokenActor.data.token.toObject();
+            const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
             tokenUpdateObj.flags = {"token-variants": {"defaultConfig": defConf}};
         }
 
@@ -983,7 +1002,7 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
     }
 
     if(actor) {
-        await (actor.document ? actor.document : actor).update({ "token.img": imgSrc });
+        await (actor.document ?? actor).update({ "token.img": imgSrc });
     }
 
     if(actor && !token){
@@ -992,9 +1011,9 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
     }
 
     if (token) {
-        const obj = token.document ? token.document : token;
-        await obj.update(tokenUpdateObj);
+        const obj = token.document ?? token;
         await obj.setFlag("token-variants", "name", imgName);
+        await obj.update(tokenUpdateObj);
     } 
 }
 
@@ -1002,7 +1021,7 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
  * Assign new artwork to the actor
  */
 async function setActorImage(actor, image, imageName, {updateActorOnly = true}={}) {
-    let updateDoc = (obj, data) => obj.document ? obj.document.update(data) : obj.update(data);
+    let updateDoc = (obj, data) => (obj.document ?? obj).update(data);
     updateDoc(actor, { img: image });
     if (updateActorOnly)
         return;
