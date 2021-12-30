@@ -50,20 +50,12 @@
         <input type="checkbox" name="linkedActorDisable" data-dtype="Boolean" {{#if linkedActorDisable}}checked{{/if}}>
     </div>
 
-    <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Player Character</label>
-        <input type="checkbox" name="pcDisable" data-dtype="Boolean" {{#if pcDisable}}checked{{/if}}>
-    </div>
-
-    <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Non-Player Character</label>
-        <input type="checkbox" name="npcDisable" data-dtype="Boolean" {{#if npcDisable}}checked{{/if}}>
-    </div>
-
-    <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Vehicle</label>
-        <input type="checkbox" name="vehicleDisable" data-dtype="Boolean" {{#if vehicleDisable}}checked{{/if}}>
-    </div>
+    {{#each actorTypes}}
+        <div class="form-group">
+            <label>&nbsp;&nbsp;&nbsp;&nbsp;{{this.label}}</label>
+            <input type="checkbox" name="{{@key}}Disable" data-dtype="Boolean" {{#if this.disable}}checked{{/if}}>
+        </div>
+    {{/each}}
 
     <div class="form-group">
         <h4>Show Art Select pop-up if randomization is disabled</h4>

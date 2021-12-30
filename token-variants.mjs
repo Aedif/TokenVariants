@@ -4,7 +4,6 @@ import TokenHUDSettings from "./applications/tokenHUDSettings.js";
 import FilterSettings from "./applications/searchFilters.js";
 import RandomizerSettings from "./applications/randomizerSettings.js";
 import PopUpSettings from "./applications/popupSettings.js";
-import TokenCustomConfig from "./applications/tokenCustomConfig.js";
 import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfigForUpdate, SEARCH_TYPE} from "./scripts/utils.js"
 import { renderHud } from "./applications/tokenHUD.js"
 
@@ -242,9 +241,6 @@ async function registerWorldSettings() {
             shared: false,
             representedActorDisable: false,
             linkedActorDisable: true,
-            pcDisable: true,
-            npcDisable: false,
-            vehicleDisable: false,
             popupOnDisable: false
         },
     });
@@ -269,9 +265,6 @@ async function registerWorldSettings() {
             twoPopups: game.settings.get("token-variants", "twoPopups"),
             twoPopupsNoDialog: game.settings.get("token-variants", "twoPopupsNoDialog"),
             disableActorPortraitArtSelect: game.settings.get("token-variants", "disableActorPortraitArtSelect"),
-            pcDisable: true,
-            npcDisable: false,
-            vehicleDisable: false
         },
         onChange: settings => {
             twoPopups = settings.twoPopups;
@@ -281,7 +274,7 @@ async function registerWorldSettings() {
     });
 
     // Backwards compatibility for setting format used in versions <=1.18.2
-    const tokenConfigs = game.settings.get("token-variants", "tokenConfigs");
+    const tokenConfigs = (game.settings.get("token-variants", "tokenConfigs") || []).flat();
     tokenConfigs.forEach((config) => {
         if(!config.hasOwnProperty('tvImgSrc')){
             config['tvImgSrc'] = config.imgSrc;
@@ -385,17 +378,13 @@ async function initialize() {
 
         const disableRandomSearchForType = (randSettings, actor) => {
             if(!actor) return false;
-            if(actor.type == "character") return randSettings.pcDisable;
-            if(actor.type == "npc") return randSettings.npcDisable;
-            if(actor.type == "vehicle") return randSettings.vehicleDisable;
+            return randSettings[`${actor.type}Disable`] ?? false;
         }
 
         const disablePopupForType = (actor) => {
             const popupSettings = game.settings.get("token-variants", "popupSettings");
             if(!actor) return false;
-            if(actor.type == "character") return popupSettings.pcDisable;
-            if(actor.type == "npc") return popupSettings.npcDisable;
-            if(actor.type == "vehicle") return popupSettings.vehicleDisable;
+            return popupSettings[`${actor.type}Disable`] ?? false;
         }
 
         // Handle actor/token art replacement
@@ -1007,7 +996,15 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
 
     if(actor && !token){
         tokenUpdateObj = mergeObject(tokenUpdateObj, {flags: {"token-variants": {name: imgName}}})
-        await actor.data.token.update(tokenUpdateObj);
+        if(isNewerVersion(game.version ?? game.data.version, "0.7.10"))
+            await actor.data.token.update(tokenUpdateObj);
+        else {
+            for (const [key, value] of Object.entries(tokenUpdateObj)) {
+                tokenUpdateObj[`token.${key}`] = value;
+                delete tokenUpdateObj[key];
+            }
+            actor.update(tokenUpdateObj);
+        }
     }
 
     if (token) {
@@ -1056,7 +1053,7 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
         });
         d.render(true);
     } else {
-        updateTokenImage(actor, token, tokenSrc, imageName);
+        updateTokenImage(actor, null, image, imageName);
     }
 }
 

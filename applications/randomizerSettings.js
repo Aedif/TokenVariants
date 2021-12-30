@@ -20,7 +20,18 @@ export default class RandomizerSettings extends FormApplication {
 
     async getData(options) {
         const data = super.getData(options);
-        return mergeObject(data, game.settings.get("token-variants", "randomizerSettings"));
+
+        const randomizerSettings = game.settings.get("token-variants", "randomizerSettings");
+
+        // Get all actor types defined by the game system
+        const actorTypes = game.system.entityTypes['Actor'];
+        data.actorTypes = actorTypes.reduce((obj, t) => {
+            const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
+            obj[t] = {label: game.i18n.has(label) ? game.i18n.localize(label) : t, disable: randomizerSettings[`${t}Disable`] ?? false}
+            return obj;
+        }, {});
+
+        return mergeObject(data, randomizerSettings);
     }
 
     async _updateObject(event, formData) {

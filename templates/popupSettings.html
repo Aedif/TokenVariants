@@ -18,23 +18,25 @@
     </div>
 
     <div class="form-group">
-        <label>Disable Automatic Pop-ups</label>
+        <label>Disable Automatic Pop-ups for</label>
     </div>
 
-    <header class="table-header flexrow">
-        <label class="index">Player Characters</label>
-        <label>Non-Player Characters</label>
-        <label>Vehicles</label>
-    </header>
-    <ul class="setting-list">
-        <li class="setting form-group">
-            <div class="form-fields">
-                <input type="checkbox" name="pcDisable" data-dtype="Boolean" {{#if pcDisable}}checked{{/if}}>
-                <input type="checkbox" name="npcDisable" data-dtype="Boolean" {{#if npcDisable}}checked{{/if}}>
-                <input type="checkbox" name="vehicleDisable" data-dtype="Boolean" {{#if vehicleDisable}}checked{{/if}}>
-            </div>
-        </li>
-    </ul>
+    {{#each actorTypes}}
+        <header class="table-header flexrow">
+            {{#each this}}
+                <label>{{this.label}}</label>
+            {{/each}}
+        </header>
+        <ul class="setting-list">
+            <li class="setting form-group">
+                <div class="form-fields">
+                    {{#each this}}
+                        <input type="checkbox" name="{{this.type}}Disable" data-dtype="Boolean" {{#if this.disable}}checked{{/if}}>
+                    {{/each}}
+                </div>
+            </li>
+        </ul>
+    {{/each}}
 
     <header class="table-header flexrow">
         <label class="index">On Actor Create</label>

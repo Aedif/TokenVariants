@@ -20,7 +20,32 @@ export default class PopUpSettings extends FormApplication {
 
     async getData(options) {
         const data = super.getData(options);
-        return mergeObject(data, game.settings.get("token-variants", "popupSettings"));
+        const popupSettings = game.settings.get("token-variants", "popupSettings");
+
+        // Get all actor types defined by the game system
+        const actorTypes = game.system.entityTypes['Actor'];
+        data.actorTypes = actorTypes.reduce((obj, t) => {
+            const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
+            obj[t] = {type: t, label: game.i18n.has(label) ? game.i18n.localize(label) : t, disable: popupSettings[`${t}Disable`] ?? false}
+            return obj;
+          }, {});
+
+        // Split into arrays of max length 3
+        let allTypes = [];
+        let tempTypes = [];
+        let i = 0;
+        for (const [key, value] of Object.entries(data.actorTypes)) {
+            tempTypes.push(value);
+            i++;
+            if(i % 3 == 0){
+                allTypes.push(tempTypes);
+                tempTypes = [];
+            }
+        }
+        if(tempTypes.length > 0) allTypes.push(tempTypes);
+        data.actorTypes = allTypes;
+        
+        return mergeObject(data, popupSettings);
     }
 
     async _updateObject(event, formData) {
