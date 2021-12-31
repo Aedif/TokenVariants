@@ -80,7 +80,7 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
 
     const sideSelect = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
 
-    const is080 = !isNewerVersion("0.8.0", game.data.version)
+    const is080 = !isNewerVersion("0.8.0", game.version ?? game.data.version)
 
     let divR = html.find('div.right').append(sideSelect);
 
@@ -103,7 +103,7 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
 
 function _onSideButtonClick(event){
     // De-activate 'Status Effects'
-    const is080 = !isNewerVersion("0.8.0", game.data.version);
+    const is080 = !isNewerVersion("0.8.0", game.version ?? game.data.version);
     const variantsControlIcon = $(event.target.parentElement);
     variantsControlIcon.closest('div.right').find( is080 ? '.control-icon[data-action="effects"]' : 'div.control-icon.effects').removeClass('active');
     variantsControlIcon.closest('div.right').find('.status-effects').removeClass('active');
@@ -156,7 +156,14 @@ function _onImageClick(event, tokenId, updateTokenImage, setActorImage){ //TODO
     const name = event.target.dataset.filename;
     const imgSrc = event.target.dataset.name;
 
-    if(keyboard.isDown("Shift")){
+    let shiftKeyDown;
+    if(isNewerVersion(game.version ?? game.data.version, "0.8.9")){
+        shiftKeyDown = game.keyboard.downKeys.has("ShiftLeft") || game.keyboard.downKeys.has("ShiftRight");
+    } else {
+        shiftKeyDown = keyboard.isDown("Shift");
+    }
+
+    if(shiftKeyDown){
         new TokenCustomConfig(token, {}, imgSrc, name).render(true);
     } else if(token.data.img === imgSrc){
         let tokenImageName = token.getFlag("token-variants", "name");

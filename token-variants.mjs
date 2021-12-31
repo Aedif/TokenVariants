@@ -415,7 +415,14 @@ async function initialize() {
 
             // Check if pop-up is enabled and if so open it
             const popupSettings = game.settings.get("token-variants", "popupSettings");
-            if(popupSettings.disableAutoPopupOnActorCreate && !keyboard.isDown(actorDirKey)){
+            let dirKeyDown;
+            if(isNewerVersion(game.version ?? game.data.version, "0.8.9")){
+                dirKeyDown = game.keyboard.downKeys.has(`${actorDirKey}Left`) || game.keyboard.downKeys.has(`${actorDirKey}Right`);
+            } else {
+                dirKeyDown = keyboard.isDown(actorDirKey);
+            }
+
+            if(popupSettings.disableAutoPopupOnActorCreate && !dirKeyDown){
                 return;
             } else if (disablePopupForType(actor)){
                 return;
@@ -429,12 +436,6 @@ async function initialize() {
         });
         Hooks.on("createToken", async (op1, op2, op3, op4) => {
 
-            // console.log("op1", op1);
-            // console.log("op2", op2);
-            // console.log("op3", op3);
-            // console.log("op4", op4);
-            // console.log("USER ID: ", game.user.id)
-
             let tokenDoc = op1;
             let options = op2;
             let userId = op3;
@@ -445,7 +446,12 @@ async function initialize() {
             if (userId && game.user.id != userId)
                 return;
 
-            let token = canvas.tokens.get(options._id);
+            let token;
+            if(isNewerVersion(game.version ?? game.data.version, "0.7.10")){
+                token = tokenDoc;
+            } else {
+                token = canvas.tokens.get(options._id);
+            }
 
             const updateTokenCallback = (imgSrc, name) => updateTokenImage(token.actor, token, imgSrc, name);
 
@@ -453,7 +459,14 @@ async function initialize() {
             // Check if random search is enabled and if so perform it 
 
             const randSettings = game.settings.get("token-variants", "randomizerSettings");
-            if((keyboard.isDown("v") && randSettings.tokenCopyPaste) || (!keyboard.isDown("v") && randSettings.tokenCreate)){
+            let vDown;
+            if(isNewerVersion(game.version ?? game.data.version, "0.8.9")){
+                vDown = game.keyboard.downKeys.has("v");
+            } else {
+                vDown = keyboard.isDown("v");
+            }
+
+            if((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)){
                 let performRandomSearch = true;
                 if(randSettings.representedActorDisable && token.actor) performRandomSearch = false;
                 if(randSettings.linkedActorDisable && token.data.actorLink) performRandomSearch = false;
@@ -476,13 +489,23 @@ async function initialize() {
 
             // Check if pop-up is enabled and if so open it
             const popupSettings = game.settings.get("token-variants", "popupSettings");
+            let dirKeyDown;
+            if(isNewerVersion(game.version ?? game.data.version, "0.8.9")){
+                dirKeyDown = game.keyboard.downKeys.has(`${actorDirKey}Left`) || game.keyboard.downKeys.has(`${actorDirKey}Right`);
+            } else {
+                dirKeyDown = keyboard.isDown(actorDirKey);
+            }
 
-            if(keyboard.isDown("v") && popupSettings.disableAutoPopupOnTokenCopyPaste){
+            if(vDown && popupSettings.disableAutoPopupOnTokenCopyPaste){
                 return;
-            } else if(popupSettings.disableAutoPopupOnTokenCreate && !keyboard.isDown(actorDirKey)){
-                return;
-            } else if (disablePopupForType(token.actor)){
-                return;
+            }
+
+            if(!dirKeyDown){
+                if(popupSettings.disableAutoPopupOnTokenCreate){
+                    return;
+                } else if (disablePopupForType(token.actor)){
+                    return;
+                }
             }
 
             showArtSelect(token.data.name, {
@@ -490,11 +513,6 @@ async function initialize() {
                 searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH, 
                 object: token
             });
-            // showArtSelect(op4 ? options.name : token.name, {
-            //     callback: updateTokenCallback, 
-            //     searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH, 
-            //     object: token
-            // });
         });
         Hooks.on("renderTokenConfig", modTokenConfig);
         Hooks.on("renderActorSheet", modActorSheet);
@@ -1003,7 +1021,7 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
                 tokenUpdateObj[`token.${key}`] = value;
                 delete tokenUpdateObj[key];
             }
-            actor.update(tokenUpdateObj);
+            await actor.update(tokenUpdateObj);
         }
     }
 

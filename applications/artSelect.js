@@ -63,7 +63,13 @@ export default class ArtSelect extends FormApplication {
         const boxes = html.find(`.token-variants-grid-box`);
         boxes.map((box) => {
             boxes[box].addEventListener('click', async function (event) {
-                if(keyboard.isDown("Shift")){
+                let shiftKeyDown;
+                if(isNewerVersion(game.version ?? game.data.version, "0.8.9")){
+                    shiftKeyDown = game.keyboard.downKeys.has("ShiftLeft") || game.keyboard.downKeys.has("ShiftRight");
+                } else {
+                    shiftKeyDown = keyboard.isDown("Shift");
+                }
+                if(shiftKeyDown){
                     if(object)
                         new TokenCustomConfig(object, {}, event.target.dataset.name, event.target.dataset.filename).render(true);
                 } else {
