@@ -1,4 +1,4 @@
-# 1.20.1
+# 1.20.2
 
 * Compatibility fixes for 0.7.10 and 9.238
 * **Randomizer** and **Pop-up Settings** now allow disablement on a dynamic set of Actor types based on the game system being used instead of a hard coded list of 5e actors (Player, NPC, Vehicle)
