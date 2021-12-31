@@ -145,7 +145,7 @@ To install, import this [manifest](https://raw.githubusercontent.com/Aedif/Token
 
 ## API
 
-### **game.TokenVariants.showArtSelect(search, {callback = null, searchType='both', tokenConfig={}}={})**
+### **showArtSelect(search, {callback = null, searchType='both', tokenConfig={}}={})**
 
 Displays the art select window.
 
@@ -157,10 +157,10 @@ Parameters:
     * {Token|object} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
 
 e.g. 
-* game.TokenVariants.showArtSelect("")
-* game.TokenVariants.showArtSelect("dragon", {callback: (selectedImg) => console.log(selectedImg)})
+* game.modules.get('token-variants').api.showArtSelect("")
+* game.modules.get('token-variants').api.showArtSelect("dragon", {callback: (selectedImg) => console.log(selectedImg)})
 
-### **game.TokenVariants.doImageSearch(search, {searchType = 'both', ignoreKeywords = false, simpleResults = false, callback = null}={})**
+### **doImageSearch(search, {searchType = 'both', ignoreKeywords = false, simpleResults = false, callback = null}={})**
 
 Performs an image search and returns the results.
 
@@ -174,10 +174,10 @@ Parameters:
  * **returns**: {Map<string, Map<string, Map<string, Array<string>>>>|Array<String>|null} All images found split by original criteria and keywords
 
 e.g. 
-* game.TokenVariants.doImageSearch("Dragon")
-* game.TokenVariants.doImageSearch("Dragon", {simpleResults: true})
+* game.modules.get('token-variants').api.doImageSearch("Dragon")
+* game.modules.get('token-variants').api.doImageSearch("Dragon", {simpleResults: true})
 
-### **game.TokenVariants.doRandomSearch(search, { searchType='both', actor=null, callback=null } = {})**
+### **doRandomSearch(search, { searchType='both', actor=null, callback=null } = {})**
 
 Performs a random image search and returns the results.
 
@@ -190,9 +190,9 @@ Parameters:
  * **returns**: {Array<string>|null} Image path and name
 
 e.g. 
-* game.TokenVariants.doRandomSearch("Goblin")
-* game.TokenVariants.doRandomSearch("Goblin", {callback: (result) => console.log(result)})
+* game.modules.get('token-variants').api.doRandomSearch("Goblin")
+* game.modules.get('token-variants').api.doRandomSearch("Goblin", {callback: (result) => console.log(result)})
 
-## **game.TokenVariants.cacheTokens()**
+## **cacheTokens()**
 
 When called will trigger the refresh of the token cache.

@@ -1,3 +1,10 @@
+# 1.20.3
+
+* **API** is being migrated to **game.modules.get("token-variants").api**
+    * For now functions are still available through game.TokenVariants but will throw a deprecation warning
+* **Search Paths** setting will now only be parsed during init and setting change instead of during image search.
+    * Should resolve slow response times on ForgeVTT where recursive asset folder traversal can take a significant amount of time.
+
 # 1.20.2
 
 * Compatibility fixes for 0.7.10 and 9.238

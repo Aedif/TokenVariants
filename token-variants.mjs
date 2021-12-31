@@ -40,6 +40,9 @@ let debug = false;
 
 let runSearchOnPath = false;
 
+// Search paths parsed into a format usable in search functions
+let parsedSearchPaths;
+
 async function registerWorldSettings() {
 
     game.settings.register("token-variants", "debug", {
@@ -66,7 +69,7 @@ async function registerWorldSettings() {
         onChange: async function (_) {
             if (game.user.can("SETTINGS_MODIFY"))
                 await game.settings.set("token-variants", "forgevttPaths", []);
-            await parseSearchPaths(debug);
+            parsedSearchPaths = await parseSearchPaths(debug);
             cacheTokens();
         }
     });
@@ -296,6 +299,7 @@ async function registerWorldSettings() {
     actorDirKey = game.settings.get("token-variants", "actorDirectoryKey");
     debug = game.settings.get("token-variants", "debug");
     runSearchOnPath = game.settings.get("token-variants", "runSearchOnPath");
+    parsedSearchPaths = await parseSearchPaths(debug);
 }
 
 function registerHUD() {
@@ -709,7 +713,7 @@ async function findTokens(name, searchType = "") {
         }
     });
 
-    let searchPaths = await parseSearchPaths(debug);
+    let searchPaths = parsedSearchPaths;
 
     for (let path of searchPaths.get("data")) {
         if((path.cache && caching) || (!path.cache && !caching))
@@ -1078,13 +1082,26 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
 // Initialize module
 Hooks.once("ready", initialize);
 
-// Make displayArtSelect function accessible through 'game'
+// Register API
 Hooks.on("init", function () {
-    game.TokenVariants = {
-        displayArtSelect, //deprecated 
+    game.modules.get('token-variants').api = {
         cacheTokens, 
         doImageSearch, 
         doRandomSearch, 
         showArtSelect
+    };
+
+    // Deprecated api access
+    const deprecatedWarn = () => console.warn("game.TokenVariants has been deprecated since 1.20.3, use game.modules.get('token-variants')?.api instead.");
+    game.TokenVariants = {
+        displayArtSelect: async (...args) => {
+            deprecatedWarn();
+            console.warn("displayArtSelect has been deprecated in favour of showArtSelect.");
+            await displayArtSelect(...args);
+        },
+        cacheTokens: async () => { deprecatedWarn(); await cacheTokens(); }, 
+        doImageSearch: (...args) => { deprecatedWarn(); doImageSearch(...args); }, 
+        doRandomSearch: async (...args) => { deprecatedWarn(); await doRandomSearch(...args); }, 
+        showArtSelect: async (...args) => { deprecatedWarn(); await showArtSelect(...args); }
     };
 });
