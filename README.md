@@ -44,6 +44,7 @@ In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, 
 
 * To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket use the following format: **s3:{bucket-name}:{path}**
 * For your ForgeVTT asset folder the format is as follows: **https://assets.forge-vtt.com/{userId}/path/to/token/art**
+   * To get this url you can go to you asset folder and hover over one of the images and select the linked chain icon
 * Rolltables can be added using: **rolltable:{rolltable name}**
 
 By default the module will scan these sources only when the world is loaded or when the **Search Paths** settings have changed. If new art is added while the world is still open it will not be found by the module. Disabling '**Cache**' will force the scan to be done every time an art search is performed at a potentially significant cost to speed at which the art is displayed to the user depending on the number of images. 
@@ -145,53 +146,53 @@ To install, import this [manifest](https://raw.githubusercontent.com/Aedif/Token
 
 ## API
 
-### **showArtSelect(search, {callback = null, searchType='both', tokenConfig={}}={})**
+### **showArtSelect(search, \{callback = null, searchType='both', tokenConfig=\{\}\}=\{\})**
 
 Displays the art select window.
 
 Parameters:
- * **{string}** **search** The text to be used as the search criteria
- * **{object}** Options which customize the search
-    * {Function[]} [callback] Function to be called with the user selected image path
-    * {string} [searchType] (token|portrait|both) Controls filters applied to the search results
-    * {Token|object} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
+ * **\{string\}** **search** The text to be used as the search criteria
+ * **\{object\}** Options which customize the search
+    * \{Function[]\} [callback] Function to be called with the user selected image path
+    * \{string\} [searchType] (token|portrait|both) Controls filters applied to the search results
+    * \{Token|object\} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
 
 e.g. 
 * game.modules.get('token-variants').api.showArtSelect("")
-* game.modules.get('token-variants').api.showArtSelect("dragon", {callback: (selectedImg) => console.log(selectedImg)})
+* game.modules.get('token-variants').api.showArtSelect("dragon", \{callback: (selectedImg) => console.log(selectedImg)\})
 
-### **doImageSearch(search, {searchType = 'both', ignoreKeywords = false, simpleResults = false, callback = null}={})**
+### **doImageSearch(search, \{searchType = 'both', ignoreKeywords = false, simpleResults = false, callback = null\}=\{\})**
 
 Performs an image search and returns the results.
 
 Parameters:
- * **{string}** **search**: Text to be used as the search criteria
- * **{object}** Options which customize the search
-    * {string} [searchType] (token|portrait|both) Controls filters applied to the search results
-    * {Boolean} [ignoreKeywords] Ignores keywords search setting
-    * {Boolean} [simpleResults] Results will be returned as an array of all image paths found
-    * {Boolean} [callback] Function to be called with the found images
- * **returns**: {Map<string, Map<string, Map<string, Array<string>>>>|Array<String>|null} All images found split by original criteria and keywords
+ * **\{string\}** **search**: Text to be used as the search criteria
+ * **\{object\}** Options which customize the search
+    * \{string\} [searchType] (token|portrait|both) Controls filters applied to the search results
+    * \{Boolean\} [ignoreKeywords] Ignores keywords search setting
+    * \{Boolean\} [simpleResults] Results will be returned as an array of all image paths found
+    * \{Boolean\} [callback] Function to be called with the found images
+ * **returns**: \{Map<string, Map<string, Map<string, Array<string>>>>|Array<String>|null\} All images found split by original criteria and keywords
 
 e.g. 
 * game.modules.get('token-variants').api.doImageSearch("Dragon")
 * game.modules.get('token-variants').api.doImageSearch("Dragon", {simpleResults: true})
 
-### **doRandomSearch(search, { searchType='both', actor=null, callback=null } = {})**
+### **doRandomSearch(search, \{ searchType='both', actor=null, callback=null \} = \{\})**
 
 Performs a random image search and returns the results.
 
 Parameters:
  * **search**: Text to be used as the search criteria
- * **{object}** Options which customize the search
-    * {string} [searchType] (token|portrait|both) Controls filters applied to the search results
-    * {Actor} [actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
-    * {Function[]} [callback] Function to be called with the random image
- * **returns**: {Array<string>|null} Image path and name
+ * **\{object\}** Options which customize the search
+    * \{string\} [searchType] (token|portrait|both) Controls filters applied to the search results
+    * \{Actor\} [actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
+    * \{Function[]\} [callback] Function to be called with the random image
+ * **returns**: \{Array<string>|null\} Image path and name
 
 e.g. 
 * game.modules.get('token-variants').api.doRandomSearch("Goblin")
-* game.modules.get('token-variants').api.doRandomSearch("Goblin", {callback: (result) => console.log(result)})
+* game.modules.get('token-variants').api.doRandomSearch("Goblin", \{callback: (result) => console.log(result)\})
 
 ## **cacheTokens()**
 
