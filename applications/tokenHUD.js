@@ -7,16 +7,22 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
 
     if (!hudSettings.enableSideMenu) return;
 
+    const tokenActor = game.actors.get(token.actorId);
+    const disableIfTHW = game.settings.get("token-variants", "disableSideMenuIfTHW");
+    if(disableIfTHW && game.modules.get("token-hud-wildcard")?.active){
+        if(tokenActor && tokenActor.data.token.randomImg) return;
+    }
+
     const search = searchText ? searchText : token.name;
     if (!search || search.length < 3) return;
 
     const userHasConfigRights = game.user && game.user.can("FILES_BROWSE") && game.user.can("TOKEN_CONFIGURE");
+    const sharedOnly = game.settings.get("token-variants", "displayOnlySharedImages");
 
-    let artSearch = await doImageSearch(search, {searchType: SEARCH_TYPE.TOKEN, ignoreKeywords: true});
+    let artSearch = !searchText && sharedOnly ? null : await doImageSearch(search, {searchType: SEARCH_TYPE.TOKEN, ignoreKeywords: true});
     let images = artSearch ? artSearch.get(search) : new Map();
 
     let actorVariants = new Map();
-    const tokenActor = game.actors.get(token.actorId);
 
     if (tokenActor) {
         actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
@@ -80,13 +86,11 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
 
     const sideSelect = await renderTemplate('modules/token-variants/templates/sideSelect.html', { imagesParsed, imageDisplay, imageOpacity })
 
-    const is080 = !isNewerVersion("0.8.0", game.version ?? game.data.version)
-
     let divR = html.find('div.right').append(sideSelect);
 
     // Activate listeners
     divR.find("#token-variants-side-button").click(_onSideButtonClick);
-    divR.find(is080 ? '.control-icon[data-action="effects"] img' : 'div.control-icon.effects img').click(_onStatusEffectsClick);
+    divR.click(_deactiveTokenVariantsSideSelector);
     divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id, updateTokenImage, setActorImage));
     divR.find('.token-variants-side-search').on('keyup', (event) => _onImageSearchKeyUp(event, hud, html, token, doImageSearch, updateTokenImage, setActorImage));
     if(userHasConfigRights) {
@@ -137,12 +141,24 @@ function _onSideButtonRightClick(event){
     }
 }
 
-function _onStatusEffectsClick(event){
+function _deactiveTokenVariantsSideSelector(event){
+    const controlIcon = $(event.target).closest('.control-icon');
+    const dataAction = controlIcon.attr("data-action");
+
+    switch(dataAction) {
+        case 'effects': break; // Effects button
+        case 'thwildcard-selector': break; // Token HUD Wildcard module button
+        default: 
+            const is080 = !isNewerVersion("0.8.0", game.version ?? game.data.version);
+            if(is080 && controlIcon.hasClass('effects')) break;
+            return;
+    }
+
     $(event.target).closest('div.right').find('.control-icon[data-action="token-variants-side-selector"]').removeClass('active');
     $(event.target).closest('div.right').find('.token-variants-wrap').removeClass('active');
 }
 
-function _onImageClick(event, tokenId, updateTokenImage, setActorImage){ //TODO
+function _onImageClick(event, tokenId, updateTokenImage, setActorImage){
     event.preventDefault();
     event.stopPropagation();
 

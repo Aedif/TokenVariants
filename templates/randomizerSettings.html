@@ -1,52 +1,52 @@
 <form>
 
-    <h3><b>Randomize:</b></h3>
+    <h3><b>{{localize "token-variants.common.randomize"}}:</b></h3>
 
     <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Portrait image on Actor Create</label>
+        <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.portrait-image-on-actor-create"}}</label>
         <input type="checkbox" name="actorCreate" data-dtype="Boolean" {{#if actorCreate}}checked{{/if}}>
     </div>
 
     <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Token image on Token Create</label>
+        <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.token-image-on-token-create"}}</label>
         <input type="checkbox" name="tokenCreate" data-dtype="Boolean" {{#if tokenCreate}}checked{{/if}}>
     </div>
 
     <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Token image on Token copy+paste</label>
+        <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.token-image-on-token-copy-paste"}}</label>
         <input type="checkbox" name="tokenCopyPaste" data-dtype="Boolean" {{#if tokenCopyPaste}}checked{{/if}}>
     </div>
 
     <hr>
 
-    <p><b>Select which searches are to be included in the randomizer:</b> </p>
+    <p><b>{{localize "token-variants.settings.randomizer.window.search-types-heading"}}:</b> </p>
 
     <div class="form-group">
-        <label>Name</label>
+        <label>{{localize "token-variants.common.name"}}</label>
         <input type="checkbox" name="tokenName" data-dtype="Boolean" {{#if tokenName}}checked{{/if}}>
     </div>
 
     <div class="form-group">
-        <label>Keywords</label>
+        <label>{{localize "token-variants.common.keywords"}}</label>
         <input type="checkbox" name="keywords" data-dtype="Boolean" {{#if keywords}}checked{{/if}}>
     </div>
 
     <div class="form-group">
-        <label>Shared</label>
+        <label>{{localize "token-variants.common.shared"}}</label>
         <input type="checkbox" name="shared" data-dtype="Boolean" {{#if shared}}checked{{/if}}>
     </div>
 
     <hr>
     
-    <h3><b>Disable for:</b></h3>
+    <h3><b>{{localize "token-variants.settings.randomizer.window.disable-for"}}:</b></h3>
 
     <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Tokens with Represented Actor</label>
+        <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.tokens-with-represented-actor"}}</label>
         <input type="checkbox" name="representedActorDisable" data-dtype="Boolean" {{#if representedActorDisable}}checked{{/if}}>
     </div>
     
     <div class="form-group">
-        <label>&nbsp;&nbsp;&nbsp;&nbsp;Tokens with Linked Actor Data</label>
+        <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.tokens-with-linked-actor-data"}}</label>
         <input type="checkbox" name="linkedActorDisable" data-dtype="Boolean" {{#if linkedActorDisable}}checked{{/if}}>
     </div>
 
@@ -58,11 +58,11 @@
     {{/each}}
 
     <div class="form-group">
-        <h4>Show Art Select pop-up if randomization is disabled</h4>
+        <h4>{{localize "token-variants.settings.randomizer.window.pop-up-if-randomization-disabled"}}</h4>
         <input type="checkbox" name="popupOnDisable" data-dtype="Boolean" {{#if popupOnDisable}}checked{{/if}}>
     </div>
 
     <footer class="sheet-footer flexrow">
-        <button type="submit" name="submit" value="1"><i class="far fa-save"></i>Apply</button>
+        <button type="submit" name="submit" value="1"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
     </footer>
 </form>

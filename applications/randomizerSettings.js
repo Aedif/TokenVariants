@@ -1,7 +1,7 @@
 export default class RandomizerSettings extends FormApplication {
 
     constructor() {
-        super({}, {title: `Randomizer Settings`});
+        super({}, {title: game.i18n.localize("token-variants.settings.randomizer.Name")});
     }
 
     static get defaultOptions() {

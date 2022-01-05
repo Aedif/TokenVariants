@@ -27,7 +27,7 @@ export default class SearchPaths extends FormApplication {
             resizable: true,
             minimizable: false,
             closeOnSubmit: false,
-            title: "Search Paths",
+            title: game.i18n.localize("token-variants.settings.search-paths.Name"),
             width: 500,
             height: "auto",
             scrollY: ["ol.table-paths"],

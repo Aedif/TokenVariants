@@ -1,7 +1,7 @@
 export default class PopUpSettings extends FormApplication {
 
     constructor() {
-        super({}, {title: `Pop-up Settings`});
+        super({}, {title: game.i18n.localize("token-variants.settings.pop-up.Name")});
     }
 
     static get defaultOptions() {

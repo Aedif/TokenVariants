@@ -54,8 +54,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.registerMenu("token-variants", "searchPaths", {
-        name: game.i18n.localize("token-variants.searchPathsTitle"),
-        hint: game.i18n.localize("token-variants.SearchPathsHint"),
+        name: game.i18n.localize('token-variants.settings.search-paths.Name'),
+        hint: game.i18n.localize('token-variants.settings.search-paths.Hint'),
         icon: "fas fa-exchange-alt",
         type: SearchPaths,
         restricted: true,
@@ -74,7 +74,22 @@ async function registerWorldSettings() {
         }
     });
 
+    // World level Token HUD setting
     game.settings.register("token-variants", "enableTokenHUDButtonForAll", {
+        scope: "world",
+        type: Boolean,
+        default: false,
+    });
+
+    // World level Token HUD setting
+    game.settings.register("token-variants", "displayOnlySharedImages", {
+        scope: "world",
+        type: Boolean,
+        default: false,
+    });
+
+    // World level Token HUD setting
+    game.settings.register("token-variants", "disableSideMenuIfTHW", {
         scope: "world",
         type: Boolean,
         default: false,
@@ -101,8 +116,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "keywordSearch", {
-        name: game.i18n.localize("token-variants.KeywordSearchName"),
-        hint: game.i18n.localize("token-variants.KeywordSearchHint"),
+        name: game.i18n.localize("token-variants.settings.keywords-search.Name"),
+        hint: game.i18n.localize("token-variants.settings.keywords-search.Hint"),
         scope: "world",
         config: true,
         type: Boolean,
@@ -111,8 +126,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "excludedKeywords", {
-        name: game.i18n.localize("token-variants.ExcludedKeywordsName"),
-        hint: game.i18n.localize("token-variants.ExcludedKeywordsHint"),
+        name: game.i18n.localize("token-variants.settings.excluded-keywords.Name"),
+        hint: game.i18n.localize("token-variants.settings.excluded-keywords.Hint"),
         scope: "world",
         config: true,
         type: String,
@@ -121,8 +136,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "actorDirectoryKey", {
-        name: game.i18n.localize("token-variants.ActorDirectoryKeyName"),
-        hint: game.i18n.localize("token-variants.ActorDirectoryKeyHint"),
+        name: game.i18n.localize("token-variants.settings.actor-directory-key.Name"),
+        hint: game.i18n.localize("token-variants.settings.actor-directory-key.Hint"),
         scope: "world",
         config: true,
         type: String,
@@ -150,8 +165,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.register("token-variants", "runSearchOnPath", {
-        name: game.i18n.localize("token-variants.runSearchOnPathName"),
-        hint: game.i18n.localize("token-variants.runSearchOnPathHint"),
+        name: game.i18n.localize("token-variants.settings.run-search-on-path.Name"),
+        hint: game.i18n.localize("token-variants.settings.run-search-on-path.Hint"),
         scope: "world",
         config: true,
         type: Boolean,
@@ -176,8 +191,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.registerMenu("token-variants", "searchFilterMenu", {
-        name: game.i18n.localize("token-variants.searchFilterMenuName"),
-        hint: game.i18n.localize("token-variants.searchFilterMenuHint"),
+        name: game.i18n.localize("token-variants.settings.search-filters.Name"),
+        hint: game.i18n.localize("token-variants.settings.search-filters.Hint"),
         scope: "world",
         icon: "fas fa-exchange-alt",
         type: FilterSettings,
@@ -223,8 +238,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.registerMenu("token-variants", "randomizerMenu", {
-        name: game.i18n.localize("token-variants.randomizerMenuName"),
-        hint: game.i18n.localize("token-variants.randomizerMenuHint"),
+        name: game.i18n.localize("token-variants.settings.randomizer.Name"),
+        hint: game.i18n.localize("token-variants.settings.randomizer.Hint"),
         scope: "world",
         icon: "fas fa-exchange-alt",
         type: RandomizerSettings,
@@ -249,8 +264,8 @@ async function registerWorldSettings() {
     });
 
     game.settings.registerMenu("token-variants", "popupMenu", {
-        name: game.i18n.localize("token-variants.popupMenuName"),
-        hint: game.i18n.localize("token-variants.popupMenuHint"),
+        name: game.i18n.localize("token-variants.settings.pop-up.Name"),
+        hint: game.i18n.localize("token-variants.settings.pop-up.Hint"),
         scope: "world",
         icon: "fas fa-exchange-alt",
         type: PopUpSettings,
@@ -304,8 +319,8 @@ async function registerWorldSettings() {
 
 function registerHUD() {
     game.settings.registerMenu("token-variants", "tokenHUDSettings", {
-        name: "Token HUD Settings",
-        hint: "Settings for the Token HUD button.",
+        name: game.i18n.localize("token-variants.settings.token-hud.Name"),
+        hint: game.i18n.localize("token-variants.settings.token-hud.Hint"),
         scope: "client",
         icon: "fas fa-exchange-alt",
         type: TokenHUDSettings,
@@ -354,12 +369,12 @@ function registerHUD() {
             displayAsImage: game.settings.get("token-variants", "HUDDisplayImage"),
             imageOpacity: game.settings.get("token-variants", "HUDImageOpacity"),
             alwaysShowButton: game.settings.get("token-variants", "alwaysShowHUD"),
-            updateActorImage: false
+            updateActorImage: false,
         },
     });
     
-    async function renderHudButton(hud, html, token, searchText){
-        renderHud(hud, html, token, searchText, doImageSearch, updateTokenImage, setActorImage);
+    async function renderHudButton(hud, html, token){
+        renderHud(hud, html, token, "", doImageSearch, updateTokenImage, setActorImage);
     }
 
     // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
@@ -539,7 +554,7 @@ function modTokenConfig(tokenConfig, html, _) {
         if (field.getAttribute('name') == 'img') {
             let el = document.createElement('button');
             el.type = "button";
-            el.title = game.i18n.localize('token-variants.TokenConfigButtonTitle');
+            el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
             el.className = "token-variants-image-select-button"; 
             el.innerHTML = '<i class="fas fa-images"></i>';
             el.tabIndex = -1;
@@ -592,7 +607,7 @@ function modActorSheet(actorSheet, html, options) {
     }
 
     if (!profile) {
-        console.log(game.i18n.localize("token-variants.ProfileListenerError"));
+        console.log(game.i18n.localize("token-variants.notifications.warn.profile-image-not-found"));
         return;
     }
 
@@ -611,7 +626,7 @@ function modActorSheet(actorSheet, html, options) {
 async function cacheTokens() {
     if (caching) return;
     caching = true;
-    ui.notifications.info(game.i18n.format("token-variants.notifications.info.cachingStarted"));
+    ui.notifications.info(game.i18n.format("token-variants.notifications.info.caching-started"));
 
     if (debug) console.log("STARTING: Token Caching");
     cachedTokens.clear();
@@ -622,7 +637,7 @@ async function cacheTokens() {
     if (debug) console.log("ENDING: Token Caching");
 
     caching = false;
-    ui.notifications.info(game.i18n.format("token-variants.notifications.info.cachingFinished", {imageCount: cachedTokens.size}));
+    ui.notifications.info(game.i18n.format("token-variants.notifications.info.caching-finished", {imageCount: cachedTokens.size}));
 }
 
 /**
@@ -763,7 +778,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
         } else if (rollTableName) {
             const table = game.tables.contents.find((t) => t.name === rollTableName);
             if (!table){
-              ui.notifications.warn(game.i18n.format("token-variants.notifications.warn.invalidTable", { tableId }));
+              ui.notifications.warn(game.i18n.format("token-variants.notifications.warn.invalid-table", { rollTableName }));
             } else {
                 for (let baseTableData of table.data.results) {
                     const path = baseTableData.data.img;
@@ -782,7 +797,7 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
             files = await FilePicker.browse("data", path);
         }
     } catch (err) {
-        console.log(`${game.i18n.localize("token-variants.PathNotFoundError")} ${path}`);
+        console.log(`${game.i18n.localize("token-variants.notifications.warn.path-not-found")} ${path}`);
         return;
     }
 
@@ -815,11 +830,11 @@ async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.
     if (caching) return;
 
     // Set Art Select screen title
-    let title = game.i18n.localize("token-variants.SelectScreenTitle");
+    let title = game.i18n.localize("token-variants.windows.art-select.select-variant");
     if (searchType == SEARCH_TYPE.TOKEN)
-        title = game.i18n.localize("token-variants.SelectScreenTitleToken");
+        title = game.i18n.localize("token-variants.windows.art-select.select-token-art");
     else if (searchType == SEARCH_TYPE.PORTRAIT)
-        title = game.i18n.localize("token-variants.SelectScreenTitlePortrait");
+        title = game.i18n.localize("token-variants.windows.art-select.select-portrait-art");
 
     let allImages = await doImageSearch(search, {searchType: searchType});
 
@@ -1054,7 +1069,7 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
     } else if (twoPopups) {
         let d = new Dialog({
             title: "Portrait -> Token",
-            content: `<p>${game.i18n.localize("token-variants.TwoPopupsDialogQuestion")}</p>`,
+            content: `<p>${game.i18n.localize("token-variants.windows.art-select-apply-same-art")}</p>`,
             buttons: {
                 one: {
                     icon: '<i class="fas fa-check"></i>',

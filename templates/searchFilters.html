@@ -1,72 +1,66 @@
 <form>
-    <label>Portrait Art Filters</label>
+    <label>{{localize "token-variants.settings.search-filters.window.portrait-filter.Name"}}</label>
     <div class="form-group">
-        <label>Include</label>
+        <label>{{localize "token-variants.common.include"}}</label>
         <div class="form-fields">
-            <input type="text" name="portraitFilterInclude" value="{{portraitFilterInclude}}" data-dtype="String" {{#if
-                portraitFilterRegex}}disabled{{/if}}>
+            <input type="text" name="portraitFilterInclude" value="{{portraitFilterInclude}}" data-dtype="String" {{#if portraitFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
-        <label>Exclude</label>
+        <label>{{localize "token-variants.common.exclude"}}</label>
         <div class="form-fields">
-            <input type="text" name="portraitFilterExclude" value="{{portraitFilterExclude}}" data-dtype="String" {{#if
-                portraitFilterRegex}}disabled{{/if}}>
+            <input type="text" name="portraitFilterExclude" value="{{portraitFilterExclude}}" data-dtype="String" {{#if portraitFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
-        <label>Regex</label>
+        <label>RegEx</label>
         <div class="form-fields">
             <input type="text" name="portraitFilterRegex" value="{{portraitFilterRegex}}" data-dtype="String">
         </div>
-        <p class="notes">{{localize "token-variants.portraitArtFilterHint"}}</p>
+        <p class="notes">{{localize "token-variants.settings.search-filters.window.portrait-filter.Hint"}}</p>
     </div>
 
     <hr />
 
-    <label>Token Art Filters</label>
+    <label>{{localize "token-variants.settings.search-filters.window.token-filter.Name"}}</label>
     <div class="form-group">
-        <label>Include</label>
+        <label>{{localize "token-variants.common.include"}}</label>
         <div class="form-fields">
-            <input type="text" name="tokenFilterInclude" value="{{tokenFilterInclude}}" data-dtype="String" {{#if
-                tokenFilterRegex}}disabled{{/if}}>
+            <input type="text" name="tokenFilterInclude" value="{{tokenFilterInclude}}" data-dtype="String" {{#if tokenFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
-        <label>Exclude</label>
+        <label>{{localize "token-variants.common.exclude"}}</label>
         <div class="form-fields">
-            <input type="text" name="tokenFilterExclude" value="{{tokenFilterExclude}}" data-dtype="String" {{#if
-                tokenFilterRegex}}disabled{{/if}}>
+            <input type="text" name="tokenFilterExclude" value="{{tokenFilterExclude}}" data-dtype="String" {{#if tokenFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
-        <label>Regex</label>
+        <label>RegEx</label>
         <div class="form-fields">
             <input type="text" name="tokenFilterRegex" value="{{tokenFilterRegex}}" data-dtype="String">
         </div>
-        <p class="notes">{{localize "token-variants.tokenArtFilterHint"}}</p>
+        <p class="notes">{{localize "token-variants.settings.search-filters.window.token-filter.Hint"}}</p>
     </div>
 
     <hr />
 
-    <label>General Art Filters</label>
+    <label>{{localize "token-variants.settings.search-filters.window.general-filter.Name"}}</label>
     <div class="form-group">
-        <label>Include</label>
+        <label>{{localize "token-variants.common.include"}}</label>
         <div class="form-fields">
-            <input type="text" name="generalFilterInclude" value="{{generalFilterInclude}}" data-dtype="String" {{#if
-                generalFilterRegex}}disabled{{/if}}>
+            <input type="text" name="generalFilterInclude" value="{{generalFilterInclude}}" data-dtype="String" {{#if generalFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
-        <label>Exclude</label>
+        <label>{{localize "token-variants.common.exclude"}}</label>
         <div class="form-fields">
-            <input type="text" name="generalFilterExclude" value="{{generalFilterExclude}}" data-dtype="String" {{#if
-                generalFilterRegex}}disabled{{/if}}>
+            <input type="text" name="generalFilterExclude" value="{{generalFilterExclude}}" data-dtype="String" {{#if generalFilterRegex}}disabled{{/if}}>
         </div>
         &nbsp;&nbsp;
-        <label>Regex</label>
+        <label>RegEx</label>
         <div class="form-fields">
             <input type="text" name="generalFilterRegex" value="{{generalFilterRegex}}" data-dtype="String">
         </div>
-        <p class="notes">{{localize "token-variants.generalArtFilterHint"}}</p>
+        <p class="notes">{{localize "token-variants.settings.search-filters.window.general-filter.Hint"}}</p>
     </div>
 
     <div class="button-container">
-        <button type="submit"><i class="far fa-save"></i>Apply</button>
+        <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
     </div>
 </form>

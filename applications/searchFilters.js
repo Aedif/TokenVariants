@@ -34,7 +34,7 @@ export default class FilterSettings extends FormApplication {
             template: "modules/token-variants/templates/searchFilters.html",
             resizable: false,
             minimizable: false,
-            title: "Filter Settings",
+            title: game.i18n.localize("token-variants.settings.search-filters.Name"),
             width: 500
         });
     }

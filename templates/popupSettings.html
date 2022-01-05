@@ -1,24 +1,24 @@
 <form>
     <div class="form-group">
-        <label>{{localize "token-variants.TwoPopupsName"}}</label>
+        <label>{{localize "token-variants.settings.pop-up.window.two-pop-ups.Name"}}</label>
         <input type="checkbox" name="twoPopups" data-dtype="Boolean" {{#if twoPopups}}checked{{/if}}>
-        <p class="notes">{{localize "token-variants.TwoPopupsHint"}}</p>
+        <p class="notes">{{localize "token-variants.settings.pop-up.window.two-pop-ups.Hint"}}</p>
     </div>
 
     <div class="form-group">
-        <label>{{localize "token-variants.twoPopupsNoDialogName"}}</label>
+        <label>{{localize "token-variants.settings.pop-up.window.no-dialog.Name"}}</label>
         <input type="checkbox" name="twoPopupsNoDialog" data-dtype="Boolean" {{#if twoPopupsNoDialog}}checked{{/if}}>
-        <p class="notes">{{localize "token-variants.twoPopupsNoDialogHint"}}</p>
+        <p class="notes">{{localize "token-variants.settings.pop-up.window.no-dialog.Hint"}}</p>
     </div>
 
     <div class="form-group">
-        <label>{{localize "token-variants.disableActorPortraitArtSelectName"}}</label>
+        <label>{{localize "token-variants.settings.pop-up.window.disable-actor-portrait.Name"}}</label>
         <input type="checkbox" name="disableActorPortraitArtSelect" data-dtype="Boolean" {{#if disableActorPortraitArtSelect}}checked{{/if}}>
-        <p class="notes">{{localize "token-variants.disableActorPortraitArtSelectHint"}}</p>
+        <p class="notes">{{localize "token-variants.settings.pop-up.window.disable-actor-portrait.Hint"}}</p>
     </div>
 
     <div class="form-group">
-        <label>Disable Automatic Pop-ups for</label>
+        <label>{{localize "token-variants.settings.pop-up.window.disable-automatic-pop-ups-for"}}</label>
     </div>
 
     {{#each actorTypes}}
@@ -39,9 +39,9 @@
     {{/each}}
 
     <header class="table-header flexrow">
-        <label class="index">On Actor Create</label>
-        <label>On Token Create</label>
-        <label>On Token Copy+Paste</label>
+        <label class="index">{{localize "token-variants.settings.pop-up.window.on-actor-create"}}</label>
+        <label>{{localize "token-variants.settings.pop-up.window.on-token-create"}}</label>
+        <label>{{localize "token-variants.settings.pop-up.window.on-token-copy-paste"}}</label>
     </header>
     <ul class="setting-list">
         <li class="setting form-group">
@@ -54,6 +54,6 @@
     </ul>
 
     <footer class="sheet-footer flexrow">
-        <button type="submit" name="submit" value="1"><i class="far fa-save"></i>Apply</button>
+        <button type="submit" name="submit" value="1"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
     </footer>
 </form>

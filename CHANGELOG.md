@@ -1,3 +1,10 @@
+# 1.21.0
+
+* Compatibility with 'Token HUD Wildcard'
+    * The buttons from both modules should now properly interact and de-activate one another when clicked.
+    * Added a new setting under **Token HUD Settings** to disable **Token Variant Art** button if **Token HUD Wildcard** is active and 'Randomize Wildcard Images' is checked.
+* New setting under **Token HUD Settings** to display only shared images in the side menu. (Search can still be performed to assign shared images)
+
 # 1.20.3
 
 * **API** is being migrated to **game.modules.get("token-variants").api**
