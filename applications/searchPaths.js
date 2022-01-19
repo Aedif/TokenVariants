@@ -1,22 +1,7 @@
-function getPaths(){
-    const paths = (game.settings.get("token-variants", "searchPaths") || []).flat();
-
-    // To maintain compatibility with previous versions
-    const defaultCaching = !game.settings.get("token-variants", "disableCaching");
-    if(paths.length > 0 && !(paths[0] instanceof Object)){
-        paths.forEach((path, i) => {
-            paths[i] = {text: path, cache: defaultCaching};
-        });
-    }
-    // end of compatibility code
-
-    return paths;
-}
-
-export default class SearchPaths extends FormApplication {
+export class SearchPaths extends FormApplication {
 
     constructor() {
-        super({paths: getPaths()}, {});
+        super({}, {});
     }
 
     static get defaultOptions() {
@@ -36,11 +21,15 @@ export default class SearchPaths extends FormApplication {
     }
 
     async getData(options) {
+
+        if(!this.object.paths) this.object.paths = await this._getPaths();
+
         const paths = this.object.paths.map(path => {
             const r = {};
             r.text = path.text;
             r.type = this._determineType(path.text);
             r.cache = path.cache;
+            r.share = path.share;
             return r;
         });
 
@@ -49,16 +38,31 @@ export default class SearchPaths extends FormApplication {
         return data;
     }
 
+    async _getPaths(){
+        const paths = (game.settings.get("token-variants", "searchPaths") || []).flat();
+    
+        // To maintain compatibility with previous versions
+        const defaultCaching = !game.settings.get("token-variants", "disableCaching");
+        if(paths.length > 0 && !(paths[0] instanceof Object)){
+            paths.forEach((path, i) => {
+                paths[i] = {text: path, cache: defaultCaching};
+            });
+        }
+        // end of compatibility code
+    
+        return paths;
+    }
+
     _determineType(path){
         const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
 
         if (path.startsWith("s3:")) {
             return "s3";
-        }else if (path.startsWith("rolltable:")) {
+        } else if (path.startsWith("rolltable:")) {
             return "rolltable";
-        } else if(path.match(regexpForge)){
+        } else if(path.startsWith("forgevtt:") || path.match(regexpForge)){
             return "forge"
-        }
+        } 
 
         return "local"
     }
@@ -93,7 +97,7 @@ export default class SearchPaths extends FormApplication {
         event.preventDefault();
         await this._onSubmit(event);
 
-        this.object.paths.push({text: "", cache: true})
+        this.object.paths.push({text: "", cache: true, share: true})
         this.render();
     }
 
@@ -108,14 +112,14 @@ export default class SearchPaths extends FormApplication {
 
     _onReset(event){
         event.preventDefault();
-        this.object.paths = getPaths();
+        this.object.paths = this._getPaths();
         this.render();
     }
 
     async _onUpdate(event){
         event.preventDefault();
         await this._onSubmit(event);
-        game.settings.set("token-variants", "searchPaths", this.object.paths.filter(path => Boolean(path.text)));
+        this._updatePaths();
     }
 
     async _updateObject(event, formData) {
@@ -129,9 +133,7 @@ export default class SearchPaths extends FormApplication {
         });
     }
 
-    async close(options={}) {
-        await this._onSubmit(event);
-
+    _cleanPaths(){
         // Cleanup empty and duplicate paths
         let uniquePaths = new Set();
         let paths = this.object.paths.filter(path => {
@@ -139,8 +141,61 @@ export default class SearchPaths extends FormApplication {
             uniquePaths.add(path.text);
             return true;
         });
+        return paths;
+    }
 
-        game.settings.set("token-variants", "searchPaths", paths)
+    _updatePaths(){
+        const paths = this._cleanPaths();
+        game.settings.set("token-variants", "searchPaths", paths);
+    }
+
+    async close(options={}) {
+        await this._onSubmit(event);
+        this._updatePaths();
         return super.close(options)
     }
+}
+
+export class ForgeSearchPaths extends SearchPaths {
+
+    async _getPaths(){
+        const forgePaths = game.settings.get("token-variants", "forgeSearchPaths") || {};
+        this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : "tempUser"; // TODO
+        this.apiKey = forgePaths[this.userId]?.apiKey;
+        return forgePaths[this.userId]?.paths || [];
+    }
+
+    _determineType(path){
+        return 'forge';
+    }
+
+    _updatePaths() {
+        if(this.userId){
+            const forgePaths = game.settings.get("token-variants", "forgeSearchPaths") || {};
+            forgePaths[this.userId] = { paths: this._cleanPaths(), apiKey: this.apiKey };
+            game.settings.set("token-variants", "forgeSearchPaths", forgePaths);
+        }
+    }
+
+    async _updateObject(event, formData) {
+        const expanded = expandObject(formData);
+        expanded.paths = expanded.hasOwnProperty("paths") ? Object.values(expanded.paths) : [];
+        expanded.paths.forEach((path, index)=> {
+            this.object.paths[index] = {
+                text: path.text,
+                cache: path.cache,
+                share: path.share
+            };
+        });
+        this.apiKey = expanded.apiKey;
+    }
+
+    async getData(options) {
+        const data = await super.getData(options);
+        data.forge = true;
+        data.apiKey = this.apiKey;
+        return data;
+    }
+
+
 }

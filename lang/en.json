@@ -5,6 +5,10 @@
                 "Name": "Search Paths",
                 "Hint": "Configure folders, Rolltables and s3 buckets to be searched for art here."
             },
+            "forge-search-paths": {
+                "Name": "Forge Asset Folder Paths",
+                "Hint": "Configure your API key and Asset Folder Paths"
+            },
             "search-filters": {
                 "Name": "Search Filter Settings",
                 "Hint": "Assign filters to Portrait and Token art searches.",
@@ -136,7 +140,8 @@
             "warn": {
                 "profile-image-not-found": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
                 "path-not-found": "Unable to find path: ",
-                "invalid-table": "The table \"{tableId}\" could not be found"
+                "invalid-table": "The table \"{tableId}\" could not be found",
+                "update-image-no-token-actor": "Calling 'updateImage' with no valid Token or Actor as update target."
             },
             "info": {
                 "caching-started": "Token Variant Art: Caching Started",

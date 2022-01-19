@@ -82,6 +82,29 @@ export function simplifyPath(path) {
     return path.replace(simplifyRegex, '').toLowerCase();
 }
 
+async function _parseForgeAssetPaths(){
+    const forgePaths = game.settings.get("token-variants", "forgeSearchPaths") || {};
+    const userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : "";
+    const searchPaths = [];
+
+    for (let uid in forgePaths) {
+        if(uid === userId){
+            forgePaths[uid].paths.forEach(path => {
+                searchPaths.push(path);
+            });
+        } else if(forgePaths[uid].apiKey){
+            forgePaths[uid].paths.forEach(path => {
+                if(path.share){
+                    path.apiKey = forgePaths[uid].apiKey;
+                    searchPaths.push(path);
+                }
+            });
+        }
+    }
+
+    return searchPaths;
+}
+
 /**
  * Parses the searchPaths setting into a Map, distinguishing s3 buckets from local paths
  */
@@ -90,8 +113,8 @@ export async function parseSearchPaths(debug = false) {
     if (debug) console.log("STARTING: Search Path Parse");
 
     const regexpBucket = /s3:(.*):(.*)/;
-    const regexpRollTable = /rolltable:(.*)/;
     const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
+    const FORGE_ASSETS_LIBRARY_URL_PREFIX = "https://assets.forge-vtt.com/";
 
     const searchPathList = (game.settings.get("token-variants", "searchPaths") || []).flat();
 
@@ -110,22 +133,6 @@ export async function parseSearchPaths(debug = false) {
     searchPaths.set("rolltable", []);
 
     let allForgePaths = [];
-    async function walkForgePaths(path, currDir, cache) {
-        let files;
-        try {
-            files = await FilePicker.browse(path, currDir, {});
-            if (!currDir.endsWith('/')) currDir += "/";
-            allForgePaths.push({text: `${path}${currDir}*`, cache: cache});
-        } catch (err) {
-            return;
-        }
-
-        if (files.target == ".") return;
-
-        for (let dir of files.dirs) {
-            await walkForgePaths(path, dir, cache);
-        }
-    }
 
     for (const path of searchPathList) {
         if (path.text.startsWith("s3:")) {
@@ -141,28 +148,43 @@ export async function parseSearchPaths(debug = false) {
                     buckets.set(bucket, [{text: bPath, cache: path.cache}]);
                 }
             }
-        }else if (path.text.startsWith("rolltable:")) {
-            const match = path.text.match(regexpRollTable);
-            if (match[0]) {
-                let tableId = match[0].split(":")[1];
-                searchPaths.get("rolltable").push({text: tableId, cache: path.cache});
+        } else if (path.text.startsWith("rolltable:")) {
+            searchPaths.get("rolltable").push({text: path.text.split(':')[1], cache: path.cache});
+        } else if (path.text.startsWith("forgevtt:") || path.text.startsWith(FORGE_ASSETS_LIBRARY_URL_PREFIX)) {
+            let url = "";
+            if(path.text.startsWith(FORGE_ASSETS_LIBRARY_URL_PREFIX)){
+                url = path.text;
+            } else if (typeof ForgeAPI !== 'undefined'){
+                const status = ForgeAPI.lastStatus || await ForgeAPI.status().catch(console.error) || {};
+                if(status.isAdmin){
+                    url = FORGE_ASSETS_LIBRARY_URL_PREFIX + await ForgeAPI.getUserId() + "/" + path.text.split(":")[1];
+                }
             }
-        } else {
-            const match = path.text.match(regexpForge);
+
+            const match = url.match(regexpForge);
             if (match) {
-                const forgeURL = match[1];
                 const userId = match[2];
                 const fPath = match[3];
                 if (typeof ForgeAPI !== 'undefined') {
                     if (userId == await ForgeAPI.getUserId()) {
-                        await walkForgePaths(forgeURL + userId + "/", fPath, path.cache);
+                        try {
+                            let files = await FilePicker.browse("forgevtt", `${FORGE_ASSETS_LIBRARY_URL_PREFIX}${userId}/${fPath}`, { recursive: true });
+                            files.dirs.push(fPath);
+                            allForgePaths = allForgePaths.concat(
+                                files.dirs.map(p => {
+                                    if (!p.endsWith('/')) p += "/";
+                                    return {text: `${FORGE_ASSETS_LIBRARY_URL_PREFIX}${userId}/${p}*`, cache: path.cache}
+                                })
+                            );
+                        } catch (err) {console.log(err)}
                     } else {
-                        allForgePaths.push({text: path.text + "/*", cache: path.cache});
+                        if (!url.endsWith('/')) url += "/";
+                        allForgePaths.push({text: url + "*", cache: path.cache});
                     }
                 }
-            } else {
-                searchPaths.get("data").push({text: path.text, cache: path.cache});
             }
+        } else {
+            searchPaths.get("data").push({text: path.text, cache: path.cache});
         }
     }
 
@@ -182,13 +204,15 @@ export async function parseSearchPaths(debug = false) {
     })
     allForgePaths.forEach(path => {
         if(!uniqueForgePaths.has(path.text)){
-            forgePathsSetting.push(path.text);
+            forgePathsSetting.push(path);
         }
-    })
+    });
 
     searchPaths.set("forge", forgePathsSetting);
     if (game.user.can("SETTINGS_MODIFY"))
         game.settings.set("token-variants", "forgevttPaths", forgePathsSetting);
+
+    searchPaths.set("forgevtt", await _parseForgeAssetPaths());
 
     if (debug) console.log("ENDING: Search Path Parse", searchPaths);
 
@@ -218,4 +242,32 @@ export function isVideo(path) {
     var extension = path.split('.')
     extension = extension[extension.length - 1]
     return ['webm', 'mp4', 'm4v'].includes(extension)
+}
+
+export async function callForgeVTT(endpoint, formData, apiKey) {
+    return new Promise(async (resolve, reject) => {
+        if (typeof ForgeVTT === 'undefined' || (!ForgeVTT.usingTheForge && !endpoint))
+            return resolve({});
+
+        const url = `${ForgeVTT.FORGE_URL}/api/${endpoint}`;
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Access-Key', apiKey);
+        xhr.setRequestHeader('X-XSRF-TOKEN', await ForgeAPI.getXSRFToken());
+        xhr.responseType = 'json';
+
+        xhr.onreadystatechange = () => {
+            if (xhr.readyState !== 4) return;
+            resolve(xhr.response);
+        };
+        xhr.onerror = (err) => {
+            resolve({ code: 500, error: err.message });
+        };
+        if (!(formData instanceof FormData)) {
+            xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+            formData = JSON.stringify(formData);
+        }
+        xhr.send(formData);
+    });
 }

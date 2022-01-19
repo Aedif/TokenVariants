@@ -49,6 +49,10 @@
     flex: 0 0 50px;
     text-align: center;
 }
+.search-paths-config ol.table-paths .table-path .path-share {
+    flex: 0 0 50px;
+    text-align: center;
+}
 .search-paths-config ol.table-paths .table-path .path-controls {
     flex: 0 0 40px;
     margin: 0;

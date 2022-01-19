@@ -183,7 +183,7 @@ e.g.
 Performs a random image search and returns the results.
 
 Parameters:
- * **search**: Text to be used as the search criteria
+ * **\{string\}** **search**: Text to be used as the search criteria
  * **\{object\}** Options which customize the search
     * \{string\} [searchType] (token|portrait|both) Controls filters applied to the search results
     * \{Actor\} [actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
@@ -193,6 +193,17 @@ Parameters:
 e.g. 
 * game.modules.get('token-variants').api.doRandomSearch("Goblin")
 * game.modules.get('token-variants').api.doRandomSearch("Goblin", \{callback: (result) => console.log(result)\})
+
+### **updateTokenImage(imgSrc, \{token = null, actor = null, imgName = null\} = \{\})**
+
+ * **\{string\}** **imgSrc**: Image source path/url
+ * **\{object\}** Update options
+    * \{Token\} [token] Token to be updated with the new image
+    * \{Actor\} [actor] Actor with Proto Token to be updated with the new image
+    * \{string\} [imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
+
+e.g. 
+* game.modules.get('token-variants').api.updateTokenImage("tokenImages/dragon/RedDragon.jpg", {token: canvas.tokens.controlled[0]});
 
 ## **cacheTokens()**
 

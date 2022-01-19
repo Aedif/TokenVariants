@@ -1,10 +1,10 @@
-import SearchPaths from "./applications/searchPaths.js";
+import {SearchPaths, ForgeSearchPaths} from "./applications/searchPaths.js";
 import ArtSelect from "./applications/artSelect.js";
 import TokenHUDSettings from "./applications/tokenHUDSettings.js";
 import FilterSettings from "./applications/searchFilters.js";
 import RandomizerSettings from "./applications/randomizerSettings.js";
 import PopUpSettings from "./applications/popupSettings.js";
-import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfigForUpdate, SEARCH_TYPE} from "./scripts/utils.js"
+import { getFileName, getFileNameWithExt, simplifyTokenName, simplifyPath, parseSearchPaths, parseKeywords, isImage, isVideo, getTokenConfigForUpdate, SEARCH_TYPE, callForgeVTT} from "./scripts/utils.js"
 import { renderHud } from "./applications/tokenHUD.js"
 
 // Default path where the script will look for token art
@@ -66,6 +66,19 @@ async function registerWorldSettings() {
         config: false,
         type: Array,
         default: DEFAULT_TOKEN_PATHS,
+        onChange: async function (_) {
+            if (game.user.can("SETTINGS_MODIFY"))
+                await game.settings.set("token-variants", "forgevttPaths", []);
+            parsedSearchPaths = await parseSearchPaths(debug);
+            cacheTokens();
+        }
+    });
+
+    game.settings.register("token-variants", "forgeSearchPaths", {
+        scope: "world",
+        config: false,
+        type: Object,
+        default: {},
         onChange: async function (_) {
             if (game.user.can("SETTINGS_MODIFY"))
                 await game.settings.set("token-variants", "forgevttPaths", []);
@@ -374,7 +387,7 @@ function registerHUD() {
     });
     
     async function renderHudButton(hud, html, token){
-        renderHud(hud, html, token, "", doImageSearch, updateTokenImage, setActorImage);
+        renderHud(hud, html, token, "", doImageSearch, updateTokenImage, updateActorImage);
     }
 
     // Incorporating 'FVTT-TokenHUDWildcard' token hud button 
@@ -389,6 +402,17 @@ async function initialize() {
     // Initialization should only be performed once
     if (initialized) {
         return;
+    }
+
+    if(typeof ForgeAPI !== 'undefined') {
+        game.settings.registerMenu("token-variants", "forgeSearchPaths", {
+            name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),
+            hint: game.i18n.localize('token-variants.settings.forge-search-paths.Hint'),
+            icon: "fas fa-exchange-alt",
+            type: ForgeSearchPaths,
+            scope: "client",
+            restricted: true,
+        });
     }
 
     await registerWorldSettings();
@@ -423,7 +447,7 @@ async function initialize() {
                     doRandomSearch(actor.data.name, {
                             searchType: SEARCH_TYPE.PORTRAIT, 
                             actor: actor, 
-                            callback: (imgSrc, name) => setActorImage(actor, imgSrc, name)
+                            callback: (imgSrc, name) => updateActorImage(actor, imgSrc, {imgName: name})
                         });
                     return;
                 }
@@ -448,7 +472,7 @@ async function initialize() {
             }
 
             showArtSelect(actor.data.name, {
-                callback: (imgSrc, name) => setActorImage(actor, imgSrc, name, {updateActorOnly: false}),
+                callback: (imgSrc, name) => updateActorImage(actor, imgSrc, {updateActorOnly: false, imgName: name}),
                 searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
                 object: actor
             }); 
@@ -472,7 +496,7 @@ async function initialize() {
                 token = canvas.tokens.get(options._id);
             }
 
-            const updateTokenCallback = (imgSrc, name) => updateTokenImage(token.actor, token, imgSrc, name);
+            const updateTokenCallback = (imgSrc, name) => updateTokenImage(imgSrc, {token: token, actor: token.actor, imgName: name});
 
 
             // Check if random search is enabled and if so perform it 
@@ -613,7 +637,7 @@ function modActorSheet(actorSheet, html, options) {
 
     profile.addEventListener('contextmenu', function (ev) {
         showArtSelect(actorSheet.object.name, {
-            callback: (imgSrc, name) => setActorImage(actorSheet.object, imgSrc, name),
+            callback: (imgSrc, name) => updateActorImage(actorSheet.object, imgSrc, {imgName: name}),
             searchType: SEARCH_TYPE.PORTRAIT,
             object: actorSheet.object
         })
@@ -732,21 +756,25 @@ async function findTokens(name, searchType = "") {
 
     for (let path of searchPaths.get("data")) {
         if((path.cache && caching) || (!path.cache && !caching))
-            await walkFindTokens(path.text, simpleName, "", filters, false, "");
+            await walkFindTokens(path.text, {name: simpleName, filters: filters});
     }
     for (let [bucket, paths] of searchPaths.get("s3")) {
         for (let path of paths) {
             if((path.cache && caching) || (!path.cache && !caching))
-                await walkFindTokens(path.text, simpleName, bucket, filters, false, "");
+                await walkFindTokens(path.text, {name: simpleName, bucket: bucket, filters: filters});
         }
     }
     for (let path of searchPaths.get("forge")) {
         if((path.cache && caching) || (!path.cache && !caching))
-            await walkFindTokens(path.text, simpleName, "", filters, true, "");
+            await walkFindTokens(path.text, {name: simpleName, filters: filters, forge: true});
     }
     for (let path of searchPaths.get("rolltable")) {
         if((path.cache && caching) || (!path.cache && !caching))
-            await walkFindTokens(path.text, simpleName, "", filters, false, path.text);
+            await walkFindTokens(path.text, {name: simpleName, filters: filters, rollTableName: path.text});
+    }
+    for (let path of searchPaths.get("forgevtt")) {
+        if((path.cache && caching) || (!path.cache && !caching))
+            await walkFindTokens(path.text, {name: simpleName, filters: filters, forgevtt: true, apiKey: path.apiKey});
     }
 
     if (debug) console.log("ENDING: Token Search", foundTokens);
@@ -766,15 +794,22 @@ function addTokenToFound(tokenSrc, name){
 /**
  * Walks the directory tree and finds all the matching token art
  */
-async function walkFindTokens(path, name = "", bucket = "", filters = null, forge = false, rollTableName = "") {
+async function walkFindTokens(path, { name = "", bucket = "", filters = null, forge = false, rollTableName = "", forgevtt = false, apiKey = ""} = {}) {
     if (!bucket && !path) return;
 
-    let files = [];
+    let files = {};
     try {
         if (bucket) {
             files = await FilePicker.browse("s3", path, { bucket: bucket });
         } else if (forge) {
             files = await FilePicker.browse("", path, { wildcard: true });
+        } else if (forgevtt) {
+            if(apiKey){
+                const response = await callForgeVTT('assets/browse', {path: path, options: { recursive: true }}, apiKey);
+                files.files = response.files.map(f => f.url);
+            } else {
+                files = await FilePicker.browse("forgevtt", path, { recursive: true });
+            }
         } else if (rollTableName) {
             const table = game.tables.contents.find((t) => t.name === rollTableName);
             if (!table){
@@ -813,8 +848,11 @@ async function walkFindTokens(path, name = "", bucket = "", filters = null, forg
             }
         }
     }
+
+    if(forgevtt) return;
+
     for (let dir of files.dirs) {
-        await walkFindTokens(dir, name, bucket, filters, forge, "");
+        await walkFindTokens(dir, {name: name, bucket: bucket, filters: filters, forge: forge});
     }
 }
 
@@ -864,11 +902,9 @@ async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.
     });
 
     if (artFound) {
-        let artSelect = new ArtSelect(title, search, allButtons, callback, searchAndDisplay, object);
-        artSelect.render(true);
+        new ArtSelect(title, search, allButtons, callback, searchAndDisplay, object).render(true);
     } else {
-        let artSelect = new ArtSelect(title, search, null, callback, searchAndDisplay, object);
-        artSelect.render(true);
+        new ArtSelect(title, search, null, callback, searchAndDisplay, object).render(true);
     }
 }
 
@@ -972,12 +1008,22 @@ async function doImageSearch(search, {searchType = SEARCH_TYPE.BOTH, ignoreKeywo
     return allImages;
 }
 
-async function updateTokenImage(actor, token, imgSrc, imgName){
-    if(!(token || actor)) return;
+/**
+ * Updates Token and/or Poro Token  with the new image and custom configuration if one exists.
+ * @param {string} imgSrc Image source path/url
+ * @param {object} [options={}] Update options
+ * @param {Token[]} [options.token] Token to be updated with the new image
+ * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
+ * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
+ */
+async function updateTokenImage(imgSrc, {token = null, actor = null, imgName = null} = {}){
+    if(!(token || actor)) {
+        console.warn(game.i18n.localize("token-variants.notifications.warn.update-image-no-token-actor"));
+        return;
+    }
 
-    let tokenActor = null;
-    if(actor){tokenActor = actor}
-    else if(token && token.actor){tokenActor = game.actors.get(token.actor.id)}
+    if(!imgName) imgName = getFileName(imgSrc);
+    if(!actor && token.actor) { actor = game.actors.get(token.actor.id); }
 
     const getDefaultConfig = (token, actor) => {
         let configEntries = [];
@@ -1012,7 +1058,7 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
             await token.setFlag('token-variants', 'defaultConfig', defConf);
         } else if(actor && !token){
             tokenUpdateObj.flags = {"token-variants": {"usingCustomConfig": true}};
-            const tokenData = tokenActor.data.token instanceof Object ? tokenActor.data.token : tokenActor.data.token.toObject();
+            const tokenData = actor.data.token instanceof Object ? actor.data.token : actor.data.token.toObject();
             const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
             tokenUpdateObj.flags = {"token-variants": {"defaultConfig": defConf}};
         }
@@ -1027,11 +1073,8 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
         }
     }
 
-    if(actor) {
-        await (actor.document ?? actor).update({ "token.img": imgSrc });
-    }
-
     if(actor && !token){
+        await (actor.document ?? actor).update({ "token.img": imgSrc });
         tokenUpdateObj = mergeObject(tokenUpdateObj, {flags: {"token-variants": {name: imgName}}})
         if(isNewerVersion(game.version ?? game.data.version, "0.7.10"))
             await actor.data.token.update(tokenUpdateObj);
@@ -1054,15 +1097,22 @@ async function updateTokenImage(actor, token, imgSrc, imgName){
 /**
  * Assign new artwork to the actor
  */
-async function setActorImage(actor, image, imageName, {updateActorOnly = true}={}) {
-    let updateDoc = (obj, data) => (obj.document ?? obj).update(data);
-    updateDoc(actor, { img: image });
+async function updateActorImage(actor, imgSrc, {updateActorOnly = true, imgName = null}={}) {
+
+    await (actor.document ?? actor).update({ img: imgSrc });
+
+    console.log("here")
+
     if (updateActorOnly)
         return;
 
+    console.log("here2")
+
+    if(!imgName) imgName = getFileName(imgSrc);
+
     if (twoPopups && noTwoPopupsPrompt) {
         showArtSelect(actor.name, {
-            callback: (imgSrc, name) => updateTokenImage(actor, null, imgSrc, name),
+            callback: (imgSrc, name) => updateTokenImage(imgSrc, {actor: actor, imgName: name}),
             searchType: SEARCH_TYPE.TOKEN,
             object: token ? token : actor
         });
@@ -1073,13 +1123,13 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
             buttons: {
                 one: {
                     icon: '<i class="fas fa-check"></i>',
-                    callback: () => updateTokenImage(actor, null, image, imageName),
+                    callback: () => updateTokenImage(imgSrc, {actor: actor, imgName: imgName}),
                 },
                 two: {
                     icon: '<i class="fas fa-times"></i>',
                     callback: () => {
                         showArtSelect(actor.name, {
-                            callback: (imgSrc, name) => updateTokenImage(actor, null, imgSrc, name),
+                            callback: (imgSrc, name) => updateTokenImage(imgSrc, {actor: actor, imgName: name}),
                             searchType: SEARCH_TYPE.TOKEN,
                             object: token ? token : actor
                         });
@@ -1090,7 +1140,7 @@ async function setActorImage(actor, image, imageName, {updateActorOnly = true}={
         });
         d.render(true);
     } else {
-        updateTokenImage(actor, null, image, imageName);
+        updateTokenImage(imgSrc, {actor: actor, imgName: imgName});
     }
 }
 
@@ -1103,7 +1153,9 @@ Hooks.on("init", function () {
         cacheTokens, 
         doImageSearch, 
         doRandomSearch, 
-        showArtSelect
+        showArtSelect,
+        updateTokenImage,
+        callForgeVTT
     };
 
     // Deprecated api access

@@ -2,7 +2,7 @@ import { getFileName, isImage, isVideo, SEARCH_TYPE} from "../scripts/utils.js"
 import TokenCustomConfig from "./tokenCustomConfig.js";
 
 // not call if still caching
-export async function renderHud(hud, html, token, searchText, doImageSearch, updateTokenImage, setActorImage) {
+export async function renderHud(hud, html, token, searchText, doImageSearch, updateTokenImage, updateActorImage) {
     const hudSettings = game.settings.get("token-variants", "hudSettings");
 
     if (!hudSettings.enableSideMenu) return;
@@ -91,8 +91,8 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
     // Activate listeners
     divR.find("#token-variants-side-button").click(_onSideButtonClick);
     divR.click(_deactiveTokenVariantsSideSelector);
-    divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id, updateTokenImage, setActorImage));
-    divR.find('.token-variants-side-search').on('keyup', (event) => _onImageSearchKeyUp(event, hud, html, token, doImageSearch, updateTokenImage, setActorImage));
+    divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id, updateTokenImage, updateActorImage));
+    divR.find('.token-variants-side-search').on('keyup', (event) => _onImageSearchKeyUp(event, hud, html, token, doImageSearch, updateTokenImage, updateActorImage));
     if(userHasConfigRights) {
         divR.find("#token-variants-side-button").on("contextmenu", _onSideButtonRightClick);
         divR.find('.token-variants-button-select').on("contextmenu", (event) => _onImageRightClick(event, token._id));
@@ -158,7 +158,7 @@ function _deactiveTokenVariantsSideSelector(event){
     $(event.target).closest('div.right').find('.token-variants-wrap').removeClass('active');
 }
 
-function _onImageClick(event, tokenId, updateTokenImage, setActorImage){
+function _onImageClick(event, tokenId, updateTokenImage, updateActorImage){
     event.preventDefault();
     event.stopPropagation();
 
@@ -185,16 +185,16 @@ function _onImageClick(event, tokenId, updateTokenImage, setActorImage){
         let tokenImageName = token.getFlag("token-variants", "name");
         if(!tokenImageName) tokenImageName = getFileName(token.data.img);
         if(tokenImageName !== name){
-            updateTokenImage(null, token, imgSrc, name);
+            updateTokenImage(imgSrc, {token: token, imgName: name});
             canvas.tokens.hud.clear();
             if(token.actor && hudSettings.updateActorImage){
-                setActorImage(game.actors.get(token.actor.id), imgSrc, name, {updateActorOnly: true});
+                updateActorImage(game.actors.get(token.actor.id), imgSrc, {updateActorOnly: true, imgName: name});
             }
         }
     } else {
-        updateTokenImage(null, token, imgSrc, name);
+        updateTokenImage(imgSrc, {token: token, imgName: name});
         if(token.actor && hudSettings.updateActorImage){
-            setActorImage(game.actors.get(token.actor.id), imgSrc, name, {updateActorOnly: true});
+            updateActorImage(game.actors.get(token.actor.id), imgSrc, {updateActorOnly: true, imgName: name});
         }
     }
 }
@@ -254,12 +254,12 @@ function _onImageRightClick(event, tokenId){
     }
 }
 
-function _onImageSearchKeyUp(event, hud, html, tokenData, doImageSearch, updateTokenImage, setActorImage){
+function _onImageSearchKeyUp(event, hud, html, tokenData, doImageSearch, updateTokenImage, updateActorImage){
     if (event.key === 'Enter' || event.keyCode === 13) {
         if (event.target.value.length >= 3) {
             $(event.target).closest('.control-icon[data-action="token-variants-side-selector"]').remove();
             html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
-            renderHud(hud, html, tokenData, event.target.value, doImageSearch, updateTokenImage, setActorImage);
+            renderHud(hud, html, tokenData, event.target.value, doImageSearch, updateTokenImage, updateActorImage);
         }
     }
 }
