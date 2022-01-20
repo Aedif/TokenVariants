@@ -170,10 +170,17 @@ export class ForgeSearchPaths extends SearchPaths {
     }
 
     _updatePaths() {
-        if(this.userId){
+        if(this.userId) {
             const forgePaths = game.settings.get("token-variants", "forgeSearchPaths") || {};
             forgePaths[this.userId] = { paths: this._cleanPaths(), apiKey: this.apiKey };
-            game.settings.set("token-variants", "forgeSearchPaths", forgePaths);
+
+            if (game.user.isGM){
+                game.settings.set("token-variants", "forgeSearchPaths", forgePaths);
+            } else {
+                // Workaround for forgeSearchPaths setting to be updated by non-GM clients
+                const message = { handlerName: "forgeSearchPaths", args: forgePaths, type: "UPDATE" };
+                game.socket?.emit('module.token-variants', message);
+            }
         }
     }
 

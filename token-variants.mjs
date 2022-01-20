@@ -411,7 +411,7 @@ async function initialize() {
             icon: "fas fa-exchange-alt",
             type: ForgeSearchPaths,
             scope: "client",
-            restricted: true,
+            restricted: false,
         });
     }
 
@@ -429,6 +429,18 @@ async function initialize() {
             if(!actor) return false;
             return popupSettings[`${actor.type}Disable`] ?? false;
         }
+        
+        // Workaround for forgeSearchPaths setting to be updated by non-GM clients
+        game.socket?.on(`module.token-variants`, message => {
+            if(message.handlerName === "forgeSearchPaths" && message.type === "UPDATE") {
+                if (!game.user.isGM) return;
+                const isResponsibleGM = !game.users
+                  .filter(user => user.isGM && (user.active || user.isActive))
+                  .some(other => other.data._id < game.user.data._id);
+                if (!isResponsibleGM) return;
+                game.settings.set("token-variants", "forgeSearchPaths", message.args);
+            }
+        });
 
         // Handle actor/token art replacement
         Hooks.on("createActor", async (actor, options, userId) => {
@@ -1101,12 +1113,8 @@ async function updateActorImage(actor, imgSrc, {updateActorOnly = true, imgName 
 
     await (actor.document ?? actor).update({ img: imgSrc });
 
-    console.log("here")
-
     if (updateActorOnly)
         return;
-
-    console.log("here2")
 
     if(!imgName) imgName = getFileName(imgSrc);
 
@@ -1155,7 +1163,6 @@ Hooks.on("init", function () {
         doRandomSearch, 
         showArtSelect,
         updateTokenImage,
-        callForgeVTT
     };
 
     // Deprecated api access

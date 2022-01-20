@@ -158,7 +158,7 @@ function _deactiveTokenVariantsSideSelector(event){
     $(event.target).closest('div.right').find('.token-variants-wrap').removeClass('active');
 }
 
-function _onImageClick(event, tokenId, updateTokenImage, updateActorImage){
+async function _onImageClick(event, tokenId, updateTokenImage, updateActorImage){
     event.preventDefault();
     event.stopPropagation();
 
@@ -185,16 +185,16 @@ function _onImageClick(event, tokenId, updateTokenImage, updateActorImage){
         let tokenImageName = token.getFlag("token-variants", "name");
         if(!tokenImageName) tokenImageName = getFileName(token.data.img);
         if(tokenImageName !== name){
-            updateTokenImage(imgSrc, {token: token, imgName: name});
+            await updateTokenImage(imgSrc, {token: token, imgName: name});
             canvas.tokens.hud.clear();
             if(token.actor && hudSettings.updateActorImage){
-                updateActorImage(game.actors.get(token.actor.id), imgSrc, {updateActorOnly: true, imgName: name});
+                updateActorImage(token.actor, imgSrc, {updateActorOnly: true, imgName: name});
             }
         }
     } else {
-        updateTokenImage(imgSrc, {token: token, imgName: name});
+        await updateTokenImage(imgSrc, {token: token, imgName: name});
         if(token.actor && hudSettings.updateActorImage){
-            updateActorImage(game.actors.get(token.actor.id), imgSrc, {updateActorOnly: true, imgName: name});
+            updateActorImage(token.actor, imgSrc, {updateActorOnly: true, imgName: name});
         }
     }
 }

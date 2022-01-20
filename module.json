@@ -15,7 +15,8 @@
     ],
     "bugs": "https://github.com/Aedif/TokenVariants/issues",
     "allowBugReporter": true,
-    "minimumCoreVersion": "0.7.10",
+    "socket": true,
+    "minimumCoreVersion": "0.7.9",
     "compatibleCoreVersion": "9",
     "esmodules": [
         "token-variants.mjs"
