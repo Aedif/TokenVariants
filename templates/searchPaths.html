@@ -8,7 +8,7 @@
                 <div class="form-fields">
                     <input type="text" name="apiKey" value="{{apiKey}}" data-dtype="String">
                 </div>
-                <p class="notes">API Key to be used by 'Token Variant Art' to access your Forge assets library and share the images with other players. API Key is available in the My Account page.</p>
+                <p class="notes">{{localize "token-variants.settings.forge-search-paths.window.Hint"}}</p>
             </div>
         {{/if}}
 
@@ -56,8 +56,8 @@
             path/to/token/art<br>
         {{#unless forge}}
             s3:my_bucket:token/art/folder<br>
-            rolltable:myRolltableName<br>
-            forgevtt:folder/in/my/assets/<br>
+            rolltable:rolltableName<br>
+            forgevtt:folder/in/my/asset/library/<br>
         {{/unless}}
         </p>
     </footer>

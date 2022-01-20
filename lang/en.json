@@ -6,8 +6,11 @@
                 "Hint": "Configure folders, Rolltables and s3 buckets to be searched for art here."
             },
             "forge-search-paths": {
-                "Name": "Forge Asset Folder Paths",
-                "Hint": "Configure your API key and Asset Folder Paths"
+                "Name": "Forge Asset Library Paths",
+                "Hint": "Configure your API key and Asset Library paths",
+                "window": {
+                    "Hint" : "API Key to be used by 'Token Variant Art' to share images with other players. API Key is available in the 'My Account' page."
+                }
             },
             "search-filters": {
                 "Name": "Search Filter Settings",

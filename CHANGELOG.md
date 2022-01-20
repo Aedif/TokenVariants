@@ -1,3 +1,13 @@
+# 1.22.0
+
+* ForgeVTT Asset Library paths can now be configured as **forgevtt:path/to/asset/library/folder** instead of **https://assets.forge-vtt.com/{userId}/path/to/asset/library/folder** inside the **Search Paths** setting menu. However the new preferred method of linking your asset library folders is:
+* New setting added:  **Forge Asset Library Paths**
+    * Only available when running the game on ForgeVTT
+    * Considerably faster for large folder structures compared to previous method
+    * Allows GMs and regular players alike to expose their Asset Libraries to the module
+    * Linked folders will be private to the user that configured it unless an API Key is entered and the path is flagged as 'Share'. API Keys can be generated via 'My Account' page.
+* Exposed updateTokenImage(...) function through the API. Token images updated using this function will apply a custom configuration to the token if one has been setup using the module.
+
 # 1.21.0
 
 * Compatibility with 'Token HUD Wildcard'

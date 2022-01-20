@@ -43,13 +43,17 @@ By default 'Token Variants' will attempt to search [Caeora's Maps, Tokens, and A
 In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, and Rolltables as image sources:
 
 * To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket use the following format: **s3:{bucket-name}:{path}**
-* For your ForgeVTT asset folder the format is as follows: **https://assets.forge-vtt.com/{userId}/path/to/token/art**
-   * To get this url you can go to you asset folder and hover over one of the images and select the linked chain icon
 * Rolltables can be added using: **rolltable:{rolltable name}**
+* For your ForgeVTT asset library the format is as follows: **forgevtt:{path}**
+  * This is far slower than using API keys and **Forge Asset Library Paths** setting.
 
 By default the module will scan these sources only when the world is loaded or when the **Search Paths** settings have changed. If new art is added while the world is still open it will not be found by the module. Disabling '**Cache**' will force the scan to be done every time an art search is performed at a potentially significant cost to speed at which the art is displayed to the user depending on the number of images. 
 
 For small directories and rolltables the performance hit is negligible so experiment with the convenience/performance trade-offs until you find the right balance.
+
+### Forge Asset Library Paths
+
+This setting will only be available when running the game through Forge VTT and can be configured by both GMs and regular players. Paths entered here point to locations within each users Asset Library and will be private to that user unless an API Key is entered and paths explicitly indicated to be shared.
 
 ### Search Filter Settings
 
