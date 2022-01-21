@@ -1,3 +1,9 @@
+# 1.22.1
+
+* Bug fixes
+    * Images not properly updating upon drag in from compendium
+    * Token HUD button always shown without always show setting enabled
+
 # 1.22.0
 
 * ForgeVTT Asset Library paths can now be configured as **forgevtt:path/to/asset/library/folder** instead of **https://assets.forge-vtt.com/{userId}/path/to/asset/library/folder** inside the **Search Paths** setting menu. However the new preferred method of linking your asset library folders is:
