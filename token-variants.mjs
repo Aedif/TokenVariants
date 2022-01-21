@@ -484,13 +484,16 @@ async function initialize() {
             }
 
             showArtSelect(actor.data.name, {
-                callback: (imgSrc, name) => updateActorImage(actor, imgSrc, {updateActorOnly: false, imgName: name}),
+                callback: (imgSrc, name) => {
+                    const actTokens = actor.getActiveTokens();
+                    const token = actTokens.length === 1 ? actTokens[0] : null;
+                    updateActorImage(actor, imgSrc, {updateActorOnly: false, imgName: name, token: token})
+                },
                 searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
                 object: actor
             }); 
         });
         Hooks.on("createToken", async (op1, op2, op3, op4) => {
-
             let tokenDoc = op1;
             let options = op2;
             let userId = op3;
@@ -509,6 +512,7 @@ async function initialize() {
             }
 
             const updateTokenCallback = (imgSrc, name) => updateTokenImage(imgSrc, {token: token, actor: token.actor, imgName: name});
+            const updateActorCallback = (imgSrc, name) => updateActorImage(token.actor, imgSrc, {updateActorOnly: false, imgName: name, token: token});
 
 
             // Check if random search is enabled and if so perform it 
@@ -564,7 +568,7 @@ async function initialize() {
             }
 
             showArtSelect(token.data.name, {
-                callback: updateTokenCallback, 
+                callback: twoPopups ? updateActorCallback : updateTokenCallback, 
                 searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH, 
                 object: token
             });
@@ -879,6 +883,11 @@ async function walkFindTokens(path, { name = "", bucket = "", filters = null, fo
 async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.BOTH, object = null}={}){
     if (caching) return;
 
+    // Allow only one instance of ArtSelect to be open at any given time
+    if(Object.values(ui.windows).filter(app => app instanceof ArtSelect).length !== 0){
+        return;
+    }
+
     // Set Art Select screen title
     let title = game.i18n.localize("token-variants.windows.art-select.select-variant");
     if (searchType == SEARCH_TYPE.TOKEN)
@@ -1040,7 +1049,7 @@ async function updateTokenImage(imgSrc, {token = null, actor = null, imgName = n
     const getDefaultConfig = (token, actor) => {
         let configEntries = [];
         if(token)
-            configEntries = token.getFlag('token-variants', 'defaultConfig') || [];
+            configEntries = (token.document ? token.document : token).getFlag('token-variants', 'defaultConfig') || [];
         else if(actor){
             const tokenData = actor.data.token;
             if('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
@@ -1055,7 +1064,7 @@ async function updateTokenImage(imgSrc, {token = null, actor = null, imgName = n
 
     let tokenUpdateObj = { img: imgSrc };
     const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
-    const usingCustomConfig = token && token.getFlag('token-variants', 'usingCustomConfig');
+    const usingCustomConfig = token && (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
     const defaultConfig = getDefaultConfig(token);
 
     if(tokenCustomConfig || usingCustomConfig){
@@ -1109,7 +1118,7 @@ async function updateTokenImage(imgSrc, {token = null, actor = null, imgName = n
 /**
  * Assign new artwork to the actor
  */
-async function updateActorImage(actor, imgSrc, {updateActorOnly = true, imgName = null}={}) {
+async function updateActorImage(actor, imgSrc, {updateActorOnly = true, imgName = null, token = null}={}) {
 
     await (actor.document ?? actor).update({ img: imgSrc });
 
@@ -1120,24 +1129,24 @@ async function updateActorImage(actor, imgSrc, {updateActorOnly = true, imgName 
 
     if (twoPopups && noTwoPopupsPrompt) {
         showArtSelect(actor.name, {
-            callback: (imgSrc, name) => updateTokenImage(imgSrc, {actor: actor, imgName: name}),
+            callback: (imgSrc, name) => updateTokenImage(imgSrc, {actor: actor, imgName: name, token: token}),
             searchType: SEARCH_TYPE.TOKEN,
             object: token ? token : actor
         });
     } else if (twoPopups) {
         let d = new Dialog({
             title: "Portrait -> Token",
-            content: `<p>${game.i18n.localize("token-variants.windows.art-select-apply-same-art")}</p>`,
+            content: `<p>${game.i18n.localize("token-variants.windows.art-select.apply-same-art")}</p>`,
             buttons: {
                 one: {
                     icon: '<i class="fas fa-check"></i>',
-                    callback: () => updateTokenImage(imgSrc, {actor: actor, imgName: imgName}),
+                    callback: () => updateTokenImage(imgSrc, {actor: actor, imgName: imgName, token: token}),
                 },
                 two: {
                     icon: '<i class="fas fa-times"></i>',
                     callback: () => {
                         showArtSelect(actor.name, {
-                            callback: (imgSrc, name) => updateTokenImage(imgSrc, {actor: actor, imgName: name}),
+                            callback: (imgSrc, name) => updateTokenImage(imgSrc, {actor: actor, imgName: name, token: token}),
                             searchType: SEARCH_TYPE.TOKEN,
                             object: token ? token : actor
                         });
@@ -1148,7 +1157,7 @@ async function updateActorImage(actor, imgSrc, {updateActorOnly = true, imgName 
         });
         d.render(true);
     } else {
-        updateTokenImage(imgSrc, {actor: actor, imgName: imgName});
+        updateTokenImage(imgSrc, {actor: actor, imgName: imgName, token: token});
     }
 }
 

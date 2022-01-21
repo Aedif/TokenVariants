@@ -52,7 +52,7 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
         }
     }
 
-    if (!hudSettings.alwaysShowButton && images.length < 2 && actorVariants.length == 0) return;
+    if (!hudSettings.alwaysShowButton && images.size == 0 && actorVariants.length == 0) return;
 
     // Retrieving the possibly custom name attached as a flag to the token
     let tokenImageName = "";

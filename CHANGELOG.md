@@ -6,7 +6,7 @@
     * Considerably faster for large folder structures compared to previous method
     * Allows GMs and regular players alike to expose their Asset Libraries to the module
     * Linked folders will be private to the user that configured it unless an API Key is entered and the path is flagged as 'Share'. API Keys can be generated via 'My Account' page.
-* Exposed updateTokenImage(...) function through the API. Token images updated using this function will apply a custom configuration to the token if one has been setup using the module.
+* Exposed **updateTokenImage(...)** function through the API. Token images updated using this function will apply a custom configuration to the token if one has been setup using the module.
 
 # 1.21.0
 
