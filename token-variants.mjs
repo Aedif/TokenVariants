@@ -880,11 +880,16 @@ async function walkFindTokens(path, { name = "", bucket = "", filters = null, fo
  * @param {string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
  * @param {Token|Actor} [options.object] Token/Actor used when displaying Custom Token Config prompt
 */
-async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.BOTH, object = null}={}){
+async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.BOTH, object = null, closeDuplicate=false}={}){
     if (caching) return;
 
-    // Allow only one instance of ArtSelect to be open at any given time
-    if(Object.values(ui.windows).filter(app => app instanceof ArtSelect).length !== 0){
+    // Allow only one instance of ArtSelect to be open at any given time unless instructed to close the other apps
+    const artSelects = Object.values(ui.windows).filter(app => app instanceof ArtSelect);
+    if(closeDuplicate){
+        for(const app of artSelects){
+            await app.close();
+        }
+    } else if (artSelects.length !== 0) {
         return;
     }
 
@@ -919,7 +924,7 @@ async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.
     });
 
     let searchAndDisplay = ((search) => {
-        showArtSelect(search, {callback: callback, searchType: searchType, object: object});
+        showArtSelect(search, {callback: callback, searchType: searchType, object: object, closeDuplicate: true});
     });
 
     if (artFound) {
