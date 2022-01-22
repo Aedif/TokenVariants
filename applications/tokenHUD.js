@@ -63,10 +63,12 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
     }
 
     let imagesParsed = [];
+    const tokenConfigs = (game.settings.get("token-variants", "tokenConfigs") || []).flat();
     images.forEach((names, tokenSrc) => {
         const img = isImage(tokenSrc);
         const vid = isVideo(tokenSrc);
         for(let name of names){
+            const hasConfig = Boolean(tokenConfigs.find(config => config.tvImgSrc == tokenSrc && config.tvImgName == name));
             let shared = false;
             if(userHasConfigRights){
                 actorVariants.forEach(variant => {
@@ -75,7 +77,8 @@ export async function renderHud(hud, html, token, searchText, doImageSearch, upd
                     }
                 });
             }
-            imagesParsed.push({ route: tokenSrc, name: name, used: tokenSrc === token.img && name === tokenImageName, img, vid, type: img || vid, shared: shared }); 
+
+            imagesParsed.push({ route: tokenSrc, name: name, used: tokenSrc === token.img && name === tokenImageName, img, vid, type: img || vid, shared: shared, hasConfig: hasConfig }); 
         }  
     });
 
@@ -180,13 +183,20 @@ async function _onImageClick(event, tokenId, updateTokenImage, updateActorImage)
     }
 
     if(shiftKeyDown){
-        new TokenCustomConfig(token, {}, imgSrc, name).render(true);
+        const toggleCog = (saved) => {
+            const cog = $(event.target).parent().find('.fa-cog');
+            if(saved) {
+                cog.addClass('active');
+            } else {
+                cog.removeClass('active')
+            }
+        };
+        new TokenCustomConfig(token, {}, imgSrc, name, toggleCog).render(true);
     } else if(token.data.img === imgSrc){
         let tokenImageName = token.getFlag("token-variants", "name");
         if(!tokenImageName) tokenImageName = getFileName(token.data.img);
         if(tokenImageName !== name){
             await updateTokenImage(imgSrc, {token: token, imgName: name});
-            canvas.tokens.hud.clear();
             if(token.actor && hudSettings.updateActorImage){
                 updateActorImage(token.actor, imgSrc, {updateActorOnly: true, imgName: name});
             }
@@ -255,6 +265,8 @@ function _onImageRightClick(event, tokenId){
 }
 
 function _onImageSearchKeyUp(event, hud, html, tokenData, doImageSearch, updateTokenImage, updateActorImage){
+    event.preventDefault();
+    event.stopPropagation();
     if (event.key === 'Enter' || event.keyCode === 13) {
         if (event.target.value.length >= 3) {
             $(event.target).closest('.control-icon[data-action="token-variants-side-selector"]').remove();

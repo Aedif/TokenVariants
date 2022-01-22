@@ -902,6 +902,8 @@ async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.
 
     let allImages = await doImageSearch(search, {searchType: searchType});
 
+    const tokenConfigs = (game.settings.get("token-variants", "tokenConfigs") || []).flat();
+
     let artFound = false;
     let allButtons = new Map();
     allImages.forEach((tokens, search) => {
@@ -917,6 +919,7 @@ async function showArtSelect(search, {callback = null, searchType = SEARCH_TYPE.
                     vid: vid,
                     type: vid || img,
                     label: name,
+                    hasConfig: searchType === SEARCH_TYPE.TOKEN || searchType === SEARCH_TYPE.BOTH ? Boolean(tokenConfigs.find(config => config.tvImgSrc == tokenSrc && config.tvImgName == name)) : false
                 })
             }
         })

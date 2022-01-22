@@ -2,7 +2,7 @@ import { getTokenConfig, setTokenConfig } from '../scripts/utils.js'
 
 export default class TokenCustomConfig extends TokenConfig {
 
-    constructor(object, options, imgSrc, imgName) {
+    constructor(object, options, imgSrc, imgName, callback) {
       let token;
       if(object instanceof Actor) {
         if(isNewerVersion(game.version ?? game.data.version, "0.7.10")){
@@ -20,6 +20,7 @@ export default class TokenCustomConfig extends TokenConfig {
       super(token, options);
       this.imgSrc = imgSrc;
       this.imgName = imgName;
+      this.callback = callback;
     }
 
     async _updateObject(event, formData) {
@@ -39,7 +40,8 @@ export default class TokenCustomConfig extends TokenConfig {
           }
         });
 
-        setTokenConfig(this.imgSrc, this.imgName, filtered);
+        const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);
+        if(this.callback) this.callback(saved);
     }
 
     async getData(options) {
@@ -92,7 +94,8 @@ export default class TokenCustomConfig extends TokenConfig {
     }
 
     async _onRemoveConfig(event){
-      setTokenConfig(this.imgSrc, this.imgName, null);
+      const saved = setTokenConfig(this.imgSrc, this.imgName, null);
+      if(this.callback) this.callback(saved);
       this.close();
     }
 

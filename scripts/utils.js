@@ -54,6 +54,7 @@ export function setTokenConfig(imgSrc, imgName, tokenConfig){
         tokenConfigs.push(tokenConfig);
     }
     game.settings.set("token-variants", "tokenConfigs", tokenConfigs);
+    return !deleteConfig;
 }
 
 

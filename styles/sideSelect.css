@@ -46,6 +46,18 @@
     pointer-events: none;
 }
 
+#token-hud .token-variants-button-select .fa-cog {
+    position: absolute;
+    right: 0;
+    color: rgb(182, 182, 121);
+    opacity: 0;
+    pointer-events: none;
+}
+
+#token-hud .token-variants-button-select .fa-cog.active {
+    opacity: 1;
+}
+
 #token-hud .token-variants-button-select .fa-share.active{
     opacity: 1;
 }
