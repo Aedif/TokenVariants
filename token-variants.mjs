@@ -559,7 +559,7 @@ async function initialize() {
                 return;
             }
 
-            if(!dirKeyDown){
+            if(!dirKeyDown || (dirKeyDown && vDown)){
                 if(popupSettings.disableAutoPopupOnTokenCreate){
                     return;
                 } else if (disablePopupForType(token.actor)){

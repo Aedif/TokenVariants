@@ -1,3 +1,8 @@
+# 1.22.3
+
+* Added a cog icon to indicate whether images have associated custom configs
+* Fixed Actor Directory key conflicting with 'Ctrl+V' token paste.
+
 # 1.22.1
 
 * Bug fixes
