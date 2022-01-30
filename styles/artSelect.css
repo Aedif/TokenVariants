@@ -50,10 +50,10 @@
 }
 
 .token-variants-grid > div > .token-variants-grid-box:hover {
-  box-shadow: 0 0 8px rgba(255,0,0, 0.6);
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
 }
 
-.token-variants-grid > div > p{
-    overflow: scroll;
-    white-space: nowrap;
+.token-variants-grid > div > p {
+  overflow: scroll;
+  white-space: nowrap;
 }

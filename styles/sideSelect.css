@@ -2,103 +2,107 @@
 /* Token HUD Settings                          */
 /* ---------------------------------------- */
 #token-hud .token-variants-wrap {
-    position: absolute;
-    left: 75px;
-    visibility: hidden;
-    top: 50%;
-    transform: translate(0%, -50%);
-    width: max-content;
-    max-width: 350px;
-    max-height: 350px;
-    text-align: start;
-    grid-template-columns: 100px 100px 100px;
-    overflow-y: auto;
+  position: absolute;
+  left: 75px;
+  visibility: hidden;
+  top: 50%;
+  transform: translate(0%, -50%);
+  width: max-content;
+  max-width: 350px;
+  max-height: 350px;
+  text-align: start;
+  grid-template-columns: 100px 100px 100px;
+  overflow-y: auto;
 }
 #token-hud .token-variants-wrap.list {
-    grid-template-columns: unset !important;
-    max-width: 450px;
+  grid-template-columns: unset !important;
+  max-width: 450px;
 }
 
 #token-hud .token-variants-wrap.active {
-    visibility: visible;
+  visibility: visible;
 }
 #token-hud .token-variants-button-select {
-    max-width: 300px;
-    overflow-wrap: break-word;
-    padding-top: 0;
-    padding-bottom: 0;
-    width: max-content !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    line-height: 0 !important;
-    position: relative;
+  max-width: 300px;
+  overflow-wrap: break-word;
+  padding-top: 0;
+  padding-bottom: 0;
+  width: max-content !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 0 !important;
+  position: relative;
 }
 
 #token-hud .token-variants-button-select.hide {
-    display: none;
+  display: none;
 }
 
 #token-hud .token-variants-button-select .fa-share {
-    position: absolute;
-    left: 0;
-    color: green;
-    opacity: 0;
-    pointer-events: none;
+  position: absolute;
+  left: 0;
+  color: green;
+  opacity: 0;
+  pointer-events: none;
 }
 
 #token-hud .token-variants-button-select .fa-cog {
-    position: absolute;
-    right: 0;
-    color: rgb(182, 182, 121);
-    opacity: 0;
-    pointer-events: none;
+  position: absolute;
+  right: 0;
+  color: rgb(182, 182, 121);
+  opacity: 0;
+  pointer-events: none;
 }
 
 #token-hud .token-variants-button-select .fa-cog.active {
-    opacity: 1;
+  opacity: 1;
 }
 
-#token-hud .token-variants-button-select .fa-share.active{
-    opacity: 1;
+#token-hud .token-variants-button-select .fa-share.active {
+  opacity: 1;
 }
 
-#token-hud .token-variants-side-search{
-    display: none;
+#token-hud .token-variants-side-search {
+  display: none;
 }
 
-#token-hud .token-variants-side-search.active{
-    display: block;
+#token-hud .token-variants-side-search.active {
+  display: block;
 }
 
-#token-hud .token-variants-button-select:hover .token-variants-button-image{
-    opacity: 1!important;
+#token-hud .token-variants-button-select:hover .token-variants-button-image {
+  opacity: 1 !important;
 }
 
 #token-hud .token-variants-button-select.list {
-    max-width: 440px;
-    width: 100% !important;
-    margin: 8px 0px !important;
-    line-height: 40px !important;
+  max-width: 440px;
+  width: 100% !important;
+  margin: 8px 0px !important;
+  line-height: 40px !important;
 }
 
 #token-hud .token-variants-button-image {
-    width: 100px;
-    height: 100px;
-    margin: 2px;
-    object-fit: contain;
+  width: 100px;
+  height: 100px;
+  margin: 2px;
+  object-fit: contain;
 }
 
-#token-hud .token-variants-button-disabled span, #token-hud .token-variants-button-disabled img, #token-hud .token-variants-button-disabled video {
-    opacity: 1 !important;
-    filter: grayscale(100%);
+#token-hud .token-variants-button-disabled span,
+#token-hud .token-variants-button-disabled img,
+#token-hud .token-variants-button-disabled video {
+  opacity: 1 !important;
+  filter: grayscale(100%);
 }
-#token-hud .token-variants-button-disabled span, #token-hud .token-variants-button-disabled:hover img, #token-hud .token-variants-button-disabled:hover video {
-    color: #CCC;
+#token-hud .token-variants-button-disabled span,
+#token-hud .token-variants-button-disabled:hover img,
+#token-hud .token-variants-button-disabled:hover video {
+  color: #ccc;
 }
 
 .token-sheet .token-variants-default {
-    display: none;
+  display: none;
 }
 .token-sheet .token-variants-default.active {
-    display: block;
+  display: block;
 }

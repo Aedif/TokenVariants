@@ -1,208 +1,225 @@
 export class SearchPaths extends FormApplication {
+  constructor() {
+    super({}, {});
+  }
 
-    constructor() {
-        super({}, {});
+  static get defaultOptions() {
+    return mergeObject(super.defaultOptions, {
+      id: 'token-variants-search-paths',
+      classes: ['sheet'],
+      template: 'modules/token-variants/templates/searchPaths.html',
+      resizable: true,
+      minimizable: false,
+      closeOnSubmit: false,
+      title: game.i18n.localize('token-variants.settings.search-paths.Name'),
+      width: 500,
+      height: 'auto',
+      scrollY: ['ol.table-paths'],
+      dragDrop: [{ dragSelector: null, dropSelector: null }],
+    });
+  }
+
+  async getData(options) {
+    if (!this.object.paths) this.object.paths = await this._getPaths();
+
+    const paths = this.object.paths.map((path) => {
+      const r = {};
+      r.text = path.text;
+      r.type = this._determineType(path.text);
+      r.cache = path.cache;
+      r.share = path.share;
+      return r;
+    });
+
+    const data = super.getData(options);
+    data.paths = paths;
+    return data;
+  }
+
+  async _getPaths() {
+    const paths = (
+      game.settings.get('token-variants', 'searchPaths') || []
+    ).flat();
+
+    // To maintain compatibility with previous versions
+    const defaultCaching = !game.settings.get(
+      'token-variants',
+      'disableCaching'
+    );
+    if (paths.length > 0 && !(paths[0] instanceof Object)) {
+      paths.forEach((path, i) => {
+        paths[i] = { text: path, cache: defaultCaching };
+      });
+    }
+    // end of compatibility code
+
+    return paths;
+  }
+
+  _determineType(path) {
+    const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
+
+    if (path.startsWith('s3:')) {
+      return 's3';
+    } else if (path.startsWith('rolltable:')) {
+      return 'rolltable';
+    } else if (path.startsWith('forgevtt:') || path.match(regexpForge)) {
+      return 'forge';
     }
 
-    static get defaultOptions() {
-        return mergeObject(super.defaultOptions, {
-            id: "token-variants-search-paths",
-            classes: ["sheet"],
-            template: "modules/token-variants/templates/searchPaths.html",
-            resizable: true,
-            minimizable: false,
-            closeOnSubmit: false,
-            title: game.i18n.localize("token-variants.settings.search-paths.Name"),
-            width: 500,
-            height: "auto",
-            scrollY: ["ol.table-paths"],
-            dragDrop: [{dragSelector: null, dropSelector: null}]
-        });
+    return 'local';
+  }
+
+  /**
+   * @param {JQuery} html
+   */
+  activateListeners(html) {
+    super.activateListeners(html);
+    html.find('a.create-path').click(this._onCreatePath.bind(this));
+    html.find('a.delete-path').click(this._onDeletePath.bind(this));
+    html.find('button.reset').click(this._onReset.bind(this));
+    html.find('button.update').click(this._onUpdate.bind(this));
+    html.on('input', '[type=text]', this._onTextChange.bind(this));
+  }
+
+  async _onTextChange(event) {
+    const type = this._determineType(event.target.value);
+    let image = 'fas fa-folder';
+    if (type === 'rolltable') {
+      image = 'fas fa-dice';
+    } else if (type === 's3') {
+      image = 'fas fa-database';
+    } else if (type === 'forge') {
+      image = 'fas fa-hammer';
     }
 
-    async getData(options) {
+    $(event.currentTarget)
+      .closest('.table-path')
+      .find('.path-image i')
+      .attr('class', image);
+  }
 
-        if(!this.object.paths) this.object.paths = await this._getPaths();
+  async _onCreatePath(event) {
+    event.preventDefault();
+    await this._onSubmit(event);
 
-        const paths = this.object.paths.map(path => {
-            const r = {};
-            r.text = path.text;
-            r.type = this._determineType(path.text);
-            r.cache = path.cache;
-            r.share = path.share;
-            return r;
-        });
+    this.object.paths.push({ text: '', cache: true, share: true });
+    this.render();
+  }
 
-        const data = super.getData(options);
-        data.paths = paths;
-        return data;
-    }
+  async _onDeletePath(event) {
+    event.preventDefault();
+    await this._onSubmit(event);
 
-    async _getPaths(){
-        const paths = (game.settings.get("token-variants", "searchPaths") || []).flat();
-    
-        // To maintain compatibility with previous versions
-        const defaultCaching = !game.settings.get("token-variants", "disableCaching");
-        if(paths.length > 0 && !(paths[0] instanceof Object)){
-            paths.forEach((path, i) => {
-                paths[i] = {text: path, cache: defaultCaching};
-            });
-        }
-        // end of compatibility code
-    
-        return paths;
-    }
+    const li = event.currentTarget.closest('.table-path');
+    this.object.paths.splice(li.dataset.index, 1);
+    this.render();
+  }
 
-    _determineType(path){
-        const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
+  _onReset(event) {
+    event.preventDefault();
+    this.object.paths = this._getPaths();
+    this.render();
+  }
 
-        if (path.startsWith("s3:")) {
-            return "s3";
-        } else if (path.startsWith("rolltable:")) {
-            return "rolltable";
-        } else if(path.startsWith("forgevtt:") || path.match(regexpForge)){
-            return "forge"
-        } 
+  async _onUpdate(event) {
+    event.preventDefault();
+    await this._onSubmit(event);
+    this._updatePaths();
+  }
 
-        return "local"
-    }
+  async _updateObject(event, formData) {
+    const expanded = expandObject(formData);
+    expanded.paths = expanded.hasOwnProperty('paths')
+      ? Object.values(expanded.paths)
+      : [];
+    expanded.paths.forEach((path, index) => {
+      this.object.paths[index] = {
+        text: path.text,
+        cache: path.cache,
+      };
+    });
+  }
 
-    /**
-     * @param {JQuery} html
-     */
-    activateListeners(html) {
-        super.activateListeners(html);
-        html.find("a.create-path").click(this._onCreatePath.bind(this));
-        html.find("a.delete-path").click(this._onDeletePath.bind(this));
-        html.find("button.reset").click(this._onReset.bind(this));
-        html.find("button.update").click(this._onUpdate.bind(this));
-        html.on("input", "[type=text]", this._onTextChange.bind(this))
-    }
+  _cleanPaths() {
+    // Cleanup empty and duplicate paths
+    let uniquePaths = new Set();
+    let paths = this.object.paths.filter((path) => {
+      if (!path.text || uniquePaths.has(path.text)) return false;
+      uniquePaths.add(path.text);
+      return true;
+    });
+    return paths;
+  }
 
-    async _onTextChange(event){        
-        const type = this._determineType(event.target.value);
-        let image = "fas fa-folder";
-        if(type === "rolltable"){
-            image= "fas fa-dice";
-        } else if (type === "s3"){
-            image = "fas fa-database";
-        } else if (type === "forge"){
-            image = "fas fa-hammer";
-        }
+  _updatePaths() {
+    const paths = this._cleanPaths();
+    game.settings.set('token-variants', 'searchPaths', paths);
+  }
 
-        $(event.currentTarget).closest(".table-path").find(".path-image i").attr('class', image);
-    }
-
-    async _onCreatePath(event){
-        event.preventDefault();
-        await this._onSubmit(event);
-
-        this.object.paths.push({text: "", cache: true, share: true})
-        this.render();
-    }
-
-    async _onDeletePath(event){
-        event.preventDefault();
-        await this._onSubmit(event);
-
-        const li = event.currentTarget.closest(".table-path");
-        this.object.paths.splice(li.dataset.index, 1);
-        this.render();
-    }
-
-    _onReset(event){
-        event.preventDefault();
-        this.object.paths = this._getPaths();
-        this.render();
-    }
-
-    async _onUpdate(event){
-        event.preventDefault();
-        await this._onSubmit(event);
-        this._updatePaths();
-    }
-
-    async _updateObject(event, formData) {
-        const expanded = expandObject(formData);
-        expanded.paths = expanded.hasOwnProperty("paths") ? Object.values(expanded.paths) : [];
-        expanded.paths.forEach((path, index)=> {
-            this.object.paths[index] = {
-                text: path.text,
-                cache: path.cache
-            };
-        });
-    }
-
-    _cleanPaths(){
-        // Cleanup empty and duplicate paths
-        let uniquePaths = new Set();
-        let paths = this.object.paths.filter(path => {
-            if (!path.text || uniquePaths.has(path.text)) return false;
-            uniquePaths.add(path.text);
-            return true;
-        });
-        return paths;
-    }
-
-    _updatePaths(){
-        const paths = this._cleanPaths();
-        game.settings.set("token-variants", "searchPaths", paths);
-    }
-
-    async close(options={}) {
-        await this._onSubmit(event);
-        this._updatePaths();
-        return super.close(options)
-    }
+  async close(options = {}) {
+    await this._onSubmit(event);
+    this._updatePaths();
+    return super.close(options);
+  }
 }
 
 export class ForgeSearchPaths extends SearchPaths {
+  async _getPaths() {
+    const forgePaths =
+      game.settings.get('token-variants', 'forgeSearchPaths') || {};
+    this.userId =
+      typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
+    this.apiKey = forgePaths[this.userId]?.apiKey;
+    return forgePaths[this.userId]?.paths || [];
+  }
 
-    async _getPaths(){
-        const forgePaths = game.settings.get("token-variants", "forgeSearchPaths") || {};
-        this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : "tempUser"; // TODO
-        this.apiKey = forgePaths[this.userId]?.apiKey;
-        return forgePaths[this.userId]?.paths || [];
+  _determineType(path) {
+    return 'forge';
+  }
+
+  _updatePaths() {
+    if (this.userId) {
+      const forgePaths =
+        game.settings.get('token-variants', 'forgeSearchPaths') || {};
+      forgePaths[this.userId] = {
+        paths: this._cleanPaths(),
+        apiKey: this.apiKey,
+      };
+
+      if (game.user.isGM) {
+        game.settings.set('token-variants', 'forgeSearchPaths', forgePaths);
+      } else {
+        // Workaround for forgeSearchPaths setting to be updated by non-GM clients
+        const message = {
+          handlerName: 'forgeSearchPaths',
+          args: forgePaths,
+          type: 'UPDATE',
+        };
+        game.socket?.emit('module.token-variants', message);
+      }
     }
+  }
 
-    _determineType(path){
-        return 'forge';
-    }
+  async _updateObject(event, formData) {
+    const expanded = expandObject(formData);
+    expanded.paths = expanded.hasOwnProperty('paths')
+      ? Object.values(expanded.paths)
+      : [];
+    expanded.paths.forEach((path, index) => {
+      this.object.paths[index] = {
+        text: path.text,
+        cache: path.cache,
+        share: path.share,
+      };
+    });
+    this.apiKey = expanded.apiKey;
+  }
 
-    _updatePaths() {
-        if(this.userId) {
-            const forgePaths = game.settings.get("token-variants", "forgeSearchPaths") || {};
-            forgePaths[this.userId] = { paths: this._cleanPaths(), apiKey: this.apiKey };
-
-            if (game.user.isGM){
-                game.settings.set("token-variants", "forgeSearchPaths", forgePaths);
-            } else {
-                // Workaround for forgeSearchPaths setting to be updated by non-GM clients
-                const message = { handlerName: "forgeSearchPaths", args: forgePaths, type: "UPDATE" };
-                game.socket?.emit('module.token-variants', message);
-            }
-        }
-    }
-
-    async _updateObject(event, formData) {
-        const expanded = expandObject(formData);
-        expanded.paths = expanded.hasOwnProperty("paths") ? Object.values(expanded.paths) : [];
-        expanded.paths.forEach((path, index)=> {
-            this.object.paths[index] = {
-                text: path.text,
-                cache: path.cache,
-                share: path.share
-            };
-        });
-        this.apiKey = expanded.apiKey;
-    }
-
-    async getData(options) {
-        const data = await super.getData(options);
-        data.forge = true;
-        data.apiKey = this.apiKey;
-        return data;
-    }
-
-
+  async getData(options) {
+    const data = await super.getData(options);
+    data.forge = true;
+    data.apiKey = this.apiKey;
+    return data;
+  }
 }

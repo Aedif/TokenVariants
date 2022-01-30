@@ -1,155 +1,155 @@
 {
-    "token-variants": {
-        "settings": {
-            "search-paths": {
-                "Name": "Search Paths",
-                "Hint": "Configure folders, Rolltables and s3 buckets to be searched for art here."
-            },
-            "forge-search-paths": {
-                "Name": "Forge Asset Library Paths",
-                "Hint": "Configure your API key and Asset Library paths",
-                "window": {
-                    "Hint" : "API Key to be used by 'Token Variant Art' to share images with other players. API Key is available in the 'My Account' page."
-                }
-            },
-            "search-filters": {
-                "Name": "Search Filter Settings",
-                "Hint": "Assign filters to Portrait and Token art searches.",
-                "window": {
-                    "portrait-filter": {
-                        "Name": "Portrait Art Filters",
-                        "Hint": "Portrait art will be limited to files that include/exclude these pieces of text or match the provided regular expression."
-                    },
-                    "token-filter": {
-                        "Name": "Token Art Filters",
-                        "Hint": "Token art will be limited to files that include/exclude these pieces of text or match the provided regular expression."
-                    },
-                    "general-filter": {
-                        "Name": "General Art Filters",
-                        "Hint": "These filters will be used when the search is being performed irrespective of the art type (token/portrait)."
-                    }
-                }
-            },
-            "randomizer": {
-                "Name": "Randomizer Settings",
-                "Hint": "Enable randomization of images upon actor and token creation.",
-                "window": {
-                    "portrait-image-on-actor-create": "Portrait image on Actor Create",
-                    "token-image-on-token-create": "Token image on Token Create",
-                    "token-image-on-token-copy-paste": "Token image on Token copy+paste",
-                    "search-types-heading": "Select which searches are to be included in the randomizer",
-                    "disable-for": "Disable for",
-                    "tokens-with-represented-actor": "Tokens with Represented Actor",
-                    "tokens-with-linked-actor-data": "Tokens with Linked Actor Data",
-                    "pop-up-if-randomization-disabled": "Show Art Select pop-up if randomization is disabled"
-                }
-            },
-            "pop-up": {
-                "Name": "Pop-up Settings",
-                "Hint": "Enable/disable pop-up features",
-                "window": {
-                    "two-pop-ups": {
-                        "Name": "Display separate pop-ups for Portrait and Token art",
-                        "Hint": "When enabled 2 separate pop-ups will be displayed upon Actor/Token creation, first to select the Portrait art, and second to select the Token art."
-                    },
-                    "no-dialog": {
-                        "Name": "Disable prompt between Portrait and Token art select",
-                        "Hint": "Will disable the prompt displayed upon Token/Actor creation when two separate pop-ups setting is enabled."
-                    },
-                    "disable-actor-portrait": {
-                        "Name": "Disable right-click pop-up on the character sheet portrait",
-                        "Hint": "Will disable the Art Select window popping up when right clicking the portrait on the character sheet."
-                    },
-                    "disable-automatic-pop-ups-for": "Disable Automatic Pop-ups for",
-                    "on-actor-create": "On Actor Create",
-                    "on-token-create": "On Token Create",
-                    "on-token-copy-paste": "On Token Copy+Paste"
-                }
-            },
-            "token-hud": {
-                "Name": "Token HUD Settings",
-                "Hint": "Settings for the Token HUD Button",
-                "window":{
-                    "enable-token-hud": {
-                        "Name": "Enable Token HUD Button",
-                        "Hint": "Enable extra Token HUD button for selecting token art."
-                    },
-                    "enable-token-hud-for-all": {
-                        "Name": "Enable Token HUD button for everyone",
-                        "Hint": "If checked will add the Token HUD button for all players. Note: May reveal art unintended for players to see."
-                    },
-                    "display-shared-only": {
-                        "Name": "Display only shared images",
-                        "Hint": "Only shared images will be shown in the side menu. Search can still be performed."
-                    },
-                    "always-show": {
-                        "Name": "Always show HUD Button",
-                        "Hint": "The HUD Button will be shown even when no matches have been found."
-                    },
-                    "display-as-image": {
-                        "Name": "Display as Image",
-                        "Hint": "Disable to display images as a list of their filenames in the HUD."
-                    },
-                    "image-opacity": {
-                        "Name": "Opacity of token preview",
-                        "Hint": "The opacity of the token previews in the HUD before hovering over them."
-                    },
-                    "update-actor-image": {
-                        "Name": "Update Actor portrait",
-                        "Hint": "When enabled selecting an image from the Token HUD will also apply it to the character sheet."
-                    },
-                    "disable-if-token-hud-wildcard-active": {
-                        "Name": "Disable button",
-                        "Hint": "This option will prevent 'Token Variant Art' button being displayed if 'Token HUD Wildcard' is active and 'Randomize Wildcard Images' is checked in the Prototype token."
-                    }
-                }
-            },
-            "keywords-search": {
-                "Name": "Search by Keyword",
-                "Hint": "Searches will use both full name and individual words in the name of the actor/token. Words less than 3 characters will be ignored."
-            },
-            "excluded-keywords": {
-                "Name": "Excluded Keywords",
-                "Hint": "This is a list of keywords that will not be included in the search when 'Search by Keyword' is on."
-            },
-            "actor-directory-key": {
-                "Name": "Actor Directory Popup key",
-                "Hint": "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory."
-            },
-            "run-search-on-path": {
-                "Name": "Match name to folder",
-                "Hint": "Whe enabled art searches will check both file names as well as folder names along their path for a match."
-            }
-        },
-        "common": {
-            "include": "Include",
-            "exclude": "Exclude",
-            "randomize": "Randomize",
-            "name": "Name",
-            "keywords": "Keywords",
-            "shared": "Shared",
-            "apply": "Apply"
-        },
-        "windows": {
-            "art-select":{
-                "apply-same-art": "Apply the same art to the token?",
-                "no-art-found": "No art found containing",
-                "select-variant": "Select variant",
-                "select-portrait-art": "Select Portrait Art",
-                "select-token-art": "Select Token Art"
-            }
-        },
-        "notifications": {
-            "warn": {
-                "profile-image-not-found": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
-                "path-not-found": "Unable to find path: ",
-                "invalid-table": "The table \"{tableId}\" could not be found",
-                "update-image-no-token-actor": "Calling 'updateImage' with no valid Token or Actor as update target."
-            },
-            "info": {
-                "caching-started": "Token Variant Art: Caching Started",
-                "caching-finished": "Token Variant Art: Caching Finished ({imageCount} images found)"
-            }
+  "token-variants": {
+    "settings": {
+      "search-paths": {
+        "Name": "Search Paths",
+        "Hint": "Configure folders, Rolltables and s3 buckets to be searched for art here."
+      },
+      "forge-search-paths": {
+        "Name": "Forge Asset Library Paths",
+        "Hint": "Configure your API key and Asset Library paths",
+        "window": {
+          "Hint": "API Key to be used by 'Token Variant Art' to share images with other players. API Key is available in the 'My Account' page."
         }
+      },
+      "search-filters": {
+        "Name": "Search Filter Settings",
+        "Hint": "Assign filters to Portrait and Token art searches.",
+        "window": {
+          "portrait-filter": {
+            "Name": "Portrait Art Filters",
+            "Hint": "Portrait art will be limited to files that include/exclude these pieces of text or match the provided regular expression."
+          },
+          "token-filter": {
+            "Name": "Token Art Filters",
+            "Hint": "Token art will be limited to files that include/exclude these pieces of text or match the provided regular expression."
+          },
+          "general-filter": {
+            "Name": "General Art Filters",
+            "Hint": "These filters will be used when the search is being performed irrespective of the art type (token/portrait)."
+          }
+        }
+      },
+      "randomizer": {
+        "Name": "Randomizer Settings",
+        "Hint": "Enable randomization of images upon actor and token creation.",
+        "window": {
+          "portrait-image-on-actor-create": "Portrait image on Actor Create",
+          "token-image-on-token-create": "Token image on Token Create",
+          "token-image-on-token-copy-paste": "Token image on Token copy+paste",
+          "search-types-heading": "Select which searches are to be included in the randomizer",
+          "disable-for": "Disable for",
+          "tokens-with-represented-actor": "Tokens with Represented Actor",
+          "tokens-with-linked-actor-data": "Tokens with Linked Actor Data",
+          "pop-up-if-randomization-disabled": "Show Art Select pop-up if randomization is disabled"
+        }
+      },
+      "pop-up": {
+        "Name": "Pop-up Settings",
+        "Hint": "Enable/disable pop-up features",
+        "window": {
+          "two-pop-ups": {
+            "Name": "Display separate pop-ups for Portrait and Token art",
+            "Hint": "When enabled 2 separate pop-ups will be displayed upon Actor/Token creation, first to select the Portrait art, and second to select the Token art."
+          },
+          "no-dialog": {
+            "Name": "Disable prompt between Portrait and Token art select",
+            "Hint": "Will disable the prompt displayed upon Token/Actor creation when two separate pop-ups setting is enabled."
+          },
+          "disable-actor-portrait": {
+            "Name": "Disable right-click pop-up on the character sheet portrait",
+            "Hint": "Will disable the Art Select window popping up when right clicking the portrait on the character sheet."
+          },
+          "disable-automatic-pop-ups-for": "Disable Automatic Pop-ups for",
+          "on-actor-create": "On Actor Create",
+          "on-token-create": "On Token Create",
+          "on-token-copy-paste": "On Token Copy+Paste"
+        }
+      },
+      "token-hud": {
+        "Name": "Token HUD Settings",
+        "Hint": "Settings for the Token HUD Button",
+        "window": {
+          "enable-token-hud": {
+            "Name": "Enable Token HUD Button",
+            "Hint": "Enable extra Token HUD button for selecting token art."
+          },
+          "enable-token-hud-for-all": {
+            "Name": "Enable Token HUD button for everyone",
+            "Hint": "If checked will add the Token HUD button for all players. Note: May reveal art unintended for players to see."
+          },
+          "display-shared-only": {
+            "Name": "Display only shared images",
+            "Hint": "Only shared images will be shown in the side menu. Search can still be performed."
+          },
+          "always-show": {
+            "Name": "Always show HUD Button",
+            "Hint": "The HUD Button will be shown even when no matches have been found."
+          },
+          "display-as-image": {
+            "Name": "Display as Image",
+            "Hint": "Disable to display images as a list of their filenames in the HUD."
+          },
+          "image-opacity": {
+            "Name": "Opacity of token preview",
+            "Hint": "The opacity of the token previews in the HUD before hovering over them."
+          },
+          "update-actor-image": {
+            "Name": "Update Actor portrait",
+            "Hint": "When enabled selecting an image from the Token HUD will also apply it to the character sheet."
+          },
+          "disable-if-token-hud-wildcard-active": {
+            "Name": "Disable button",
+            "Hint": "This option will prevent 'Token Variant Art' button being displayed if 'Token HUD Wildcard' is active and 'Randomize Wildcard Images' is checked in the Prototype token."
+          }
+        }
+      },
+      "keywords-search": {
+        "Name": "Search by Keyword",
+        "Hint": "Searches will use both full name and individual words in the name of the actor/token. Words less than 3 characters will be ignored."
+      },
+      "excluded-keywords": {
+        "Name": "Excluded Keywords",
+        "Hint": "This is a list of keywords that will not be included in the search when 'Search by Keyword' is on."
+      },
+      "actor-directory-key": {
+        "Name": "Actor Directory Popup key",
+        "Hint": "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory."
+      },
+      "run-search-on-path": {
+        "Name": "Match name to folder",
+        "Hint": "Whe enabled art searches will check both file names as well as folder names along their path for a match."
+      }
+    },
+    "common": {
+      "include": "Include",
+      "exclude": "Exclude",
+      "randomize": "Randomize",
+      "name": "Name",
+      "keywords": "Keywords",
+      "shared": "Shared",
+      "apply": "Apply"
+    },
+    "windows": {
+      "art-select": {
+        "apply-same-art": "Apply the same art to the token?",
+        "no-art-found": "No art found containing",
+        "select-variant": "Select variant",
+        "select-portrait-art": "Select Portrait Art",
+        "select-token-art": "Select Token Art"
+      }
+    },
+    "notifications": {
+      "warn": {
+        "profile-image-not-found": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
+        "path-not-found": "Unable to find path: ",
+        "invalid-table": "The table \"{tableId}\" could not be found",
+        "update-image-no-token-actor": "Calling 'updateImage' with no valid Token or Actor as update target."
+      },
+      "info": {
+        "caching-started": "Token Variant Art: Caching Started",
+        "caching-finished": "Token Variant Art: Caching Finished ({imageCount} images found)"
+      }
     }
+  }
 }

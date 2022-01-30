@@ -1,38 +1,36 @@
 {
-    "name": "token-variants",
-    "title": "Token Variant Art",
-    "description": "Searches a customisable list of directories and displays art variants for tokens/actors through pop-ups and a new Token HUD button. Variants can be individually shared with players allowing them to switch out their token art on the fly.",
-    "version": "1.22.3",
-    "download": "https://github.com//Aedif/TokenVariants/releases/download/1.22.3/token-variants.zip",
-    "url": "https://github.com/Aedif/TokenVariants",
-    "manifest": "https://github.com/Aedif/TokenVariants/releases/latest/download/module.json",
-    "author": "Aedif",
-    "authors": [
-        {
-            "name": "Aedif",
-            "discord": "Aedif#7268"
-        }
-    ],
-    "bugs": "https://github.com/Aedif/TokenVariants/issues",
-    "allowBugReporter": true,
-    "socket": true,
-    "minimumCoreVersion": "0.7.9",
-    "compatibleCoreVersion": "9",
-    "esmodules": [
-        "token-variants.mjs"
-    ],
-    "scripts": [],
-    "styles": [
-        "styles/artSelect.css",
-        "styles/sideSelect.css",
-        "styles/searchPaths.css",
-        "styles/popupSettings.css"
-    ],
-    "languages": [
-        {
-            "lang": "en",
-            "name": "English",
-            "path": "lang/en.json"
-        }
-    ]
+  "name": "token-variants",
+  "title": "Token Variant Art",
+  "description": "Searches a customisable list of directories and displays art variants for tokens/actors through pop-ups and a new Token HUD button. Variants can be individually shared with players allowing them to switch out their token art on the fly.",
+  "version": "1.22.3",
+  "download": "https://github.com//Aedif/TokenVariants/releases/download/1.22.3/token-variants.zip",
+  "url": "https://github.com/Aedif/TokenVariants",
+  "manifest": "https://github.com/Aedif/TokenVariants/releases/latest/download/module.json",
+  "author": "Aedif",
+  "authors": [
+    {
+      "name": "Aedif",
+      "discord": "Aedif#7268"
+    }
+  ],
+  "bugs": "https://github.com/Aedif/TokenVariants/issues",
+  "allowBugReporter": true,
+  "socket": true,
+  "minimumCoreVersion": "0.7.9",
+  "compatibleCoreVersion": "9",
+  "esmodules": ["token-variants.mjs"],
+  "scripts": [],
+  "styles": [
+    "styles/artSelect.css",
+    "styles/sideSelect.css",
+    "styles/searchPaths.css",
+    "styles/popupSettings.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    }
+  ]
 }
