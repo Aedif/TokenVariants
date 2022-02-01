@@ -53,12 +53,20 @@
   flex: 0 0 50px;
   text-align: center;
 }
-.search-paths-config ol.table-paths .table-path .path-controls {
+.search-paths-config ol.table-paths .table-path .path-controls,
+.search-paths-config ol.table-paths .table-path .imgur-control {
   flex: 0 0 40px;
   margin: 0;
   text-align: center;
 }
-.search-paths-config ol.table-paths .table-path .path-controls i {
+.search-paths-config ol.table-paths .table-path .imgur-control {
+  display: none;
+}
+.search-paths-config ol.table-paths .table-path .imgur-control.active {
+  display: block;
+}
+.search-paths-config ol.table-paths .table-path .path-controls i,
+.search-paths-config ol.table-paths .table-path .imgur-control i {
   width: 20px;
 }
 .search-paths-config ol.table-paths .table-header {

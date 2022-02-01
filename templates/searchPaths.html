@@ -38,8 +38,14 @@
                 {{#if (eq path.type "rolltable")}}
                     <i class="fas fa-dice"></i>
                 {{/if}}
+                {{#if (eq path.type "imgur")}}
+                    <i class="fas fa-info"></i>
+                {{/if}}
                 </div>
                 <div class="path-text"><input type="text" name="paths.{{index}}.text" value="{{path.text}}" placeholder="Path to image source"></div>
+                <div class="imgur-control {{#if (eq path.type 'imgur')}}active{{/if}}">
+                    <a class="convert-imgur" title="Convert to Rolltable"><i class="fas fa-angle-double-left"></i></a>
+                </div>
                 <div class="path-cache"><input type="checkbox" name="paths.{{index}}.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/></div>
             {{#if ../forge}}
                 <div class="path-share"><input type="checkbox" name="paths.{{index}}.share" data-dtype="Boolean" {{#if path.share}}checked{{/if}}/></div>
@@ -59,6 +65,7 @@
             rolltable:rolltableName<br>
             forgevtt:folder/in/my/asset/library/<br>
         {{/unless}}
+            imgur:galleryId
         </p>
     </footer>
 </form>

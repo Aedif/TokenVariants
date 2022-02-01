@@ -65,6 +65,8 @@ export class SearchPaths extends FormApplication {
       return 'rolltable';
     } else if (path.startsWith('forgevtt:') || path.match(regexpForge)) {
       return 'forge';
+    } else if (path.startsWith('imgur:')) {
+      return 'imgur';
     }
 
     return 'local';
@@ -77,6 +79,7 @@ export class SearchPaths extends FormApplication {
     super.activateListeners(html);
     html.find('a.create-path').click(this._onCreatePath.bind(this));
     html.find('a.delete-path').click(this._onDeletePath.bind(this));
+    html.find('a.convert-imgur').click(this._onConvertImgur.bind(this));
     html.find('button.reset').click(this._onReset.bind(this));
     html.find('button.update').click(this._onUpdate.bind(this));
     html.on('input', '[type=text]', this._onTextChange.bind(this));
@@ -85,13 +88,23 @@ export class SearchPaths extends FormApplication {
   async _onTextChange(event) {
     const type = this._determineType(event.target.value);
     let image = 'fas fa-folder';
+    let imgur = false;
     if (type === 'rolltable') {
       image = 'fas fa-dice';
     } else if (type === 's3') {
       image = 'fas fa-database';
     } else if (type === 'forge') {
       image = 'fas fa-hammer';
+    } else if (type === 'imgur') {
+      image = 'fas fa-info';
+      imgur = true;
     }
+
+    const imgurControl = $(event.currentTarget)
+      .closest('.table-path')
+      .find('.imgur-control');
+    if (imgur) imgurControl.addClass('active');
+    else imgurControl.removeClass('active');
 
     $(event.currentTarget)
       .closest('.table-path')
@@ -114,6 +127,64 @@ export class SearchPaths extends FormApplication {
     const li = event.currentTarget.closest('.table-path');
     this.object.paths.splice(li.dataset.index, 1);
     this.render();
+  }
+
+  async _onConvertImgur(event) {
+    event.preventDefault();
+    await this._onSubmit(event);
+
+    const li = event.currentTarget.closest('.table-path');
+    const albumHash = this.object.paths[li.dataset.index].text.split(':')[1];
+    const imgurClientId = game.settings.get('token-variants', 'imgurClientId') ?? 'df9d991443bb222';
+
+    fetch('https://api.imgur.com/3/gallery/album/' + albumHash, {
+      headers: {
+        Authorization: 'Client-ID ' + imgurClientId,
+        Accept: 'application/json',
+      },
+    })
+      .then((response) => response.json())
+      .then(
+        async function (result) {
+          if (!result.success && location.hostname === 'localhost') {
+            ui.notifications.warn(
+              game.i18n.format(
+                'token-variants.notifications.warn.imgur-localhost'
+              )
+            );
+            return;
+          }
+
+          const data = result.data;
+
+          let resultsArray = [];
+          data.images.forEach((img, i) => {
+            resultsArray.push({
+              type: 0,
+              text: img.title ?? img.description ?? '',
+              weight: 1,
+              range: [i + 1, i + 1],
+              collection: 'Text',
+              drawn: false,
+              img: img.link,
+            });
+          });
+
+          await RollTable.create({
+            name: data.title,
+            description:
+              'Token Variant Art auto generated RollTable: ' + data.link,
+            results: resultsArray,
+            replacement: true,
+            displayRoll: true,
+            img: 'modules/token-variants/img/token-images.svg',
+          });
+
+          this.object.paths[li.dataset.index].text = 'rolltable:' + data.title;
+          this.render();
+        }.bind(this)
+      )
+      .catch((error) => console.log('Token Variant Art: ', error));
   }
 
   _onReset(event) {

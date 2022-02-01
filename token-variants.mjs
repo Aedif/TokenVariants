@@ -57,6 +57,8 @@ let debug = false;
 
 let runSearchOnPath = false;
 
+let imgurClientId;
+
 // Search paths parsed into a format usable in search functions
 let parsedSearchPaths;
 
@@ -342,6 +344,15 @@ async function registerWorldSettings() {
     },
   });
 
+  game.settings.register('token-variants', 'imgurClientId', {
+    name: game.i18n.localize('token-variants.settings.imgur-client-id.Name'),
+    hint: game.i18n.localize('token-variants.settings.imgur-client-id.Hint'),
+    scope: 'world',
+    config: true,
+    type: String,
+    onChange: (id) => (imgurClientId = id),
+  });
+
   // Backwards compatibility for setting format used in versions <=1.18.2
   const tokenConfigs = (
     game.settings.get('token-variants', 'tokenConfigs') || []
@@ -368,6 +379,7 @@ async function registerWorldSettings() {
   debug = game.settings.get('token-variants', 'debug');
   runSearchOnPath = game.settings.get('token-variants', 'runSearchOnPath');
   parsedSearchPaths = await parseSearchPaths(debug);
+  imgurClientId = game.settings.get('token-variants', 'imgurClientId');
 }
 
 function registerHUD() {
@@ -936,6 +948,14 @@ async function findTokens(name, searchType = '') {
         apiKey: path.apiKey,
       });
   }
+  for (let path of searchPaths.get('imgur')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        name: simpleName,
+        filters: filters,
+        imgur: true,
+      });
+  }
 
   if (debug) console.log('ENDING: Token Search', foundTokens);
   return foundTokens;
@@ -964,6 +984,7 @@ async function walkFindTokens(
     rollTableName = '',
     forgevtt = false,
     apiKey = '',
+    imgur = false,
   } = {}
 ) {
   if (!bucket && !path) return;
@@ -987,6 +1008,34 @@ async function walkFindTokens(
           recursive: true,
         });
       }
+    } else if (imgur && location.hostname !== 'localhost') {
+      await fetch('https://api.imgur.com/3/gallery/album/' + path, {
+        headers: {
+          Authorization: 'Client-ID ' + (imgurClientId ? imgurClientId : 'df9d991443bb222'),
+          Accept: 'application/json',
+        },
+      })
+        .then((response) => response.json())
+        .then(async function (result) {
+          if (!result.success) {
+            return;
+          }
+          result.data.images.forEach((img) => {
+            const path = img.link;
+            const rtName = img.title ?? img.description ?? getFileName(img.link);
+            if (!name) {
+              addTokenToFound(path, rtName);
+            } else {
+              if (
+                searchMatchesToken(simplifyTokenName(name), path, rtName, filters)
+              ) {
+                addTokenToFound(path, rtName);
+              }
+            }
+          });
+        })
+        .catch((error) => console.log('Token Variant Art: ', error));
+        return;
     } else if (rollTableName) {
       const table = game.tables.contents.find((t) => t.name === rollTableName);
       if (!table) {

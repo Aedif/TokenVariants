@@ -119,6 +119,10 @@
       "run-search-on-path": {
         "Name": "Match name to folder",
         "Hint": "Whe enabled art searches will check both file names as well as folder names along their path for a match."
+      },
+      "imgur-client-id": {
+        "Name": "Imgur Client ID",
+        "Hint": "Client ID to be used to perform Imgur API calls with."
       }
     },
     "common": {
@@ -144,7 +148,8 @@
         "profile-image-not-found": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
         "path-not-found": "Unable to find path: ",
         "invalid-table": "The table \"{tableId}\" could not be found",
-        "update-image-no-token-actor": "Calling 'updateImage' with no valid Token or Actor as update target."
+        "update-image-no-token-actor": "Calling 'updateImage' with no valid Token or Actor as update target.",
+        "imgur-localhost": "Imgur galleries cannot be accessed through clients running on 'localhost'"
       },
       "info": {
         "caching-started": "Token Variant Art: Caching Started",

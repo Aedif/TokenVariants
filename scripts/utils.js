@@ -142,6 +142,7 @@ export async function parseSearchPaths(debug = false) {
   searchPaths.set('data', []);
   searchPaths.set('s3', new Map());
   searchPaths.set('rolltable', []);
+  searchPaths.set('imgur', []);
 
   let allForgePaths = [];
 
@@ -162,6 +163,10 @@ export async function parseSearchPaths(debug = false) {
     } else if (path.text.startsWith('rolltable:')) {
       searchPaths
         .get('rolltable')
+        .push({ text: path.text.split(':')[1], cache: path.cache });
+    } else if (path.text.startsWith('imgur:')) {
+      searchPaths
+        .get('imgur')
         .push({ text: path.text.split(':')[1], cache: path.cache });
     } else if (
       path.text.startsWith('forgevtt:') ||
