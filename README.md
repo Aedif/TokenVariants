@@ -42,6 +42,10 @@ In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, 
 - Rolltables can be added using: **rolltable:{rolltable name}**
 - For your ForgeVTT asset library the format is as follows: **forgevtt:{path}**
   - This is far slower than using API keys and **Forge Asset Library Paths** setting.
+- Imgur galleries can be linked with: **imgur:galleryID**
+  - e.g. https://imgur.com/gallery/**JweWCpf** -> imgur:**JweWCpf**
+  - Imgur paths can be automatically converted to RollTables
+  - **!!!** Imgur galleries cannot be accessed when running Foundry on 'localhost'.
 
 By default the module will scan these sources only when the world is loaded or when the **Search Paths** settings have changed. If new art is added while the world is still open it will not be found by the module. Disabling '**Cache**' will force the scan to be done every time an art search is performed at a potentially significant cost to speed at which the art is displayed to the user depending on the number of images.
 

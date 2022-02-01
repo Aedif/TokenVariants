@@ -1,3 +1,10 @@
+# 1.23.0
+
+- Imgur galleries can now be added as image sources in the '**Search Paths**' setting
+  - **imgur:galleryId** (e.g. imgur:JweWCpf)
+  - Imgur paths can be automatically converted to RollTables
+  - **!!!** Images will not be picked up when running from '**localhost**'
+
 # 1.22.3
 
 - Added a cog icon to indicate whether images have associated custom configs
