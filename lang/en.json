@@ -101,6 +101,10 @@
           "disable-if-token-hud-wildcard-active": {
             "Name": "Disable button",
             "Hint": "This option will prevent 'Token Variant Art' button being displayed if 'Token HUD Wildcard' is active and 'Randomize Wildcard Images' is checked in the Prototype token."
+          },
+          "include-wildcard": {
+            "Name": "Include wildcard images",
+            "Hint": "If prototype token has been setup with 'Randomize Wildcard Images', these will be included in the HUD menu."
           }
         }
       },

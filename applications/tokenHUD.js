@@ -68,18 +68,33 @@ export async function renderHud(
     }
     // end of compatibility code
 
-    // Merge images found through search with variants shared through 'variant' flag
     if (!searchText) {
-      actorVariants.forEach((variant) => {
-        for (let name of variant.names) {
-          if (images.has(variant.imgSrc)) {
-            if (!images.get(variant.imgSrc).includes(name))
-              images.get(variant.imgSrc).push(name);
-          } else {
-            images.set(variant.imgSrc, [name]);
+
+      const mergeImages = function (imgArr) {
+        imgArr.forEach((variant) => {
+          for (let name of variant.names) {
+            if (images.has(variant.imgSrc)) {
+              if (!images.get(variant.imgSrc).includes(name))
+                images.get(variant.imgSrc).push(name);
+            } else {
+              images.set(variant.imgSrc, [name]);
+            }
           }
-        }
-      });
+        });
+      };
+      
+      // Merge images found through search, with variants shared through 'variant' flag
+      mergeImages(actorVariants);
+
+      // Merge wildcard images
+      if(hudSettings.includeWildcard){
+        const wildcardImages = (await tokenActor.getTokenImages()).map(
+          (variant) => {
+            return { imgSrc: variant, names: [getFileName(variant)] };
+          }
+        );
+        mergeImages(wildcardImages);
+      }
     }
   }
 

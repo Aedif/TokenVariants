@@ -1,3 +1,8 @@
+# 1.24.0
+
+- Net setting added under 'Token HUD Settings': **Include wildcard images**
+  - When enabled 'Alternate Actor Tokens' will be included in the Token HUD side menu
+
 # 1.23.0
 
 - Imgur galleries can now be added as image sources in the '**Search Paths**' setting

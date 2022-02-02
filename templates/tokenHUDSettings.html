@@ -58,6 +58,14 @@
         <p class="notes">{{localize "token-variants.settings.token-hud.window.update-actor-image.Hint"}}</p>
     </div>
 
+    <div class="form-group">
+        <label>{{localize "token-variants.settings.token-hud.window.include-wildcard.Name"}}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="includeWildcard" data-dtype="Boolean" {{#if includeWildcard}}checked{{/if}}>
+        </div>
+        <p class="notes">{{localize "token-variants.settings.token-hud.window.include-wildcard.Hint"}}</p>
+    </div>
+
     {{#if tokenHUDWildcardActive}}
         <hr>
         <h3><b>Token HUD Wildcard</b></h3>

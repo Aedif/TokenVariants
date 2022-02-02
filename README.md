@@ -20,10 +20,6 @@ The only requirement is that the full name of the Actor is present in the file n
 - '**Mage**' will NOT match: **mag03.png**, **09_ma_abc_ge.png**
 - '**Half-Red Dragon Veteran**' will NOT match **RedDragon.png**, **HalfRedDragon.png**
 
-The 'Art Select' screen can also be opened up from the Actor Sheet by right-clicking on the portrait or the 'Token Configuration' window's 'Image' tab. A new button is added right next to the File Picker:
-
-!["Token Configuration Button"](./docs/token_config_button.png)
-
 ## Settings
 
 ### Search Paths
@@ -118,6 +114,10 @@ Controls the opacity of the tokens in the preview before being hovered over.
 #### Update Actor portrait
 
 When enabled selecting an image from the Token HUD will also apply it to the character sheet.
+
+#### Include wildcard images
+
+'Alternate Actor Tokens' will be included in the HUD.
 
 ### Search by Keyword
 

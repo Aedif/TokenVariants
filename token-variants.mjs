@@ -439,6 +439,7 @@ function registerHUD() {
       imageOpacity: game.settings.get('token-variants', 'HUDImageOpacity'),
       alwaysShowButton: game.settings.get('token-variants', 'alwaysShowHUD'),
       updateActorImage: false,
+      includeWildcard: true
     },
   });
 
@@ -1354,7 +1355,7 @@ async function doImageSearch(
 }
 
 /**
- * Updates Token and/or Poro Token  with the new image and custom configuration if one exists.
+ * Updates Token and/or Proto Token  with the new image and custom configuration if one exists.
  * @param {string} imgSrc Image source path/url
  * @param {object} [options={}] Update options
  * @param {Token[]} [options.token] Token to be updated with the new image
