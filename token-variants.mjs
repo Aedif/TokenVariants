@@ -624,7 +624,7 @@ async function initialize() {
       );
       let vDown;
       if (isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
-        vDown = game.keyboard.downKeys.has('v');
+        vDown = game.keyboard.downKeys.has('KeyV');
       } else {
         vDown = keyboard.isDown('v');
       }

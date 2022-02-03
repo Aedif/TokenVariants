@@ -1,6 +1,10 @@
+# 1.24.1
+
+- Fixed a v9 bug causing '**Disable Automatic Pop-ups for: On Token Copy+Paste**' to be ignored
+
 # 1.24.0
 
-- Net setting added under 'Token HUD Settings': **Include wildcard images**
+- New setting added under 'Token HUD Settings': **Include wildcard images**
   - When enabled 'Alternate Actor Tokens' will be included in the Token HUD side menu
 
 # 1.23.0
