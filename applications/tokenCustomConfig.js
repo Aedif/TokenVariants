@@ -113,8 +113,11 @@ export default class TokenCustomConfig extends TokenConfig {
       html.find('.remove-config').click(this._onRemoveConfig.bind(this));
     }
 
-    // Pre-select image tab
+    // Pre-select image or appearance tab
     $(html).find('.tabs > .item[data-tab="image"] > i').trigger('click');
+    $(html).find('.tabs > .item[data-tab="appearance"] > i').trigger('click');
+    
+    document.activeElement.blur(); // Hack fix for key UP/DOWN effects not registering after config has been opened
   }
 
   async _onRemoveConfig(event) {

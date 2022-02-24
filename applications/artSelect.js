@@ -1,4 +1,5 @@
 import TokenCustomConfig from './tokenCustomConfig.js';
+import { keyPressed } from '../scripts/utils.js';
 
 function getStartingWidth(allImages) {
   let maxLength = 0;
@@ -69,15 +70,7 @@ export default class ArtSelect extends FormApplication {
     const boxes = html.find(`.token-variants-grid-box`);
     boxes.map((box) => {
       boxes[box].addEventListener('click', async function (event) {
-        let shiftKeyDown;
-        if (isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
-          shiftKeyDown =
-            game.keyboard.downKeys.has('ShiftLeft') ||
-            game.keyboard.downKeys.has('ShiftRight');
-        } else {
-          shiftKeyDown = keyboard.isDown('Shift');
-        }
-        if (shiftKeyDown) {
+        if (keyPressed('config')) {
           if (object)
             new TokenCustomConfig(
               object,

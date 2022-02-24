@@ -7,16 +7,74 @@ export const SEARCH_TYPE = {
   BOTH: 'both',
 };
 
+export const PRESSED_KEYS = {
+  popupOverride: false,
+  config: false,
+};
+
+/**
+ * Checks if a key is pressed taking into account current game version.
+ * @param {string} key v/Ctrl/Shift/Alt
+ * @returns
+ */
+export function keyPressed(key) {
+  if (isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
+    if (key === 'v') return game.keyboard.downKeys.has('KeyV');
+    return PRESSED_KEYS[key];
+  }
+
+  if (key === 'popupOverride') key = game.settings.get('token-variants', 'actorDirectoryKey');
+  else if (key === 'v') key = 'v';
+  else if (key === 'config') key = 'Shift';
+  return keyboard.isDown(key);
+}
+
+export function registerKeybinds() {
+  if (!game.keybindings) return;
+  game.keybindings.register('token-variants', 'popupOverride', {
+    name: 'Popup Override',
+    hint: 'When held will trigger popups even when they are disabled.',
+    editable: [
+      {
+        key: 'ShiftLeft',
+      },
+    ],
+    onDown: () => {
+      PRESSED_KEYS.popupOverride = true;
+    },
+    onUp: () => {
+      PRESSED_KEYS.popupOverride = false;
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'config', {
+    name: 'Config',
+    hint: 'When held during a mouse Left-Click of an Image or an Active Affect will display a configuration window.',
+    editable: [
+      {
+        key: 'ShiftLeft',
+      },
+    ],
+    onDown: () => {
+      PRESSED_KEYS.config = true;
+      console.log('Config DOWN');
+    },
+    onUp: () => {
+      PRESSED_KEYS.config = false;
+      console.log('Config UP');
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+}
+
 /**
  * Retrieves a custom token configuration if one exists for the given image
  */
 export function getTokenConfig(imgSrc, imgName) {
-  const tokenConfigs = (
-    game.settings.get('token-variants', 'tokenConfigs') || []
-  ).flat();
-  return tokenConfigs.find(
-    (config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName
-  );
+  const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
+  return tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
 }
 
 /**
@@ -41,9 +99,7 @@ export function getTokenConfigForUpdate(imgSrc, imgName) {
  * Adds or removes a custom token configuration
  */
 export function setTokenConfig(imgSrc, imgName, tokenConfig) {
-  const tokenConfigs = (
-    game.settings.get('token-variants', 'tokenConfigs') || []
-  ).flat();
+  const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
   const tcIndex = tokenConfigs.findIndex(
     (config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName
   );
@@ -91,10 +147,8 @@ export function simplifyPath(path) {
 }
 
 async function _parseForgeAssetPaths() {
-  const forgePaths =
-    game.settings.get('token-variants', 'forgeSearchPaths') || {};
-  const userId =
-    typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : '';
+  const forgePaths = game.settings.get('token-variants', 'forgeSearchPaths') || {};
+  const userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : '';
   const searchPaths = [];
 
   for (let uid in forgePaths) {
@@ -125,9 +179,7 @@ export async function parseSearchPaths(debug = false) {
   const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
   const FORGE_ASSETS_LIBRARY_URL_PREFIX = 'https://assets.forge-vtt.com/';
 
-  const searchPathList = (
-    game.settings.get('token-variants', 'searchPaths') || []
-  ).flat();
+  const searchPathList = (game.settings.get('token-variants', 'searchPaths') || []).flat();
 
   // To maintain compatibility with previous versions
   const defaultCaching = !game.settings.get('token-variants', 'disableCaching');
@@ -161,13 +213,9 @@ export async function parseSearchPaths(debug = false) {
         }
       }
     } else if (path.text.startsWith('rolltable:')) {
-      searchPaths
-        .get('rolltable')
-        .push({ text: path.text.split(':')[1], cache: path.cache });
+      searchPaths.get('rolltable').push({ text: path.text.split(':')[1], cache: path.cache });
     } else if (path.text.startsWith('imgur:')) {
-      searchPaths
-        .get('imgur')
-        .push({ text: path.text.split(':')[1], cache: path.cache });
+      searchPaths.get('imgur').push({ text: path.text.split(':')[1], cache: path.cache });
     } else if (
       path.text.startsWith('forgevtt:') ||
       path.text.startsWith(FORGE_ASSETS_LIBRARY_URL_PREFIX)
@@ -176,10 +224,7 @@ export async function parseSearchPaths(debug = false) {
       if (path.text.startsWith(FORGE_ASSETS_LIBRARY_URL_PREFIX)) {
         url = path.text;
       } else if (typeof ForgeAPI !== 'undefined') {
-        const status =
-          ForgeAPI.lastStatus ||
-          (await ForgeAPI.status().catch(console.error)) ||
-          {};
+        const status = ForgeAPI.lastStatus || (await ForgeAPI.status().catch(console.error)) || {};
         if (status.isAdmin) {
           url =
             FORGE_ASSETS_LIBRARY_URL_PREFIX +
@@ -225,15 +270,10 @@ export async function parseSearchPaths(debug = false) {
     }
   }
 
-  let forgePathsSetting = (
-    game.settings.get('token-variants', 'forgevttPaths') || []
-  ).flat();
+  let forgePathsSetting = (game.settings.get('token-variants', 'forgevttPaths') || []).flat();
 
   // To maintain compatibility with previous versions
-  if (
-    forgePathsSetting.length > 0 &&
-    !(forgePathsSetting[0] instanceof Object)
-  ) {
+  if (forgePathsSetting.length > 0 && !(forgePathsSetting[0] instanceof Object)) {
     forgePathsSetting.forEach((path, i) => {
       forgePathsSetting[i] = { text: path, cache: defaultCaching };
     });
@@ -297,8 +337,7 @@ export function isVideo(path) {
  */
 export async function callForgeVTT(path, apiKey) {
   return new Promise(async (resolve, reject) => {
-    if (typeof ForgeVTT === 'undefined' || !ForgeVTT.usingTheForge)
-      return resolve({});
+    if (typeof ForgeVTT === 'undefined' || !ForgeVTT.usingTheForge) return resolve({});
 
     const url = `${ForgeVTT.FORGE_URL}/api/assets/browse`;
     const xhr = new XMLHttpRequest();

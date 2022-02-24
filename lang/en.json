@@ -117,8 +117,8 @@
         "Hint": "This is a list of keywords that will not be included in the search when 'Search by Keyword' is on."
       },
       "actor-directory-key": {
-        "Name": "Actor Directory Popup key",
-        "Hint": "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory."
+        "Name": "Pop-up Override Key",
+        "Hint": "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory even when pop-ups are disabled."
       },
       "run-search-on-path": {
         "Name": "Match name to folder",
@@ -127,6 +127,10 @@
       "imgur-client-id": {
         "Name": "Imgur Client ID",
         "Hint": "Client ID to be used to perform Imgur API calls with."
+      },
+      "status-config": {
+        "Name": "Enable Status Config",
+        "Hint": "Enables image mappings to status effects, visibility and combat states."
       }
     },
     "common": {
