@@ -527,6 +527,7 @@ async function initialize() {
         token: token,
         imgName: tokenDefaultImg.imgName,
       });
+      (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
 
       // HUD will automatically close due to the update
       // Re-open it and the 'Assign Status Effects' view
@@ -580,7 +581,9 @@ async function initialize() {
     }
 
     if (!effectChanged) effects = getEffects(token);
+    if (token.inCombat) effects.unshift('token-variants-combat');
     if (change.hidden) effects.push('token-variants-visibility');
+    else if (token.data.hidden) effects.push('token-variants-visibility');
     if (change.hidden != null && token.data.hidden !== change.hidden) {
       effectChanged = true;
     }

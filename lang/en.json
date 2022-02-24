@@ -140,7 +140,9 @@
       "name": "Name",
       "keywords": "Keywords",
       "shared": "Shared",
-      "apply": "Apply"
+      "apply": "Apply",
+      "priority": "Priority",
+      "remove": "Remove"
     },
     "windows": {
       "art-select": {
@@ -149,6 +151,9 @@
         "select-variant": "Select variant",
         "select-portrait-art": "Select Portrait Art",
         "select-token-art": "Select Token Art"
+      },
+      "status-config": {
+        "hint": "Order in which the image will be updated if multiple effects/status are applied. If they have same priority recency will be used instead."
       }
     },
     "notifications": {

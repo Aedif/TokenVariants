@@ -14,7 +14,7 @@ export async function renderHud(
 ) {
   const hudSettings = game.settings.get('token-variants', 'hudSettings');
 
-  if (game.settings.get('token-variants', 'enableStatusConfig')) {
+  if (game.settings.get('token-variants', 'enableStatusConfig') && token.actorId) {
     $('.control-icon[data-action="visibility"]')
       .find('img')
       .click((event) => {
@@ -49,12 +49,8 @@ export async function renderHud(
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-
           let effectNameAttr = 'title';
           if (game.system.id === 'pf2e') effectNameAttr = 'data-condition';
-
-          console.log(event.target);
-
           new ActiveEffectConfig(
             token,
             event.target.getAttribute('src'),

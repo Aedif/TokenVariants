@@ -7,15 +7,15 @@
         <input class="imgName" type="hidden" name="imgName" value="{{imgName}}">
     </div>
     <div class="form-group">
-        <label style="flex:3;" title="Order in which the image will be updated if multiple 'effects' are applied. If they have same priority recency will be used instead.">Priority</label>
-        <input class="priority" type="number" min="0" max="100" name="priority" value="{{priority}}" title="Order in which the image will be updated if multiple 'effects' are applied. If they have same priority recency will be used instead.">
+        <label style="flex:3;" title="{{localize 'token-variants.windows.status-config.hint'}}">{{localize "token-variants.common.priority"}}</label>
+        <input class="priority" type="number" min="0" max="100" name="priority" value="{{priority}}" title="{{localize 'token-variants.windows.status-config.hint'}}">
         <p class="notes"></p>
     </div>
 
     <footer class="sheet-footer flexrow">
         <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
     {{#if imgSrc}}
-        <button type="button" class="remove"><i class="fas fa-trash"></i> Remove</button>
+        <button type="button" class="remove"><i class="fas fa-trash"></i> {{localize "token-variants.common.remove"}}</button>
     {{/if}}
     </footer>
 </form>
