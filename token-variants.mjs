@@ -483,7 +483,7 @@ async function initialize() {
       'token-variants',
       'defaultImg'
     );
-    const hadActiveHUD = token._object.hasActiveHUD;
+    const hadActiveHUD = (token._object || token).hasActiveHUD;
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
 
     // Filter effects that do not have a mapping and sort based on priority
@@ -510,7 +510,7 @@ async function initialize() {
         // HUD will automatically close due to the update
         // Re-open it and the 'Assign Status Effects' view
         if (hadActiveHUD) {
-          canvas.tokens.hud.bind(token._object);
+          canvas.tokens.hud.bind(token._object || token);
           if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
         }
       }
@@ -531,7 +531,7 @@ async function initialize() {
       // HUD will automatically close due to the update
       // Re-open it and the 'Assign Status Effects' view
       if (hadActiveHUD) {
-        canvas.tokens.hud.bind(token._object);
+        canvas.tokens.hud.bind(token._object || token);
         if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
       }
     }
@@ -539,17 +539,19 @@ async function initialize() {
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
     if (!enableStatusConfig) return;
-    const effects = getEffects(combatant._token);
-    if (combatant._token.data.hidden) effects.push('token-variants-visibility');
+    const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+    const effects = getEffects(token);
+    if (token.data.hidden) effects.push('token-variants-visibility');
     effects.push('token-variants-combat');
-    updateWithEffectMapping(combatant._token, effects, canvas.tokens.hud._statusEffects);
+    updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
   });
 
   Hooks.on('deleteCombatant', (combatant, options, userId) => {
     if (!enableStatusConfig) return;
-    const effects = getEffects(combatant._token);
-    if (combatant._token.data.hidden) effects.push('token-variants-visibility');
-    updateWithEffectMapping(combatant._token, effects, canvas.tokens.hud._statusEffects);
+    const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+    const effects = getEffects(token);
+    if (token.data.hidden) effects.push('token-variants-visibility');
+    updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
   });
 
   Hooks.on('preUpdateToken', (token, change, options, userId) => {
