@@ -1,3 +1,11 @@
+# 1.25.1
+
+- Images can now be mapped to Visibility/Combat status and Active Effects
+  - Enabled via 'Enable Status Config' setting
+  - Each image can be given a priority that will be enforced if multiple statuses are active
+  - Due to slight differences in the way active effects are handled between different systems this functionality is currently only supported for **DnD5e** and **PF2e**. Create an issue under the project if you're interested with having support for another system.
+- Customizable v9 keybindings added for Art Select popup override and Config control keys
+
 # 1.24.1
 
 - Fixed a v9 bug causing '**Disable Automatic Pop-ups for: On Token Copy+Paste**' to be ignored

@@ -484,7 +484,8 @@ async function initialize() {
       'defaultImg'
     );
     const hadActiveHUD = (token._object || token).hasActiveHUD;
-    const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
+    const mappings =
+      (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
 
     // Filter effects that do not have a mapping and sort based on priority
     effects = effects
@@ -518,16 +519,13 @@ async function initialize() {
 
     // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
     // reset the token image back to default
-    if (
-      effects.length === 0 &&
-      tokenDefaultImg &&
-      (tokenDefaultImg.imgSrc !== tokenImgSrc || tokenDefaultImg.imgName !== tokenImgName)
-    ) {
-      await updateTokenImage(tokenDefaultImg.imgSrc, {
-        token: token,
-        imgName: tokenDefaultImg.imgName,
-      });
-      (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
+    if (effects.length === 0 && tokenDefaultImg) {
+      await (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
+      if (tokenDefaultImg.imgSrc !== tokenImgSrc || tokenDefaultImg.imgName !== tokenImgName)
+        await updateTokenImage(tokenDefaultImg.imgSrc, {
+          token: token,
+          imgName: tokenDefaultImg.imgName,
+        });
 
       // HUD will automatically close due to the update
       // Re-open it and the 'Assign Status Effects' view
@@ -541,6 +539,10 @@ async function initialize() {
   Hooks.on('createCombatant', (combatant, options, userId) => {
     if (!enableStatusConfig) return;
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+
+    const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
+    if (!('token-variants-combat' in mappings)) return;
+
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     effects.push('token-variants-combat');
@@ -550,6 +552,10 @@ async function initialize() {
   Hooks.on('deleteCombatant', (combatant, options, userId) => {
     if (!enableStatusConfig) return;
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+
+    const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
+    if (!('token-variants-combat' in mappings)) return;
+
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
@@ -559,41 +565,54 @@ async function initialize() {
     if (!enableStatusConfig) return;
     if (!token.actor) return; // Only tokens with associated actors supported
 
-    let effectChanged = false;
-    let effects = [];
+    const mappings =
+      (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
+
+    let oldEffects = [];
+    let newEffects = [];
 
     if (game.system.id === 'dnd5e') {
-      if (
-        (options.action === 'create' || options.action === 'delete') &&
-        options.embedded.embeddedName === 'ActiveEffect'
-      ) {
-        effects = (change.actorData?.effects || []).map((ef) => ef.label);
-        effectChanged = true;
-      }
+      newEffects = change.actorData?.effects
+        ? change.actorData.effects.map((ef) => ef.label)
+        : getEffects(token);
+      oldEffects = getEffects(token);
     } else if (game.system.id === 'pf2e') {
-      if (
-        change.actorData?.items &&
-        (token.data.actorData?.items || []).length !== (change.actorData.items || []).length
-      ) {
-        effects = (change.actorData?.items || []).map((ef) => ef.name);
-        effectChanged = true;
-      }
+      newEffects = change.actorData?.items
+        ? change.actorData.items.map((ef) => ef.name)
+        : getEffects(token);
+      oldEffects = getEffects(token);
     }
 
-    if (!effectChanged) effects = getEffects(token);
-    if (token.inCombat) effects.unshift('token-variants-combat');
-    if (change.hidden) effects.push('token-variants-visibility');
-    else if (token.data.hidden) effects.push('token-variants-visibility');
-    if (change.hidden != null && token.data.hidden !== change.hidden) {
-      effectChanged = true;
+    const effectAdded = oldEffects.length < newEffects.length;
+    const effectRemoved = oldEffects.length > newEffects.length;
+
+    let performUpdate = false;
+    if (effectAdded) {
+      performUpdate = newEffects[newEffects.length - 1] in mappings;
+    }
+    if (effectRemoved) {
+      performUpdate = oldEffects[oldEffects.length - 1] in mappings;
     }
 
-    if (effectChanged) {
-      options['token-variants'] = {
-        effects: effects,
-        toggleStatus: canvas.tokens.hud._statusEffects,
-      };
+    if (token.inCombat) newEffects.unshift('token-variants-combat');
+    if (change.hidden) newEffects.push('token-variants-visibility');
+    else if (change.hidden == null && token.data.hidden)
+      newEffects.unshift('token-variants-visibility');
+
+    if (
+      change.hidden != null &&
+      change.hidden !== token.data.hidden &&
+      'token-variants-visibility' in mappings
+    ) {
+      performUpdate = true;
     }
+
+    if (!performUpdate) return;
+
+    options['token-variants'] = {
+      effects: newEffects,
+      toggleStatus: canvas.tokens.hud._statusEffects,
+    };
   });
 
   Hooks.on('updateToken', async function (token, change, options, userId) {

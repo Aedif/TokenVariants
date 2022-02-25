@@ -25,7 +25,7 @@ export default class ActiveEffectConfig extends FormApplication {
       template: 'modules/token-variants/templates/activeEffectConfig.html',
       resizable: false,
       minimizable: false,
-      title: 'Active Effect Config',
+      title: 'Config',
       width: 250,
     });
   }
@@ -84,7 +84,7 @@ export default class ActiveEffectConfig extends FormApplication {
       const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings');
       if (effectMappings) {
         delete effectMappings[this.effectName];
-        this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
         this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
       }
     }

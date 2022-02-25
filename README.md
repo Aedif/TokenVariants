@@ -39,7 +39,7 @@ In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, 
 - For your ForgeVTT asset library the format is as follows: **forgevtt:{path}**
   - This is far slower than using API keys and **Forge Asset Library Paths** setting.
 - Imgur galleries can be linked with: **imgur:galleryID**
-  - e.g. https://imgur.com/gallery/**JweWCpf** -> imgur:**JweWCpf**
+  - e.g. https://imgur.com/gallery/**JweWCpf** -> imgur:**JweWCpf\*\*
   - Imgur paths can be automatically converted to RollTables
   - **!!!** Imgur galleries cannot be accessed when running Foundry on 'localhost'.
 
@@ -146,6 +146,14 @@ Images displayed in the **Art Select** window or the **TokenHUD** side menu can 
 !["Image Configuration"](./docs/image_config.png)
 
 Once configured these settings will be applied to the token every time you switch to these images using the **Token Variant Art** module.
+
+## Enable Status Config
+
+Allows to map images to Visibility/Combat status and Active Effects.
+
+!["Image Configuration"](./docs/status_config.png)
+
+The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
 
 ## Installation
 
