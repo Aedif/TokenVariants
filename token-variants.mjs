@@ -338,15 +338,17 @@ async function registerWorldSettings() {
     onChange: (id) => (imgurClientId = id),
   });
 
-  game.settings.register('token-variants', 'enableStatusConfig', {
-    name: game.i18n.localize('token-variants.settings.status-config.Name'),
-    hint: game.i18n.localize('token-variants.settings.status-config.Hint'),
-    scope: 'world',
-    config: true,
-    default: false,
-    type: Boolean,
-    onChange: (enable) => (enableStatusConfig = enable),
-  });
+  if (['dnd5e', 'pf2e'].includes(game.system.id)) {
+    game.settings.register('token-variants', 'enableStatusConfig', {
+      name: game.i18n.localize('token-variants.settings.status-config.Name'),
+      hint: game.i18n.localize('token-variants.settings.status-config.Hint'),
+      scope: 'world',
+      config: true,
+      default: false,
+      type: Boolean,
+      onChange: (enable) => (enableStatusConfig = enable),
+    });
+  }
 
   // Backwards compatibility for setting format used in versions <=1.18.2
   const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
@@ -607,12 +609,12 @@ async function initialize() {
       performUpdate = true;
     }
 
-    if (!performUpdate) return;
-
-    options['token-variants'] = {
-      effects: newEffects,
-      toggleStatus: canvas.tokens.hud._statusEffects,
-    };
+    if (performUpdate) {
+      options['token-variants'] = {
+        effects: newEffects,
+        toggleStatus: canvas.tokens.hud._statusEffects,
+      };
+    }
   });
 
   Hooks.on('updateToken', async function (token, change, options, userId) {

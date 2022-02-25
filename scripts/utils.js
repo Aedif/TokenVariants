@@ -58,11 +58,9 @@ export function registerKeybinds() {
     ],
     onDown: () => {
       PRESSED_KEYS.config = true;
-      console.log('Config DOWN');
     },
     onUp: () => {
       PRESSED_KEYS.config = false;
-      console.log('Config UP');
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
