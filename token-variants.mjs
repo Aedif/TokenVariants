@@ -338,17 +338,15 @@ async function registerWorldSettings() {
     onChange: (id) => (imgurClientId = id),
   });
 
-  if (['dnd5e', 'pf2e'].includes(game.system.id)) {
-    game.settings.register('token-variants', 'enableStatusConfig', {
-      name: game.i18n.localize('token-variants.settings.status-config.Name'),
-      hint: game.i18n.localize('token-variants.settings.status-config.Hint'),
-      scope: 'world',
-      config: true,
-      default: false,
-      type: Boolean,
-      onChange: (enable) => (enableStatusConfig = enable),
-    });
-  }
+  game.settings.register('token-variants', 'enableStatusConfig', {
+    name: game.i18n.localize('token-variants.settings.status-config.Name'),
+    hint: game.i18n.localize('token-variants.settings.status-config.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+    onChange: (enable) => (enableStatusConfig = enable),
+  });
 
   // Backwards compatibility for setting format used in versions <=1.18.2
   const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
@@ -469,12 +467,10 @@ async function initialize() {
   await registerWorldSettings();
 
   const getEffects = (token) => {
-    if (game.system.id === 'dnd5e') {
-      return (token.data.actorData?.effects || []).map((ef) => ef.label);
-    } else if (game.system.id === 'pf2e') {
+    if (game.system.id === 'pf2e') {
       return (token.data.actorData?.items || []).map((ef) => ef.name);
     }
-    return [];
+    return (token.data.actorData?.effects || []).map((ef) => ef.label);
   };
 
   const updateWithEffectMapping = async function (token, effects, toggleStatus) {
@@ -573,14 +569,14 @@ async function initialize() {
     let oldEffects = [];
     let newEffects = [];
 
-    if (game.system.id === 'dnd5e') {
-      newEffects = change.actorData?.effects
-        ? change.actorData.effects.map((ef) => ef.label)
-        : getEffects(token);
-      oldEffects = getEffects(token);
-    } else if (game.system.id === 'pf2e') {
+    if (game.system.id === 'pf2e') {
       newEffects = change.actorData?.items
         ? change.actorData.items.map((ef) => ef.name)
+        : getEffects(token);
+      oldEffects = getEffects(token);
+    } else {
+      newEffects = change.actorData?.effects
+        ? change.actorData.effects.map((ef) => ef.label)
         : getEffects(token);
       oldEffects = getEffects(token);
     }

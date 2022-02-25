@@ -1,3 +1,8 @@
+# 1.25.2
+
+- Lifted restrictions on which game system can use the Status Config functionality.
+- Bug fix for one for one of the settings not registering properly
+
 # 1.25.1
 
 - Images can now be mapped to Visibility/Combat status and Active Effects
