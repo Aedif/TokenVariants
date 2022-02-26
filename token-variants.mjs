@@ -1,5 +1,5 @@
 import { SearchPaths, ForgeSearchPaths } from './applications/searchPaths.js';
-import ArtSelect from './applications/artSelect.js';
+import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
 import TokenHUDSettings from './applications/tokenHUDSettings.js';
 import FilterSettings from './applications/searchFilters.js';
 import RandomizerSettings from './applications/randomizerSettings.js';
@@ -18,8 +18,10 @@ import {
   callForgeVTT,
   keyPressed,
   registerKeybinds,
+  updateActorImage,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
+import CompendiumMapConfig from './applications/compendiumMap.js';
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = [
@@ -61,6 +63,12 @@ let enableStatusConfig = false;
 
 // Search paths parsed into a format usable in search functions
 let parsedSearchPaths;
+
+// showArtSelect(...) can take a while to fully execute and it is possible for it to be called
+// multiple times in very quick succession especially if copy pasting tokens or importing actors
+// this variable set early in the function execution is used to queue additional requests rather
+// than continue execution
+const showArtSelectExecuting = { inProgress: false };
 
 async function registerWorldSettings() {
   game.settings.register('token-variants', 'debug', {
@@ -348,6 +356,15 @@ async function registerWorldSettings() {
     onChange: (enable) => (enableStatusConfig = enable),
   });
 
+  game.settings.registerMenu('token-variants', 'mapCompendium', {
+    name: 'Map Compendium Images',
+    hint: 'temp',
+    scope: 'world',
+    icon: 'fas fa-exchange-alt',
+    type: CompendiumMapConfig,
+    restricted: true,
+  });
+
   // Backwards compatibility for setting format used in versions <=1.18.2
   const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
   tokenConfigs.forEach((config) => {
@@ -624,6 +641,10 @@ async function initialize() {
     }
   });
 
+  Hooks.on('renderArtSelect', () => {
+    showArtSelectExecuting.inProgress = false;
+  });
+
   if (game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE')) {
     const disableRandomSearchForType = (randSettings, actor) => {
       if (!actor) return false;
@@ -687,17 +708,25 @@ async function initialize() {
       }
 
       showArtSelect(actor.data.name, {
-        callback: (imgSrc, name) => {
+        callback: async function (imgSrc, name) {
           const actTokens = actor.getActiveTokens();
           const token = actTokens.length === 1 ? actTokens[0] : null;
-          updateActorImage(actor, imgSrc, {
-            updateActorOnly: false,
+          await updateActorImage(actor, imgSrc, {
             imgName: name,
             token: token,
           });
+          if (twoPopups) twoPopupPrompt(actor, imgSrc, name, token);
+          else {
+            updateTokenImage(imgSrc, {
+              actor: actor,
+              imgName: imgName,
+              token: token,
+            });
+          }
         },
         searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
         object: actor,
+        preventClose: twoPopups,
       });
     });
     Hooks.on('createToken', async (op1, op2, op3, op4) => {
@@ -773,9 +802,24 @@ async function initialize() {
       }
 
       showArtSelect(token.data.name, {
-        callback: twoPopups ? updateActorCallback : updateTokenCallback,
+        callback: async function (imgSrc, imgName) {
+          if (twoPopups) {
+            await updateActorImage(token.actor, imgSrc, {
+              imgName: imgName,
+              token: token,
+            });
+            twoPopupPrompt(token.actor, imgSrc, imgName, token);
+          } else {
+            updateTokenImage(imgSrc, {
+              actor: token.actor,
+              imgName: imgName,
+              token: token,
+            });
+          }
+        },
         searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
         object: token,
+        preventClose: twoPopups,
       });
     });
     Hooks.on('renderTokenConfig', modTokenConfig);
@@ -1178,28 +1222,32 @@ async function walkFindTokens(
  * @param {string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
  * @param {Token|Actor} [options.object] Token/Actor used when displaying Custom Token Config prompt
  */
-export default async function showArtSelect(
+export async function showArtSelect(
   search,
-  { callback = null, searchType = SEARCH_TYPE.BOTH, object = null, closeDuplicate = false } = {}
+  {
+    callback = null,
+    searchType = SEARCH_TYPE.BOTH,
+    object = null,
+    force = false,
+    preventClose = false,
+    image1 = '',
+    image2 = '',
+  } = {}
 ) {
   if (caching) return;
 
-  // Allow only one instance of ArtSelect to be open at any given time unless instructed to close the other apps
   const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
-  if (closeDuplicate) {
-    for (const app of artSelects) {
-      await app.close();
-    }
-  } else if (artSelects.length !== 0) {
+  if (showArtSelectExecuting.inProgress || (!force && artSelects.length !== 0)) {
+    addToArtSelectQueue(search, {
+      callback: callback,
+      searchType: searchType,
+      object: object,
+      preventClose: preventClose,
+    });
     return;
   }
 
-  // Set Art Select screen title
-  let title = game.i18n.localize('token-variants.windows.art-select.select-variant');
-  if (searchType == SEARCH_TYPE.TOKEN)
-    title = game.i18n.localize('token-variants.windows.art-select.select-token-art');
-  else if (searchType == SEARCH_TYPE.PORTRAIT)
-    title = game.i18n.localize('token-variants.windows.art-select.select-portrait-art');
+  showArtSelectExecuting.inProgress = true;
 
   let allImages = await doImageSearch(search, {
     searchType: searchType,
@@ -1236,20 +1284,15 @@ export default async function showArtSelect(
     allButtons.set(search, buttons);
   });
 
-  let searchAndDisplay = (search) => {
-    showArtSelect(search, {
-      callback: callback,
-      searchType: searchType,
-      object: object,
-      closeDuplicate: true,
-    });
-  };
-
-  if (artFound) {
-    new ArtSelect(title, search, allButtons, callback, searchAndDisplay, object).render(true);
-  } else {
-    new ArtSelect(title, search, null, callback, searchAndDisplay, object).render(true);
-  }
+  new ArtSelect(search, {
+    allImages: artFound ? allButtons : null,
+    searchType: searchType,
+    callback: callback,
+    object: object,
+    preventClose: preventClose,
+    image1: image1,
+    image2: image2,
+  }).render(true);
 }
 
 // Deprecated
@@ -1385,7 +1428,10 @@ async function doImageSearch(
  * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
  * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
  */
-async function updateTokenImage(imgSrc, { token = null, actor = null, imgName = null } = {}) {
+export async function updateTokenImage(
+  imgSrc,
+  { token = null, actor = null, imgName = null } = {}
+) {
   if (!(token || actor)) {
     console.warn(
       game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor')
@@ -1497,24 +1543,9 @@ async function updateTokenImage(imgSrc, { token = null, actor = null, imgName = 
   }
 }
 
-/**
- * Assign new artwork to the actor
- */
-async function updateActorImage(
-  actor,
-  imgSrc,
-  { updateActorOnly = true, imgName = null, token = null } = {}
-) {
-  await (actor.document ?? actor).update({
-    img: imgSrc,
-  });
-
-  if (updateActorOnly) return;
-
-  if (!imgName) imgName = getFileName(imgSrc);
-
+function twoPopupPrompt(actor, imgSrc, imgName, token) {
   if (twoPopups && noTwoPopupsPrompt) {
-    showArtSelect(actor.name, {
+    showArtSelect((token ?? actor.data.token).name, {
       callback: (imgSrc, name) =>
         updateTokenImage(imgSrc, {
           actor: actor,
@@ -1523,6 +1554,7 @@ async function updateActorImage(
         }),
       searchType: SEARCH_TYPE.TOKEN,
       object: token ? token : actor,
+      force: true,
     });
   } else if (twoPopups) {
     let d = new Dialog({
@@ -1531,17 +1563,22 @@ async function updateActorImage(
       buttons: {
         one: {
           icon: '<i class="fas fa-check"></i>',
-          callback: () =>
+          callback: () => {
             updateTokenImage(imgSrc, {
               actor: actor,
               imgName: imgName,
               token: token,
-            }),
+            });
+            const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
+            for (const app of artSelects) {
+              app.close();
+            }
+          },
         },
         two: {
           icon: '<i class="fas fa-times"></i>',
           callback: () => {
-            showArtSelect(actor.name, {
+            showArtSelect((token ?? actor.data.token).name, {
               callback: (imgSrc, name) =>
                 updateTokenImage(imgSrc, {
                   actor: actor,
@@ -1550,6 +1587,7 @@ async function updateActorImage(
                 }),
               searchType: SEARCH_TYPE.TOKEN,
               object: token ? token : actor,
+              force: true,
             });
           },
         },
@@ -1557,12 +1595,6 @@ async function updateActorImage(
       default: 'one',
     });
     d.render(true);
-  } else {
-    updateTokenImage(imgSrc, {
-      actor: actor,
-      imgName: imgName,
-      token: token,
-    });
   }
 }
 

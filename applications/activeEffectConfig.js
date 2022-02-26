@@ -1,4 +1,4 @@
-import showArtSelect from '../token-variants.mjs';
+import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
 
 export default class ActiveEffectConfig extends FormApplication {

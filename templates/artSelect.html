@@ -1,43 +1,51 @@
 <form>
-    <div class="form-group">
-        <input type="text" id="custom-art-search" name="search" value="{{search}}" />
-        <button type="button" id="custom-art-search-bt">
-            Search
-        </button>
-    </div>
-    {{#if allImages}}
-
-    {{#each allImages as |search index|}}
+  {{#if image1}}
+  <div class="token-variants-portrait-token form-group">
+    <img class="image {{#if image1_active}}active{{/if}}" src="{{image1}}" title="Portrait" alt="" width="100" height="100"></img>
+    <img class="image {{#if image2_active}}active{{/if}}" src="{{image2}}" title="Token" alt="" width="100" height="100"></img>
+  </div>
+  {{/if}}
+  <div class="form-group">
+    <input type="text" id="custom-art-search" name="search" value="{{search}}" />
+    <button type="button" id="custom-art-search-bt">Search</button>
+    <button type="button" id="token-variant-art-clear-queue" {{#unless queue}}hidden{{/unless}}>Clear Queue ({{queue}})</button>
+  </div>
+  {{#if allImages}} {{#each allImages as |search index|}}
+  <div>
+    <h2><b>{{search.[0]}}</b></h2>
+  </div>
+  <hr />
+  <div class="token-variants-grid">
+    {{#each search.[1] as |image|}}
     <div>
-        <h2><b>{{search.[0]}}</b></h2>
-    </div>
-    <hr />
-    <div class="token-variants-grid">
-        {{#each search.[1] as |image|}}
-        <div>
-            <span class="token-variants-grid-box" data-name="{{image.path}}" data-filename="{{image.label}}"></span>
-            {{#if image.img}}
-            <img class="token-variants-grid-image" src="{{image.path}}" />
-            {{/if}}
-            {{#if image.vid}}
-            <video class="token-variants-grid-image" src="{{image.path}}" alt="{{image.label}}"
-                autoplay loop></video>
-            {{/if}}
-            {{#unless image.type}}
-            <span class="token-variants-grid-image" alt="{{image.label}}">{{image.path}}</span>
-            {{/unless}}
-            <i class="fas fa-cog fa-lg {{#if image.hasConfig}}active{{/if}}"></i>
-            <p>{{image.label}}</p>
-        </div>
-        {{/each}}
+      <span
+        class="token-variants-grid-box"
+        data-name="{{image.path}}"
+        data-filename="{{image.label}}"
+      ></span>
+      {{#if image.img}}
+      <img class="token-variants-grid-image" src="{{image.path}}" />
+      {{/if}} {{#if image.vid}}
+      <video
+        class="token-variants-grid-image"
+        src="{{image.path}}"
+        alt="{{image.label}}"
+        autoplay
+        loop
+      ></video>
+      {{/if}} {{#unless image.type}}
+      <span class="token-variants-grid-image" alt="{{image.label}}">{{image.path}}</span>
+      {{/unless}}
+      <i class="fas fa-cog fa-lg {{#if image.hasConfig}}active{{/if}}"></i>
+      <p>{{image.label}}</p>
     </div>
     {{/each}}
+  </div>
+  {{/each}} {{else}}
 
-    {{else}}
+  <div>
+    <p>{{localize "token-variants.windows.art-select.no-art-found"}}: <b>{{search}}</b></p>
+  </div>
 
-    <div>
-        <p>{{localize "token-variants.windows.art-select.no-art-found"}}: <b>{{search}}</b></p>
-    </div>
-
-    {{/if}}
+  {{/if}}
 </form>

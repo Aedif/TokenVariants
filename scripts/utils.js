@@ -13,6 +13,15 @@ export const PRESSED_KEYS = {
 };
 
 /**
+ * Assign new artwork to the actor
+ */
+export async function updateActorImage(actor, imgSrc) {
+  await (actor.document ?? actor).update({
+    img: imgSrc,
+  });
+}
+
+/**
  * Checks if a key is pressed taking into account current game version.
  * @param {string} key v/Ctrl/Shift/Alt
  * @returns

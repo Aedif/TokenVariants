@@ -1,0 +1,32 @@
+<form>
+  <div class="form-group">
+    <label>Compendium</label>
+    <div class="form-fields">
+      <select name="compendium">
+        {{#each compendiums as |compendium|}}
+        <option value="{{compendium.id}}" selected="">{{compendium.title}}</option>
+        {{/each}}
+      </select>
+    </div>
+    <p class="notes">Select from the list of unlocked Actor compendiums</p>
+  </div>
+
+  <div class="form-group">
+    <label>Show 'Art Select' only for missing images</label>
+    <input type="checkbox" name="missingOnly" data-dtype="Boolean" />
+  </div>
+
+  <div class="form-group">
+    <label>Select different images for Portrait and Token</label>
+    <input type="checkbox" name="diffImages" data-dtype="Boolean" />
+  </div>
+
+  <div class="form-group">
+    <label>Show current portrait/token image in the 'Art Select' window</label>
+    <input type="checkbox" name="showImages" data-dtype="Boolean" />
+  </div>
+
+  <footer class="sheet-footer flexrow">
+    <button type="submit"><i class="far fa-save"></i>Start</button>
+  </footer>
+</form>

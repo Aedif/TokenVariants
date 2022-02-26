@@ -305,19 +305,13 @@ async function _onImageClick(event, tokenId, updateTokenImage, updateActorImage)
     if (tokenImageName !== name) {
       await updateTokenImage(imgSrc, { token: token, imgName: name });
       if (token.actor && hudSettings.updateActorImage) {
-        updateActorImage(token.actor, imgSrc, {
-          updateActorOnly: true,
-          imgName: name,
-        });
+        updateActorImage(token.actor, imgSrc, { imgName: name });
       }
     }
   } else {
     await updateTokenImage(imgSrc, { token: token, imgName: name });
     if (token.actor && hudSettings.updateActorImage) {
-      updateActorImage(token.actor, imgSrc, {
-        updateActorOnly: true,
-        imgName: name,
-      });
+      updateActorImage(token.actor, imgSrc, { imgName: name });
     }
   }
 }
