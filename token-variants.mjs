@@ -1232,6 +1232,7 @@ export async function showArtSelect(
     preventClose = false,
     image1 = '',
     image2 = '',
+    ignoreKeywords = false,
   } = {}
 ) {
   if (caching) return;
@@ -1251,6 +1252,7 @@ export async function showArtSelect(
 
   let allImages = await doImageSearch(search, {
     searchType: searchType,
+    ignoreKeywords: ignoreKeywords,
   });
 
   const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
@@ -1369,9 +1371,9 @@ async function doRandomSearch(
  * @param {Boolean} [options.ignoreKeywords] Ignores keywords search setting
  * @param {Boolean} [options.simpleResults] Results will be returned as an array of all image paths found
  * @param {Function[]} [options.callback] Function to be called with the found images
- * @returns {Map<string, Map<string, Map<string, Array<string>>>>|Array<String>|null} All images found split by original criteria and keywords
+ * @returns {Promise<Map<string, Map<string, Map<string, Array<string>>>>>|Array<String>|null} All images found split by original criteria and keywords
  */
-async function doImageSearch(
+export async function doImageSearch(
   search,
   {
     searchType = SEARCH_TYPE.BOTH,

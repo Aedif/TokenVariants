@@ -12,18 +12,36 @@
   </div>
 
   <div class="form-group">
-    <label>Show 'Art Select' only for missing images</label>
+    <label>Only include actors with missing images</label>
     <input type="checkbox" name="missingOnly" data-dtype="Boolean" />
   </div>
 
   <div class="form-group">
-    <label>Select different images for Portrait and Token</label>
+    <label>Apply different images for Portrait and Token</label>
     <input type="checkbox" name="diffImages" data-dtype="Boolean" />
   </div>
 
   <div class="form-group">
     <label>Show current portrait/token image in the 'Art Select' window</label>
-    <input type="checkbox" name="showImages" data-dtype="Boolean" />
+    <input type="checkbox" name="showImages" data-dtype="Boolean" checked />
+  </div>
+
+  <div class="form-group">
+    <label>Include keywords in the search</label>
+    <input type="checkbox" name="incKeywords" data-dtype="Boolean" {{#if incKeywords}}checked{{/if}}
+    />
+  </div>
+
+  <h2>Automation</h2>
+
+  <div class="form-group">
+    <label>Auto-apply the first found image</label>
+    <input type="checkbox" name="autoApply" data-dtype="Boolean" />
+  </div>
+
+  <div class="form-group">
+    <label>Display 'Art Select' if no image found</label>
+    <input type="checkbox" name="autoDisplayArtSelect" data-dtype="Boolean" />
   </div>
 
   <footer class="sheet-footer flexrow">

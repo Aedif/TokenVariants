@@ -49,7 +49,7 @@ function getStartingWidth(allImages) {
     allImages.forEach((tokens, _) => {
       if (maxLength < tokens.length) maxLength = tokens.length;
     });
-  return maxLength < 4 ? 150 * maxLength + 30 : 550;
+  return maxLength < 4 ? 150 * maxLength + 400 : 550;
 }
 
 function getStartingHeight(allImages) {
