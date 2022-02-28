@@ -1,3 +1,20 @@
+# 1.26.1
+
+- **Compendium Mapper** setting menu added
+  - Allows for automated and/or aided means of assigning images to Actors in a compendium
+  - Options
+    - Only include actors with missing images
+    - Apply different images for Portrait and Token
+    - Show current portrait/token images in the 'Art Select' window
+    - Include keywords in the search
+    - Re-cache images before mapping begins
+  - Automation
+    - Auto-apply the first found image
+    - Display 'Art Select' if no image found
+    - Sync Portrait and Token if only one image is missing
+- **Art Select** window now support a queue
+  - Instead of opening multiple instances of the window the module will now add them to the queue, opening the next search once the first image has been selected or the window closed
+
 # 1.25.2
 
 - Lifted restrictions on which game system can use the Status Config functionality.

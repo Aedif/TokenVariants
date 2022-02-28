@@ -157,6 +157,12 @@ Allows to map images to Visibility/Combat status and Active Effects.
 
 The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
 
+## Compendium Mapper
+
+Auto-updates or queues up 'Art Select' window for all Actors within a Compendium.
+
+!["Compendium Mapper"](./docs/compendium_mapper.png)
+
 ## Installation
 
 To install, import this [manifest](https://raw.githubusercontent.com/Aedif/TokenVariants/master/module.json) into the module browser or search for 'Token Variant Art'.
