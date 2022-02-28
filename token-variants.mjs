@@ -356,13 +356,28 @@ async function registerWorldSettings() {
     onChange: (enable) => (enableStatusConfig = enable),
   });
 
-  game.settings.registerMenu('token-variants', 'mapCompendium', {
+  game.settings.registerMenu('token-variants', 'compendiumMapper', {
     name: game.i18n.localize('token-variants.settings.compendium-mapper.Name'),
     hint: game.i18n.localize('token-variants.settings.compendium-mapper.Hint'),
     scope: 'world',
     icon: 'fas fa-cogs',
     type: CompendiumMapConfig,
     restricted: true,
+  });
+
+  game.settings.register('token-variants', 'compendiumMapper', {
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: {
+      missingOnly: false,
+      diffImages: false,
+      showImages: true,
+      incKeywords: true,
+      cache: false,
+      autoDisplayArtSelect: true,
+      syncImages: false,
+    },
   });
 
   // Backwards compatibility for setting format used in versions <=1.18.2
@@ -919,7 +934,7 @@ function modActorSheet(actorSheet, html, options) {
 /**
  * Search for and cache all the found token art
  */
-async function cacheTokens() {
+export async function cacheTokens() {
   if (caching) return;
   caching = true;
   ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));

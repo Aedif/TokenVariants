@@ -142,7 +142,9 @@
           "show-images": "Show current portrait/token image in the 'Art Select' window",
           "include-keywords": "Include keywords in the search",
           "auto-apply": "Auto-apply the first found image",
-          "auto-art-select": "Display 'Art Select' if no image found"
+          "auto-art-select": "Display 'Art Select' if no image found",
+          "cache": "Re-cache images before mapping begins",
+          "sync-images": "Sync Portrait and Token if only one image is missing"
         }
       }
     },

@@ -15,23 +15,31 @@
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.missing-only"}}</label>
-    <input type="checkbox" name="missingOnly" data-dtype="Boolean" />
+    <input type="checkbox" name="missingOnly" data-dtype="Boolean" {{#if missingOnly}}checked{{/if}}
+    />
   </div>
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.diff-images"}}</label>
-    <input type="checkbox" name="diffImages" data-dtype="Boolean" />
+    <input type="checkbox" name="diffImages" data-dtype="Boolean" {{#if diffImages}}checked{{/if}}
+    />
   </div>
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.show-images"}}</label>
-    <input type="checkbox" name="showImages" data-dtype="Boolean" checked />
+    <input type="checkbox" name="showImages" data-dtype="Boolean" {{#if showImages}}checked{{/if}}
+    />
   </div>
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.include-keywords"}}</label>
     <input type="checkbox" name="incKeywords" data-dtype="Boolean" {{#if incKeywords}}checked{{/if}}
     />
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.compendium-mapper.window.cache"}}</label>
+    <input type="checkbox" name="cache" data-dtype="Boolean" {{#if cache}}checked{{/if}} />
   </div>
 
   <h2>Automation</h2>
@@ -48,12 +56,13 @@
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.auto-art-select"}}</label>
-    <input
-      class="token-variants-auto-art-select"
-      type="checkbox"
-      name="autoDisplayArtSelect"
-      data-dtype="Boolean"
-      disabled
+    <input class="token-variants-auto-art-select" type="checkbox" name="autoDisplayArtSelect"
+    data-dtype="Boolean" disabled {{#if autoDisplayArtSelect}}checked{{/if}}/>
+  </div>
+
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.compendium-mapper.window.sync-images"}}</label>
+    <input type="checkbox" name="syncImages" data-dtype="Boolean" {{#if syncImages}}checked{{/if}}
     />
   </div>
 

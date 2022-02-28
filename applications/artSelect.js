@@ -6,6 +6,9 @@ const ART_SELECT_QUEUE = {
   queue: [],
 };
 
+let WIDTH = 500;
+let HEIGHT = 500;
+
 export function addToArtSelectQueue(search, options) {
   ART_SELECT_QUEUE.queue.push({
     search: search,
@@ -24,7 +27,6 @@ export function addToQueue(search, options) {
 }
 
 export function renderFromQueue(force = false) {
-  console.log('QUEUE SIZE ', ART_SELECT_QUEUE.queue.length);
   if (!force) {
     const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
     if (artSelects.length !== 0) {
@@ -32,7 +34,6 @@ export function renderFromQueue(force = false) {
         $('button#token-variant-art-clear-queue')
           .html(`Clear Queue (${ART_SELECT_QUEUE.queue.length})`)
           .show();
-      console.log('I AM HERE');
       return;
     }
   }
@@ -66,8 +67,8 @@ export class ArtSelect extends FormApplication {
       {},
       {
         closeOnSubmit: false,
-        width: 500,
-        height: 500,
+        width: WIDTH,
+        height: HEIGHT,
         title: title,
       }
     );
@@ -171,6 +172,8 @@ export class ArtSelect extends FormApplication {
   }
 
   async close(options = {}) {
+    WIDTH = this.position.width;
+    HEIGHT = this.position.height;
     let callData = ART_SELECT_QUEUE.queue.shift();
     if (callData) {
       callData.options.force = true;
