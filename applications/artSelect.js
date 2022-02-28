@@ -43,28 +43,6 @@ export function renderFromQueue(force = false) {
   }
 }
 
-function getStartingWidth(allImages) {
-  let maxLength = 0;
-  if (allImages)
-    allImages.forEach((tokens, _) => {
-      if (maxLength < tokens.length) maxLength = tokens.length;
-    });
-  return maxLength < 4 ? 150 * maxLength + 400 : 550;
-}
-
-function getStartingHeight(allImages) {
-  let maxRows = 0;
-  let maxLength = 0;
-  if (allImages)
-    allImages.forEach((tokens, _) => {
-      maxRows++;
-      if (maxLength < tokens.length) maxLength = tokens.length;
-    });
-  if (maxRows > 2) return 500;
-  if (maxLength > 8) return 500;
-  return undefined;
-}
-
 export class ArtSelect extends FormApplication {
   constructor(
     search,
@@ -88,8 +66,8 @@ export class ArtSelect extends FormApplication {
       {},
       {
         closeOnSubmit: false,
-        width: getStartingWidth(allImages),
-        height: getStartingHeight(allImages),
+        width: 500,
+        height: 500,
         title: title,
       }
     );

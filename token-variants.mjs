@@ -357,10 +357,10 @@ async function registerWorldSettings() {
   });
 
   game.settings.registerMenu('token-variants', 'mapCompendium', {
-    name: 'Map Compendium Images',
-    hint: 'temp',
+    name: game.i18n.localize('token-variants.settings.compendium-mapper.Name'),
+    hint: game.i18n.localize('token-variants.settings.compendium-mapper.Hint'),
     scope: 'world',
-    icon: 'fas fa-exchange-alt',
+    icon: 'fas fa-cogs',
     type: CompendiumMapConfig,
     restricted: true,
   });

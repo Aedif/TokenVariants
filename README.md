@@ -55,6 +55,8 @@ This setting will only be available when running the game through Forge VTT and 
 
 !["Filter Settings"](./docs/filter_settings.png)
 
+_Example image setup for files labelled as so: Dragon_PRT.png, Dragon_TKN.png_
+
 There are 3 types of searches. Portrait, Token, and General (Token+Portrait). Each of these searches can be configured with filters to exclude files that include or exclude certain text, or match some regular expression.
 
 ### Randomizer Settings

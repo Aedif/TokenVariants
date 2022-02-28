@@ -58,13 +58,21 @@
   white-space: nowrap;
 }
 
-.token-variants-portrait-token > img {
-  /* height: 100px; */
-  max-width: 100px;
+.token-variants-portrait-token > div {
+  max-width: 80px;
   margin: auto;
   padding-bottom: 5px;
+  color: green;
+  font-weight: bold;
 }
 
-.token-variants-portrait-token > .image.active {
-  box-shadow: 0 0 8px rgba(230, 157, 0, 0.747);
+.token-variants-portrait-token > div > .image.active {
+  box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
 }
+
+/* .token-variants-banner {
+  position: sticky;
+  top: 0;
+  background-color: beige;
+
+} */

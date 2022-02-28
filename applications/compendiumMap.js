@@ -119,7 +119,7 @@ export default class CompendiumMapConfig extends FormApplication {
       template: 'modules/token-variants/templates/compendiumMap.html',
       resizable: false,
       minimizable: false,
-      title: 'Compendium Map',
+      title: game.i18n.localize('token-variants.settings.compendium-mapper.Name'),
       width: 500,
     });
   }
@@ -137,6 +137,21 @@ export default class CompendiumMapConfig extends FormApplication {
     data.incKeywords = game.settings.get('token-variants', 'keywordSearch');
 
     return data;
+  }
+
+  /**
+   * @param {JQuery} html
+   */
+  activateListeners(html) {
+    super.activateListeners(html);
+    html.find('.token-variants-auto-apply').change(this._onAutoApply);
+  }
+
+  async _onAutoApply(event) {
+    $(event.target)
+      .closest('form')
+      .find('.token-variants-auto-art-select')
+      .prop('disabled', !event.target.checked);
   }
 
   /**

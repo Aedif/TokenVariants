@@ -1,71 +1,82 @@
 <form>
-    <section class="search-paths-config">
+  <section class="search-paths-config">
+    {{#if forge}}
+    <h2 class="module-header">The Forge</h2>
+    <div class="form-group">
+      <label>API Secret Key</label>
+      <div class="form-fields">
+        <input type="text" name="apiKey" value="{{apiKey}}" data-dtype="String" />
+      </div>
+      <p class="notes">{{localize "token-variants.settings.forge-search-paths.window.Hint"}}</p>
+    </div>
+    {{/if}}
 
+    <ol class="table-paths">
+      <li class="table-path table-header flexrow">
+        <div class="path-image">
+          <a class="create-path" title="Add new path"><i class="fas fa-plus"></i></a>
+        </div>
+        <div class="path-text"><label>Path</label></div>
+        <div class="path-cache"><label>Cache</label></div>
         {{#if forge}}
-            <h2 class="module-header">The Forge</h2>
-            <div class="form-group">
-                <label>API Secret Key</label>
-                <div class="form-fields">
-                    <input type="text" name="apiKey" value="{{apiKey}}" data-dtype="String">
-                </div>
-                <p class="notes">{{localize "token-variants.settings.forge-search-paths.window.Hint"}}</p>
-            </div>
+        <div class="path-share"><label>Share</label></div>
         {{/if}}
+        <div class="path-controls"></div>
+      </li>
 
-        <ol class="table-paths">
-            <li class="table-path table-header flexrow">
-                <div class="path-image"><a class="create-path" title="Add new path"><i class="fas fa-plus"></i></a></div>
-                <div class="path-text"><label>Path</label></div>
-                <div class="path-cache"><label>Cache</label></div>
-            {{#if forge}}
-                <div class="path-share"><label>Share</label></div>
-            {{/if}}
-                <div class="path-controls"></div>
-            </li>
-
-        {{#each paths as |path index|}}
-            <li class="table-path flexrow" data-index="{{index}}" >
-                <div class="path-image">
-                {{#if (eq path.type "local")}}
-                    <i class="fas fa-folder"></i>
-                {{/if}}
-                {{#if (eq path.type "s3")}}
-                    <i class="fas fa-database"></i>
-                {{/if}}
-                {{#if (eq path.type "forge")}}
-                    <i class="fas fa-hammer"></i>
-                {{/if}}
-                {{#if (eq path.type "rolltable")}}
-                    <i class="fas fa-dice"></i>
-                {{/if}}
-                {{#if (eq path.type "imgur")}}
-                    <i class="fas fa-info"></i>
-                {{/if}}
-                </div>
-                <div class="path-text"><input type="text" name="paths.{{index}}.text" value="{{path.text}}" placeholder="Path to image source"></div>
-                <div class="imgur-control {{#if (eq path.type 'imgur')}}active{{/if}}">
-                    <a class="convert-imgur" title="Convert to Rolltable"><i class="fas fa-angle-double-left"></i></a>
-                </div>
-                <div class="path-cache"><input type="checkbox" name="paths.{{index}}.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/></div>
-            {{#if ../forge}}
-                <div class="path-share"><input type="checkbox" name="paths.{{index}}.share" data-dtype="Boolean" {{#if path.share}}checked{{/if}}/></div>
-            {{/if}}
-                <div class="path-controls">
-                    <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
-                </div>
-            </li>
-        {{/each}}
-        </ol>
-    </section>
-    <footer class="sheet-footer flexrow">
-        <p class="notes"><b>Formats:</b><br>
-            path/to/token/art<br>
-        {{#unless forge}}
-            s3:my_bucket:token/art/folder<br>
-            rolltable:rolltableName<br>
-            forgevtt:folder/in/my/asset/library/<br>
-        {{/unless}}
-            imgur:galleryId
-        </p>
-    </footer>
+      {{#each paths as |path index|}}
+      <li class="table-path flexrow" data-index="{{index}}">
+        <div class="path-image">
+          {{#if (eq path.type "local")}}
+          <i class="fas fa-folder"></i>
+          {{/if}} {{#if (eq path.type "s3")}}
+          <i class="fas fa-database"></i>
+          {{/if}} {{#if (eq path.type "forge")}}
+          <i class="fas fa-hammer"></i>
+          {{/if}} {{#if (eq path.type "rolltable")}}
+          <i class="fas fa-dice"></i>
+          {{/if}} {{#if (eq path.type "imgur")}}
+          <i class="fas fa-info"></i>
+          {{/if}}
+        </div>
+        <div class="path-text">
+          <input
+            type="text"
+            name="paths.{{index}}.text"
+            value="{{path.text}}"
+            placeholder="Path to image source"
+          />
+        </div>
+        <div class="imgur-control {{#if (eq path.type 'imgur')}}active{{/if}}">
+          <a class="convert-imgur" title="Convert to Rolltable"
+            ><i class="fas fa-angle-double-left"></i
+          ></a>
+        </div>
+        <div class="path-cache">
+          <input type="checkbox" name="paths.{{index}}.cache" data-dtype="Boolean" {{#if
+          path.cache}}checked{{/if}}/>
+        </div>
+        {{#if ../forge}}
+        <div class="path-share">
+          <input type="checkbox" name="paths.{{index}}.share" data-dtype="Boolean" {{#if
+          path.share}}checked{{/if}}/>
+        </div>
+        {{/if}}
+        <div class="path-controls">
+          <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
+        </div>
+      </li>
+      {{/each}}
+    </ol>
+  </section>
+  <footer class="sheet-footer flexrow">
+    <p class="notes">
+      <b>Formats:</b><br />
+      path/to/token/art<br />
+      {{#unless forge}} s3:my_bucket:token/art/folder/<br />
+      rolltable:rolltableName<br />
+      forgevtt:folder/in/my/asset/library/<br />
+      {{/unless}} imgur:galleryId
+    </p>
+  </footer>
 </form>

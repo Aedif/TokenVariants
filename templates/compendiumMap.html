@@ -8,26 +8,28 @@
         {{/each}}
       </select>
     </div>
-    <p class="notes">Select from the list of unlocked Actor compendiums</p>
+    <p class="notes">
+      {{localize "token-variants.settings.compendium-mapper.window.compendium-select"}}
+    </p>
   </div>
 
   <div class="form-group">
-    <label>Only include actors with missing images</label>
+    <label>{{localize "token-variants.settings.compendium-mapper.window.missing-only"}}</label>
     <input type="checkbox" name="missingOnly" data-dtype="Boolean" />
   </div>
 
   <div class="form-group">
-    <label>Apply different images for Portrait and Token</label>
+    <label>{{localize "token-variants.settings.compendium-mapper.window.diff-images"}}</label>
     <input type="checkbox" name="diffImages" data-dtype="Boolean" />
   </div>
 
   <div class="form-group">
-    <label>Show current portrait/token image in the 'Art Select' window</label>
+    <label>{{localize "token-variants.settings.compendium-mapper.window.show-images"}}</label>
     <input type="checkbox" name="showImages" data-dtype="Boolean" checked />
   </div>
 
   <div class="form-group">
-    <label>Include keywords in the search</label>
+    <label>{{localize "token-variants.settings.compendium-mapper.window.include-keywords"}}</label>
     <input type="checkbox" name="incKeywords" data-dtype="Boolean" {{#if incKeywords}}checked{{/if}}
     />
   </div>
@@ -35,16 +37,29 @@
   <h2>Automation</h2>
 
   <div class="form-group">
-    <label>Auto-apply the first found image</label>
-    <input type="checkbox" name="autoApply" data-dtype="Boolean" />
+    <label>{{localize "token-variants.settings.compendium-mapper.window.auto-apply"}}</label>
+    <input
+      class="token-variants-auto-apply"
+      type="checkbox"
+      name="autoApply"
+      data-dtype="Boolean"
+    />
   </div>
 
   <div class="form-group">
-    <label>Display 'Art Select' if no image found</label>
-    <input type="checkbox" name="autoDisplayArtSelect" data-dtype="Boolean" />
+    <label>{{localize "token-variants.settings.compendium-mapper.window.auto-art-select"}}</label>
+    <input
+      class="token-variants-auto-art-select"
+      type="checkbox"
+      name="autoDisplayArtSelect"
+      data-dtype="Boolean"
+      disabled
+    />
   </div>
 
   <footer class="sheet-footer flexrow">
-    <button type="submit"><i class="far fa-save"></i>Start</button>
+    <button type="submit">
+      <i class="fas fa-cogs"></i>{{localize "token-variants.common.start"}}
+    </button>
   </footer>
 </form>

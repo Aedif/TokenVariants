@@ -1,15 +1,17 @@
 <form>
-  {{#if image1}}
-  <div class="token-variants-portrait-token form-group">
-    <img class="image {{#if image1_active}}active{{/if}}" src="{{image1}}" title="Portrait" alt="" width="100" height="100"></img>
-    <img class="image {{#if image2_active}}active{{/if}}" src="{{image2}}" title="Token" alt="" width="100" height="100"></img>
-  </div>
-  {{/if}}
-  <div class="form-group">
-    <input type="text" id="custom-art-search" name="search" value="{{search}}" />
-    <button type="button" id="custom-art-search-bt">Search</button>
-    <button type="button" id="token-variant-art-clear-queue" {{#unless queue}}hidden{{/unless}}>Clear Queue ({{queue}})</button>
-  </div>
+  <div class="token-variants-banner">
+    {{#if image1}}
+    <div class="token-variants-portrait-token form-group">
+      <div>Portrait<img class="image {{#if image1_active}}active{{/if}}" src="{{image1}}" title="Portrait" alt="" width="80" height="80"></img></div>
+      <div>Token<img class="image {{#if image2_active}}active{{/if}}" src="{{image2}}" title="Token" alt="" width="80" height="80"></img></div>
+    </div>
+    {{/if}}
+    <div class="form-group">
+      <input type="text" id="custom-art-search" name="search" value="{{search}}" />
+      <button type="button" id="custom-art-search-bt">Search</button>
+      <button type="button" id="token-variant-art-clear-queue" {{#unless queue}}hidden{{/unless}}>Clear Queue ({{queue}})</button>
+    </div>
+</div>
   {{#if allImages}} {{#each allImages as |search index|}}
   <div>
     <h2><b>{{search.[0]}}</b></h2>

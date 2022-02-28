@@ -37,7 +37,7 @@
           "portrait-image-on-actor-create": "Portrait image on Actor Create",
           "token-image-on-token-create": "Token image on Token Create",
           "token-image-on-token-copy-paste": "Token image on Token copy+paste",
-          "search-types-heading": "Select which searches are to be included in the randomizer",
+          "search-types-heading": "Searches to be included in the randomizer",
           "disable-for": "Disable for",
           "tokens-with-represented-actor": "Tokens with Represented Actor",
           "tokens-with-linked-actor-data": "Tokens with Linked Actor Data",
@@ -131,6 +131,19 @@
       "status-config": {
         "Name": "Enable Status Config",
         "Hint": "Enables image mappings to status effects, visibility and combat states."
+      },
+      "compendium-mapper": {
+        "Name": "Compendium Mapper",
+        "Hint": "Apply images to Actor compendiums",
+        "window": {
+          "compendium-select": "Select an unlocked Actor compendium to perform mappings on",
+          "missing-only": "Only include actors with missing images",
+          "diff-images": "Apply different images for Portrait and Token",
+          "show-images": "Show current portrait/token image in the 'Art Select' window",
+          "include-keywords": "Include keywords in the search",
+          "auto-apply": "Auto-apply the first found image",
+          "auto-art-select": "Display 'Art Select' if no image found"
+        }
       }
     },
     "common": {
@@ -142,7 +155,8 @@
       "shared": "Shared",
       "apply": "Apply",
       "priority": "Priority",
-      "remove": "Remove"
+      "remove": "Remove",
+      "start": "Start"
     },
     "windows": {
       "art-select": {
