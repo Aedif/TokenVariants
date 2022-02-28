@@ -4,11 +4,26 @@
 
 # Token Variant Art
 
-This module searches a customisable list of directories and displays art variants for tokens/actors through pop-ups and a new Token HUD button. Variants can be individually shared with players allowing them to switch out their token art on the fly.
+Improve management of Token art in-session and during prep.
+
+This module searches a customisable list of directories and makes found art available through vairous convenient means such as pop-ups and a new Token HUD button.
+
+Main features include:
+
+- Sourcing images from local folders, rolltables, Imgur galleries, and s3 buckets
+- Pop-ups on Actor/Token create to select images found based on Actor/Token name
+- Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
+- Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRD].png
+- Wildcard images shown in the Token HUD
+- Aided and/or automatic mapping of images to actor compendiums
+- Assigning art to status effects and Visibility/Combat states, updating tokens once conditions such as 'Dead' and 'Paralysis' have been applied
+- Assigning custom token configuration (token scale, vision, name etc.) to images which are applied upon image selection through the Token HUD
+
+The comprehensive list of settings is available bellow.
 
 https://user-images.githubusercontent.com/7693704/121926941-69aff780-cd36-11eb-864b-b2a9640baeea.mp4
 
-The search is done using the Actor's name, and will ignore special characters, case, or spaces in the files
+The searches are done using the Actor's or Token's name, and will ignore special characters, case, or spaces in the files
 
 e.g.
 
