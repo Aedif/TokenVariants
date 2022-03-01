@@ -44,7 +44,7 @@
           "pop-up-if-randomization-disabled": "Show Art Select pop-up if randomization is disabled",
           "token-to-portrait": "Apply Token image to Portrait",
           "different-images": "Different images for Portrait and Token",
-          "sync-images": "Sync Portrait and Token based on name % similarity"
+          "sync-images": "Sync Portrait and Token based on image name similarity"
         }
       },
       "pop-up": {

@@ -1410,7 +1410,6 @@ async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, ac
   });
 
   if (mostSimilar.imgName) {
-    console.log('Similarity: ', mostSimilar.similarity);
     return [mostSimilar.imgSrc, mostSimilar.imgName];
   }
 

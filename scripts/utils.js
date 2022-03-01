@@ -1,4 +1,4 @@
-const simplifyRegex = new RegExp(/[^A-Za-z0-9/]/g);
+const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
 // Types of searches
 export const SEARCH_TYPE = {

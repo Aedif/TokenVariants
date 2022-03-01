@@ -1,3 +1,15 @@
+# 1.27.1
+
+- New Randomizer setting: **Apply Token image to Portrait**
+  - Applies the random image generated on Token Create/Copy-paste to the Portrait
+- New Randomizer setting: **Different images for Portrait and Token**
+  - Randomizes Portrait and Token images separately
+- New Randomizer setting: **Sync Portrait and Token based on image name similarity**
+  - Available if **Different images for Portrait and Token** is enabled
+  - Portrait/Token image will be randomly applied and then another search performed to find a counterpart image with a similar name
+  - Useful if you have a setup such as **Orc_1.png** and **Orc_1\[Portrait\].png** and use the modules 'Filter' settings to distinguish between Token and Portrait images
+  - **Orc_4.png** will be matched with **Orc_4\[Portrait\].png**, **Orc_3.png** with **Orc_3\[Portrait\].png** etc.
+
 # 1.26.1
 
 - **Compendium Mapper** setting menu added
