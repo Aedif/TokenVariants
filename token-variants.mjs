@@ -19,6 +19,7 @@ import {
   keyPressed,
   registerKeybinds,
   updateActorImage,
+  stringSimilarity,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import CompendiumMapConfig from './applications/compendiumMap.js';
@@ -300,6 +301,8 @@ async function registerWorldSettings() {
       representedActorDisable: false,
       linkedActorDisable: true,
       popupOnDisable: false,
+      diffImages: false,
+      syncImages: false,
     },
   });
 
@@ -689,7 +692,6 @@ async function initialize() {
       if (userId && game.user.id != userId) return;
 
       // Check if random search is enabled and if so perform it
-
       const randSettings = game.settings.get('token-variants', 'randomizerSettings');
       if (randSettings.actorCreate) {
         let performRandomSearch = true;
@@ -698,14 +700,33 @@ async function initialize() {
         if (disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
 
         if (performRandomSearch) {
-          doRandomSearch(actor.data.name, {
+          const img = await doRandomSearch(actor.data.name, {
             searchType: SEARCH_TYPE.PORTRAIT,
             actor: actor,
-            callback: (imgSrc, name) =>
-              updateActorImage(actor, imgSrc, {
-                imgName: name,
-              }),
           });
+          if (img) {
+            await updateActorImage(actor, img[0], { imgName: img[1] });
+          }
+
+          if (!img) return;
+
+          if (randSettings.diffImages) {
+            let imgToken;
+            if (randSettings.syncImages) {
+              imgToken = await doSyncSearch(actor.data.name, img[1], { actor: actor });
+            } else {
+              imgToken = await doRandomSearch(actor.data.name, {
+                searchType: SEARCH_TYPE.TOKEN,
+                actor: actor,
+              });
+            }
+
+            if (imgToken) {
+              await updateTokenImage(imgToken[0], { actor: actor, imgName: imgToken[1] });
+            }
+          } else if (randSettings.portraitToToken) {
+            await updateTokenImage(img[0], { actor: actor, imgName: img[1] });
+          }
           return;
         }
         if (!randSettings.popupOnDisable) {
@@ -767,12 +788,6 @@ async function initialize() {
           actor: token.actor,
           imgName: name,
         });
-      const updateActorCallback = (imgSrc, name) =>
-        updateActorImage(token.actor, imgSrc, {
-          updateActorOnly: false,
-          imgName: name,
-          token: token,
-        });
 
       // Check if random search is enabled and if so perform it
 
@@ -786,11 +801,40 @@ async function initialize() {
         if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
 
         if (performRandomSearch) {
-          doRandomSearch(token.data.name, {
+          const img = await doRandomSearch(token.data.name, {
             searchType: SEARCH_TYPE.TOKEN,
             actor: token.actor,
-            callback: updateTokenCallback,
           });
+          if (img) {
+            await updateTokenImage(img[0], {
+              token: token,
+              actor: token.actor,
+              imgName: img[1],
+            });
+          }
+
+          if (!img) return;
+
+          if (randSettings.diffImages) {
+            let imgPortrait;
+            if (randSettings.syncImages) {
+              imgPortrait = await doSyncSearch(token.data.name, img[1], {
+                actor: token.actor,
+                searchType: SEARCH_TYPE.PORTRAIT,
+              });
+            } else {
+              imgPortrait = await doRandomSearch(token.data.name, {
+                searchType: SEARCH_TYPE.PORTRAIT,
+                actor: token.actor,
+              });
+            }
+
+            if (imgPortrait) {
+              await updateActorImage(token.actor, imgPortrait[0]);
+            }
+          } else if (randSettings.tokenToPortrait) {
+            await updateActorImage(token.actor, img[0]);
+          }
           return;
         }
         if (!randSettings.popupOnDisable) {
@@ -1321,20 +1365,7 @@ async function displayArtSelect(search, callback, searchType = SEARCH_TYPE.BOTH,
   });
 }
 
-/**
- * @param {*} search Text to be used as the search criteria
- * @param {object} [options={}] Options which customize the search
- * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
- * @param {Actor} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
- * @param {Function[]} [options.callback] Function to be called with the random image
- * @returns Array<string>|null} Image path and name
- */
-async function doRandomSearch(
-  search,
-  { searchType = SEARCH_TYPE.BOTH, actor = null, callback = null } = {}
-) {
-  if (caching) return null;
-
+async function _randSearchUtil(search, { searchType = SEARCH_TYPE.BOTH, actor = null } = {}) {
   const randSettings = game.settings.get('token-variants', 'randomizerSettings');
   if (!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return null;
 
@@ -1356,6 +1387,52 @@ async function doRandomSearch(
       results.set('variants95436723', new Map(sharedVariants.map((v) => [v.imgSrc, v.names])));
     }
   }
+
+  return results;
+}
+
+async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, actor = null } = {}) {
+  if (caching) return null;
+  const results = await _randSearchUtil(search, { searchType: searchType, actor: actor });
+  if (!results) return results;
+
+  // Find image with the name most similar to target
+  let mostSimilar = { imgSrc: '', imgName: '', similarity: 0.0 };
+  results.forEach((images, _) => {
+    images.forEach((imgNames, imgSrc) => {
+      for (const name of imgNames) {
+        const similarity = stringSimilarity(name, target);
+        if (mostSimilar.similarity < similarity) {
+          mostSimilar = { imgSrc: imgSrc, imgName: name, similarity: similarity };
+        }
+      }
+    });
+  });
+
+  if (mostSimilar.imgName) {
+    console.log('Similarity: ', mostSimilar.similarity);
+    return [mostSimilar.imgSrc, mostSimilar.imgName];
+  }
+
+  return null;
+}
+
+/**
+ * @param {*} search Text to be used as the search criteria
+ * @param {object} [options={}] Options which customize the search
+ * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
+ * @param {Actor} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
+ * @param {Function[]} [options.callback] Function to be called with the random image
+ * @returns Array<string>|null} Image path and name
+ */
+async function doRandomSearch(
+  search,
+  { searchType = SEARCH_TYPE.BOTH, actor = null, callback = null } = {}
+) {
+  if (caching) return null;
+
+  const results = await _randSearchUtil(search, { searchType: searchType, actor: actor });
+  if (!results) return results;
 
   // Pick random image
   let total = 0;

@@ -2,30 +2,54 @@
   <h2>{{localize "token-variants.common.randomize"}}</h2>
 
   <div class="form-group">
-    <label
-      >&nbsp;&nbsp;&nbsp;&nbsp;{{localize
-      "token-variants.settings.randomizer.window.portrait-image-on-actor-create"}}</label
-    >
+    <label>
+      {{localize "token-variants.settings.randomizer.window.portrait-image-on-actor-create"}}
+    </label>
     <input type="checkbox" name="actorCreate" data-dtype="Boolean" {{#if
     actorCreate}}checked{{/if}}>
   </div>
 
+  <hr />
+
   <div class="form-group">
-    <label
-      >&nbsp;&nbsp;&nbsp;&nbsp;{{localize
-      "token-variants.settings.randomizer.window.token-image-on-token-create"}}</label
-    >
+    <label>
+      {{localize "token-variants.settings.randomizer.window.token-image-on-token-create"}}
+    </label>
     <input type="checkbox" name="tokenCreate" data-dtype="Boolean" {{#if
     tokenCreate}}checked{{/if}}>
   </div>
 
   <div class="form-group">
-    <label
-      >&nbsp;&nbsp;&nbsp;&nbsp;{{localize
-      "token-variants.settings.randomizer.window.token-image-on-token-copy-paste"}}</label
-    >
+    <label>
+      {{localize "token-variants.settings.randomizer.window.token-image-on-token-copy-paste"}}
+    </label>
     <input type="checkbox" name="tokenCopyPaste" data-dtype="Boolean" {{#if
     tokenCopyPaste}}checked{{/if}}>
+  </div>
+
+  <div class="form-group">
+    <label
+      >&nbsp;&nbsp;&nbsp;&nbsp; {{localize
+      "token-variants.settings.randomizer.window.token-to-portrait"}}</label
+    >
+    <input type="checkbox" name="tokenToPortrait" data-dtype="Boolean" {{#if
+    tokenToPortrait}}checked{{/if}} {{#if tokenToPortraitDisabled}}disabled{{/if}}>
+  </div>
+
+  <hr />
+
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.randomizer.window.different-images"}}</label>
+    <input type="checkbox" name="diffImages" data-dtype="Boolean" {{#if diffImages}}checked{{/if}}>
+  </div>
+
+  <div class="form-group">
+    <label
+      >&nbsp;&nbsp;&nbsp;&nbsp; {{localize
+      "token-variants.settings.randomizer.window.sync-images"}}</label
+    >
+    <input type="checkbox" name="syncImages" data-dtype="Boolean" {{#if syncImages}}checked{{/if}}
+    {{#unless diffImages}}disabled{{/unless}}>
   </div>
 
   <h2>{{localize "token-variants.settings.randomizer.window.search-types-heading"}}</h2>
