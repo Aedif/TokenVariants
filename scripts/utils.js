@@ -62,6 +62,7 @@ export function stringSimilarity(s1, s2) {
  * Assign new artwork to the actor
  */
 export async function updateActorImage(actor, imgSrc) {
+  if (!actor) return;
   await (actor.document ?? actor).update({
     img: imgSrc,
   });
@@ -235,10 +236,9 @@ export async function parseSearchPaths(debug = false) {
   const searchPathList = (game.settings.get('token-variants', 'searchPaths') || []).flat();
 
   // To maintain compatibility with previous versions
-  const defaultCaching = !game.settings.get('token-variants', 'disableCaching');
   if (searchPathList.length > 0 && !(searchPathList[0] instanceof Object)) {
     searchPathList.forEach((path, i) => {
-      searchPathList[i] = { text: path, cache: defaultCaching };
+      searchPathList[i] = { text: path, cache: true };
     });
   }
   // end of compatibility code
@@ -328,7 +328,7 @@ export async function parseSearchPaths(debug = false) {
   // To maintain compatibility with previous versions
   if (forgePathsSetting.length > 0 && !(forgePathsSetting[0] instanceof Object)) {
     forgePathsSetting.forEach((path, i) => {
-      forgePathsSetting[i] = { text: path, cache: defaultCaching };
+      forgePathsSetting[i] = { text: path, cache: true };
     });
   }
   // end of compatibility code

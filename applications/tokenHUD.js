@@ -1,18 +1,19 @@
-import { getFileName, isImage, isVideo, SEARCH_TYPE, keyPressed } from '../scripts/utils.js';
+import {
+  getFileName,
+  isImage,
+  isVideo,
+  SEARCH_TYPE,
+  keyPressed,
+  updateActorImage,
+} from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import ActiveEffectConfig from './activeEffectConfig.js';
+import { doImageSearch, updateTokenImage } from '../token-variants.mjs';
 
 // not call if still caching
-export async function renderHud(
-  hud,
-  html,
-  token,
-  searchText,
-  doImageSearch,
-  updateTokenImage,
-  updateActorImage
-) {
+export async function renderHud(hud, html, token, searchText = '') {
   const hudSettings = game.settings.get('token-variants', 'hudSettings');
+  const worldHudSettings = game.settings.get('token-variants', 'worldHudSettings');
 
   if (game.settings.get('token-variants', 'enableStatusConfig') && token.actorId) {
     $('.control-icon[data-action="visibility"]')
@@ -63,8 +64,7 @@ export async function renderHud(
   if (!hudSettings.enableSideMenu) return;
 
   const tokenActor = game.actors.get(token.actorId);
-  const disableIfTHW = game.settings.get('token-variants', 'disableSideMenuIfTHW');
-  if (disableIfTHW && game.modules.get('token-hud-wildcard')?.active) {
+  if (worldHudSettings.disableIfTHWEnabled && game.modules.get('token-hud-wildcard')?.active) {
     if (tokenActor && tokenActor.data.token.randomImg) return;
   }
 
@@ -73,16 +73,28 @@ export async function renderHud(
 
   const userHasConfigRights =
     game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE');
-  const sharedOnly = game.settings.get('token-variants', 'displayOnlySharedImages');
 
   let artSearch =
-    !searchText && sharedOnly
+    !searchText && worldHudSettings.displayOnlySharedImages
       ? null
       : await doImageSearch(search, {
           searchType: SEARCH_TYPE.TOKEN,
-          ignoreKeywords: true,
+          ignoreKeywords: !worldHudSettings.includeKeywords,
         });
-  let images = artSearch ? artSearch.get(search) : new Map();
+
+  // Merge full search, and keywords into a single map
+  let images = new Map();
+  if (artSearch) {
+    artSearch.forEach((result, _) => {
+      result.forEach((names, imgSrc) => {
+        if (images.has(imgSrc)) {
+          images.set(imgSrc, images.get(imgSrc).concat(names));
+        } else {
+          images.set(imgSrc, names);
+        }
+      });
+    });
+  }
 
   let actorVariants = new Map();
 
@@ -116,16 +128,17 @@ export async function renderHud(
       mergeImages(actorVariants);
 
       // Merge wildcard images
-      if (hudSettings.includeWildcard) {
+      if (hudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
         const wildcardImages = (await tokenActor.getTokenImages()).map((variant) => {
           return { imgSrc: variant, names: [getFileName(variant)] };
         });
+        console.log(wildcardImages);
         mergeImages(wildcardImages);
       }
     }
   }
 
-  if (!hudSettings.alwaysShowButton && images.size == 0 && actorVariants.length == 0) return;
+  if (!hudSettings.alwaysShowButton && !images.size && !actorVariants.length) return;
 
   // Retrieving the possibly custom name attached as a flag to the token
   let tokenImageName = '';
@@ -182,22 +195,10 @@ export async function renderHud(
   // Activate listeners
   divR.find('#token-variants-side-button').click(_onSideButtonClick);
   divR.click(_deactiveTokenVariantsSideSelector);
-  divR
-    .find('.token-variants-button-select')
-    .click((event) => _onImageClick(event, token._id, updateTokenImage, updateActorImage));
+  divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));
   divR
     .find('.token-variants-side-search')
-    .on('keyup', (event) =>
-      _onImageSearchKeyUp(
-        event,
-        hud,
-        html,
-        token,
-        doImageSearch,
-        updateTokenImage,
-        updateActorImage
-      )
-    );
+    .on('keyup', (event) => _onImageSearchKeyUp(event, hud, html, token));
   if (userHasConfigRights) {
     divR.find('#token-variants-side-button').on('contextmenu', _onSideButtonRightClick);
     divR
@@ -275,7 +276,7 @@ function _deactiveTokenVariantsSideSelector(event) {
   $(event.target).closest('div.right').find('.token-variants-wrap').removeClass('active');
 }
 
-async function _onImageClick(event, tokenId, updateTokenImage, updateActorImage) {
+async function _onImageClick(event, tokenId) {
   event.preventDefault();
   event.stopPropagation();
 
@@ -371,30 +372,14 @@ function _onImageRightClick(event, tokenId) {
   }
 }
 
-function _onImageSearchKeyUp(
-  event,
-  hud,
-  html,
-  tokenData,
-  doImageSearch,
-  updateTokenImage,
-  updateActorImage
-) {
+function _onImageSearchKeyUp(event, hud, html, tokenData) {
   event.preventDefault();
   event.stopPropagation();
   if (event.key === 'Enter' || event.keyCode === 13) {
     if (event.target.value.length >= 3) {
       $(event.target).closest('.control-icon[data-action="token-variants-side-selector"]').remove();
       html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
-      renderHud(
-        hud,
-        html,
-        tokenData,
-        event.target.value,
-        doImageSearch,
-        updateTokenImage,
-        updateActorImage
-      );
+      renderHud(hud, html, tokenData, event.target.value);
     }
   }
 }

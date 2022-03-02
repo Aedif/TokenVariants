@@ -114,45 +114,38 @@ async function registerWorldSettings() {
     },
   });
 
-  // World level Token HUD setting
+  // World level Token HUD setting, Deprecated
   game.settings.register('token-variants', 'enableTokenHUDButtonForAll', {
     scope: 'world',
     type: Boolean,
     default: false,
   });
 
-  // World level Token HUD setting
+  // World level Token HUD setting, Deprecated
   game.settings.register('token-variants', 'displayOnlySharedImages', {
     scope: 'world',
     type: Boolean,
     default: false,
   });
 
-  // World level Token HUD setting
+  // World level Token HUD setting, Deprecated
   game.settings.register('token-variants', 'disableSideMenuIfTHW', {
     scope: 'world',
     type: Boolean,
     default: false,
   });
 
-  // Deprecated, caching is now controlled on per image source basis
-  game.settings.register('token-variants', 'disableCaching', {
+  // World level Token HUD setting
+  game.settings.register('token-variants', 'worldHudSettings', {
     scope: 'world',
-    type: Boolean,
-    default: false,
-  });
-
-  // Deprecated
-  game.settings.register('token-variants', 'disableAutomaticPopup', {
-    scope: 'world',
-    type: Boolean,
-    default: false,
-  });
-
-  // Deprecated
-  game.settings.register('token-variants', 'filterMSRD', {
-    scope: 'world',
-    type: Boolean,
+    config: false,
+    type: Object,
+    default: {
+      enableButtonForAll: game.settings.get('token-variants', 'enableTokenHUDButtonForAll'),
+      displayOnlySharedImages: game.settings.get('token-variants', 'displayOnlySharedImages'),
+      disableIfTHWEnabled: game.settings.get('token-variants', 'disableSideMenuIfTHW'),
+      includeKeywords: false,
+    },
   });
 
   game.settings.register('token-variants', 'keywordSearch', {
@@ -190,20 +183,6 @@ async function registerWorldSettings() {
       default: 'Control',
     });
   }
-
-  // Deprecated
-  game.settings.register('token-variants', 'twoPopups', {
-    scope: 'world',
-    type: Boolean,
-    default: false,
-  });
-
-  // Deprecated
-  game.settings.register('token-variants', 'twoPopupsNoDialog', {
-    scope: 'world',
-    type: Boolean,
-    default: false,
-  });
 
   game.settings.register('token-variants', 'runSearchOnPath', {
     name: game.i18n.localize('token-variants.settings.run-search-on-path.Name'),
@@ -271,13 +250,6 @@ async function registerWorldSettings() {
     default: [],
   });
 
-  // Deprecated
-  game.settings.register('token-variants', 'disableActorPortraitArtSelect', {
-    scope: 'world',
-    type: Boolean,
-    default: false,
-  });
-
   game.settings.registerMenu('token-variants', 'randomizerMenu', {
     name: game.i18n.localize('token-variants.settings.randomizer.Name'),
     hint: game.i18n.localize('token-variants.settings.randomizer.Hint'),
@@ -320,18 +292,12 @@ async function registerWorldSettings() {
     config: false,
     type: Object,
     default: {
-      disableAutoPopupOnActorCreate: game.settings.get('token-variants', 'disableAutomaticPopup'),
-      disableAutoPopupOnTokenCreate: game.settings.get('token-variants', 'disableAutomaticPopup'),
-      disableAutoPopupOnTokenCopyPaste: game.settings.get(
-        'token-variants',
-        'disableAutomaticPopup'
-      ),
-      twoPopups: game.settings.get('token-variants', 'twoPopups'),
-      twoPopupsNoDialog: game.settings.get('token-variants', 'twoPopupsNoDialog'),
-      disableActorPortraitArtSelect: game.settings.get(
-        'token-variants',
-        'disableActorPortraitArtSelect'
-      ),
+      disableAutoPopupOnActorCreate: false,
+      disableAutoPopupOnTokenCreate: false,
+      disableAutoPopupOnTokenCopyPaste: false,
+      twoPopups: false,
+      twoPopupsNoDialog: false,
+      disableActorPortraitArtSelect: false,
     },
     onChange: (settings) => {
       twoPopups = settings.twoPopups;
@@ -420,63 +386,21 @@ function registerHUD() {
     restricted: false,
   });
 
-  // Deprecated
-  game.settings.register('token-variants', 'enableTokenHUD', {
-    scope: 'client',
-    config: false,
-    type: Boolean,
-    default: true,
-  });
-
-  // Deprecated
-  game.settings.register('token-variants', 'alwaysShowHUD', {
-    scope: 'client',
-    config: false,
-    type: Boolean,
-    default: false,
-  });
-
-  // Deprecated
-  game.settings.register('token-variants', 'HUDDisplayImage', {
-    scope: 'client',
-    config: false,
-    type: Boolean,
-    default: true,
-  });
-
-  // Deprecated
-  game.settings.register('token-variants', 'HUDImageOpacity', {
-    scope: 'client',
-    config: false,
-    range: {
-      min: 0,
-      max: 100,
-      step: 1,
-    },
-    type: Number,
-    default: 50,
-  });
-
   game.settings.register('token-variants', 'hudSettings', {
     scope: 'client',
     config: false,
     type: Object,
     default: {
-      enableSideMenu: game.settings.get('token-variants', 'enableTokenHUD'),
-      displayAsImage: game.settings.get('token-variants', 'HUDDisplayImage'),
-      imageOpacity: game.settings.get('token-variants', 'HUDImageOpacity'),
-      alwaysShowButton: game.settings.get('token-variants', 'alwaysShowHUD'),
+      enableSideMenu: true,
+      displayAsImage: true,
+      imageOpacity: 50,
+      alwaysShowButton: false,
       updateActorImage: false,
       includeWildcard: true,
     },
   });
 
-  async function renderHudButton(hud, html, token) {
-    renderHud(hud, html, token, '', doImageSearch, updateTokenImage, updateActorImage);
-  }
-
-  // Incorporating 'FVTT-TokenHUDWildcard' token hud button
-  Hooks.on('renderTokenHUD', renderHudButton);
+  Hooks.on('renderTokenHUD', renderHud);
 }
 
 /**
@@ -884,7 +808,7 @@ async function initialize() {
     Hooks.on('renderTokenConfig', modTokenConfig);
     Hooks.on('renderActorSheet', modActorSheet);
     await cacheTokens();
-  } else if (game.settings.get('token-variants', 'enableTokenHUDButtonForAll')) {
+  } else if ((game.settings.get('token-variants', 'worldHudSettings') ?? {}).enableButtonForAll) {
     await cacheTokens();
   }
   registerHUD();

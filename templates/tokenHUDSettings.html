@@ -1,85 +1,134 @@
 <form>
-    <div class="form-group">
-        <label>{{localize "token-variants.settings.token-hud.window.enable-token-hud.Name"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" name="enableSideMenu" data-dtype="Boolean" {{#if enableSideMenu}}checked{{/if}}>
-        </div>
-        <p class="notes">{{localize "token-variants.settings.token-hud.window.enable-token-hud.Hint"}}</p>
+  <h2>Client Settings</h2>
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.token-hud.window.enable-token-hud.Name"}}</label>
+    <div class="form-fields">
+      <input type="checkbox" name="enableSideMenu" data-dtype="Boolean" {{#if
+      enableSideMenu}}checked{{/if}}>
     </div>
+    <p class="notes">
+      {{localize "token-variants.settings.token-hud.window.enable-token-hud.Hint"}}
+    </p>
+  </div>
 
-    {{#if enableWorldSettings}}
-        <div class="form-group">
-            <label>{{localize "token-variants.settings.token-hud.window.enable-token-hud-for-all.Name"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" name="enableSideMenuForAll" data-dtype="Boolean" {{#if enableSideMenuForAll}}checked{{/if}}>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.token-hud.window.enable-token-hud-for-all.Hint"}}</p>
-        </div>
-
-        <div class="form-group">
-            <label>{{localize "token-variants.settings.token-hud.window.display-shared-only.Name"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" name="displaySharedOnly" data-dtype="Boolean" {{#if displaySharedOnly}}checked{{/if}}>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.token-hud.window.display-shared-only.Hint"}}</p>
-        </div>
-    {{/if}}
-
-    <div class="form-group">
-        <label>{{localize "token-variants.settings.token-hud.window.always-show.Name"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" name="alwaysShowButton" data-dtype="Boolean" {{#if alwaysShowButton}}checked{{/if}}>
-        </div>
-        <p class="notes">{{localize "token-variants.settings.token-hud.window.always-show.Hint"}}</p>
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.token-hud.window.always-show.Name"}}</label>
+    <div class="form-fields">
+      <input type="checkbox" name="alwaysShowButton" data-dtype="Boolean" {{#if
+      alwaysShowButton}}checked{{/if}}>
     </div>
+    <p class="notes">{{localize "token-variants.settings.token-hud.window.always-show.Hint"}}</p>
+  </div>
 
-    <div class="form-group">
-        <label>{{localize "token-variants.settings.token-hud.window.display-as-image.Name"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" name="displayAsImage" data-dtype="Boolean" {{#if displayAsImage}}checked{{/if}}>
-        </div>
-        <p class="notes">{{localize "token-variants.settings.token-hud.window.display-as-image.Hint"}}</p>
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.token-hud.window.display-as-image.Name"}}</label>
+    <div class="form-fields">
+      <input type="checkbox" name="displayAsImage" data-dtype="Boolean" {{#if
+      displayAsImage}}checked{{/if}}>
     </div>
+    <p class="notes">
+      {{localize "token-variants.settings.token-hud.window.display-as-image.Hint"}}
+    </p>
+  </div>
 
-    <div class="form-group">
-        <label>{{localize "token-variants.settings.token-hud.window.image-opacity.Name"}}</label>
-        <div class="form-fields">
-            <input type="range" name="imageOpacity" data-dtype="Number" value="{{imageOpacity}}" min="0" max="100"
-                step="1">
-        </div>
-        <p class="notes">{{localize "token-variants.settings.token-hud.window.image-opacity.Hint"}}</p>
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.token-hud.window.image-opacity.Name"}}</label>
+    <div class="form-fields">
+      <input
+        type="range"
+        name="imageOpacity"
+        data-dtype="Number"
+        value="{{imageOpacity}}"
+        min="0"
+        max="100"
+        step="1"
+      />
     </div>
+    <p class="notes">{{localize "token-variants.settings.token-hud.window.image-opacity.Hint"}}</p>
+  </div>
 
-    <div class="form-group">
-        <label>{{localize "token-variants.settings.token-hud.window.update-actor-image.Name"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" name="updateActorImage" data-dtype="Boolean" {{#if updateActorImage}}checked{{/if}}>
-        </div>
-        <p class="notes">{{localize "token-variants.settings.token-hud.window.update-actor-image.Hint"}}</p>
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.token-hud.window.update-actor-image.Name"}}</label>
+    <div class="form-fields">
+      <input type="checkbox" name="updateActorImage" data-dtype="Boolean" {{#if
+      updateActorImage}}checked{{/if}}>
     </div>
+    <p class="notes">
+      {{localize "token-variants.settings.token-hud.window.update-actor-image.Hint"}}
+    </p>
+  </div>
 
-    <div class="form-group">
-        <label>{{localize "token-variants.settings.token-hud.window.include-wildcard.Name"}}</label>
-        <div class="form-fields">
-            <input type="checkbox" name="includeWildcard" data-dtype="Boolean" {{#if includeWildcard}}checked{{/if}}>
-        </div>
-        <p class="notes">{{localize "token-variants.settings.token-hud.window.include-wildcard.Hint"}}</p>
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.token-hud.window.include-wildcard.Name"}}</label>
+    <div class="form-fields">
+      <input type="checkbox" name="includeWildcard" data-dtype="Boolean" {{#if
+      includeWildcard}}checked{{/if}}>
     </div>
+    <p class="notes">
+      {{localize "token-variants.settings.token-hud.window.include-wildcard.Hint"}}
+    </p>
+  </div>
 
-    {{#if tokenHUDWildcardActive}}
-        <hr>
-        <h3><b>Token HUD Wildcard</b></h3>
+  <h2>World Settings</h2>
 
-        <div class="form-group">
-            <label>{{localize "token-variants.settings.token-hud.window.disable-if-token-hud-wildcard-active.Name"}}</label>
-            <div class="form-fields">
-                <input type="checkbox" name="disableSideMenuIfTHW" data-dtype="Boolean" {{#if disableSideMenuIfTHW}}checked{{/if}}>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.token-hud.window.disable-if-token-hud-wildcard-active.Hint"}}</p>
-        </div>
-    {{/if}}
-
-    <div class="button-container">
-        <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
+  {{#if enableWorldSettings}}
+  <div class="form-group">
+    <label
+      >{{localize "token-variants.settings.token-hud.window.enable-token-hud-for-all.Name"}}</label
+    >
+    <div class="form-fields">
+      <input type="checkbox" name="enableButtonForAll" data-dtype="Boolean" {{#if
+      enableButtonForAll}}checked{{/if}}>
     </div>
+    <p class="notes">
+      {{localize "token-variants.settings.token-hud.window.enable-token-hud-for-all.Hint"}}
+    </p>
+  </div>
+
+  <div class="form-group">
+    <label
+      >{{localize "token-variants.settings.token-hud.window.display-shared-only.Name"}}
+      <i class="fas fa-share"></i
+    ></label>
+    <div class="form-fields">
+      <input type="checkbox" name="displayOnlySharedImages" data-dtype="Boolean" {{#if
+      displayOnlySharedImages}}checked{{/if}}>
+    </div>
+    <p class="notes">
+      {{localize "token-variants.settings.token-hud.window.display-shared-only.Hint"}}
+    </p>
+  </div>
+
+  <div class="form-group">
+    <label> {{localize "token-variants.settings.compendium-mapper.window.include-keywords"}}</label>
+    <div class="form-fields">
+      <input type="checkbox" name="includeKeywords" data-dtype="Boolean" {{#if
+      includeKeywords}}checked{{/if}}>
+    </div>
+  </div>
+  {{/if}} {{#if tokenHUDWildcardActive}}
+
+  <h2><b>Token HUD Wildcard</b></h2>
+
+  <div class="form-group">
+    <label
+      >{{localize
+      "token-variants.settings.token-hud.window.disable-if-token-hud-wildcard-active.Name"}}</label
+    >
+    <div class="form-fields">
+      <input type="checkbox" name="disableIfTHWEnabled" data-dtype="Boolean" {{#if
+      disableIfTHWEnabled}}checked{{/if}}>
+    </div>
+    <p class="notes">
+      {{localize
+      "token-variants.settings.token-hud.window.disable-if-token-hud-wildcard-active.Hint"}}
+    </p>
+  </div>
+  {{/if}}
+
+  <div class="button-container">
+    <button type="submit">
+      <i class="far fa-save"></i>{{localize "token-variants.common.apply"}}
+    </button>
+  </div>
 </form>

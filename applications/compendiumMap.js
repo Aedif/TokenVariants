@@ -1,5 +1,5 @@
 import { showArtSelect, updateTokenImage, doImageSearch, cacheTokens } from '../token-variants.mjs';
-import { SEARCH_TYPE, updateActorImage, getFileName } from '../scripts/utils.js';
+import { SEARCH_TYPE, updateActorImage } from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
 
 async function autoApply(actor, diffImages, image1, image2, ignoreKeywords, dispArtSelect) {

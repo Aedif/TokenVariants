@@ -37,18 +37,12 @@ export class SearchPaths extends FormApplication {
   }
 
   async _getPaths() {
-    const paths = (
-      game.settings.get('token-variants', 'searchPaths') || []
-    ).flat();
+    const paths = (game.settings.get('token-variants', 'searchPaths') || []).flat();
 
     // To maintain compatibility with previous versions
-    const defaultCaching = !game.settings.get(
-      'token-variants',
-      'disableCaching'
-    );
     if (paths.length > 0 && !(paths[0] instanceof Object)) {
       paths.forEach((path, i) => {
-        paths[i] = { text: path, cache: defaultCaching };
+        paths[i] = { text: path, cache: true };
       });
     }
     // end of compatibility code
@@ -100,16 +94,11 @@ export class SearchPaths extends FormApplication {
       imgur = true;
     }
 
-    const imgurControl = $(event.currentTarget)
-      .closest('.table-path')
-      .find('.imgur-control');
+    const imgurControl = $(event.currentTarget).closest('.table-path').find('.imgur-control');
     if (imgur) imgurControl.addClass('active');
     else imgurControl.removeClass('active');
 
-    $(event.currentTarget)
-      .closest('.table-path')
-      .find('.path-image i')
-      .attr('class', image);
+    $(event.currentTarget).closest('.table-path').find('.path-image i').attr('class', image);
   }
 
   async _onCreatePath(event) {
@@ -148,9 +137,7 @@ export class SearchPaths extends FormApplication {
         async function (result) {
           if (!result.success && location.hostname === 'localhost') {
             ui.notifications.warn(
-              game.i18n.format(
-                'token-variants.notifications.warn.imgur-localhost'
-              )
+              game.i18n.format('token-variants.notifications.warn.imgur-localhost')
             );
             return;
           }
@@ -172,8 +159,7 @@ export class SearchPaths extends FormApplication {
 
           await RollTable.create({
             name: data.title,
-            description:
-              'Token Variant Art auto generated RollTable: ' + data.link,
+            description: 'Token Variant Art auto generated RollTable: ' + data.link,
             results: resultsArray,
             replacement: true,
             displayRoll: true,
@@ -201,9 +187,7 @@ export class SearchPaths extends FormApplication {
 
   async _updateObject(event, formData) {
     const expanded = expandObject(formData);
-    expanded.paths = expanded.hasOwnProperty('paths')
-      ? Object.values(expanded.paths)
-      : [];
+    expanded.paths = expanded.hasOwnProperty('paths') ? Object.values(expanded.paths) : [];
     expanded.paths.forEach((path, index) => {
       this.object.paths[index] = {
         text: path.text,
@@ -237,10 +221,8 @@ export class SearchPaths extends FormApplication {
 
 export class ForgeSearchPaths extends SearchPaths {
   async _getPaths() {
-    const forgePaths =
-      game.settings.get('token-variants', 'forgeSearchPaths') || {};
-    this.userId =
-      typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
+    const forgePaths = game.settings.get('token-variants', 'forgeSearchPaths') || {};
+    this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
     this.apiKey = forgePaths[this.userId]?.apiKey;
     return forgePaths[this.userId]?.paths || [];
   }
@@ -251,8 +233,7 @@ export class ForgeSearchPaths extends SearchPaths {
 
   _updatePaths() {
     if (this.userId) {
-      const forgePaths =
-        game.settings.get('token-variants', 'forgeSearchPaths') || {};
+      const forgePaths = game.settings.get('token-variants', 'forgeSearchPaths') || {};
       forgePaths[this.userId] = {
         paths: this._cleanPaths(),
         apiKey: this.apiKey,
@@ -274,9 +255,7 @@ export class ForgeSearchPaths extends SearchPaths {
 
   async _updateObject(event, formData) {
     const expanded = expandObject(formData);
-    expanded.paths = expanded.hasOwnProperty('paths')
-      ? Object.values(expanded.paths)
-      : [];
+    expanded.paths = expanded.hasOwnProperty('paths') ? Object.values(expanded.paths) : [];
     expanded.paths.forEach((path, index) => {
       this.object.paths[index] = {
         text: path.text,
