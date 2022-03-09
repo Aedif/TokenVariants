@@ -61,6 +61,7 @@ let runSearchOnPath = false;
 
 let imgurClientId;
 let enableStatusConfig = false;
+let disableNotifs = false;
 
 // Search paths parsed into a format usable in search functions
 let parsedSearchPaths;
@@ -325,6 +326,16 @@ async function registerWorldSettings() {
     onChange: (enable) => (enableStatusConfig = enable),
   });
 
+  game.settings.register('token-variants', 'disableNotifs', {
+    name: game.i18n.localize('token-variants.settings.disable-notifs.Name'),
+    hint: game.i18n.localize('token-variants.settings.disable-notifs.Hint'),
+    scope: 'world',
+    config: true,
+    default: false,
+    type: Boolean,
+    onChange: (disable) => (disableNotifs = disable),
+  });
+
   game.settings.registerMenu('token-variants', 'compendiumMapper', {
     name: game.i18n.localize('token-variants.settings.compendium-mapper.Name'),
     hint: game.i18n.localize('token-variants.settings.compendium-mapper.Hint'),
@@ -374,6 +385,7 @@ async function registerWorldSettings() {
   parsedSearchPaths = await parseSearchPaths(debug);
   imgurClientId = game.settings.get('token-variants', 'imgurClientId');
   enableStatusConfig = game.settings.get('token-variants', 'enableStatusConfig');
+  disableNotifs = game.settings.get('token-variants', 'disableNotifs');
 }
 
 function registerHUD() {
@@ -905,7 +917,8 @@ function modActorSheet(actorSheet, html, options) {
 export async function cacheTokens() {
   if (caching) return;
   caching = true;
-  ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
+  if (!disableNotifs)
+    ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
   if (debug) console.log('STARTING: Token Caching');
   cachedTokens.clear();
@@ -916,11 +929,12 @@ export async function cacheTokens() {
   if (debug) console.log('ENDING: Token Caching');
 
   caching = false;
-  ui.notifications.info(
-    game.i18n.format('token-variants.notifications.info.caching-finished', {
-      imageCount: cachedTokens.size,
-    })
-  );
+  if (!disableNotifs)
+    ui.notifications.info(
+      game.i18n.format('token-variants.notifications.info.caching-finished', {
+        imageCount: cachedTokens.size,
+      })
+    );
 }
 
 /**

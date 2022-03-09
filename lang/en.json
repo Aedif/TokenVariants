@@ -135,6 +135,10 @@
         "Name": "Enable Status Config",
         "Hint": "Enables image mappings to status effects, visibility and combat states."
       },
+      "disable-notifs": {
+        "Name": "Disable Cache Notifications",
+        "Hint": "Disables notifications shown by the module during caching."
+      },
       "compendium-mapper": {
         "Name": "Compendium Mapper",
         "Hint": "Apply images to Actor compendiums",

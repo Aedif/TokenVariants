@@ -1,3 +1,10 @@
+# 1.28.1
+
+- New Token HUD setting: **IncludeKeywords in the search**
+  - All art matching token's full name and individual words within the name will be shown in the Token HUD
+- New setting: **Disable Cache Notifications**
+  - Disabled notifications shown by the module during caching
+
 # 1.27.1
 
 - New Randomizer setting: **Apply Token image to Portrait**
