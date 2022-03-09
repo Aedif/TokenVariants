@@ -1,26 +1,47 @@
 <div class="control-icon" data-action="token-variants-side-selector">
-    <img id="token-variants-side-button" src="modules/token-variants/img/token-images.svg" width="36" height="36"
-        title="{{localize token-variants.windows.art-select.select-variant}}" />
-    <div class="token-variants-wrap {{#unless imageDisplay}}list{{/unless}}">
-        <input class="token-variants-side-search" type="text" />
-        {{#each imagesParsed as |image|}}
-        <button type="button"
-            class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}">
-            {{#if ../imageDisplay}}
-            {{#if image.img}}
-            <img class="token-variants-button-image" src="{{image.route}}" alt="{{image.name}}"
-                data-name="{{image.route}}" data-filename="{{image.name}}" style="opacity:{{../imageOpacity}};" />
-            {{/if}}
-            {{#if image.vid}}
-            <video class="token-variants-button-image" src="{{image.route}}" alt="{{image.name}}"
-                data-name="{{image.route}}" data-filename="{{image.name}}" style="opacity:{{../imageOpacity}};" autoplay loop></video>
-            {{/if}}
-            {{else}}
-            <span data-name="{{image.route}}" data-filename="{{image.name}}">{{image.name}}</span>
-            {{/if}}
-            <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
-            <i class="fas fa-cog {{#if image.hasConfig}}active{{/if}}"></i>
-        </button>
-        {{/each}}
+  <img
+    id="token-variants-side-button"
+    src="modules/token-variants/img/token-images.svg"
+    width="36"
+    height="36"
+    title="{{localize token-variants.windows.art-select.select-variant}}"
+  />
+  <div class="token-variants-wrap {{#unless imageDisplay}}list{{/unless}}">
+    <div class="token-variants-side-search">
+      <input type="text" />
+      <button class="token-variants-fog-setting">Fog</button>
     </div>
+    {{#each imagesParsed as |image|}}
+    <button
+      type="button"
+      class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}"
+    >
+      {{#if ../imageDisplay}} {{#if image.img}}
+      <img
+        class="token-variants-button-image"
+        src="{{image.route}}"
+        alt="{{image.name}}"
+        data-name="{{image.route}}"
+        data-filename="{{image.name}}"
+        style="opacity:{{../imageOpacity}};"
+      />
+      {{/if}} {{#if image.vid}}
+      <video
+        class="token-variants-button-image"
+        src="{{image.route}}"
+        alt="{{image.name}}"
+        data-name="{{image.route}}"
+        data-filename="{{image.name}}"
+        style="opacity:{{../imageOpacity}};"
+        autoplay
+        loop
+      ></video>
+      {{/if}} {{else}}
+      <span data-name="{{image.route}}" data-filename="{{image.name}}">{{image.name}}</span>
+      {{/if}}
+      <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
+      <i class="fas fa-cog {{#if image.hasConfig}}active{{/if}}"></i>
+    </button>
+    {{/each}}
+  </div>
 </div>

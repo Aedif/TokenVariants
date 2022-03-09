@@ -1,0 +1,22 @@
+<form>
+  <div class="form-group">
+    <label>Visible in shroud</label>
+    <input type="checkbox" name="visibleInShroud" data-dtype="Boolean" {{#if
+    visibleInShroud}}checked{{/if}} />
+  </div>
+
+  <img class="image" src="{{imgSrc}}" title="{{imgName}}" alt="" width="100" height="100" style="margin-left:auto;margin-right:auto;display:block;"></img>
+  <input class="imgSrc" type="hidden" name="imgSrc" value="{{imgSrc}}">
+  <input class="imgName" type="hidden" name="imgName" value="{{imgName}}">
+
+  <footer class="sheet-footer flexrow">
+    <button type="submit">
+      <i class="far fa-save"></i>{{localize "token-variants.common.apply"}}
+    </button>
+    {{#if imgSrc}}
+    <button type="button" class="remove">
+      <i class="fas fa-trash"></i> {{localize "token-variants.common.remove"}}
+    </button>
+    {{/if}}
+  </footer>
+</form>

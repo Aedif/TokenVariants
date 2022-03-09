@@ -363,6 +363,32 @@ async function registerWorldSettings() {
   game.settings.set('token-variants', 'tokenConfigs', tokenConfigs);
   // end of compatibility code
 
+  // TEST
+  if (typeof libWrapper === 'function') {
+    libWrapper.register(
+      'token-variants',
+      'Token.prototype.isVisible',
+      function (wrapped, ...args) {
+        console.log('Token.prototype.isVisible called');
+        // ... do things ...
+        let result = wrapped(...args);
+        if (
+          !result &&
+          this.actor?.getFlag('token-variants', 'effectMappings')?.['token-variants-fog']
+        ) {
+          console.log(
+            this.actor?.getFlag('token-variants', 'effectMappings')?.['token-variants-fog']
+          );
+          return true;
+        }
+        // ... do things ...
+        return result;
+      },
+      'MIXED' /* optional, since this is the default type */
+    );
+  }
+  // END OF TEST
+
   const popupSettings = game.settings.get('token-variants', 'popupSettings');
   twoPopups = popupSettings.twoPopups;
   noTwoPopupsPrompt = popupSettings.twoPopupsNoDialog;
@@ -425,14 +451,38 @@ async function initialize() {
 
   await registerWorldSettings();
 
-  const getEffects = (token) => {
+  const getEffects = (token, { includeCustom = false, effectOnTop = '' } = {}) => {
+    let effects = [];
     if (game.system.id === 'pf2e') {
-      return (token.data.actorData?.items || []).map((ef) => ef.name);
+      effects = (token.data.actorData?.items || []).map((ef) => ef.name);
+    } else {
+      if (token.actor?.data.effects) {
+        token.actor.data.effects.forEach((effect, id) => {
+          effects.push(effect.data.label);
+        });
+      } else {
+        effects = (token.data.actorData?.effects || []).map((ef) => ef.label);
+      }
     }
-    return (token.data.actorData?.effects || []).map((ef) => ef.label);
+
+    if (includeCustom) {
+      // const tolerance = Math.min(token.w, token.h) / 4;
+      // if (!canvas.sight.testVisibility(token.center, { tolerance, object: token })) {
+      //   effects.unshift('token-variants-fog');
+      // }
+      if (token.inCombat) effects.unshift('token-variants-combat');
+      if (token.data.hidden) effects.unshift('token-variants-visibility');
+
+      if (effectOnTop) {
+        effects = effects.filter((ef) => ef !== effectOnTop);
+        effects.push(effectOnTop);
+      }
+    }
+
+    return effects;
   };
 
-  const updateWithEffectMapping = async function (token, effects, toggleStatus) {
+  const updateWithEffectMapping = async function (token, toggleStatus, effectOnTop = '') {
     const tokenImgSrc = token.data.img;
     const tokenImgName =
       (token.document ?? token).getFlag('token-variants', 'name') || getFileName(tokenImgSrc);
@@ -444,6 +494,8 @@ async function initialize() {
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
 
+    let effects = getEffects(token, { includeCustom: true, effectOnTop: effectOnTop });
+    console.log(effects);
     // Filter effects that do not have a mapping and sort based on priority
     effects = effects
       .filter((ef) => ef in mappings)
@@ -495,32 +547,50 @@ async function initialize() {
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
     if (!enableStatusConfig) return;
-    const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+    const token = canvas.tokens.get(combatant.data.tokenId);
 
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
     if (!('token-variants-combat' in mappings)) return;
 
-    const effects = getEffects(token);
-    if (token.data.hidden) effects.push('token-variants-visibility');
-    effects.push('token-variants-combat');
-    updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
+    updateWithEffectMapping(token, canvas.tokens.hud._statusEffects, 'token-variants-combat');
   });
 
   Hooks.on('deleteCombatant', (combatant, options, userId) => {
     if (!enableStatusConfig) return;
-    const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+    const token = canvas.tokens.get(combatant.data.tokenId);
 
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
     if (!('token-variants-combat' in mappings)) return;
 
-    const effects = getEffects(token);
-    if (token.data.hidden) effects.push('token-variants-visibility');
-    updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
+    updateWithEffectMapping(token, canvas.tokens.hud._statusEffects);
   });
 
-  Hooks.on('preUpdateToken', (token, change, options, userId) => {
+  Hooks.on('createActiveEffect', (effect, options, userId) => {
+    const mappings = effect.parent.getFlag('token-variants', 'effectMappings') || {};
+    if (!(effect.data.label in mappings)) return;
+
+    effect.parent.getActiveTokens(true).forEach((token) => {
+      console.log(token);
+      updateWithEffectMapping(token, canvas.tokens.hud._statusEffects);
+    });
+  });
+
+  Hooks.on('deleteActiveEffect', (effect, options, userId) => {
+    const mappings = effect.parent.getFlag('token-variants', 'effectMappings') || {};
+    if (!(effect.data.label in mappings)) return;
+
+    effect.parent.getActiveTokens(true).forEach((token) => {
+      updateWithEffectMapping(token, canvas.tokens.hud._statusEffects);
+    });
+  });
+
+  Hooks.on('preUpdateToken', (tkn, change, options, userId) => {
     if (!enableStatusConfig) return;
-    if (!token.actor) return; // Only tokens with associated actors supported
+    if (!tkn.actor) return; // Only tokens with associated actors supported
+    return; // TEMP TEST
+
+    const token = canvas.tokens.get(tkn.id);
+    console.log('EFFECTS', change.actorData?.effects);
 
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
@@ -540,10 +610,13 @@ async function initialize() {
       oldEffects = getEffects(token);
     }
 
+    // Determine if image update is required
+    let performUpdate = false;
+
+    // Effect # difference between current token and 'change' obj indicates removal
+    // or addition of an effect
     const effectAdded = oldEffects.length < newEffects.length;
     const effectRemoved = oldEffects.length > newEffects.length;
-
-    let performUpdate = false;
     if (effectAdded) {
       performUpdate = newEffects[newEffects.length - 1] in mappings;
     }
@@ -551,23 +624,28 @@ async function initialize() {
       performUpdate = oldEffects[oldEffects.length - 1] in mappings;
     }
 
-    if (token.inCombat) newEffects.unshift('token-variants-combat');
-    if (change.hidden) newEffects.push('token-variants-visibility');
-    else if (change.hidden == null && token.data.hidden)
-      newEffects.unshift('token-variants-visibility');
+    console.log('effectAdded', effectAdded);
+    console.log('effectRemoved', effectRemoved);
 
+    //if (token.inCombat) newEffects.unshift('token-variants-combat');
+    // if (change.hidden) newEffects.push('token-variants-visibility');
+    // else if (change.hidden == null && token.data.hidden)
+    //   newEffects.unshift('token-variants-visibility');
+    let effectOnTop = '';
     if (
       change.hidden != null &&
       change.hidden !== token.data.hidden &&
       'token-variants-visibility' in mappings
     ) {
       performUpdate = true;
+      if (change.hidden) effectOnTop = 'token-variants-visibility';
     }
 
     if (performUpdate) {
+      console.log('nNEED UPDATE');
       options['token-variants'] = {
-        effects: newEffects,
         toggleStatus: canvas.tokens.hud._statusEffects,
+        effectOnTop: effectOnTop,
       };
     }
   });
@@ -576,9 +654,9 @@ async function initialize() {
     if (!enableStatusConfig) return;
     if (options['token-variants'] && token.actor) {
       updateWithEffectMapping(
-        token,
-        options['token-variants'].effects,
-        options['token-variants'].toggleStatus
+        canvas.tokens.get(token.id),
+        options['token-variants'].toggleStatus,
+        options['token-variants'].effectOnTop
       );
     }
   });

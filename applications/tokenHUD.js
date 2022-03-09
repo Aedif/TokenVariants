@@ -8,6 +8,7 @@ import {
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import ActiveEffectConfig from './activeEffectConfig.js';
+import VisibilityConfig from './visibilityConfig.js';
 import { doImageSearch, updateTokenImage } from '../token-variants.mjs';
 
 // not call if still caching
@@ -205,6 +206,14 @@ export async function renderHud(hud, html, token, searchText = '') {
       .find('.token-variants-button-select')
       .on('contextmenu', (event) => _onImageRightClick(event, token._id));
   }
+  divR.find('.token-variants-fog-setting').click((event) => {
+    //new VisibilityConfig(token).render(true);
+    new ActiveEffectConfig(
+      token,
+      'modules/token-variants/img/token-images.svg',
+      'token-variants-fog'
+    ).render(true);
+  });
 
   // If renderHud is being called from text box search the side menu should be enabled by default
   if (searchText) {

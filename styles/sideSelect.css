@@ -106,3 +106,12 @@
 .token-sheet .token-variants-default.active {
   display: block;
 }
+
+.token-variants-fog-setting {
+  width: 100px;
+  height: 30px;
+  margin: 2px;
+  background-color: rgb(65, 65, 65);
+  object-fit: contain;
+  color: white;
+}
