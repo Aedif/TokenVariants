@@ -132,7 +132,6 @@ export async function renderHud(hud, html, token, searchText = '') {
         const wildcardImages = (await tokenActor.getTokenImages()).map((variant) => {
           return { imgSrc: variant, names: [getFileName(variant)] };
         });
-        console.log(wildcardImages);
         mergeImages(wildcardImages);
       }
     }

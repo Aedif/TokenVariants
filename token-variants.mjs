@@ -691,7 +691,7 @@ async function initialize() {
           else {
             updateTokenImage(imgSrc, {
               actor: actor,
-              imgName: imgName,
+              imgName: name,
               token: token,
             });
           }
