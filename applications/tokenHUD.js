@@ -286,12 +286,16 @@ async function _onImageClick(event, tokenId) {
   }
 
   const hudSettings = game.settings.get('token-variants', 'hudSettings');
-  const name = event.target.dataset.filename;
-  const imgSrc = event.target.dataset.name;
+
+  const imgButton = $(event.target).closest('.token-variants-button-select');
+  const imgSrc = imgButton.attr('data-name');
+  const name = imgButton.attr('data-filename');
+
+  if (!imgSrc || !name) return;
 
   if (keyPressed('config')) {
     const toggleCog = (saved) => {
-      const cog = $(event.target).parent().find('.fa-cog');
+      const cog = imgButton.find('.fa-cog');
       if (saved) {
         cog.addClass('active');
       } else {
@@ -326,8 +330,11 @@ function _onImageRightClick(event, tokenId) {
     token = token.document ?? token;
   }
 
-  const imgSrc = event.target.dataset.name;
-  const name = event.target.dataset.filename;
+  const imgButton = $(event.target).closest('.token-variants-button-select');
+  const imgSrc = imgButton.attr('data-name');
+  const name = imgButton.attr('data-filename');
+
+  if (!imgSrc || !name) return;
 
   if (token.actor) {
     let tokenActor = game.actors.get(token.actor.id);
@@ -367,7 +374,7 @@ function _onImageRightClick(event, tokenId) {
     if (variants.length > 0) {
       tokenActor.setFlag('token-variants', 'variants', variants);
     }
-    $(event.target).parent().find('.fa-share').toggleClass('active'); // Display green arrow
+    imgButton.find('.fa-share').toggleClass('active'); // Display green arrow
   }
 }
 
