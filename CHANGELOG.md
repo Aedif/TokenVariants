@@ -1,3 +1,8 @@
+# 1.28.2
+
+- Fixed token image not updating on 'Actor create' with **Display separate pop-ups for Portrait and Token art** disabled
+- Fixed Token HUD button breaking when right-clicking the very edge of the image in the side menu
+
 # 1.28.1
 
 - New Token HUD setting: **IncludeKeywords in the search**
