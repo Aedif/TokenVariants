@@ -20,6 +20,7 @@ import {
   registerKeybinds,
   updateActorImage,
   stringSimilarity,
+  queueUpdate,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import CompendiumMapConfig from './applications/compendiumMap.js';
@@ -415,6 +416,15 @@ function registerHUD() {
   Hooks.on('renderTokenHUD', renderHud);
 }
 
+// TEMP
+// Hooks.once('canvasReady', () => {
+//   console.log('canvasReady ==========');
+//   canvas.app.ticker.add(() => {
+//     console.log('tick');
+//   });
+// });
+// TEMP
+
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -701,6 +711,7 @@ async function initialize() {
         preventClose: twoPopups,
       });
     });
+
     Hooks.on('createToken', async (op1, op2, op3, op4) => {
       let tokenDoc = op1;
       let options = op2;
@@ -717,13 +728,6 @@ async function initialize() {
       } else {
         token = canvas.tokens.get(options._id);
       }
-
-      const updateTokenCallback = (imgSrc, name) =>
-        updateTokenImage(imgSrc, {
-          token: token,
-          actor: token.actor,
-          imgName: name,
-        });
 
       // Check if random search is enabled and if so perform it
 
@@ -1451,15 +1455,7 @@ export async function doImageSearch(
   return allImages;
 }
 
-/**
- * Updates Token and/or Proto Token  with the new image and custom configuration if one exists.
- * @param {string} imgSrc Image source path/url
- * @param {object} [options={}] Update options
- * @param {Token[]} [options.token] Token to be updated with the new image
- * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
- * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
- */
-export async function updateTokenImage(
+export async function performTokenImageUpdate(
   imgSrc,
   { token = null, actor = null, imgName = null } = {}
 ) {
@@ -1572,6 +1568,24 @@ export async function updateTokenImage(
     await obj.setFlag('token-variants', 'name', imgName);
     await obj.update(tokenUpdateObj);
   }
+}
+
+/**
+ * Updates Token and/or Proto Token  with the new image and custom configuration if one exists.
+ * @param {string} imgSrc Image source path/url
+ * @param {object} [options={}] Update options
+ * @param {Token[]} [options.token] Token to be updated with the new image
+ * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
+ * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
+ */
+export async function updateTokenImage(
+  imgSrc,
+  { token = null, actor = null, imgName = null } = {}
+) {
+  // performTokenImageUpdate(imgSrc, { token: token, actor: actor, imgName: imgName });
+  queueUpdate(() =>
+    performTokenImageUpdate(imgSrc, { token: token, actor: actor, imgName: imgName })
+  );
 }
 
 function twoPopupPrompt(actor, imgSrc, imgName, token) {
