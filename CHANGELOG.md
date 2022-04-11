@@ -1,3 +1,8 @@
+# 1.28.3
+
+- Resolved an issue with file's with spaces in their name not being found when 'Match name to folder' is enabled.
+- Token's are now updated once per canvas.app tick. Should prevent errors caused by rapid updating of the same token.
+
 # 1.28.2
 
 - Fixed token image not updating on 'Actor create' with **Display separate pop-ups for Portrait and Token art** disabled
