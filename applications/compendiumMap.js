@@ -2,31 +2,37 @@ import { showArtSelect, updateTokenImage, doImageSearch, cacheTokens } from '../
 import { SEARCH_TYPE, updateActorImage } from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
 
-async function autoApply(actor, diffImages, image1, image2, ignoreKeywords, dispArtSelect) {
-  let portraitFound = false;
-  let tokenFound = false;
+async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
+  let portraitFound = formData.ignorePortrait;
+  let tokenFound = formData.ignoreToken;
 
-  if (diffImages) {
-    let results = await doImageSearch(actor.data.name, {
-      searchType: SEARCH_TYPE.PORTRAIT,
-      simpleResults: true,
-      ignoreKeywords: ignoreKeywords,
-    });
+  if (formData.diffImages) {
+    let results = [];
 
-    if ((results ?? []).length != 0) {
-      portraitFound = true;
-      await updateActorImage(actor, results[0]);
+    if (!formData.ignorePortrait) {
+      results = await doImageSearch(actor.data.name, {
+        searchType: SEARCH_TYPE.PORTRAIT,
+        simpleResults: true,
+        ignoreKeywords: ignoreKeywords,
+      });
+
+      if ((results ?? []).length != 0) {
+        portraitFound = true;
+        await updateActorImage(actor, results[0]);
+      }
     }
 
-    await doImageSearch(actor.data.token.name, {
-      searchType: SEARCH_TYPE.TOKEN,
-      simpleResults: true,
-      ignoreKeywords: ignoreKeywords,
-    });
+    if (!formData.ignoreToken) {
+      results = await doImageSearch(actor.data.token.name, {
+        searchType: SEARCH_TYPE.TOKEN,
+        simpleResults: true,
+        ignoreKeywords: ignoreKeywords,
+      });
 
-    if ((results ?? []).length != 0) {
-      tokenFound = true;
-      updateTokenImage(results[0], { actor: actor });
+      if ((results ?? []).length != 0) {
+        tokenFound = true;
+        updateTokenImage(results[0], { actor: actor });
+      }
     }
   } else {
     let results = await doImageSearch(actor.data.name, {
@@ -43,37 +49,64 @@ async function autoApply(actor, diffImages, image1, image2, ignoreKeywords, disp
     }
   }
 
-  if (!(tokenFound && portraitFound) && dispArtSelect) {
-    addToArtSelectQueue(actor, diffImages, image1, image2, ignoreKeywords);
+  if (!(tokenFound && portraitFound) && formData.autoDisplayArtSelect) {
+    addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData);
   }
 }
 
-function addToArtSelectQueue(actor, diffImages, image1, image2, ignoreKeywords) {
-  if (diffImages) {
-    addToQueue(actor.data.name, {
-      searchType: SEARCH_TYPE.PORTRAIT,
-      object: actor,
-      preventClose: true,
-      image1: image1,
-      image2: image2,
-      ignoreKeywords: ignoreKeywords,
-      callback: async function (imgSrc, _) {
-        await updateActorImage(actor, imgSrc);
-        showArtSelect(actor.data.token.name, {
-          searchType: SEARCH_TYPE.TOKEN,
-          object: actor,
-          force: true,
-          image1: imgSrc,
-          image2: image2,
-          ignoreKeywords: ignoreKeywords,
-          callback: (imgSrc, name) =>
-            updateTokenImage(imgSrc, {
-              actor: actor,
-              imgName: name,
-            }),
-        });
-      },
-    });
+function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
+  if (formData.diffImages) {
+    if (!formData.ignorePortrait && !formData.ignoreToken) {
+      addToQueue(actor.data.name, {
+        searchType: SEARCH_TYPE.PORTRAIT,
+        object: actor,
+        preventClose: true,
+        image1: image1,
+        image2: image2,
+        ignoreKeywords: ignoreKeywords,
+        callback: async function (imgSrc, _) {
+          await updateActorImage(actor, imgSrc);
+          showArtSelect(actor.data.token.name, {
+            searchType: SEARCH_TYPE.TOKEN,
+            object: actor,
+            force: true,
+            image1: imgSrc,
+            image2: image2,
+            ignoreKeywords: ignoreKeywords,
+            callback: (imgSrc, name) =>
+              updateTokenImage(imgSrc, {
+                actor: actor,
+                imgName: name,
+              }),
+          });
+        },
+      });
+    } else if (formData.ignorePortrait) {
+      addToQueue(actor.data.name, {
+        searchType: SEARCH_TYPE.TOKEN,
+        object: actor,
+        image1: image1,
+        image2: image2,
+        ignoreKeywords: ignoreKeywords,
+        callback: async function (imgSrc, name) {
+          updateTokenImage(imgSrc, {
+            actor: actor,
+            imgName: name,
+          });
+        },
+      });
+    } else if (formData.ignoreToken) {
+      addToQueue(actor.data.name, {
+        searchType: SEARCH_TYPE.PORTRAIT,
+        object: actor,
+        image1: image1,
+        image2: image2,
+        ignoreKeywords: ignoreKeywords,
+        callback: async function (imgSrc, name) {
+          await updateActorImage(actor, imgSrc);
+        },
+      });
+    }
   } else {
     addToQueue(actor.data.name, {
       searchType: SEARCH_TYPE.BOTH,
@@ -131,6 +164,7 @@ export default class CompendiumMapConfig extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.find('.token-variants-auto-apply').change(this._onAutoApply);
+    html.find('.token-variants-diff-images').change(this._onDiffImages);
   }
 
   async _onAutoApply(event) {
@@ -140,7 +174,18 @@ export default class CompendiumMapConfig extends FormApplication {
       .prop('disabled', !event.target.checked);
   }
 
+  async _onDiffImages(event) {
+    $(event.target)
+      .closest('form')
+      .find('.token-variants-tp-ignore')
+      .prop('disabled', !event.target.checked);
+  }
+
   async startMapping(formData) {
+    if (formData.diffImages && formData.ignoreToken && formData.ignorePortrait) {
+      return;
+    }
+
     if (formData.cache) {
       await cacheTokens();
     }
@@ -162,24 +207,17 @@ export default class CompendiumMapConfig extends FormApplication {
         hasPortrait = hasToken = true;
       }
 
-      let includeThisActor = !(formData.missingOnly && hasPortrait);
-      let includeThisToken = !(formData.missingOnly && hasToken);
+      let includeThisActor = !(formData.missingOnly && hasPortrait) && !formData.ignorePortrait;
+      let includeThisToken = !(formData.missingOnly && hasToken) && !formData.ignoreToken;
 
       const image1 = formData.showImages ? actor.img : '';
       const image2 = formData.showImages ? actor.data.token.img : '';
 
       if (includeThisActor || includeThisToken) {
         if (formData.autoApply) {
-          await autoApply(
-            actor,
-            formData.diffImages,
-            image1,
-            image2,
-            ignoreKeywords,
-            formData.autoDisplayArtSelect
-          );
+          await autoApply(actor, image1, image2, ignoreKeywords, formData);
         } else {
-          addToArtSelectQueue(actor, formData.diffImages, image1, image2, ignoreKeywords);
+          addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData);
         }
       }
     };

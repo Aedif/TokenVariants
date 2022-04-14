@@ -13,15 +13,38 @@
     </p>
   </div>
 
-  <div class="form-group">
-    <label>{{localize "token-variants.settings.compendium-mapper.window.missing-only"}}</label>
-    <input type="checkbox" name="missingOnly" data-dtype="Boolean" {{#if missingOnly}}checked{{/if}}
-    />
-  </div>
+  <hr />
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.diff-images"}}</label>
-    <input type="checkbox" name="diffImages" data-dtype="Boolean" {{#if diffImages}}checked{{/if}}
+    <input class="token-variants-diff-images" type="checkbox" name="diffImages" data-dtype="Boolean"
+    {{#if diffImages}}checked{{/if}} />
+  </div>
+
+  <div class="form-group">
+    <label
+      >&nbsp;&nbsp;&nbsp;&nbsp; {{localize
+      "token-variants.settings.compendium-mapper.window.ignore-token"}}</label
+    >
+    <input class="token-variants-tp-ignore" type="checkbox" name="ignoreToken" data-dtype="Boolean"
+    {{#if ignoreToken}}checked{{/if}} {{#unless diffImages}}disabled{{/unless}}/>
+  </div>
+
+  <div class="form-group">
+    <label
+      >&nbsp;&nbsp;&nbsp;&nbsp; {{localize
+      "token-variants.settings.compendium-mapper.window.ignore-portrait"}}</label
+    >
+    <input class="token-variants-tp-ignore" type="checkbox" name="ignorePortrait"
+    data-dtype="Boolean" {{#if ignorePortrait}}checked{{/if}} {{#unless
+    diffImages}}disabled{{/unless}}/>
+  </div>
+
+  <hr />
+
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.compendium-mapper.window.missing-only"}}</label>
+    <input type="checkbox" name="missingOnly" data-dtype="Boolean" {{#if missingOnly}}checked{{/if}}
     />
   </div>
 
@@ -42,7 +65,7 @@
     <input type="checkbox" name="cache" data-dtype="Boolean" {{#if cache}}checked{{/if}} />
   </div>
 
-  <h2>Automation</h2>
+  <h2>{{localize "token-variants.common.automation"}}</h2>
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.auto-apply"}}</label>

@@ -1,6 +1,12 @@
+# 1.29.1
+
+- New '**Compendium Mapper**' settings:
+  - '**Ignore Token**' and '**Ignore Portrait**' found under '**Apply different images for Portrait and Token**'
+  - When enabled automation and 'Art Select' windows will ignore either token or portrait respectively affecting only the art of the other.
+
 # 1.28.3
 
-- Resolved an issue with file's with spaces in their name not being found when 'Match name to folder' is enabled.
+- Resolved an issue with files with spaces in their name not being found when 'Match name to folder' is enabled.
 - Token's are now updated once per canvas.app tick. Should prevent errors caused by rapid updating of the same token.
 
 # 1.28.2

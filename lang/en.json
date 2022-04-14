@@ -146,6 +146,8 @@
           "compendium-select": "Select an unlocked Actor compendium to perform mappings on",
           "missing-only": "Only include actors with missing images",
           "diff-images": "Apply different images for Portrait and Token",
+          "ignore-token": "Ignore Token",
+          "ignore-portrait": "Ignore Portrait",
           "show-images": "Show current portrait/token image in the 'Art Select' window",
           "include-keywords": "Include keywords in the search",
           "auto-apply": "Auto-apply the first found image",
@@ -165,7 +167,8 @@
       "apply": "Apply",
       "priority": "Priority",
       "remove": "Remove",
-      "start": "Start"
+      "start": "Start",
+      "automation": "Automation"
     },
     "windows": {
       "art-select": {
