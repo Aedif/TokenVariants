@@ -20,7 +20,6 @@ import {
   registerKeybinds,
   updateActorImage,
   stringSimilarity,
-  queueUpdate,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import CompendiumMapConfig from './applications/compendiumMap.js';
@@ -447,21 +446,32 @@ async function initialize() {
 
   await registerWorldSettings();
 
-  const getEffects = (token) => {
-    if (game.system.id === 'pf2e') {
-      return (token.data.actorData?.items || []).map((ef) => ef.name);
-    }
-    return (token.data.actorData?.effects || []).map((ef) => ef.label);
+  const getEffectsFromActor = (actor) => {
+    let effects = [];
+    (actor.data.effects || []).forEach((activeEffect, id) => {
+      if (!activeEffect.data.disabled) effects.push(activeEffect.data.label);
+    });
+    return effects;
   };
 
   const updateWithEffectMapping = async function (token, effects, toggleStatus) {
     const tokenImgSrc = token.data.img;
     const tokenImgName =
       (token.document ?? token).getFlag('token-variants', 'name') || getFileName(tokenImgSrc);
-    const tokenDefaultImg = (token.actor.document ?? token.actor).getFlag(
-      'token-variants',
-      'defaultImg'
-    );
+    let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+    // Legacy support, to be removed after reasonable amount of time has been given for defaultImg to have been cleared
+    // from most users' Actors. (19/04/2022)
+    if (!tokenDefaultImg) {
+      tokenDefaultImg = (token.actor.document ?? token.actor).getFlag(
+        'token-variants',
+        'defaultImg'
+      );
+      if (tokenDefaultImg) {
+        (token.document ?? token).setFlag('token-variants', 'defaultImg', tokenDefaultImg);
+        await (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
+      }
+    }
+    // end of legacy code
     const hadActiveHUD = (token._object || token).hasActiveHUD;
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
@@ -476,7 +486,7 @@ async function initialize() {
       const effect = effects[effects.length - 1];
       if (tokenImgSrc !== effect.imgSrc || tokenImgName !== effect.imgName) {
         if (!tokenDefaultImg) {
-          (token.actor.document ?? token.actor).setFlag('token-variants', 'defaultImg', {
+          (token.document ?? token).setFlag('token-variants', 'defaultImg', {
             imgSrc: tokenImgSrc,
             imgName: tokenImgName,
           });
@@ -487,8 +497,6 @@ async function initialize() {
           imgName: effect.imgName,
         });
 
-        // HUD will automatically close due to the update
-        // Re-open it and the 'Assign Status Effects' view
         if (hadActiveHUD) {
           canvas.tokens.hud.bind(token._object || token);
           if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
@@ -500,17 +508,15 @@ async function initialize() {
     // reset the token image back to default
     if (effects.length === 0 && tokenDefaultImg) {
       await (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
-      if (tokenDefaultImg.imgSrc !== tokenImgSrc || tokenDefaultImg.imgName !== tokenImgName)
+      if (tokenDefaultImg.imgSrc !== tokenImgSrc || tokenDefaultImg.imgName !== tokenImgName) {
         await updateTokenImage(tokenDefaultImg.imgSrc, {
           token: token,
           imgName: tokenDefaultImg.imgName,
         });
-
-      // HUD will automatically close due to the update
-      // Re-open it and the 'Assign Status Effects' view
-      if (hadActiveHUD) {
-        canvas.tokens.hud.bind(token._object || token);
-        if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+        if (hadActiveHUD) {
+          canvas.tokens.hud.bind(token._object || token);
+          if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+        }
       }
     }
   };
@@ -540,9 +546,60 @@ async function initialize() {
     updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
   });
 
+  //
+  // Handle image updates for Active Effects applied to Tokens WITH Linked Actors
+  //
+
+  let updateImageOnEffectChange = async function (activeEffect) {
+    const actor = activeEffect.parent;
+    const tokens = actor.getActiveTokens();
+    if (tokens.length === 0) return;
+
+    const mappings = activeEffect.parent.getFlag('token-variants', 'effectMappings') || {};
+    let effects = getEffectsFromActor(actor);
+
+    if (activeEffect.data.label in mappings) {
+      for (const token of tokens) {
+        if (token.data.actorLink) {
+          let tokenEffects = [...effects];
+          if (token.inCombat) tokenEffects.unshift('token-variants-combat');
+          if (token.data.hidden) tokenEffects.unshift('token-variants-visibility');
+          await updateWithEffectMapping(token, tokenEffects, canvas.tokens.hud._statusEffects);
+        }
+      }
+    }
+  };
+
+  Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
+    if (!enableStatusConfig || !activeEffect.parent || activeEffect.data.disabled) return;
+    updateImageOnEffectChange(activeEffect);
+  });
+
+  Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
+    if (!enableStatusConfig || !activeEffect.parent || activeEffect.data.disabled) return;
+    updateImageOnEffectChange(activeEffect);
+  });
+
+  Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
+    if (!enableStatusConfig || !activeEffect.parent || !('disabled' in change)) return;
+    updateImageOnEffectChange(activeEffect);
+  });
+
+  //
+  // Handle image updates for Active Effects applied to Tokens WITHOUT Linked Actors
+  // PF2e treats Active Effects differently. Both linked and unlinked tokens must be managed via update token hooks
+
+  const getEffects = (token) => {
+    if (game.system.id === 'pf2e') {
+      return (token.data.actorData?.items || []).map((ef) => ef.name);
+    }
+    return (token.data.actorData?.effects || []).map((ef) => ef.label);
+  };
+
   Hooks.on('preUpdateToken', (token, change, options, userId) => {
-    if (!enableStatusConfig) return;
-    if (!token.actor) return; // Only tokens with associated actors supported
+    if (token.data.actorLink && game.system.id !== 'pf2e') return;
+
+    if (!enableStatusConfig || !token.actor) return;
 
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
@@ -1458,6 +1515,19 @@ export async function doImageSearch(
 export async function performTokenImageUpdate(
   imgSrc,
   { token = null, actor = null, imgName = null } = {}
+) {}
+
+/**
+ * Updates Token and/or Proto Token  with the new image and custom configuration if one exists.
+ * @param {string} imgSrc Image source path/url
+ * @param {object} [options={}] Update options
+ * @param {Token[]} [options.token] Token to be updated with the new image
+ * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
+ * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
+ */
+export async function updateTokenImage(
+  imgSrc,
+  { token = null, actor = null, imgName = null } = {}
 ) {
   if (!(token || actor)) {
     console.warn(
@@ -1568,24 +1638,6 @@ export async function performTokenImageUpdate(
     await obj.setFlag('token-variants', 'name', imgName);
     await obj.update(tokenUpdateObj);
   }
-}
-
-/**
- * Updates Token and/or Proto Token  with the new image and custom configuration if one exists.
- * @param {string} imgSrc Image source path/url
- * @param {object} [options={}] Update options
- * @param {Token[]} [options.token] Token to be updated with the new image
- * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
- * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
- */
-export async function updateTokenImage(
-  imgSrc,
-  { token = null, actor = null, imgName = null } = {}
-) {
-  // performTokenImageUpdate(imgSrc, { token: token, actor: actor, imgName: imgName });
-  queueUpdate(() =>
-    performTokenImageUpdate(imgSrc, { token: token, actor: actor, imgName: imgName })
-  );
 }
 
 function twoPopupPrompt(actor, imgSrc, imgName, token) {

@@ -14,19 +14,6 @@ export const PRESSED_KEYS = {
   config: false,
 };
 
-export function queueUpdate(f) {
-  documentUpdateCalls.push(f);
-  canvas.app.ticker.addOnce(documentUpdater);
-}
-
-function documentUpdater() {
-  const f = documentUpdateCalls.pop();
-  if (f) f();
-  if (documentUpdateCalls.length === 0) {
-    canvas.app.ticker.remove(documentUpdater);
-  }
-}
-
 /**
  * Implementation of 'https://en.wikipedia.org/wiki/Levenshtein_distance'
  * Credit to: David and overlord1234 @ stackoverflow
@@ -77,11 +64,6 @@ export function stringSimilarity(s1, s2) {
  * Assign new artwork to the actor
  */
 export async function updateActorImage(actor, imgSrc) {
-  //performActorImageUpdate(actor, imgSrc);
-  queueUpdate(() => performActorImageUpdate(actor, imgSrc));
-}
-
-function performActorImageUpdate(actor, imgSrc) {
   if (!actor) return;
   (actor.document ?? actor).update({
     img: imgSrc,
