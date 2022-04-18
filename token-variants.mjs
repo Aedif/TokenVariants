@@ -24,6 +24,7 @@ import {
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import CompendiumMapConfig from './applications/compendiumMap.js';
+import { fuzzysortNew } from './scripts/fuzzysort.js';
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = [
@@ -196,22 +197,6 @@ async function registerWorldSettings() {
     onChange: (val) => (runSearchOnPath = val),
   });
 
-  // Legacy filter setting, retained in case some users have used this setting
-  game.settings.register('token-variants', 'portraitFilter', {
-    scope: 'world',
-    config: false,
-    type: String,
-    default: '',
-  });
-
-  // Legacy filter setting, retained in case some users have used this setting
-  game.settings.register('token-variants', 'tokenFilter', {
-    scope: 'world',
-    config: false,
-    type: String,
-    default: '',
-  });
-
   game.settings.registerMenu('token-variants', 'searchFilterMenu', {
     name: game.i18n.localize('token-variants.settings.search-filters.Name'),
     hint: game.i18n.localize('token-variants.settings.search-filters.Hint'),
@@ -226,10 +211,10 @@ async function registerWorldSettings() {
     config: false,
     type: Object,
     default: {
-      portraitFilterInclude: game.settings.get('token-variants', 'portraitFilter'),
+      portraitFilterInclude: '',
       portraitFilterExclude: '',
       portraitFilterRegex: '',
-      tokenFilterInclude: game.settings.get('token-variants', 'tokenFilter'),
+      tokenFilterInclude: '',
       tokenFilterExclude: '',
       tokenFilterRegex: '',
       generalFilterInclude: '',
@@ -949,10 +934,23 @@ export async function cacheTokens() {
  * @param filters filters to be applied
  * @returns true|false
  */
-function searchMatchesToken(search, tokenSrc, name, filters) {
+function searchMatchesToken(search, simplifiedSearch, tokenSrc, name, filters, fuzzysort) {
   // Is the search text contained in name/path
   const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(name);
-  if (!simplified.includes(search)) return false;
+
+  if (!simplified.includes(simplifiedSearch)) {
+    if (fuzzysort) {
+      // TEST string similarity
+      let result = fuzzysort.single(search, name);
+      if (!result) {
+        return false;
+      } else {
+        console.log('| Search:', search, '| Name:', name, '| Similarity:', result.score, ' |');
+      }
+    } else {
+      return false;
+    }
+  }
 
   if (!filters) return true;
 
@@ -1019,10 +1017,11 @@ async function findTokens(name, searchType = '') {
 
   foundTokens = new Map();
   const simpleName = simplifyTokenName(name);
+  const fuzzysort = fuzzysortNew();
 
   cachedTokens.forEach((names, tokenSrc) => {
     for (let n of names) {
-      if (searchMatchesToken(simpleName, tokenSrc, n, filters)) {
+      if (searchMatchesToken(name, simpleName, tokenSrc, n, filters, fuzzysort)) {
         addTokenToFound(tokenSrc, n);
       }
     }
@@ -1113,6 +1112,8 @@ async function walkFindTokens(
 ) {
   if (!bucket && !path) return;
 
+  const fuzzysort = fuzzysortNew();
+
   let files = {};
   try {
     if (bucket) {
@@ -1150,7 +1151,9 @@ async function walkFindTokens(
             if (!name) {
               addTokenToFound(path, rtName);
             } else {
-              if (searchMatchesToken(simplifyTokenName(name), path, rtName, filters)) {
+              if (
+                searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters, fuzzysort)
+              ) {
                 addTokenToFound(path, rtName);
               }
             }
@@ -1173,7 +1176,9 @@ async function walkFindTokens(
           if (!name) {
             addTokenToFound(path, rtName);
           } else {
-            if (searchMatchesToken(simplifyTokenName(name), path, rtName, filters)) {
+            if (
+              searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters, fuzzysort)
+            ) {
               addTokenToFound(path, rtName);
             }
           }
@@ -1197,7 +1202,7 @@ async function walkFindTokens(
     if (!name) {
       addTokenToFound(tokenSrc, tName);
     } else {
-      if (searchMatchesToken(simplifyTokenName(name), tokenSrc, tName, filters)) {
+      if (searchMatchesToken(name, simplifyTokenName(name), tokenSrc, tName, filters, fuzzysort)) {
         addTokenToFound(tokenSrc, tName);
       }
     }
@@ -1656,6 +1661,7 @@ Hooks.on('init', function () {
     doRandomSearch,
     showArtSelect,
     updateTokenImage,
+    stringSimilarity,
   };
 
   // Deprecated api access
