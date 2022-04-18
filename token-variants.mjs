@@ -534,8 +534,7 @@ async function initialize() {
     updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
   });
 
-  Hooks.on('deleteCombatant', (combatant, options, userId) => {
-    if (!enableStatusConfig) return;
+  const deleteCombatant = function (combatant) {
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
 
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
@@ -544,6 +543,18 @@ async function initialize() {
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
+  };
+
+  Hooks.on('deleteCombatant', (combatant, options, userId) => {
+    if (!enableStatusConfig) return;
+    deleteCombatant(combatant);
+  });
+
+  Hooks.on('deleteCombat', (combat, options, userId) => {
+    if (!enableStatusConfig) return;
+    combat.combatants.forEach((combatant) => {
+      deleteCombatant(combatant);
+    });
   });
 
   //
