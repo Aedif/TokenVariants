@@ -18,7 +18,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
 
       if ((results ?? []).length != 0) {
         portraitFound = true;
-        await updateActorImage(actor, results[0]);
+        await updateActorImage(actor, results[0], false, formData.compendium);
       }
     }
 
@@ -31,7 +31,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
 
       if ((results ?? []).length != 0) {
         tokenFound = true;
-        updateTokenImage(results[0], { actor: actor });
+        updateTokenImage(results[0], { actor: actor, pack: formData.compendium });
       }
     }
   } else {
@@ -44,8 +44,11 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
     if ((results ?? []).length != 0) {
       portraitFound = tokenFound = true;
       const imgSrc = results[0];
-      await updateActorImage(actor, imgSrc);
-      updateTokenImage(imgSrc, { actor: actor });
+      updateTokenImage(imgSrc, {
+        actor: actor,
+        actorUpdate: { img: imgSrc },
+        pack: formData.compendium,
+      });
     }
   }
 

@@ -16,32 +16,42 @@ export const PRESSED_KEYS = {
 
 const BATCH_UPDATES = {
   TOKEN: [],
+  TOKEN_CALLBACK: null,
   ACTOR: [],
+  ACTOR_CONTEXT: null,
 };
 
 export function startBatchUpdater() {
   canvas.app.ticker.add(() => {
     if (BATCH_UPDATES.TOKEN.length !== 0) {
-      console.log('UPDATING ', BATCH_UPDATES.TOKEN.length, ' tokens');
-      canvas.scene.updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN);
+      canvas.scene.updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN).then(() => {
+        if (BATCH_UPDATES.TOKEN_CALLBACK) {
+          BATCH_UPDATES.TOKEN_CALLBACK();
+          BATCH_UPDATES.TOKEN_CALLBACK = null;
+        }
+      });
       BATCH_UPDATES.TOKEN = [];
     }
     if (BATCH_UPDATES.ACTOR.length !== 0) {
-      console.log('UPDATING ', BATCH_UPDATES.ACTOR.length, ' actors');
-      Actor.updateDocuments(BATCH_UPDATES.ACTOR);
+      if (BATCH_UPDATES.ACTOR_CONTEXT)
+        Actor.updateDocuments(BATCH_UPDATES.ACTOR, BATCH_UPDATES.ACTOR_CONTEXT);
+      else Actor.updateDocuments(BATCH_UPDATES.ACTOR);
       BATCH_UPDATES.ACTOR = [];
+      BATCH_UPDATES.ACTOR_CONTEXT = null;
     }
   });
 }
 
-export function queueTokenUpdate(id, update) {
+export function queueTokenUpdate(id, update, callback = null) {
   update._id = id;
   BATCH_UPDATES.TOKEN.push(update);
+  if (callback) BATCH_UPDATES.TOKEN_CALLBACK = callback;
 }
 
-export function queueActorUpdate(id, update) {
+export function queueActorUpdate(id, update, context = null) {
   update._id = id;
   BATCH_UPDATES.ACTOR.push(update);
+  BATCH_UPDATES.ACTOR_CONTEXT = context;
 }
 
 /**
@@ -51,11 +61,22 @@ export function queueActorUpdate(id, update) {
  * @param {Token[]} [options.token] Token to be updated with the new image
  * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
  * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
- * @param {object} [options.mergeUpdate] Token update to be merged and performed at the same time as image update
+ * @param {object} [options.tokenUpdate] Token update to be merged and performed at the same time as image update
+ * @param {object} [options.actorUpdate] Actor update to be merged and performed at the same time as image update
+ * @param {string} [options.pack] Compendium pack of the Actor being updated
+ * @param {func} [options.callback] Callback to be executed when a batch update has been performed
  */
 export async function updateTokenImage(
   imgSrc,
-  { token = null, actor = null, imgName = null, mergeUpdate = {} } = {}
+  {
+    token = null,
+    actor = null,
+    imgName = null,
+    tokenUpdate = {},
+    actorUpdate = {},
+    pack = '',
+    callback = null,
+  } = {}
 ) {
   if (!(token || actor)) {
     console.warn(
@@ -86,7 +107,7 @@ export async function updateTokenImage(
     return Object.entries(flattenObject(filterObject(origData, customConfig)));
   };
 
-  let tokenUpdateObj = mergeUpdate;
+  let tokenUpdateObj = tokenUpdate;
   tokenUpdateObj.img = imgSrc;
   tokenUpdateObj['flags.token-variants.name'] = imgName;
 
@@ -131,29 +152,36 @@ export async function updateTokenImage(
   }
 
   if (actor && !token) {
-    await (actor.document ?? actor).update({
-      token: tokenUpdateObj,
-    });
+    actorUpdate.token = tokenUpdateObj;
+    if (pack) {
+      queueActorUpdate(actor.id, actorUpdate, { pack: pack });
+    } else {
+      await (actor.document ?? actor).update(actorUpdate);
+    }
   }
 
   if (token) {
-    queueTokenUpdate(token.id, tokenUpdateObj);
+    queueTokenUpdate(token.id, tokenUpdateObj, callback);
   }
 }
 
 /**
  * Assign new artwork to the actor
  */
-export async function updateActorImage(actor, imgSrc, directUpdate = true) {
+export async function updateActorImage(actor, imgSrc, directUpdate = true, pack = '') {
   if (!actor) return;
   if (directUpdate) {
     await (actor.document ?? actor).update({
       img: imgSrc,
     });
   } else {
-    queueActorUpdate(actor.id, {
-      img: imgSrc,
-    });
+    queueActorUpdate(
+      actor.id,
+      {
+        img: imgSrc,
+      },
+      pack ? { pack: pack } : null
+    );
   }
 }
 

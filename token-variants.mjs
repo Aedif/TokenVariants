@@ -492,20 +492,20 @@ async function initialize() {
         await updateTokenImage(effect.imgSrc, {
           token: token,
           imgName: effect.imgName,
-          mergeUpdate: tokenUpdateObj,
+          tokenUpdate: tokenUpdateObj,
+          callback: hadActiveHUD
+            ? () => {
+                canvas.tokens.hud.bind(token._object || token);
+                if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+              }
+            : null,
         });
-
-        if (hadActiveHUD) {
-          canvas.tokens.hud.bind(token._object || token);
-          if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-        }
       }
     }
 
     // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
     // reset the token image back to default
     if (effects.length === 0 && tokenDefaultImg) {
-      //await (token.document ?? token).unsetFlag('token-variants', 'defaultImg');
       delete tokenUpdateObj['flags.token-variants.defaultImg'];
       tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
 
@@ -513,12 +513,14 @@ async function initialize() {
         await updateTokenImage(tokenDefaultImg.imgSrc, {
           token: token,
           imgName: tokenDefaultImg.imgName,
-          mergeUpdate: tokenUpdateObj,
+          tokenUpdate: tokenUpdateObj,
+          callback: hadActiveHUD
+            ? () => {
+                canvas.tokens.hud.bind(token._object || token);
+                if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+              }
+            : null,
         });
-        if (hadActiveHUD) {
-          canvas.tokens.hud.bind(token._object || token);
-          if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-        }
       } else {
         queueTokenUpdate(token.id, tokenUpdateObj);
       }

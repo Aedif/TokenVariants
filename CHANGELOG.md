@@ -1,3 +1,12 @@
+# 1.29.2
+
+- Ending combat should now properly remove the custom combat images assigned to all the combatants
+- Fixed Status Effect images not being applied to linked tokens
+- Fixed tokens not reverting to default/original image if multiple active tokens exist that are derived from the same actor. Default/original images are now remembered per token rather than actor.
+- Fixed Token HUD closing when toggling mapped status effects.
+- Token HUD images will now display their file names when hovered over.
+- Most Token/Actor updates will now be performed in batches. Should see less console errors and some performance improvements when copying large amounts of tokens or using the compendium mapper.
+
 # 1.29.1
 
 - New '**Compendium Mapper**' settings:
