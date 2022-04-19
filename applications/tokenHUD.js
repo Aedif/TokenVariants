@@ -5,17 +5,22 @@ import {
   SEARCH_TYPE,
   keyPressed,
   updateActorImage,
+  updateTokenImage,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import ActiveEffectConfig from './activeEffectConfig.js';
-import { doImageSearch, updateTokenImage } from '../token-variants.mjs';
+import { doImageSearch } from '../token-variants.mjs';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '') {
   const hudSettings = game.settings.get('token-variants', 'hudSettings');
   const worldHudSettings = game.settings.get('token-variants', 'worldHudSettings');
 
-  if (game.settings.get('token-variants', 'enableStatusConfig') && token.actorId) {
+  if (
+    game.settings.get('token-variants', 'enableStatusConfig') &&
+    token.actorId &&
+    game.actors.get(token.actorId)
+  ) {
     $('.control-icon[data-action="visibility"]')
       .find('img')
       .click((event) => {

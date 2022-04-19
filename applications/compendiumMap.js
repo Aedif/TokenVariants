@@ -1,5 +1,5 @@
-import { showArtSelect, updateTokenImage, doImageSearch, cacheTokens } from '../token-variants.mjs';
-import { SEARCH_TYPE, updateActorImage } from '../scripts/utils.js';
+import { showArtSelect, doImageSearch, cacheTokens } from '../token-variants.mjs';
+import { SEARCH_TYPE, updateActorImage, updateTokenImage } from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
 
 async function autoApply(actor, image1, image2, ignoreKeywords, formData) {

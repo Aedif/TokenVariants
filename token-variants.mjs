@@ -19,7 +19,10 @@ import {
   keyPressed,
   registerKeybinds,
   updateActorImage,
+  updateTokenImage,
   stringSimilarity,
+  startBatchUpdater,
+  queueTokenUpdate,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import CompendiumMapConfig from './applications/compendiumMap.js';
@@ -415,15 +418,6 @@ function registerHUD() {
   Hooks.on('renderTokenHUD', renderHud);
 }
 
-// TEMP
-// Hooks.once('canvasReady', () => {
-//   console.log('canvasReady ==========');
-//   canvas.app.ticker.add(() => {
-//     console.log('tick');
-//   });
-// });
-// TEMP
-
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -446,6 +440,9 @@ async function initialize() {
 
   await registerWorldSettings();
 
+  // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
+  startBatchUpdater();
+
   const getEffectsFromActor = (actor) => {
     let effects = [];
     (actor.data.effects || []).forEach((activeEffect, id) => {
@@ -459,6 +456,7 @@ async function initialize() {
     const tokenImgName =
       (token.document ?? token).getFlag('token-variants', 'name') || getFileName(tokenImgSrc);
     let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+    const tokenUpdateObj = {};
     // Legacy support, to be removed after reasonable amount of time has been given for defaultImg to have been cleared
     // from most users' Actors. (19/04/2022)
     if (!tokenDefaultImg) {
@@ -467,7 +465,7 @@ async function initialize() {
         'defaultImg'
       );
       if (tokenDefaultImg) {
-        (token.document ?? token).setFlag('token-variants', 'defaultImg', tokenDefaultImg);
+        tokenUpdateObj['flags.token-variants.defaultImg'] = tokenDefaultImg;
         await (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
       }
     }
@@ -486,15 +484,15 @@ async function initialize() {
       const effect = effects[effects.length - 1];
       if (tokenImgSrc !== effect.imgSrc || tokenImgName !== effect.imgName) {
         if (!tokenDefaultImg) {
-          (token.document ?? token).setFlag('token-variants', 'defaultImg', {
+          tokenUpdateObj['flags.token-variants.defaultImg'] = {
             imgSrc: tokenImgSrc,
             imgName: tokenImgName,
-          });
+          };
         }
-
         await updateTokenImage(effect.imgSrc, {
           token: token,
           imgName: effect.imgName,
+          mergeUpdate: tokenUpdateObj,
         });
 
         if (hadActiveHUD) {
@@ -507,16 +505,22 @@ async function initialize() {
     // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
     // reset the token image back to default
     if (effects.length === 0 && tokenDefaultImg) {
-      await (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
+      //await (token.document ?? token).unsetFlag('token-variants', 'defaultImg');
+      delete tokenUpdateObj['flags.token-variants.defaultImg'];
+      tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
+
       if (tokenDefaultImg.imgSrc !== tokenImgSrc || tokenDefaultImg.imgName !== tokenImgName) {
         await updateTokenImage(tokenDefaultImg.imgSrc, {
           token: token,
           imgName: tokenDefaultImg.imgName,
+          mergeUpdate: tokenUpdateObj,
         });
         if (hadActiveHUD) {
           canvas.tokens.hud.bind(token._object || token);
           if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
         }
+      } else {
+        queueTokenUpdate(token.id, tokenUpdateObj);
       }
     }
   };
@@ -534,7 +538,7 @@ async function initialize() {
     updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
   });
 
-  const deleteCombatant = function (combatant) {
+  const deleteCombatant = async function (combatant) {
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
 
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
@@ -542,7 +546,7 @@ async function initialize() {
 
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
-    updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
+    await updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects);
   };
 
   Hooks.on('deleteCombatant', (combatant, options, userId) => {
@@ -1521,134 +1525,6 @@ export async function doImageSearch(
 
   if (callback) callback(allImages);
   return allImages;
-}
-
-export async function performTokenImageUpdate(
-  imgSrc,
-  { token = null, actor = null, imgName = null } = {}
-) {}
-
-/**
- * Updates Token and/or Proto Token  with the new image and custom configuration if one exists.
- * @param {string} imgSrc Image source path/url
- * @param {object} [options={}] Update options
- * @param {Token[]} [options.token] Token to be updated with the new image
- * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
- * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
- */
-export async function updateTokenImage(
-  imgSrc,
-  { token = null, actor = null, imgName = null } = {}
-) {
-  if (!(token || actor)) {
-    console.warn(
-      game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor')
-    );
-    return;
-  }
-
-  if (!imgName) imgName = getFileName(imgSrc);
-  if (!actor && token.actor) {
-    actor = game.actors.get(token.actor.id);
-  }
-
-  const getDefaultConfig = (token, actor) => {
-    let configEntries = [];
-    if (token)
-      configEntries =
-        (token.document ? token.document : token).getFlag('token-variants', 'defaultConfig') || [];
-    else if (actor) {
-      const tokenData = actor.data.token;
-      if ('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
-        configEntries = tokenData['token-variants']['defaultConfig'];
-    }
-    return expandObject(Object.fromEntries(configEntries));
-  };
-
-  const constructDefaultConfig = (origData, customConfig) => {
-    return Object.entries(flattenObject(filterObject(origData, customConfig)));
-  };
-
-  let tokenUpdateObj = {
-    img: imgSrc,
-  };
-  const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
-  const usingCustomConfig =
-    token &&
-    (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
-  const defaultConfig = getDefaultConfig(token);
-
-  if (tokenCustomConfig || usingCustomConfig) {
-    tokenUpdateObj = mergeObject(tokenUpdateObj, defaultConfig);
-  }
-
-  if (tokenCustomConfig) {
-    if (token) {
-      await token.setFlag('token-variants', 'usingCustomConfig', true);
-      const tokenData = token.data instanceof Object ? token.data : token.data.toObject();
-      const defConf = constructDefaultConfig(
-        mergeObject(tokenData, defaultConfig),
-        tokenCustomConfig
-      );
-      await token.setFlag('token-variants', 'defaultConfig', defConf);
-    } else if (actor && !token) {
-      tokenUpdateObj.flags = {
-        'token-variants': {
-          usingCustomConfig: true,
-        },
-      };
-      const tokenData =
-        actor.data.token instanceof Object ? actor.data.token : actor.data.token.toObject();
-      const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
-      tokenUpdateObj.flags = {
-        'token-variants': {
-          defaultConfig: defConf,
-        },
-      };
-    }
-
-    tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
-  } else if (usingCustomConfig) {
-    if (token) {
-      await token.setFlag('token-variants', 'usingCustomConfig', false);
-      await token.unsetFlag('token-variants', 'defaultConfig');
-    } else if (actor && !token) {
-      tokenUpdateObj.flags = {
-        'token-variants': {
-          usingCustomConfig: false,
-          defaultConfig: [],
-        },
-      };
-    }
-  }
-
-  if (actor && !token) {
-    await (actor.document ?? actor).update({
-      'token.img': imgSrc,
-    });
-    tokenUpdateObj = mergeObject(tokenUpdateObj, {
-      flags: {
-        'token-variants': {
-          name: imgName,
-        },
-      },
-    });
-    if (isNewerVersion(game.version ?? game.data.version, '0.7.10'))
-      await actor.data.token.update(tokenUpdateObj);
-    else {
-      for (const [key, value] of Object.entries(tokenUpdateObj)) {
-        tokenUpdateObj[`token.${key}`] = value;
-        delete tokenUpdateObj[key];
-      }
-      await actor.update(tokenUpdateObj);
-    }
-  }
-
-  if (token) {
-    const obj = token.document ?? token;
-    await obj.setFlag('token-variants', 'name', imgName);
-    await obj.update(tokenUpdateObj);
-  }
 }
 
 function twoPopupPrompt(actor, imgSrc, imgName, token) {
