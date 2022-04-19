@@ -14,6 +14,149 @@ export const PRESSED_KEYS = {
   config: false,
 };
 
+const BATCH_UPDATES = {
+  TOKEN: [],
+  ACTOR: [],
+};
+
+export function startBatchUpdater() {
+  canvas.app.ticker.add(() => {
+    if (BATCH_UPDATES.TOKEN.length !== 0) {
+      console.log('UPDATING ', BATCH_UPDATES.TOKEN.length, ' tokens');
+      canvas.scene.updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN);
+      BATCH_UPDATES.TOKEN = [];
+    }
+    if (BATCH_UPDATES.ACTOR.length !== 0) {
+      console.log('UPDATING ', BATCH_UPDATES.ACTOR.length, ' actors');
+      Actor.updateDocuments(BATCH_UPDATES.ACTOR);
+      BATCH_UPDATES.ACTOR = [];
+    }
+  });
+}
+
+export function queueTokenUpdate(id, update) {
+  update._id = id;
+  BATCH_UPDATES.TOKEN.push(update);
+}
+
+export function queueActorUpdate(id, update) {
+  update._id = id;
+  BATCH_UPDATES.ACTOR.push(update);
+}
+
+/**
+ * Updates Token and/or Proto Token  with the new image and custom configuration if one exists.
+ * @param {string} imgSrc Image source path/url
+ * @param {object} [options={}] Update options
+ * @param {Token[]} [options.token] Token to be updated with the new image
+ * @param {Actor} [options.actor] Actor with Proto Token to be updated with the new image
+ * @param {string} [options.imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
+ * @param {object} [options.mergeUpdate] Token update to be merged and performed at the same time as image update
+ */
+export async function updateTokenImage(
+  imgSrc,
+  { token = null, actor = null, imgName = null, mergeUpdate = {} } = {}
+) {
+  if (!(token || actor)) {
+    console.warn(
+      game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor')
+    );
+    return;
+  }
+
+  if (!imgName) imgName = getFileName(imgSrc);
+  if (!actor && token.actor) {
+    actor = game.actors.get(token.actor.id);
+  }
+
+  const getDefaultConfig = (token, actor) => {
+    let configEntries = [];
+    if (token)
+      configEntries =
+        (token.document ? token.document : token).getFlag('token-variants', 'defaultConfig') || [];
+    else if (actor) {
+      const tokenData = actor.data.token;
+      if ('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
+        configEntries = tokenData['token-variants']['defaultConfig'];
+    }
+    return expandObject(Object.fromEntries(configEntries));
+  };
+
+  const constructDefaultConfig = (origData, customConfig) => {
+    return Object.entries(flattenObject(filterObject(origData, customConfig)));
+  };
+
+  let tokenUpdateObj = mergeUpdate;
+  tokenUpdateObj.img = imgSrc;
+  tokenUpdateObj['flags.token-variants.name'] = imgName;
+
+  const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
+  const usingCustomConfig =
+    token &&
+    (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
+  const defaultConfig = getDefaultConfig(token);
+
+  if (tokenCustomConfig || usingCustomConfig) {
+    tokenUpdateObj = mergeObject(tokenUpdateObj, defaultConfig);
+  }
+
+  if (tokenCustomConfig) {
+    if (token) {
+      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
+      const tokenData = token.data instanceof Object ? token.data : token.data.toObject();
+      const defConf = constructDefaultConfig(
+        mergeObject(tokenData, defaultConfig),
+        tokenCustomConfig
+      );
+      tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
+    } else if (actor && !token) {
+      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
+      const tokenData =
+        actor.data.token instanceof Object ? actor.data.token : actor.data.token.toObject();
+      const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
+      tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
+    }
+
+    tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
+  } else if (usingCustomConfig) {
+    if (token) {
+      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
+      delete tokenUpdateObj['flags.token-variants.defaultConfig'];
+      tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
+    } else if (actor && !token) {
+      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = false;
+      delete tokenUpdateObj['flags.token-variants.defaultConfig'];
+      tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
+    }
+  }
+
+  if (actor && !token) {
+    await (actor.document ?? actor).update({
+      token: tokenUpdateObj,
+    });
+  }
+
+  if (token) {
+    queueTokenUpdate(token.id, tokenUpdateObj);
+  }
+}
+
+/**
+ * Assign new artwork to the actor
+ */
+export async function updateActorImage(actor, imgSrc, directUpdate = true) {
+  if (!actor) return;
+  if (directUpdate) {
+    await (actor.document ?? actor).update({
+      img: imgSrc,
+    });
+  } else {
+    queueActorUpdate(actor.id, {
+      img: imgSrc,
+    });
+  }
+}
+
 /**
  * Implementation of 'https://en.wikipedia.org/wiki/Levenshtein_distance'
  * Credit to: David and overlord1234 @ stackoverflow
@@ -58,16 +201,6 @@ export function stringSimilarity(s1, s2) {
     return 1.0;
   }
   return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
-}
-
-/**
- * Assign new artwork to the actor
- */
-export async function updateActorImage(actor, imgSrc) {
-  if (!actor) return;
-  (actor.document ?? actor).update({
-    img: imgSrc,
-  });
 }
 
 /**
