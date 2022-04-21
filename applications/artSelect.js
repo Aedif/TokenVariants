@@ -112,34 +112,18 @@ export class ArtSelect extends FormApplication {
     let artFound = false;
 
     const genLabel = function (obj) {
-      if (!fuzzySearch || !obj.indexes) return obj.name;
-
+      if (!fuzzySearch || !obj.indices) return obj.name;
       const name = obj.name;
-      const indexes = obj.indexes;
 
-      let lastIndex = indexes[0];
       let label = '';
-
-      let substringLength = 1;
-
-      if (lastIndex !== 0) {
-        label = name.substring(0, lastIndex);
+      let lastIndex = 0;
+      for (const index of obj.indices) {
+        label += name.slice(lastIndex, index[0]);
+        label += '<mark>' + name.slice(index[0], index[1] + 1) + '</mark>';
+        lastIndex = index[1] + 1;
       }
+      label += name.slice(lastIndex, name.length);
 
-      for (let i = 0; i < indexes.length; i++) {
-        if (i + 1 === indexes.length) {
-          label += '<mark>' + name.substring(lastIndex, lastIndex + substringLength) + '</mark>';
-        } else if (indexes[i + 1] - indexes[i] === 1) {
-          substringLength++;
-        } else {
-          label += '<mark>' + name.substring(lastIndex, lastIndex + substringLength) + '</mark>';
-          label += name.substring(lastIndex + substringLength, indexes[i + 1]);
-          lastIndex = indexes[i + 1];
-          substringLength = 1;
-        }
-      }
-
-      label += name.substring(lastIndex + substringLength, name.length);
       return label;
     };
 
@@ -156,6 +140,7 @@ export class ArtSelect extends FormApplication {
           type: vid || img,
           name: imageObj.name,
           label: genLabel(imageObj),
+          score: fuzzySearch ? Math.ceil((1 - imageObj.score) * 100) + '%' : null,
           hasConfig:
             this.searchType === SEARCH_TYPE.TOKEN || this.searchType === SEARCH_TYPE.BOTH
               ? Boolean(
@@ -215,10 +200,6 @@ export class ArtSelect extends FormApplication {
       });
     });
 
-    html.find('button#custom-art-search-bt').on('click', () => {
-      this._performSearch(html.find(`input#custom-art-search`)[0].value);
-    });
-
     let searchInput = html.find('#custom-art-search');
     searchInput.on(
       'input',
@@ -236,6 +217,7 @@ export class ArtSelect extends FormApplication {
   }
 
   _performSearch(search) {
+    if (this.search.trim() === search.trim()) return;
     showArtSelect(search, {
       callback: this.callback,
       searchType: this.searchType,

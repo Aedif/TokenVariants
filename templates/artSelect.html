@@ -8,7 +8,6 @@
     {{/if}}
     <div class="form-group">
       <input type="text" id="custom-art-search" name="search" value="{{search}}" />
-      <button type="button" id="custom-art-search-bt">Search</button>
       <button type="button" id="token-variant-art-clear-queue" {{#unless queue}}hidden{{/unless}}>Clear Queue ({{queue}})</button>
     </div>
 </div>
@@ -22,6 +21,7 @@
     <div>
       <span
         class="token-variants-grid-box"
+        title="{{image.score}}"
         data-name="{{image.path}}"
         data-filename="{{image.name}}"
       ></span>

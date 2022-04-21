@@ -25,8 +25,8 @@ import {
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import CompendiumMapConfig from './applications/compendiumMap.js';
-import { fuzzysortNew } from './scripts/fuzzysort.js';
 import AlgorithmSettings from './applications/algorithm.js';
+import { Fuse } from './scripts/fuse/fuse.js';
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -79,7 +79,9 @@ let parsedSearchPaths;
 // than continue execution
 const showArtSelectExecuting = { inProgress: false };
 
-const fuzzysort = fuzzysortNew();
+// Controls for when performing multiple searches for one result set aka keywords search
+let multiSearch = false;
+let usedImages = new Set();
 
 async function registerWorldSettings() {
   game.settings.register('token-variants', 'debug', {
@@ -246,6 +248,8 @@ async function registerWorldSettings() {
     default: {
       exact: true,
       fuzzy: false,
+      fuzzyLimit: 50,
+      fuzzyThreshold: 0.3,
     },
     onChange: (settings) => (algorithmSettings = settings),
   });
@@ -1082,9 +1086,16 @@ async function findTokensFuzzy(name, searchType) {
   // Select filters based on type of search
   let filters = getFilters(searchType);
 
-  const allPaths = cachedImages.filter((imgObj) =>
-    imagePassesFilter(imgObj.name, imgObj.path, filters)
-  );
+  let allPaths;
+  if (multiSearch) {
+    allPaths = cachedImages.filter(
+      (imgObj) => !usedImages.has(imgObj) && imagePassesFilter(imgObj.name, imgObj.path, filters)
+    );
+  } else {
+    allPaths = cachedImages.filter((imgObj) =>
+      imagePassesFilter(imgObj.name, imgObj.path, filters)
+    );
+  }
 
   foundImages = [];
   await walkAllPaths();
@@ -1095,11 +1106,24 @@ async function findTokensFuzzy(name, searchType) {
     }
   });
 
-  const results = fuzzysort.go(name, allPaths, { key: 'name', limit: 50 });
-  foundImages = results.map((r) => {
-    r.obj.indexes = r.indexes;
-    return r.obj;
+  const fuse = new Fuse(allPaths, {
+    keys: ['name'],
+    includeScore: true,
+    includeMatches: true,
+    minMatchCharLength: 1,
+    // ignoreLocation: true,
+    threshold: algorithmSettings.fuzzyThreshold,
   });
+
+  const results = fuse.search(name).slice(0, algorithmSettings.fuzzyLimit);
+  console.log(results);
+
+  foundImages = results.map((r) => {
+    r.item.indices = r.matches[0].indices;
+    r.item.score = r.score;
+    return r.item;
+  });
+  console.log(foundImages);
 
   if (debug) console.log('ENDING: Fuzzy Token Search', foundImages);
 
@@ -1462,11 +1486,13 @@ export async function doImageSearch(
   } = {}
 ) {
   if (caching) return;
+
+  search = search.trim();
+
   if (debug) console.log('STARTING: Art Search', search, searchType);
 
   let searches = [search];
   let allImages = new Map();
-  let usedTokens = new Set();
 
   if (keywordSearch && !ignoreKeywords) {
     excludedKeywords = parseKeywords(game.settings.get('token-variants', 'excludedKeywords'));
@@ -1478,20 +1504,25 @@ export async function doImageSearch(
     );
   }
 
+  multiSearch = true; // TODO: transfer this logic to findTokens()
+  usedImages = new Set();
   for (const search of searches) {
     if (allImages.get(search) !== undefined) continue;
 
     let results = await findTokens(search, searchType);
-    results = results.filter((pathObj) => !usedTokens.has(pathObj));
+    results = results.filter((pathObj) => !usedImages.has(pathObj));
 
     allImages.set(search, results);
-    results.forEach(usedTokens.add, usedTokens);
+    results.forEach(usedImages.add, usedImages);
+
+    multiSearch = true; // TODO: transfer this logic to findTokens()
   }
+  multiSearch = false;
 
   if (debug) console.log('ENDING: Art Search');
 
   if (simpleResults) {
-    allImages = Array.from(usedTokens).map((obj) => obj.path);
+    allImages = Array.from(usedImages).map((obj) => obj.path);
   }
 
   if (callback) callback(allImages);

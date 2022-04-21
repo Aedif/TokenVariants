@@ -17,7 +17,9 @@ export default class AlgorithmSettings extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    return mergeObject(data, game.settings.get('token-variants', 'algorithmSettings'));
+    const settings = game.settings.get('token-variants', 'algorithmSettings');
+    settings.fuzzyThreshold = 100 - settings.fuzzyThreshold * 100;
+    return mergeObject(data, settings);
   }
 
   /**
@@ -42,6 +44,11 @@ export default class AlgorithmSettings extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
+    formData.fuzzyLimit = parseInt(formData.fuzzyLimit);
+    if (isNaN(formData.fuzzyLimit) || formData.fuzzyLimit < 1) formData.fuzzyLimit = 50;
+
+    formData.fuzzyThreshold = (100 - formData.fuzzyThreshold) / 100;
+
     game.settings.set('token-variants', 'algorithmSettings', formData);
   }
 }

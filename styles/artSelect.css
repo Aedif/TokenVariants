@@ -58,6 +58,11 @@
   white-space: nowrap;
 }
 
+.token-variants-grid > div > span {
+  overflow: scroll;
+  white-space: nowrap;
+}
+
 .token-variants-grid > div > p > mark {
   background-color: initial;
   font-weight: bold;

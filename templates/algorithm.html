@@ -13,6 +13,33 @@
     <p class="notes">Token/Actor names require only partial matches to the file/folder name.</p>
   </div>
 
+  <div class="form-group">
+    <label>Limit</label>
+    <input
+      type="text"
+      name="fuzzyLimit"
+      value="{{fuzzyLimit}}"
+      placeholder="1"
+      data-dtype="Number"
+    />
+    <p class="notes">Maximum number of results returned per search</p>
+  </div>
+
+  <div class="form-group">
+    <label>Percentage Match</label>
+    <input
+      type="range"
+      name="fuzzyThreshold"
+      data-dtype="Number"
+      value="{{fuzzyThreshold}}"
+      min="0"
+      max="100"
+      step="0.1"
+    />
+    <span class="range-value">{{fuzzyThreshold}}</span>
+    <p class="notes">Minimum percentage match required for an image to be shown.</p>
+  </div>
+
   <hr />
 
   <div class="button-container">
