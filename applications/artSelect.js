@@ -106,12 +106,13 @@ export class ArtSelect extends FormApplication {
     // Create buttons
     //
     const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
+    const fuzzySearch = game.settings.get('token-variants', 'algorithmSettings').fuzzy;
 
     let allButtons = new Map();
     let artFound = false;
 
     const genLabel = function (obj) {
-      if (!obj.indexes) return obj.name;
+      if (!fuzzySearch || !obj.indexes) return obj.name;
 
       const name = obj.name;
       const indexes = obj.indexes;

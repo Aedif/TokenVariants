@@ -1,0 +1,23 @@
+<form>
+  <h2>Exact</h2>
+  <div class="form-group">
+    <label>Enable</label>
+    <input type="checkbox" name="exact" data-dtype="Boolean" {{#if exact}}checked{{/if}}>
+    <p class="notes">Token/Actor names need to be fully present in the file/folder name.</p>
+  </div>
+
+  <h2>Fuzzy</h2>
+  <div class="form-group">
+    <label>Enable</label>
+    <input type="checkbox" name="fuzzy" data-dtype="Boolean" {{#if fuzzy}}checked{{/if}}>
+    <p class="notes">Token/Actor names require only partial matches to the file/folder name.</p>
+  </div>
+
+  <hr />
+
+  <div class="button-container">
+    <button type="submit">
+      <i class="far fa-save"></i>{{localize "token-variants.common.apply"}}
+    </button>
+  </div>
+</form>

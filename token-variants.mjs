@@ -11,8 +11,6 @@ import {
   simplifyPath,
   parseSearchPaths,
   parseKeywords,
-  isImage,
-  isVideo,
   getTokenConfigForUpdate,
   SEARCH_TYPE,
   callForgeVTT,
@@ -27,6 +25,10 @@ import {
 import { renderHud } from './applications/tokenHUD.js';
 import CompendiumMapConfig from './applications/compendiumMap.js';
 import { fuzzysortNew } from './scripts/fuzzysort.js';
+import AlgorithmSettings from './applications/algorithm.js';
+
+// Tracks if module has been initialized
+let initialized = false;
 
 // Default path where the script will look for token art
 const DEFAULT_TOKEN_PATHS = [
@@ -40,6 +42,8 @@ const DEFAULT_TOKEN_PATHS = [
 let keywordSearch = false;
 let excludedKeywords = [];
 
+let algorithmSettings;
+
 // True if in the middle of caching image paths
 let caching = false;
 
@@ -49,9 +53,6 @@ let cachedTokens = [];
 // Tokens found with caching disabled
 let foundTokens = [];
 
-// Tracks if module has been initialized
-let initialized = false;
-
 // Controls whether separate popups are displayed for portrait and token art
 let twoPopups = false;
 let noTwoPopupsPrompt = false;
@@ -59,6 +60,7 @@ let noTwoPopupsPrompt = false;
 // Prevent registering of right-click listener on the character sheet
 let disableActorPortraitListener = false;
 
+// Enables console logs
 let debug = false;
 
 let runSearchOnPath = false;
@@ -71,8 +73,8 @@ let disableNotifs = false;
 let parsedSearchPaths;
 
 // showArtSelect(...) can take a while to fully execute and it is possible for it to be called
-// multiple times in very quick succession especially if copy pasting tokens or importing actors
-// this variable set early in the function execution is used to queue additional requests rather
+// multiple times in very quick succession especially if copy pasting tokens or importing actors.
+// This variable set early in the function execution is used to queue additional requests rather
 // than continue execution
 const showArtSelectExecuting = { inProgress: false };
 
@@ -227,6 +229,26 @@ async function registerWorldSettings() {
     },
   });
 
+  game.settings.registerMenu('token-variants', 'algorithmMenu', {
+    name: 'Algorithm Settings',
+    hint: 'Configure the algorithm used to perform image searches.',
+    scope: 'world',
+    icon: 'fas fa-exchange-alt',
+    type: AlgorithmSettings,
+    restricted: true,
+  });
+
+  game.settings.register('token-variants', 'algorithmSettings', {
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: {
+      exact: true,
+      fuzzy: false,
+    },
+    onChange: (settings) => (algorithmSettings = settings),
+  });
+
   game.settings.register('token-variants', 'forgevttPaths', {
     scope: 'world',
     config: false,
@@ -376,6 +398,7 @@ async function registerWorldSettings() {
   imgurClientId = game.settings.get('token-variants', 'imgurClientId');
   enableStatusConfig = game.settings.get('token-variants', 'enableStatusConfig');
   disableNotifs = game.settings.get('token-variants', 'disableNotifs');
+  algorithmSettings = game.settings.get('token-variants', 'algorithmSettings');
 }
 
 function registerHUD() {
@@ -988,7 +1011,7 @@ export async function cacheTokens() {
   if (debug) console.log('STARTING: Token Caching');
   cachedTokens = [];
 
-  await findTokens('', '');
+  await findTokensExact('', '');
   cachedTokens = foundTokens;
 
   foundTokens = [];
@@ -1016,17 +1039,7 @@ function searchMatchesToken(search, simplifiedSearch, tokenSrc, name, filters) {
   const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(name);
 
   if (!simplified.includes(simplifiedSearch)) {
-    // if (true) {
-    //   // TEST string similarity
-    //   let result = fuzzysort.single(search, name);
-    //   if (!result) {
-    //     return false;
-    //   } else {
-    //     console.log('| Search:', search, '| Name:', name, '| Similarity:', result.score, ' |');
-    //   }
-    // } else {
     return false;
-    // }
   }
 
   if (!filters) return true;
@@ -1053,7 +1066,15 @@ function searchMatchesToken(search, simplifiedSearch, tokenSrc, name, filters) {
   return true;
 }
 
-async function findTokensFuzzy(name, searchType = '') {
+async function findTokens(name, searchType = '') {
+  if (algorithmSettings.exact) {
+    return findTokensExact(name, searchType);
+  } else {
+    return findTokensFuzzy(name, searchType);
+  }
+}
+
+async function findTokensFuzzy(name, searchType) {
   if (debug) console.log('STARTING: Fuzzy Token Search', name, searchType, caching);
 
   // Select filters based on type of search
@@ -1092,53 +1113,7 @@ async function findTokensFuzzy(name, searchType = '') {
   // TODO: incorporate filters in the fuzzy search
 
   foundTokens = [];
-
-  let searchPaths = parsedSearchPaths;
-
-  for (let path of searchPaths.get('data')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        filters: filters,
-      });
-  }
-  for (let [bucket, paths] of searchPaths.get('s3')) {
-    for (let path of paths) {
-      if ((path.cache && caching) || (!path.cache && !caching))
-        await walkFindTokens(path.text, {
-          bucket: bucket,
-          filters: filters,
-        });
-    }
-  }
-  for (let path of searchPaths.get('forge')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        filters: filters,
-        forge: true,
-      });
-  }
-  for (let path of searchPaths.get('rolltable')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        filters: filters,
-        rollTableName: path.text,
-      });
-  }
-  for (let path of searchPaths.get('forgevtt')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        filters: filters,
-        forgevtt: true,
-        apiKey: path.apiKey,
-      });
-  }
-  for (let path of searchPaths.get('imgur')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        filters: filters,
-        imgur: true,
-      });
-  }
+  await walkAllPaths();
 
   // foundTokens should now contain all uncached images
   // and cachedTokens all the cached images
@@ -1162,7 +1137,7 @@ async function findTokensFuzzy(name, searchType = '') {
 /**
  * Search for tokens matching the supplied name
  */
-async function findTokens(name, searchType = '') {
+async function findTokensExact(name, searchType) {
   if (debug) console.log('STARTING: Token Search', name, searchType, caching);
 
   // Select filters based on type of search
@@ -1206,80 +1181,63 @@ async function findTokens(name, searchType = '') {
       foundTokens.push(pathObj);
   });
 
-  // cachedTokens.forEach((names, tokenSrc) => {
-  //   for (let n of names) {
-  //     if (searchMatchesToken(name, simpleName, tokenSrc, n, filters)) {
-  //       addTokenToFound(tokenSrc, n);
-  //     }
-  //   }
-  // });
-
-  let searchPaths = parsedSearchPaths;
-
-  for (let path of searchPaths.get('data')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        name: simpleName,
-        filters: filters,
-      });
-  }
-  for (let [bucket, paths] of searchPaths.get('s3')) {
-    for (let path of paths) {
-      if ((path.cache && caching) || (!path.cache && !caching))
-        await walkFindTokens(path.text, {
-          name: simpleName,
-          bucket: bucket,
-          filters: filters,
-        });
-    }
-  }
-  for (let path of searchPaths.get('forge')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        name: simpleName,
-        filters: filters,
-        forge: true,
-      });
-  }
-  for (let path of searchPaths.get('rolltable')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        name: simpleName,
-        filters: filters,
-        rollTableName: path.text,
-      });
-  }
-  for (let path of searchPaths.get('forgevtt')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        name: simpleName,
-        filters: filters,
-        forgevtt: true,
-        apiKey: path.apiKey,
-      });
-  }
-  for (let path of searchPaths.get('imgur')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        name: simpleName,
-        filters: filters,
-        imgur: true,
-      });
-  }
+  await walkAllPaths(simpleName, filters);
 
   if (debug) console.log('ENDING: Token Search', foundTokens);
   return foundTokens;
 }
 
-function addTokenToFound(tokenSrc, name) {
-  foundTokens.push({ path: tokenSrc, name: name });
-  // if (foundTokens.has(tokenSrc)) {
-  //   if (!foundTokens.get(tokenSrc).includes(name)) {
-  //     foundTokens.get(tokenSrc).push(name);
-  //   }
-  // } else {
-  //   foundTokens.set(tokenSrc, [name]);
-  // }
+async function walkAllPaths(name = '', filters = null) {
+  for (let path of parsedSearchPaths.get('data')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        name: name,
+        filters: filters,
+      });
+  }
+  for (let [bucket, paths] of parsedSearchPaths.get('s3')) {
+    for (let path of paths) {
+      if ((path.cache && caching) || (!path.cache && !caching))
+        await walkFindTokens(path.text, {
+          name: name,
+          bucket: bucket,
+          filters: filters,
+        });
+    }
+  }
+  for (let path of parsedSearchPaths.get('forge')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        name: name,
+        filters: filters,
+        forge: true,
+      });
+  }
+  for (let path of parsedSearchPaths.get('rolltable')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        name: name,
+        filters: filters,
+        rollTableName: path.text,
+      });
+  }
+  for (let path of parsedSearchPaths.get('forgevtt')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        name: name,
+        filters: filters,
+        forgevtt: true,
+        apiKey: path.apiKey,
+      });
+  }
+  for (let path of parsedSearchPaths.get('imgur')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        name: name,
+        filters: filters,
+        imgur: true,
+      });
+  }
 }
 
 /**
@@ -1335,10 +1293,10 @@ async function walkFindTokens(
             const path = img.link;
             const rtName = img.title ?? img.description ?? getFileName(img.link);
             if (!name) {
-              addTokenToFound(path, rtName);
+              foundTokens.push({ path: path, name: rtName });
             } else {
               if (searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters)) {
-                addTokenToFound(path, rtName);
+                foundTokens.push({ path: path, name: rtName });
               }
             }
           });
@@ -1358,10 +1316,10 @@ async function walkFindTokens(
           const path = baseTableData.data.img;
           const rtName = baseTableData.data.text;
           if (!name) {
-            addTokenToFound(path, rtName);
+            foundTokens.push({ path: path, name: rtName });
           } else {
             if (searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters)) {
-              addTokenToFound(path, rtName);
+              foundTokens.push({ path: path, name: rtName });
             }
           }
         }
@@ -1382,10 +1340,10 @@ async function walkFindTokens(
   for (let tokenSrc of files.files) {
     const tName = getFileName(tokenSrc);
     if (!name) {
-      addTokenToFound(tokenSrc, tName);
+      foundTokens.push({ path: tokenSrc, name: tName });
     } else {
       if (searchMatchesToken(name, simplifyTokenName(name), tokenSrc, tName, filters)) {
-        addTokenToFound(tokenSrc, tName);
+        foundTokens.push({ path: tokenSrc, name: tName });
       }
     }
   }
@@ -1615,8 +1573,7 @@ export async function doImageSearch(
   for (const search of searches) {
     if (allImages.get(search) !== undefined) continue;
 
-    // let results = await findTokens(search, searchType); // TODO: allow for swapping
-    let results = await findTokensFuzzy(search, searchType);
+    let results = await findTokens(search, searchType);
     results = results.filter((pathObj) => !usedTokens.has(pathObj));
 
     allImages.set(search, results);
