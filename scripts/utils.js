@@ -1,7 +1,5 @@
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
-const documentUpdateCalls = [];
-
 // Types of searches
 export const SEARCH_TYPE = {
   PORTRAIT: 'portrait',
@@ -580,4 +578,44 @@ export async function callForgeVTT(path, apiKey) {
     xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8');
     xhr.send(formData);
   });
+}
+
+/**
+ * Retrieves filters based on the type of search.
+ * @param {SEARCH_TYPE} searchType
+ */
+export function getFilters(searchType) {
+  // Select filters based on type of search
+  let filters = game.settings.get('token-variants', 'searchFilterSettings');
+  switch (searchType) {
+    case SEARCH_TYPE.BOTH:
+      filters = {
+        include: filters.generalFilterInclude,
+        exclude: filters.generalFilterExclude,
+        regex: filters.generalFilterRegex,
+      };
+      break;
+    case SEARCH_TYPE.PORTRAIT:
+      filters = {
+        include: filters.portraitFilterInclude,
+        exclude: filters.portraitFilterExclude,
+        regex: filters.portraitFilterRegex,
+      };
+      break;
+    case SEARCH_TYPE.TOKEN:
+      filters = {
+        include: filters.tokenFilterInclude,
+        exclude: filters.tokenFilterExclude,
+        regex: filters.tokenFilterRegex,
+      };
+      break;
+    default:
+      filters = {
+        include: '',
+        exclude: '',
+        regex: '',
+      };
+  }
+  if (filters.regex) filters.regex = new RegExp(filters.regex);
+  return filters;
 }
