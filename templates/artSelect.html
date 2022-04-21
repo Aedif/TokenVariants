@@ -23,7 +23,7 @@
       <span
         class="token-variants-grid-box"
         data-name="{{image.path}}"
-        data-filename="{{image.label}}"
+        data-filename="{{image.name}}"
       ></span>
       {{#if image.img}}
       <img class="token-variants-grid-image" src="{{image.path}}" />
@@ -31,15 +31,15 @@
       <video
         class="token-variants-grid-image"
         src="{{image.path}}"
-        alt="{{image.label}}"
+        alt="{{image.name}}"
         autoplay
         loop
       ></video>
       {{/if}} {{#unless image.type}}
-      <span class="token-variants-grid-image" alt="{{image.label}}">{{image.path}}</span>
+      <span class="token-variants-grid-image" alt="{{image.name}}">{{image.path}}</span>
       {{/unless}}
       <i class="fas fa-cog fa-lg {{#if image.hasConfig}}active{{/if}}"></i>
-      <p>{{image.label}}</p>
+      <p>{{{image.label}}}</p>
     </div>
     {{/each}}
   </div>

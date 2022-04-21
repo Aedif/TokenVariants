@@ -1,13 +1,10 @@
 import TokenCustomConfig from './tokenCustomConfig.js';
-import { keyPressed, SEARCH_TYPE } from '../scripts/utils.js';
+import { isVideo, isImage, keyPressed, SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 
 const ART_SELECT_QUEUE = {
   queue: [],
 };
-
-let WIDTH = 500;
-let HEIGHT = 500;
 
 export function addToArtSelectQueue(search, options) {
   ART_SELECT_QUEUE.queue.push({
@@ -44,6 +41,14 @@ export function renderFromQueue(force = false) {
   }
 }
 
+function delay(fn, ms) {
+  let timer = 0;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(fn.bind(this, ...args), ms || 0);
+  };
+}
+
 export class ArtSelect extends FormApplication {
   constructor(
     search,
@@ -67,8 +72,10 @@ export class ArtSelect extends FormApplication {
       {},
       {
         closeOnSubmit: false,
-        width: WIDTH,
-        height: HEIGHT,
+        width: ArtSelect.WIDTH || 500,
+        height: ArtSelect.HEIGHT || 500,
+        left: ArtSelect.LEFT,
+        top: ArtSelect.TOP,
         title: title,
       }
     );
@@ -80,17 +87,6 @@ export class ArtSelect extends FormApplication {
     this.image1 = image1;
     this.image2 = image2;
     this.searchType = searchType;
-
-    this.performSearch = (search) => {
-      showArtSelect(search, {
-        callback: callback,
-        searchType: searchType,
-        object: object,
-        force: true,
-        image1: image1,
-        image2: image2,
-      });
-    };
   }
 
   static get defaultOptions() {
@@ -105,7 +101,76 @@ export class ArtSelect extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    data.allImages = this.allImages;
+
+    //
+    // Create buttons
+    //
+    const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
+
+    let allButtons = new Map();
+    let artFound = false;
+
+    const genLabel = function (obj) {
+      if (!obj.indexes) return obj.name;
+
+      const name = obj.name;
+      const indexes = obj.indexes;
+
+      let lastIndex = indexes[0];
+      let label = '';
+
+      let substringLength = 1;
+
+      if (lastIndex !== 0) {
+        label = name.substring(0, lastIndex);
+      }
+
+      for (let i = 0; i < indexes.length; i++) {
+        if (i + 1 === indexes.length) {
+          label += '<mark>' + name.substring(lastIndex, lastIndex + substringLength) + '</mark>';
+        } else if (indexes[i + 1] - indexes[i] === 1) {
+          substringLength++;
+        } else {
+          label += '<mark>' + name.substring(lastIndex, lastIndex + substringLength) + '</mark>';
+          label += name.substring(lastIndex + substringLength, indexes[i + 1]);
+          lastIndex = indexes[i + 1];
+          substringLength = 1;
+        }
+      }
+
+      label += name.substring(lastIndex + substringLength, name.length);
+      return label;
+    };
+
+    this.allImages.forEach((images, search) => {
+      const buttons = [];
+      images.forEach((imageObj) => {
+        artFound = true;
+        const vid = isVideo(imageObj.path);
+        const img = isImage(imageObj.path);
+        buttons.push({
+          path: imageObj.path,
+          img: img,
+          vid: vid,
+          type: vid || img,
+          name: imageObj.name,
+          label: genLabel(imageObj),
+          hasConfig:
+            this.searchType === SEARCH_TYPE.TOKEN || this.searchType === SEARCH_TYPE.BOTH
+              ? Boolean(
+                  tokenConfigs.find(
+                    (config) =>
+                      config.tvImgSrc == imageObj.path && config.tvImgName == imageObj.name
+                  )
+                )
+              : false,
+        });
+      });
+      allButtons.set(search, buttons);
+    });
+
+    if (artFound) data.allImages = allButtons;
+
     data.search = this.search;
     data.queue = ART_SELECT_QUEUE.queue.length;
     data.image1 = this.image1;
@@ -149,13 +214,34 @@ export class ArtSelect extends FormApplication {
       });
     });
 
-    html.find(`button#custom-art-search-bt`).on('click', () => {
-      this.performSearch(html.find(`input#custom-art-search`)[0].value);
+    html.find('button#custom-art-search-bt').on('click', () => {
+      this._performSearch(html.find(`input#custom-art-search`)[0].value);
     });
+
+    let searchInput = html.find('#custom-art-search');
+    searchInput.on(
+      'input',
+      delay((event) => {
+        this._performSearch(event.target.value);
+      }, 250)
+    );
+    searchInput = searchInput[0];
+    searchInput.selectionStart = searchInput.selectionEnd = searchInput.value.length;
 
     html.find(`button#token-variant-art-clear-queue`).on('click', (event) => {
       ART_SELECT_QUEUE.queue = [];
       $(event.target).hide();
+    });
+  }
+
+  _performSearch(search) {
+    showArtSelect(search, {
+      callback: this.callback,
+      searchType: this.searchType,
+      object: this.doc,
+      force: true,
+      image1: this.image1,
+      image2: this.image2,
     });
   }
 
@@ -165,15 +251,21 @@ export class ArtSelect extends FormApplication {
    */
   async _updateObject(event, formData) {
     if (formData && formData.search != this.search) {
-      this.performSearch(formData.search);
+      this._performSearch(formData.search);
     } else {
       this.close();
     }
   }
 
+  setPosition(options = {}) {
+    if (options.width) ArtSelect.WIDTH = options.width;
+    if (options.height) ArtSelect.HEIGHT = options.height;
+    if (options.top) ArtSelect.TOP = options.top;
+    if (options.left) ArtSelect.LEFT = options.left;
+    super.setPosition(options);
+  }
+
   async close(options = {}) {
-    WIDTH = this.position.width;
-    HEIGHT = this.position.height;
     let callData = ART_SELECT_QUEUE.queue.shift();
     if (callData) {
       callData.options.force = true;

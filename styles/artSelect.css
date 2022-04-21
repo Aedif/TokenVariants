@@ -58,6 +58,12 @@
   white-space: nowrap;
 }
 
+.token-variants-grid > div > p > mark {
+  background-color: initial;
+  font-weight: bold;
+  color: rgba(255, 0, 0, 0.6);
+}
+
 .token-variants-portrait-token > div {
   max-width: 80px;
   margin: auto;
@@ -68,6 +74,9 @@
 
 .token-variants-portrait-token > div > .image.active {
   box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
+}
+.token-variants-banner > div > input {
+  text-align: center;
 }
 
 /* .token-variants-banner {

@@ -44,10 +44,10 @@ let excludedKeywords = [];
 let caching = false;
 
 // A cached map of all the found tokens
-let cachedTokens = new Map();
+let cachedTokens = [];
 
 // Tokens found with caching disabled
-let foundTokens = new Map();
+let foundTokens = [];
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -75,6 +75,8 @@ let parsedSearchPaths;
 // this variable set early in the function execution is used to queue additional requests rather
 // than continue execution
 const showArtSelectExecuting = { inProgress: false };
+
+const fuzzysort = fuzzysortNew();
 
 async function registerWorldSettings() {
   game.settings.register('token-variants', 'debug', {
@@ -984,18 +986,19 @@ export async function cacheTokens() {
     ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
   if (debug) console.log('STARTING: Token Caching');
-  cachedTokens.clear();
+  cachedTokens = [];
 
   await findTokens('', '');
   cachedTokens = foundTokens;
-  foundTokens = new Map();
+
+  foundTokens = [];
   if (debug) console.log('ENDING: Token Caching');
 
   caching = false;
   if (!disableNotifs)
     ui.notifications.info(
       game.i18n.format('token-variants.notifications.info.caching-finished', {
-        imageCount: cachedTokens.size,
+        imageCount: cachedTokens.length,
       })
     );
 }
@@ -1008,22 +1011,22 @@ export async function cacheTokens() {
  * @param filters filters to be applied
  * @returns true|false
  */
-function searchMatchesToken(search, simplifiedSearch, tokenSrc, name, filters, fuzzysort) {
+function searchMatchesToken(search, simplifiedSearch, tokenSrc, name, filters) {
   // Is the search text contained in name/path
   const simplified = runSearchOnPath ? simplifyPath(tokenSrc) : simplifyTokenName(name);
 
   if (!simplified.includes(simplifiedSearch)) {
-    if (fuzzysort) {
-      // TEST string similarity
-      let result = fuzzysort.single(search, name);
-      if (!result) {
-        return false;
-      } else {
-        console.log('| Search:', search, '| Name:', name, '| Similarity:', result.score, ' |');
-      }
-    } else {
-      return false;
-    }
+    // if (true) {
+    //   // TEST string similarity
+    //   let result = fuzzysort.single(search, name);
+    //   if (!result) {
+    //     return false;
+    //   } else {
+    //     console.log('| Search:', search, '| Name:', name, '| Similarity:', result.score, ' |');
+    //   }
+    // } else {
+    return false;
+    // }
   }
 
   if (!filters) return true;
@@ -1048,6 +1051,112 @@ function searchMatchesToken(search, simplifiedSearch, tokenSrc, name, filters, f
     if (text.includes(filters.exclude)) return false;
   }
   return true;
+}
+
+async function findTokensFuzzy(name, searchType = '') {
+  if (debug) console.log('STARTING: Fuzzy Token Search', name, searchType, caching);
+
+  // Select filters based on type of search
+  let filters = game.settings.get('token-variants', 'searchFilterSettings');
+  switch (searchType) {
+    case SEARCH_TYPE.BOTH:
+      filters = {
+        include: filters.generalFilterInclude,
+        exclude: filters.generalFilterExclude,
+        regex: filters.generalFilterRegex,
+      };
+      break;
+    case SEARCH_TYPE.PORTRAIT:
+      filters = {
+        include: filters.portraitFilterInclude,
+        exclude: filters.portraitFilterExclude,
+        regex: filters.portraitFilterRegex,
+      };
+      break;
+    case SEARCH_TYPE.TOKEN:
+      filters = {
+        include: filters.tokenFilterInclude,
+        exclude: filters.tokenFilterExclude,
+        regex: filters.tokenFilterRegex,
+      };
+      break;
+    default:
+      filters = {
+        include: '',
+        exclude: '',
+        regex: '',
+      };
+  }
+  if (filters.regex) filters.regex = new RegExp(filters.regex);
+
+  // TODO: incorporate filters in the fuzzy search
+
+  foundTokens = [];
+
+  let searchPaths = parsedSearchPaths;
+
+  for (let path of searchPaths.get('data')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        filters: filters,
+      });
+  }
+  for (let [bucket, paths] of searchPaths.get('s3')) {
+    for (let path of paths) {
+      if ((path.cache && caching) || (!path.cache && !caching))
+        await walkFindTokens(path.text, {
+          bucket: bucket,
+          filters: filters,
+        });
+    }
+  }
+  for (let path of searchPaths.get('forge')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        filters: filters,
+        forge: true,
+      });
+  }
+  for (let path of searchPaths.get('rolltable')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        filters: filters,
+        rollTableName: path.text,
+      });
+  }
+  for (let path of searchPaths.get('forgevtt')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        filters: filters,
+        forgevtt: true,
+        apiKey: path.apiKey,
+      });
+  }
+  for (let path of searchPaths.get('imgur')) {
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindTokens(path.text, {
+        filters: filters,
+        imgur: true,
+      });
+  }
+
+  // foundTokens should now contain all uncached images
+  // and cachedTokens all the cached images
+
+  const allPaths = [];
+
+  allPaths.push(...cachedTokens);
+  allPaths.push(...foundTokens);
+
+  const results = fuzzysort.go(name, allPaths, { key: 'name', limit: 50 });
+  foundTokens = results.map((r) => {
+    r.obj.indexes = r.indexes;
+    return r.obj;
+  });
+
+  if (debug) console.log('ENDING: Fuzzy Token Search', foundTokens);
+
+  return foundTokens;
 }
 
 /**
@@ -1089,17 +1198,21 @@ async function findTokens(name, searchType = '') {
   }
   if (filters.regex) filters.regex = new RegExp(filters.regex);
 
-  foundTokens = new Map();
+  foundTokens = [];
   const simpleName = simplifyTokenName(name);
-  const fuzzysort = fuzzysortNew();
 
-  cachedTokens.forEach((names, tokenSrc) => {
-    for (let n of names) {
-      if (searchMatchesToken(name, simpleName, tokenSrc, n, filters, fuzzysort)) {
-        addTokenToFound(tokenSrc, n);
-      }
-    }
+  cachedTokens.forEach((pathObj) => {
+    if (searchMatchesToken(name, simpleName, pathObj.path, pathObj.name, filters))
+      foundTokens.push(pathObj);
   });
+
+  // cachedTokens.forEach((names, tokenSrc) => {
+  //   for (let n of names) {
+  //     if (searchMatchesToken(name, simpleName, tokenSrc, n, filters)) {
+  //       addTokenToFound(tokenSrc, n);
+  //     }
+  //   }
+  // });
 
   let searchPaths = parsedSearchPaths;
 
@@ -1159,13 +1272,14 @@ async function findTokens(name, searchType = '') {
 }
 
 function addTokenToFound(tokenSrc, name) {
-  if (foundTokens.has(tokenSrc)) {
-    if (!foundTokens.get(tokenSrc).includes(name)) {
-      foundTokens.get(tokenSrc).push(name);
-    }
-  } else {
-    foundTokens.set(tokenSrc, [name]);
-  }
+  foundTokens.push({ path: tokenSrc, name: name });
+  // if (foundTokens.has(tokenSrc)) {
+  //   if (!foundTokens.get(tokenSrc).includes(name)) {
+  //     foundTokens.get(tokenSrc).push(name);
+  //   }
+  // } else {
+  //   foundTokens.set(tokenSrc, [name]);
+  // }
 }
 
 /**
@@ -1185,8 +1299,6 @@ async function walkFindTokens(
   } = {}
 ) {
   if (!bucket && !path) return;
-
-  const fuzzysort = fuzzysortNew();
 
   let files = {};
   try {
@@ -1225,9 +1337,7 @@ async function walkFindTokens(
             if (!name) {
               addTokenToFound(path, rtName);
             } else {
-              if (
-                searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters, fuzzysort)
-              ) {
+              if (searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters)) {
                 addTokenToFound(path, rtName);
               }
             }
@@ -1250,9 +1360,7 @@ async function walkFindTokens(
           if (!name) {
             addTokenToFound(path, rtName);
           } else {
-            if (
-              searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters, fuzzysort)
-            ) {
+            if (searchMatchesToken(name, simplifyTokenName(name), path, rtName, filters)) {
               addTokenToFound(path, rtName);
             }
           }
@@ -1276,7 +1384,7 @@ async function walkFindTokens(
     if (!name) {
       addTokenToFound(tokenSrc, tName);
     } else {
-      if (searchMatchesToken(name, simplifyTokenName(name), tokenSrc, tName, filters, fuzzysort)) {
+      if (searchMatchesToken(name, simplifyTokenName(name), tokenSrc, tName, filters)) {
         addTokenToFound(tokenSrc, tName);
       }
     }
@@ -1330,44 +1438,13 @@ export async function showArtSelect(
 
   showArtSelectExecuting.inProgress = true;
 
-  let allImages = await doImageSearch(search, {
+  const allImages = await doImageSearch(search, {
     searchType: searchType,
     ignoreKeywords: ignoreKeywords,
   });
 
-  const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
-
-  let artFound = false;
-  let allButtons = new Map();
-  allImages.forEach((tokens, search) => {
-    let buttons = [];
-    tokens.forEach((names, tokenSrc) => {
-      artFound = true;
-      const vid = isVideo(tokenSrc);
-      const img = isImage(tokenSrc);
-      for (let name of names) {
-        buttons.push({
-          path: tokenSrc,
-          img: img,
-          vid: vid,
-          type: vid || img,
-          label: name,
-          hasConfig:
-            searchType === SEARCH_TYPE.TOKEN || searchType === SEARCH_TYPE.BOTH
-              ? Boolean(
-                  tokenConfigs.find(
-                    (config) => config.tvImgSrc == tokenSrc && config.tvImgName == name
-                  )
-                )
-              : false,
-        });
-      }
-    });
-    allButtons.set(search, buttons);
-  });
-
   new ArtSelect(search, {
-    allImages: artFound ? allButtons : null,
+    allImages: allImages,
     searchType: searchType,
     callback: callback,
     object: object,
@@ -1405,7 +1482,13 @@ async function _randSearchUtil(search, { searchType = SEARCH_TYPE.BOTH, actor = 
   if (randSettings.shared && actor) {
     let sharedVariants = actor.getFlag('token-variants', 'variants') || [];
     if (sharedVariants.length != 0) {
-      results.set('variants95436723', new Map(sharedVariants.map((v) => [v.imgSrc, v.names])));
+      const sv = [];
+      sharedVariants.forEach((variant) => {
+        variant.names.forEach((name) => {
+          sv.push({ path: variant.imgSrc, name: name });
+        });
+      });
+      results.set('variants95436723', sv);
     }
   }
 
@@ -1419,16 +1502,26 @@ async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, ac
 
   // Find image with the name most similar to target
   let mostSimilar = { imgSrc: '', imgName: '', similarity: 0.0 };
-  results.forEach((images, _) => {
-    images.forEach((imgNames, imgSrc) => {
-      for (const name of imgNames) {
-        const similarity = stringSimilarity(name, target);
-        if (mostSimilar.similarity < similarity) {
-          mostSimilar = { imgSrc: imgSrc, imgName: name, similarity: similarity };
-        }
+
+  results.forEach((images) => {
+    images.forEach((imageObj) => {
+      const similarity = stringSimilarity(imageObj.name, target);
+      if (mostSimilar.similarity < similarity) {
+        mostSimilar = { imgSrc: imageObj.path, imgName: imageObj.name, similarity: similarity };
       }
     });
   });
+
+  // results.forEach((images, _) => {
+  //   images.forEach((imgNames, imgSrc) => {
+  //     for (const name of imgNames) {
+  //       const similarity = stringSimilarity(name, target);
+  //       if (mostSimilar.similarity < similarity) {
+  //         mostSimilar = { imgSrc: imgSrc, imgName: name, similarity: similarity };
+  //       }
+  //     }
+  //   });
+  // });
 
   if (mostSimilar.imgName) {
     return [mostSimilar.imgSrc, mostSimilar.imgName];
@@ -1456,23 +1549,31 @@ async function doRandomSearch(
 
   // Pick random image
   let total = 0;
-  results.forEach((v) => (total += v.size));
+  results.forEach((v) => (total += v.length));
   let randImageNum = Math.floor(Math.random() * total);
   for (const [_, images] of results.entries()) {
-    if (randImageNum < images.size) {
-      for (let src of images.keys()) {
-        if (randImageNum == 0) {
-          const names = images.get(src);
-          const result = [src, names[Math.floor(Math.random() * names.length)]];
-          if (callback) callback(result[0], result[1]);
-          return result;
-        }
-        randImageNum--;
-      }
+    if (randImageNum < images.length) {
+      return [images[randImageNum].path, images[randImageNum].name];
     } else {
-      randImageNum -= images.size;
+      randImageNum -= images.length;
     }
   }
+
+  // for (const [_, images] of results.entries()) {
+  //   if (randImageNum < images.length) {
+  //     for (let src of images.keys()) {
+  //       if (randImageNum == 0) {
+  //         const names = images.get(src);
+  //         const result = [src, names[Math.floor(Math.random() * names.length)]];
+  //         if (callback) callback(result[0], result[1]);
+  //         return result;
+  //       }
+  //       randImageNum--;
+  //     }
+  //   } else {
+  //     randImageNum -= images.size;
+  //   }
+  // }
   return null;
 }
 
@@ -1511,23 +1612,21 @@ export async function doImageSearch(
     );
   }
 
-  for (let search of searches) {
+  for (const search of searches) {
     if (allImages.get(search) !== undefined) continue;
-    let map = await findTokens(search, searchType);
-    let tokens = new Map();
-    for (let tokenSrc of map.keys()) {
-      if (!usedTokens.has(tokenSrc)) {
-        usedTokens.add(tokenSrc);
-        tokens.set(tokenSrc, map.get(tokenSrc));
-      }
-    }
-    allImages.set(search, tokens);
+
+    // let results = await findTokens(search, searchType); // TODO: allow for swapping
+    let results = await findTokensFuzzy(search, searchType);
+    results = results.filter((pathObj) => !usedTokens.has(pathObj));
+
+    allImages.set(search, results);
+    results.forEach(usedTokens.add, usedTokens);
   }
 
   if (debug) console.log('ENDING: Art Search');
 
   if (simpleResults) {
-    allImages = Array.from(usedTokens);
+    allImages = Array.from(usedTokens).map((obj) => obj.path);
   }
 
   if (callback) callback(allImages);
@@ -1603,6 +1702,7 @@ Hooks.on('init', function () {
     showArtSelect,
     updateTokenImage,
     stringSimilarity,
+    findTokensFuzzy,
   };
 
   // Deprecated api access

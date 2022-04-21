@@ -87,17 +87,11 @@ export async function renderHud(hud, html, token, searchText = '') {
           ignoreKeywords: !worldHudSettings.includeKeywords,
         });
 
-  // Merge full search, and keywords into a single map
-  let images = new Map();
+  // Merge full search, and keywords into a single array
+  let images = [];
   if (artSearch) {
-    artSearch.forEach((result, _) => {
-      result.forEach((names, imgSrc) => {
-        if (images.has(imgSrc)) {
-          images.set(imgSrc, images.get(imgSrc).concat(names));
-        } else {
-          images.set(imgSrc, names);
-        }
-      });
+    artSearch.forEach((results) => {
+      images.push(...results);
     });
   }
 
@@ -119,11 +113,9 @@ export async function renderHud(hud, html, token, searchText = '') {
     if (!searchText) {
       const mergeImages = function (imgArr) {
         imgArr.forEach((variant) => {
-          for (let name of variant.names) {
-            if (images.has(variant.imgSrc)) {
-              if (!images.get(variant.imgSrc).includes(name)) images.get(variant.imgSrc).push(name);
-            } else {
-              images.set(variant.imgSrc, [name]);
+          for (const name of variant.names) {
+            if (!images.find((obj) => obj.path === variant.imgSrc && obj.name === name)) {
+              images.unshift({ path: variant.imgSrc, name: name });
             }
           }
         });
@@ -154,34 +146,64 @@ export async function renderHud(hud, html, token, searchText = '') {
 
   let imagesParsed = [];
   const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
-  images.forEach((names, tokenSrc) => {
-    const img = isImage(tokenSrc);
-    const vid = isVideo(tokenSrc);
-    for (let name of names) {
-      const hasConfig = Boolean(
-        tokenConfigs.find((config) => config.tvImgSrc == tokenSrc && config.tvImgName == name)
-      );
-      let shared = false;
-      if (userHasConfigRights) {
-        actorVariants.forEach((variant) => {
-          if (variant.imgSrc === tokenSrc && variant.names.includes(name)) {
-            shared = true;
-          }
-        });
-      }
 
-      imagesParsed.push({
-        route: tokenSrc,
-        name: name,
-        used: tokenSrc === token.img && name === tokenImageName,
-        img,
-        vid,
-        type: img || vid,
-        shared: shared,
-        hasConfig: hasConfig,
+  images.forEach((imageObj) => {
+    const img = isImage(imageObj.path);
+    const vid = isVideo(imageObj.path);
+    const hasConfig = Boolean(
+      tokenConfigs.find(
+        (config) => config.tvImgSrc === imageObj.path && config.tvImgName === imageObj.name
+      )
+    );
+    let shared = false;
+    if (userHasConfigRights) {
+      actorVariants.forEach((variant) => {
+        if (variant.imgSrc === imageObj.path && variant.names.includes(imageObj.name)) {
+          shared = true;
+        }
       });
     }
+
+    imagesParsed.push({
+      route: imageObj.path,
+      name: imageObj.name,
+      used: imageObj.path === token.img && imageObj.name === tokenImageName,
+      img,
+      vid,
+      type: img || vid,
+      shared: shared,
+      hasConfig: hasConfig,
+    });
   });
+
+  // images.forEach((names, tokenSrc) => {
+  //   const img = isImage(tokenSrc);
+  //   const vid = isVideo(tokenSrc);
+  //   for (let name of names) {
+  //     const hasConfig = Boolean(
+  //       tokenConfigs.find((config) => config.tvImgSrc == tokenSrc && config.tvImgName == name)
+  //     );
+  //     let shared = false;
+  //     if (userHasConfigRights) {
+  //       actorVariants.forEach((variant) => {
+  //         if (variant.imgSrc === tokenSrc && variant.names.includes(name)) {
+  //           shared = true;
+  //         }
+  //       });
+  //     }
+
+  //     imagesParsed.push({
+  //       route: tokenSrc,
+  //       name: name,
+  //       used: tokenSrc === token.img && name === tokenImageName,
+  //       img,
+  //       vid,
+  //       type: img || vid,
+  //       shared: shared,
+  //       hasConfig: hasConfig,
+  //     });
+  //   }
+  // });
 
   // Render
 

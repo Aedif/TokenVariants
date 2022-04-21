@@ -43,10 +43,9 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
 
     if ((results ?? []).length != 0) {
       portraitFound = tokenFound = true;
-      const imgSrc = results[0];
-      updateTokenImage(imgSrc, {
+      updateTokenImage(results[0], {
         actor: actor,
-        actorUpdate: { img: imgSrc },
+        actorUpdate: { img: results[0] },
         pack: formData.compendium,
       });
     }

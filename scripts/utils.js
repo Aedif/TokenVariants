@@ -533,7 +533,7 @@ export function parseKeywords(keywords) {
 export function isImage(path) {
   var extension = path.split('.');
   extension = extension[extension.length - 1];
-  return ['jpg', 'jpeg', 'png', 'svg', 'webp'].includes(extension);
+  return ['jpg', 'jpeg', 'png', 'svg', 'webp', 'gif'].includes(extension);
 }
 
 /**
