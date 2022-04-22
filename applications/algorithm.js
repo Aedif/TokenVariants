@@ -5,7 +5,7 @@ export default class AlgorithmSettings extends FormApplication {
 
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
-      id: 'token-variants-filter-settings',
+      id: 'token-variants-algorithm-settings',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/algorithm.html',
       resizable: false,

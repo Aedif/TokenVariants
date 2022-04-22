@@ -107,24 +107,34 @@ export class ArtSelect extends FormApplication {
     //
     const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
     const fuzzySearch = game.settings.get('token-variants', 'algorithmSettings').fuzzy;
+    const runSearchOnPath = game.settings.get('token-variants', 'runSearchOnPath');
 
     let allButtons = new Map();
     let artFound = false;
 
-    const genLabel = function (obj) {
-      if (!fuzzySearch || !obj.indices) return obj.name;
-      const name = obj.name;
-
+    const genLabel = function (str, indices, start = '<mark>', end = '</mark>', fillChar = null) {
+      if (!indices) return str;
+      let fillStr = fillChar ? fillChar.repeat(str.length) : str;
       let label = '';
       let lastIndex = 0;
-      for (const index of obj.indices) {
-        label += name.slice(lastIndex, index[0]);
-        label += '<mark>' + name.slice(index[0], index[1] + 1) + '</mark>';
+      for (const index of indices) {
+        label += fillStr.slice(lastIndex, index[0]);
+        label += start + str.slice(index[0], index[1] + 1) + end;
         lastIndex = index[1] + 1;
       }
-      label += name.slice(lastIndex, name.length);
+      label += fillStr.slice(lastIndex, fillStr.length);
 
       return label;
+    };
+
+    const genTitle = function (obj) {
+      if (!fuzzySearch) return obj.path;
+
+      let percent = Math.ceil((1 - obj.score) * 100) + '%';
+      if (runSearchOnPath) {
+        return percent + '\n' + genLabel(obj.path, obj.indices, '', '', '-') + '\n' + obj.path;
+      }
+      return percent;
     };
 
     this.allImages.forEach((images, search) => {
@@ -139,8 +149,11 @@ export class ArtSelect extends FormApplication {
           vid: vid,
           type: vid || img,
           name: imageObj.name,
-          label: genLabel(imageObj),
-          score: fuzzySearch ? Math.ceil((1 - imageObj.score) * 100) + '%' : null,
+          label:
+            fuzzySearch && !runSearchOnPath
+              ? genLabel(imageObj.name, imageObj.indices)
+              : imageObj.name,
+          title: genTitle(imageObj),
           hasConfig:
             this.searchType === SEARCH_TYPE.TOKEN || this.searchType === SEARCH_TYPE.BOTH
               ? Boolean(

@@ -1107,23 +1107,21 @@ async function findTokensFuzzy(name, searchType) {
   });
 
   const fuse = new Fuse(allPaths, {
-    keys: ['name'],
+    keys: [runSearchOnPath ? 'path' : 'name'],
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
-    // ignoreLocation: true,
+    ignoreLocation: runSearchOnPath,
     threshold: algorithmSettings.fuzzyThreshold,
   });
 
   const results = fuse.search(name).slice(0, algorithmSettings.fuzzyLimit);
-  console.log(results);
 
   foundImages = results.map((r) => {
     r.item.indices = r.matches[0].indices;
     r.item.score = r.score;
     return r.item;
   });
-  console.log(foundImages);
 
   if (debug) console.log('ENDING: Fuzzy Token Search', foundImages);
 

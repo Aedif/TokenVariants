@@ -54,12 +54,11 @@
 }
 
 .token-variants-grid > div > p {
-  overflow: scroll;
+  overflow: auto;
   white-space: nowrap;
 }
 
 .token-variants-grid > div > span {
-  overflow: scroll;
   white-space: nowrap;
 }
 
