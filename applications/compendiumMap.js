@@ -1,6 +1,7 @@
 import { showArtSelect, doImageSearch, cacheTokens } from '../token-variants.mjs';
 import { SEARCH_TYPE, updateActorImage, updateTokenImage } from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
+import AlgorithmSettings from './algorithm.js';
 
 async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
   let portraitFound = formData.ignorePortrait;
@@ -14,6 +15,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
         searchType: SEARCH_TYPE.PORTRAIT,
         simpleResults: true,
         ignoreKeywords: ignoreKeywords,
+        algorithmOptions: formData.algorithmSettings,
       });
 
       if ((results ?? []).length != 0) {
@@ -27,6 +29,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
         searchType: SEARCH_TYPE.TOKEN,
         simpleResults: true,
         ignoreKeywords: ignoreKeywords,
+        algorithmOptions: formData.algorithmSettings,
       });
 
       if ((results ?? []).length != 0) {
@@ -39,6 +42,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
       searchType: SEARCH_TYPE.BOTH,
       simpleResults: true,
       ignoreKeywords: ignoreKeywords,
+      algorithmOptions: formData.algorithmSettings,
     });
 
     if ((results ?? []).length != 0) {
@@ -66,6 +70,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
         image1: image1,
         image2: image2,
         ignoreKeywords: ignoreKeywords,
+        algorithmOptions: formData.algorithmSettings,
         callback: async function (imgSrc, _) {
           await updateActorImage(actor, imgSrc);
           showArtSelect(actor.data.token.name, {
@@ -90,6 +95,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
         image1: image1,
         image2: image2,
         ignoreKeywords: ignoreKeywords,
+        algorithmOptions: formData.algorithmSettings,
         callback: async function (imgSrc, name) {
           updateTokenImage(imgSrc, {
             actor: actor,
@@ -104,6 +110,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
         image1: image1,
         image2: image2,
         ignoreKeywords: ignoreKeywords,
+        algorithmOptions: formData.algorithmSettings,
         callback: async function (imgSrc, name) {
           await updateActorImage(actor, imgSrc);
         },
@@ -116,6 +123,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
       image1: image1,
       image2: image2,
       ignoreKeywords: ignoreKeywords,
+      algorithmOptions: formData.algorithmSettings,
       callback: async function (imgSrc, name) {
         await updateActorImage(actor, imgSrc);
         updateTokenImage(imgSrc, {
@@ -147,6 +155,11 @@ export default class CompendiumMapConfig extends FormApplication {
   async getData(options) {
     let data = super.getData(options);
     data = mergeObject(data, game.settings.get('token-variants', 'compendiumMapper'));
+    this.algorithmSettings = data.algorithmSettings
+      ? data.algorithmSettings
+      : game.settings.get('token-variants', 'algorithmSettings');
+
+    console.log('data', this.algorithmSettings);
 
     const packs = [];
     game.packs.forEach((pack) => {
@@ -167,6 +180,7 @@ export default class CompendiumMapConfig extends FormApplication {
     super.activateListeners(html);
     html.find('.token-variants-auto-apply').change(this._onAutoApply);
     html.find('.token-variants-diff-images').change(this._onDiffImages);
+    html.find(`.token-variants-algorithm`).on('click', this._onAlgorithmSettings.bind(this));
   }
 
   async _onAutoApply(event) {
@@ -181,6 +195,11 @@ export default class CompendiumMapConfig extends FormApplication {
       .closest('form')
       .find('.token-variants-tp-ignore')
       .prop('disabled', !event.target.checked);
+  }
+
+  async _onAlgorithmSettings(event) {
+    console.log(this.algorithmSettings);
+    new AlgorithmSettings(this.algorithmSettings).render(true);
   }
 
   async startMapping(formData) {
@@ -247,6 +266,7 @@ export default class CompendiumMapConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
+    formData.algorithmSettings = this.algorithmSettings;
     game.settings.set('token-variants', 'compendiumMapper', formData);
     if (formData.compendium) {
       this.startMapping(formData);

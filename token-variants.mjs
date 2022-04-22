@@ -233,8 +233,8 @@ async function registerWorldSettings() {
   });
 
   game.settings.registerMenu('token-variants', 'algorithmMenu', {
-    name: 'Algorithm Settings',
-    hint: 'Configure the algorithm used to perform image searches.',
+    name: game.i18n.localize('token-variants.settings.algorithm.Name'),
+    hint: game.i18n.localize('token-variants.settings.algorithm.Hint'),
     scope: 'world',
     icon: 'fas fa-exchange-alt',
     type: AlgorithmSettings,
@@ -1072,15 +1072,16 @@ function imagePassesFilter(imageName, imagePath, filters) {
   return true;
 }
 
-async function findTokens(name, searchType = '') {
-  if (algorithmSettings.exact) {
+async function findTokens(name, searchType = '', algorithmOptions = {}) {
+  const algOptions = mergeObject(algorithmOptions, algorithmSettings, { overwrite: false });
+  if (algOptions.exact) {
     return findTokensExact(name, searchType);
   } else {
-    return findTokensFuzzy(name, searchType);
+    return findTokensFuzzy(name, searchType, algOptions);
   }
 }
 
-async function findTokensFuzzy(name, searchType) {
+async function findTokensFuzzy(name, searchType, algorithmOptions) {
   if (debug) console.log('STARTING: Fuzzy Token Search', name, searchType, caching);
 
   // Select filters based on type of search
@@ -1112,10 +1113,10 @@ async function findTokensFuzzy(name, searchType) {
     includeMatches: true,
     minMatchCharLength: 1,
     ignoreLocation: runSearchOnPath,
-    threshold: algorithmSettings.fuzzyThreshold,
+    threshold: algorithmOptions.fuzzyThreshold,
   });
 
-  const results = fuse.search(name).slice(0, algorithmSettings.fuzzyLimit);
+  const results = fuse.search(name).slice(0, algorithmOptions.fuzzyLimit);
 
   foundImages = results.map((r) => {
     r.item.indices = r.matches[0].indices;
@@ -1309,6 +1310,7 @@ export async function showArtSelect(
     image1 = '',
     image2 = '',
     ignoreKeywords = false,
+    algorithmOptions = {},
   } = {}
 ) {
   if (caching) return;
@@ -1320,6 +1322,7 @@ export async function showArtSelect(
       searchType: searchType,
       object: object,
       preventClose: preventClose,
+      algorithmOptions: algorithmOptions,
     });
     return;
   }
@@ -1329,6 +1332,7 @@ export async function showArtSelect(
   const allImages = await doImageSearch(search, {
     searchType: searchType,
     ignoreKeywords: ignoreKeywords,
+    algorithmOptions: algorithmOptions,
   });
 
   new ArtSelect(search, {
@@ -1339,6 +1343,7 @@ export async function showArtSelect(
     preventClose: preventClose,
     image1: image1,
     image2: image2,
+    algorithmOptions: algorithmOptions,
   }).render(true);
 }
 
@@ -1481,6 +1486,7 @@ export async function doImageSearch(
     ignoreKeywords = false,
     simpleResults = false,
     callback = null,
+    algorithmOptions = {},
   } = {}
 ) {
   if (caching) return;
@@ -1507,7 +1513,7 @@ export async function doImageSearch(
   for (const search of searches) {
     if (allImages.get(search) !== undefined) continue;
 
-    let results = await findTokens(search, searchType);
+    let results = await findTokens(search, searchType, algorithmOptions);
     results = results.filter((pathObj) => !usedImages.has(pathObj));
 
     allImages.set(search, results);

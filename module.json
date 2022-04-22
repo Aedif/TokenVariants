@@ -24,7 +24,8 @@
     "styles/artSelect.css",
     "styles/sideSelect.css",
     "styles/searchPaths.css",
-    "styles/popupSettings.css"
+    "styles/popupSettings.css",
+    "styles/general.css"
   ],
   "languages": [
     {

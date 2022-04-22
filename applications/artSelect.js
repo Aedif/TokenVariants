@@ -60,6 +60,7 @@ export class ArtSelect extends FormApplication {
       allImages = null,
       image1 = '',
       image2 = '',
+      algorithmOptions = {},
     } = {}
   ) {
     let title = game.i18n.localize('token-variants.windows.art-select.select-variant');
@@ -87,6 +88,7 @@ export class ArtSelect extends FormApplication {
     this.image1 = image1;
     this.image2 = image2;
     this.searchType = searchType;
+    this.algorithmOptions = algorithmOptions;
   }
 
   static get defaultOptions() {
@@ -106,7 +108,7 @@ export class ArtSelect extends FormApplication {
     // Create buttons
     //
     const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
-    const fuzzySearch = game.settings.get('token-variants', 'algorithmSettings').fuzzy;
+    const fuzzySearch = this.algorithmOptions.fuzzy;
     const runSearchOnPath = game.settings.get('token-variants', 'runSearchOnPath');
 
     let allButtons = new Map();
@@ -218,7 +220,7 @@ export class ArtSelect extends FormApplication {
       'input',
       delay((event) => {
         this._performSearch(event.target.value);
-      }, 250)
+      }, 350)
     );
     searchInput = searchInput[0];
     searchInput.selectionStart = searchInput.selectionEnd = searchInput.value.length;

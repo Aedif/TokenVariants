@@ -1,20 +1,20 @@
 <form>
-  <h2>Exact</h2>
+  <h2>{{localize "token-variants.common.exact"}}</h2>
   <div class="form-group">
-    <label>Enable</label>
+    <label>{{localize "token-variants.common.enable"}}</label>
     <input type="checkbox" name="exact" data-dtype="Boolean" {{#if exact}}checked{{/if}}>
-    <p class="notes">Token/Actor names need to be fully present in the file/folder name.</p>
+    <p class="notes">{{localize "token-variants.settings.algorithm.exact-hint"}}</p>
   </div>
 
-  <h2>Fuzzy</h2>
+  <h2>{{localize "token-variants.common.fuzzy"}}</h2>
   <div class="form-group">
-    <label>Enable</label>
+    <label>{{localize "token-variants.common.enable"}}</label>
     <input type="checkbox" name="fuzzy" data-dtype="Boolean" {{#if fuzzy}}checked{{/if}}>
-    <p class="notes">Token/Actor names require only partial matches to the file/folder name.</p>
+    <p class="notes">{{localize "token-variants.settings.algorithm.fuzzy-hint"}}</p>
   </div>
 
   <div class="form-group">
-    <label>Limit</label>
+    <label>{{localize "token-variants.common.limit"}}</label>
     <input
       type="text"
       name="fuzzyLimit"
@@ -22,11 +22,11 @@
       placeholder="1"
       data-dtype="Number"
     />
-    <p class="notes">Maximum number of results returned per search</p>
+    <p class="notes">{{localize "token-variants.settings.algorithm.limit-hint"}}</p>
   </div>
 
   <div class="form-group">
-    <label>Percentage Match</label>
+    <label>{{localize "token-variants.settings.algorithm.window.percentage-match.Name"}}</label>
     <input
       type="range"
       name="fuzzyThreshold"
@@ -36,8 +36,10 @@
       max="100"
       step="0.1"
     />
-    <span class="range-value">{{fuzzyThreshold}}</span>
-    <p class="notes">Minimum percentage match required for an image to be shown.</p>
+    <span class="token-variants-range-value">{{fuzzyThreshold}}%</span>
+    <p class="notes">
+      {{localize "token-variants.settings.algorithm.window.percentage-match.Hint"}}
+    </p>
   </div>
 
   <hr />

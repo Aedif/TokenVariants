@@ -155,6 +155,19 @@
           "cache": "Re-cache images before mapping begins",
           "sync-images": "Sync Portrait and Token if only one image is missing"
         }
+      },
+      "algorithm": {
+        "Name": "Algorithm Settings",
+        "Hint": "Configure the algorithm used to perform image searches",
+        "window": {
+          "exact-hint": "Token/Actor names need to be fully present in the file/folder name",
+          "fuzzy-hint": "Token/Actor names require only partial matches to the file/folder name",
+          "limit-hint": "Maximum number of results returned per search",
+          "percentage-match": {
+            "Name": "Percentage match",
+            "Hint": "How accurately file/folder name must match for it to be considered a match."
+          }
+        }
       }
     },
     "common": {
@@ -168,7 +181,11 @@
       "priority": "Priority",
       "remove": "Remove",
       "start": "Start",
-      "automation": "Automation"
+      "automation": "Automation",
+      "enable": "Enable",
+      "exact": "Exact",
+      "fuzzy": "Fuzzy",
+      "limit": "Limit"
     },
     "windows": {
       "art-select": {

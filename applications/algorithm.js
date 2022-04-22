@@ -1,6 +1,13 @@
 export default class AlgorithmSettings extends FormApplication {
-  constructor() {
+  constructor(dummySettings) {
     super({}, {});
+    if (dummySettings) {
+      this.dummySettings = mergeObject(
+        dummySettings,
+        game.settings.get('token-variants', 'algorithmSettings'),
+        { overwrite: false }
+      );
+    }
   }
 
   static get defaultOptions() {
@@ -10,14 +17,16 @@ export default class AlgorithmSettings extends FormApplication {
       template: 'modules/token-variants/templates/algorithm.html',
       resizable: false,
       minimizable: false,
-      title: 'Algorithm Settings',
+      title: game.i18n.localize('token-variants.settings.algorithm.Name'),
       width: 500,
     });
   }
 
   async getData(options) {
     const data = super.getData(options);
-    const settings = game.settings.get('token-variants', 'algorithmSettings');
+    const settings = this.dummySettings
+      ? this.dummySettings
+      : game.settings.get('token-variants', 'algorithmSettings');
     settings.fuzzyThreshold = 100 - settings.fuzzyThreshold * 100;
     return mergeObject(data, settings);
   }
@@ -37,6 +46,11 @@ export default class AlgorithmSettings extends FormApplication {
       .change((e) => {
         $(e.target).closest('form').find('[name="exact"]').prop('checked', !e.target.checked);
       });
+    $(html)
+      .find('[name="fuzzyThreshold"]')
+      .change((e) => {
+        $(e.target).siblings('.token-variants-range-value').html(`${e.target.value}%`);
+      });
   }
 
   /**
@@ -49,6 +63,10 @@ export default class AlgorithmSettings extends FormApplication {
 
     formData.fuzzyThreshold = (100 - formData.fuzzyThreshold) / 100;
 
-    game.settings.set('token-variants', 'algorithmSettings', formData);
+    if (this.dummySettings) {
+      mergeObject(this.dummySettings, formData);
+    } else {
+      game.settings.set('token-variants', 'algorithmSettings', formData);
+    }
   }
 }
