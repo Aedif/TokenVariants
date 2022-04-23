@@ -17,8 +17,7 @@ export default class TokenHUDSettings extends FormApplication {
 
   async getData(options) {
     let data = super.getData(options);
-    data.enableWorldSettings =
-      game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE');
+    data.enableWorldSettings = game.user && game.user.isGM;
     if (data.enableWorldSettings) {
       data = mergeObject(data, game.settings.get('token-variants', 'worldHudSettings'));
     }
@@ -41,13 +40,13 @@ export default class TokenHUDSettings extends FormApplication {
   async _updateObject(event, formData) {
     const worldSettings = game.settings.get('token-variants', 'worldHudSettings');
     Object.keys(worldSettings).forEach((setting) => {
-      worldSettings[setting] = formData[setting];
+      if (settings in formData) worldSettings[setting] = formData[setting];
     });
     game.settings.set('token-variants', 'worldHudSettings', worldSettings);
 
     const clientSettings = game.settings.get('token-variants', 'hudSettings');
     Object.keys(clientSettings).forEach((setting) => {
-      clientSettings[setting] = formData[setting];
+      if (setting in formData) clientSettings[setting] = formData[setting];
     });
     game.settings.set('token-variants', 'hudSettings', clientSettings);
   }

@@ -23,17 +23,12 @@ The comprehensive list of settings is available bellow.
 
 https://user-images.githubusercontent.com/7693704/121926941-69aff780-cd36-11eb-864b-b2a9640baeea.mp4
 
-The searches are done using the Actor's or Token's name, and will ignore special characters, case, or spaces in the files
+The image searches are done using the Actor's or Token's name, and will ignore special characters, case, or spaces in the files
 
 e.g.
 
 - '**Mage**' will match: **09_mage.png**, **red-MAGE-64.png**, **mage-s_fire.jpg**
 - '**Half-Red Dragon Veteran**' will match: **HalfRedDragonVeteran.png**, **hAlF_rEd_dRAgon-VETERAN.png**
-
-The only requirement is that the full name of the Actor is present in the file name. So the following would not match:
-
-- '**Mage**' will NOT match: **mag03.png**, **09_ma_abc_ge.png**
-- '**Half-Red Dragon Veteran**' will NOT match **RedDragon.png**, **HalfRedDragon.png**
 
 ## Settings
 
@@ -73,6 +68,12 @@ This setting will only be available when running the game through Forge VTT and 
 _Example image setup for files labelled as so: Dragon_PRT.png, Dragon_TKN.png_
 
 There are 3 types of searches. Portrait, Token, and General (Token+Portrait). Each of these searches can be configured with filters to exclude files that include or exclude certain text, or match some regular expression.
+
+### Search Algorithm Settings
+
+Allows to change the search algorithm used by the module. By default the module will only return images that fully contain the Token/Actor name (exact search), but you can also enable approximate searches (fuzzy search) and configure the acceptable percentage match.
+
+!["Search Algorithm Settings"](./docs/algorithms.png)
 
 ### Randomizer Settings
 
@@ -120,7 +121,7 @@ If checked will allow all players to access the new Token HUD button. Note that 
 
 If enabled the HUD Button will be shown even when no matches have been found.
 
-#### Display as image?
+#### Display as image
 
 Controls whether the art in the preview is rendered as images or a list of file names.
 
@@ -135,6 +136,18 @@ When enabled selecting an image from the Token HUD will also apply it to the cha
 #### Include wildcard images
 
 'Alternate Actor Tokens' will be included in the HUD.
+
+#### Enable Token HUD button for everyone
+
+Makes the HUD button available for all players.
+
+#### Display only shared images
+
+Limits images shown in the Token HUD just to the shared (Rich-clicked).
+
+#### Include keywords in the search
+
+By default Token HUD only shows full name matched images. This will include keyword matches as well.
 
 ### Search by Keyword
 
@@ -192,11 +205,18 @@ Parameters:
 
 - **\{string\}** **search** The text to be used as the search criteria
 - **\{object\}** Options which customize the search
-  - \{Function[]\} [callback] Function to be called with the user selected image path
-  - \{string\} [searchType] (token|portrait|both) Controls filters applied to the search results
-  - \{Token|object\} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
 
-e.g.
+  - \{Function[]\} [callback] Function to be called with the user selected image path
+  - \{SEARCH_TYPE|string\} [searchType] (token|portrait|both) Controls filters applied to the search results
+  - \{Token|object\} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
+  - \{boolean\} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
+  - \{boolean\} [options.ignoreKeywords] Override for the 'Search by Keyword' setting
+  - \{object\} [options.algorithmOptions] Override for the 'Search Algorithm Settings' setting
+  - \{boolean\} [options.algorithmOptions.exact] Force use exact search
+  - \{boolean\} [options.algorithmOptions.fuzzy] Force use fuzzy search
+  - \{number\} [options.algorithmOptions.fuzzyLimit] Force fuzzy search image return limit
+  - \{number\} [options.algorithmOptions.fuzzyThreshold] Force fuzzy search threshold (0.0-1.0)
+    e.g.
 
 - game.modules.get('token-variants').api.showArtSelect("")
 - game.modules.get('token-variants').api.showArtSelect("dragon", \{callback: (selectedImg) => console.log(selectedImg)\})
@@ -209,11 +229,12 @@ Parameters:
 
 - **\{string\}** **search**: Text to be used as the search criteria
 - **\{object\}** Options which customize the search
-  - \{string\} [searchType] (token|portrait|both) Controls filters applied to the search results
-  - \{Boolean\} [ignoreKeywords] Ignores keywords search setting
-  - \{Boolean\} [simpleResults] Results will be returned as an array of all image paths found
-  - \{Boolean\} [callback] Function to be called with the found images
-- **returns**: \{Map<string, Map<string, Map<string, Array<string>>>>|Array<String>|null\} All images found split by original criteria and keywords
+  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both) Controls filters applied to the search results
+  - \{Boolean\} [options.ignoreKeywords] Ignores keywords search setting
+  - \{Boolean\} [options.simpleResults] Results will be returned as an array of all image paths found
+  - \{Boolean\} [options.callback] Function to be called with the found images
+  - \{object\} [options.algorithmOptions] See showArtSelect(...)
+- **returns**: \{Promise<Map<string, Array<object>|Array<string>>\} Images found
 
 e.g.
 
@@ -228,9 +249,9 @@ Parameters:
 
 - **\{string\}** **search**: Text to be used as the search criteria
 - **\{object\}** Options which customize the search
-  - \{string\} [searchType] (token|portrait|both) Controls filters applied to the search results
-  - \{Actor\} [actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
-  - \{Function[]\} [callback] Function to be called with the random image
+  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both) Controls filters applied to the search results
+  - \{Actor\} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
+  - \{Function[]\} [options.callback] Function to be called with the random image
 - **returns**: \{Array<string>|null\} Image path and name
 
 e.g.

@@ -157,7 +157,7 @@
         }
       },
       "algorithm": {
-        "Name": "Algorithm Settings",
+        "Name": "Search Algorithm Settings",
         "Hint": "Configure the algorithm used to perform image searches",
         "window": {
           "exact-hint": "Token/Actor names need to be fully present in the file/folder name",

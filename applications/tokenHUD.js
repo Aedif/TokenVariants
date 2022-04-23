@@ -147,9 +147,10 @@ export async function renderHud(hud, html, token, searchText = '') {
   let imagesParsed = [];
   const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
 
-  images.forEach((imageObj) => {
+  for (const imageObj of images) {
     const img = isImage(imageObj.path);
     const vid = isVideo(imageObj.path);
+
     const hasConfig = Boolean(
       tokenConfigs.find(
         (config) => config.tvImgSrc === imageObj.path && config.tvImgName === imageObj.name
@@ -170,43 +171,14 @@ export async function renderHud(hud, html, token, searchText = '') {
       used: imageObj.path === token.img && imageObj.name === tokenImageName,
       img,
       vid,
-      type: img || vid,
       shared: shared,
       hasConfig: hasConfig,
     });
-  });
+  }
 
-  // images.forEach((names, tokenSrc) => {
-  //   const img = isImage(tokenSrc);
-  //   const vid = isVideo(tokenSrc);
-  //   for (let name of names) {
-  //     const hasConfig = Boolean(
-  //       tokenConfigs.find((config) => config.tvImgSrc == tokenSrc && config.tvImgName == name)
-  //     );
-  //     let shared = false;
-  //     if (userHasConfigRights) {
-  //       actorVariants.forEach((variant) => {
-  //         if (variant.imgSrc === tokenSrc && variant.names.includes(name)) {
-  //           shared = true;
-  //         }
-  //       });
-  //     }
-
-  //     imagesParsed.push({
-  //       route: tokenSrc,
-  //       name: name,
-  //       used: tokenSrc === token.img && name === tokenImageName,
-  //       img,
-  //       vid,
-  //       type: img || vid,
-  //       shared: shared,
-  //       hasConfig: hasConfig,
-  //     });
-  //   }
-  // });
-
+  //
   // Render
-
+  //
   const imageDisplay = hudSettings.displayAsImage;
   const imageOpacity = hudSettings.imageOpacity / 100;
 

@@ -16,18 +16,16 @@
       data-filename="{{image.name}}"
       title="{{image.name}}"
     >
-      {{#if ../imageDisplay}} {{#if image.img}}
+      {{#if ../imageDisplay}}{{#if image.img}}
       <img
         class="token-variants-button-image"
         src="{{image.route}}"
-        alt="{{image.name}}"
         style="opacity:{{../imageOpacity}};"
       />
       {{/if}} {{#if image.vid}}
       <video
         class="token-variants-button-image"
         src="{{image.route}}"
-        alt="{{image.name}}"
         style="opacity:{{../imageOpacity}};"
         autoplay
         loop

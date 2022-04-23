@@ -1,3 +1,30 @@
+# 1.30.1
+
+**Fuzzy Search**
+
+- New search algorithm allowing approximate image searches
+- Can switch between the old '**Exact**' and new '**Fuzzy**' search via the '**Search Algorithm Settings**' :
+  - **Percentage match**: Percentage controlling how accurately file/folder name must match
+  - **Limit**: Maximum number of results to be returned per search
+
+**Compendium Mapper**
+
+- Added private instance of **Search Algorithm Settings** used just for the mapper. Changes here will not affect the settings used for the rest of the module.
+
+**Art Select**
+
+- Removed the '**Search**' button; searches are now performed and returned as you type
+- If fuzzy search is enabled the percentage match and parts of the file name and path that were relevant to the match will be highlighted or shown in the tooltip on hover
+- Fixed the window in some cases not retaining it's height/width after being closed
+- The window will now remember and re-open in it's last position
+- Scroll bars should no longer show on the images themselves in Foundry v9 and will be limited to horizontal on the image name
+- Fixed GIFs not rendering in the Art Select window and Token HUD
+
+**API**
+
+- **game.TokenVariants**: Has been removed
+- **game.modules.get('token-variants').api**: Should be used instead
+
 # 1.29.2
 
 - Ending combat should now properly remove the custom combat images assigned to all the combatants

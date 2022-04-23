@@ -4,25 +4,13 @@ export default class TokenCustomConfig extends TokenConfig {
   constructor(object, options, imgSrc, imgName, callback) {
     let token;
     if (object instanceof Actor) {
-      if (isNewerVersion(game.version ?? game.data.version, '0.7.10')) {
-        token = new TokenDocument(object.data.token, {
-          actor: object,
-        });
-      } else {
-        token = new Token(object.data.token, {
-          actor: object,
-        });
-      }
+      token = new TokenDocument(object.data.token, {
+        actor: object,
+      });
     } else {
-      if (isNewerVersion(game.version ?? game.data.version, '0.7.10')) {
-        token = new TokenDocument(object.data, {
-          actor: object.actor,
-        });
-      } else {
-        token = new Token(object.data, {
-          actor: object,
-        });
-      }
+      token = new TokenDocument(object.data, {
+        actor: object.actor,
+      });
     }
     super(token, options);
     this.imgSrc = imgSrc;
@@ -101,9 +89,7 @@ export default class TokenCustomConfig extends TokenConfig {
     $(html).find('.sheet-footer > button').remove();
     $(html)
       .find('.sheet-footer')
-      .append(
-        '<button type="submit" value="1"><i class="far fa-save"></i> Save Config</button>'
-      );
+      .append('<button type="submit" value="1"><i class="far fa-save"></i> Save Config</button>');
     if (tokenConfig) {
       $(html)
         .find('.sheet-footer')
@@ -116,7 +102,7 @@ export default class TokenCustomConfig extends TokenConfig {
     // Pre-select image or appearance tab
     $(html).find('.tabs > .item[data-tab="image"] > i').trigger('click');
     $(html).find('.tabs > .item[data-tab="appearance"] > i').trigger('click');
-    
+
     document.activeElement.blur(); // Hack fix for key UP/DOWN effects not registering after config has been opened
   }
 
@@ -140,8 +126,7 @@ function _diffObject(original, other, { inner = false } = {}) {
     let t0 = getType(v0);
     let t1 = getType(v1);
     if (t0 !== t1) {
-      if ((t0 === 'undefined' || t0 === 'null') && v1 === '')
-        return [false, v1];
+      if ((t0 === 'undefined' || t0 === 'null') && v1 === '') return [false, v1];
       return [true, v1];
     }
     if (t0 === 'Array') return [!v0.equals(v1), v1];

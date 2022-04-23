@@ -3,14 +3,14 @@
   <div class="form-group">
     <label>{{localize "token-variants.common.enable"}}</label>
     <input type="checkbox" name="exact" data-dtype="Boolean" {{#if exact}}checked{{/if}}>
-    <p class="notes">{{localize "token-variants.settings.algorithm.exact-hint"}}</p>
+    <p class="notes">{{localize "token-variants.settings.algorithm.window.exact-hint"}}</p>
   </div>
 
   <h2>{{localize "token-variants.common.fuzzy"}}</h2>
   <div class="form-group">
     <label>{{localize "token-variants.common.enable"}}</label>
     <input type="checkbox" name="fuzzy" data-dtype="Boolean" {{#if fuzzy}}checked{{/if}}>
-    <p class="notes">{{localize "token-variants.settings.algorithm.fuzzy-hint"}}</p>
+    <p class="notes">{{localize "token-variants.settings.algorithm.window.fuzzy-hint"}}</p>
   </div>
 
   <div class="form-group">
@@ -22,7 +22,7 @@
       placeholder="1"
       data-dtype="Number"
     />
-    <p class="notes">{{localize "token-variants.settings.algorithm.limit-hint"}}</p>
+    <p class="notes">{{localize "token-variants.settings.algorithm.window.limit-hint"}}</p>
   </div>
 
   <div class="form-group">

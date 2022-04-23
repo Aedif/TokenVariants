@@ -126,36 +126,15 @@ async function registerWorldSettings() {
     },
   });
 
-  // World level Token HUD setting, Deprecated
-  game.settings.register('token-variants', 'enableTokenHUDButtonForAll', {
-    scope: 'world',
-    type: Boolean,
-    default: false,
-  });
-
-  // World level Token HUD setting, Deprecated
-  game.settings.register('token-variants', 'displayOnlySharedImages', {
-    scope: 'world',
-    type: Boolean,
-    default: false,
-  });
-
-  // World level Token HUD setting, Deprecated
-  game.settings.register('token-variants', 'disableSideMenuIfTHW', {
-    scope: 'world',
-    type: Boolean,
-    default: false,
-  });
-
   // World level Token HUD setting
   game.settings.register('token-variants', 'worldHudSettings', {
     scope: 'world',
     config: false,
     type: Object,
     default: {
-      enableButtonForAll: game.settings.get('token-variants', 'enableTokenHUDButtonForAll'),
-      displayOnlySharedImages: game.settings.get('token-variants', 'displayOnlySharedImages'),
-      disableIfTHWEnabled: game.settings.get('token-variants', 'disableSideMenuIfTHW'),
+      enableButtonForAll: false,
+      displayOnlySharedImages: false,
+      disableIfTHWEnabled: false,
       includeKeywords: false,
     },
   });
@@ -801,22 +780,8 @@ async function initialize() {
       });
     });
 
-    Hooks.on('createToken', async (op1, op2, op3, op4) => {
-      let tokenDoc = op1;
-      let options = op2;
-      let userId = op3;
-
-      // Compatability for 0.7.x
-      if (op4) userId = op4;
-
+    Hooks.on('createToken', async (token, options, userId) => {
       if (userId && game.user.id != userId) return;
-
-      let token;
-      if (isNewerVersion(game.version ?? game.data.version, '0.7.10')) {
-        token = tokenDoc;
-      } else {
-        token = canvas.tokens.get(options._id);
-      }
 
       // Check if random search is enabled and if so perform it
 
@@ -1296,8 +1261,15 @@ async function walkFindTokens(
  * @param {string} search The text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
  * @param {Function[]} [options.callback] Function to be called with the user selected image path
- * @param {string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
+ * @param {SEARCH_TYPE|string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
  * @param {Token|Actor} [options.object] Token/Actor used when displaying Custom Token Config prompt
+ * @param {boolean} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
+ * @param {boolean} [options.ignoreKeywords] Override for the 'Search by Keyword' setting
+ * @param {object} [options.algorithmOptions] Override for the 'Search Algorithm Settings' setting
+ * @param {boolean} [options.algorithmOptions.exact] Force use exact search
+ * @param {boolean} [options.algorithmOptions.fuzzy] Force use fuzzy search
+ * @param {number} [options.algorithmOptions.fuzzyLimit] Force fuzzy search image return limit
+ * @param {number} [options.algorithmOptions.fuzzyThreshold] Force fuzzy search threshold (0.0-1.0)
  */
 export async function showArtSelect(
   search,
@@ -1345,15 +1317,6 @@ export async function showArtSelect(
     image2: image2,
     algorithmOptions: algorithmOptions,
   }).render(true);
-}
-
-// Deprecated
-async function displayArtSelect(search, callback, searchType = SEARCH_TYPE.BOTH, object = {}) {
-  showArtSelect(search, {
-    callback: callback,
-    searchType: searchType,
-    object: object,
-  });
 }
 
 async function _randSearchUtil(search, { searchType = SEARCH_TYPE.BOTH, actor = null } = {}) {
@@ -1405,17 +1368,6 @@ async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, ac
     });
   });
 
-  // results.forEach((images, _) => {
-  //   images.forEach((imgNames, imgSrc) => {
-  //     for (const name of imgNames) {
-  //       const similarity = stringSimilarity(name, target);
-  //       if (mostSimilar.similarity < similarity) {
-  //         mostSimilar = { imgSrc: imgSrc, imgName: name, similarity: similarity };
-  //       }
-  //     }
-  //   });
-  // });
-
   if (mostSimilar.imgName) {
     return [mostSimilar.imgSrc, mostSimilar.imgName];
   }
@@ -1451,33 +1403,18 @@ async function doRandomSearch(
       randImageNum -= images.length;
     }
   }
-
-  // for (const [_, images] of results.entries()) {
-  //   if (randImageNum < images.length) {
-  //     for (let src of images.keys()) {
-  //       if (randImageNum == 0) {
-  //         const names = images.get(src);
-  //         const result = [src, names[Math.floor(Math.random() * names.length)]];
-  //         if (callback) callback(result[0], result[1]);
-  //         return result;
-  //       }
-  //       randImageNum--;
-  //     }
-  //   } else {
-  //     randImageNum -= images.size;
-  //   }
-  // }
   return null;
 }
 
 /**
- * @param {*} search Text to be used as the search criteria
+ * @param {string} search Text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
  * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
  * @param {Boolean} [options.ignoreKeywords] Ignores keywords search setting
  * @param {Boolean} [options.simpleResults] Results will be returned as an array of all image paths found
  * @param {Function[]} [options.callback] Function to be called with the found images
- * @returns {Promise<Map<string, Map<string, Map<string, Array<string>>>>>|Array<String>|null} All images found split by original criteria and keywords
+ * @param {object} [options.algorithmOptions] See showArtSelect(...)
+ * @returns {Promise<Map<string, Array<object>|Array<string>>} All images found split by original criteria and keywords
  */
 export async function doImageSearch(
   search,
@@ -1601,36 +1538,5 @@ Hooks.on('init', function () {
     doRandomSearch,
     showArtSelect,
     updateTokenImage,
-    stringSimilarity,
-    findTokensFuzzy,
-  };
-
-  // Deprecated api access
-  const deprecatedWarn = () =>
-    console.warn(
-      "game.TokenVariants has been deprecated since 1.20.3, use game.modules.get('token-variants')?.api instead."
-    );
-  game.TokenVariants = {
-    displayArtSelect: async (...args) => {
-      deprecatedWarn();
-      console.warn('displayArtSelect has been deprecated in favour of showArtSelect.');
-      await displayArtSelect(...args);
-    },
-    cacheTokens: async () => {
-      deprecatedWarn();
-      await cacheTokens();
-    },
-    doImageSearch: (...args) => {
-      deprecatedWarn();
-      doImageSearch(...args);
-    },
-    doRandomSearch: async (...args) => {
-      deprecatedWarn();
-      await doRandomSearch(...args);
-    },
-    showArtSelect: async (...args) => {
-      deprecatedWarn();
-      await showArtSelect(...args);
-    },
   };
 });
