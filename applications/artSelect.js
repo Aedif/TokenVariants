@@ -184,9 +184,10 @@ export class ArtSelect extends FormApplication {
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.PORTRAIT;
     data.image2_active =
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.TOKEN;
-    data.fuzzyThreshold = this.algorithmOptions.fuzzyArtSelectPercentSlider
-      ? this.algorithmOptions.fuzzyThreshold
-      : null;
+    data.fuzzyThreshold =
+      this.algorithmOptions.fuzzy && this.algorithmOptions.fuzzyArtSelectPercentSlider
+        ? this.algorithmOptions.fuzzyThreshold
+        : null;
     if (data.fuzzyThreshold) {
       data.fuzzyThreshold = 100 - data.fuzzyThreshold * 100;
     }
