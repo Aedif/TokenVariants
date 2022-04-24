@@ -88,7 +88,11 @@ export class ArtSelect extends FormApplication {
     this.image1 = image1;
     this.image2 = image2;
     this.searchType = searchType;
-    this.algorithmOptions = algorithmOptions;
+    this.algorithmOptions = mergeObject(
+      algorithmOptions,
+      game.settings.get('token-variants', 'algorithmSettings'),
+      { overwrite: false }
+    );
   }
 
   static get defaultOptions() {
@@ -180,6 +184,12 @@ export class ArtSelect extends FormApplication {
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.PORTRAIT;
     data.image2_active =
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.TOKEN;
+    data.fuzzyThreshold = this.algorithmOptions.fuzzyArtSelectPercentSlider
+      ? this.algorithmOptions.fuzzyThreshold
+      : null;
+    if (data.fuzzyThreshold) {
+      data.fuzzyThreshold = 100 - data.fuzzyThreshold * 100;
+    }
     return data;
   }
 
@@ -229,10 +239,22 @@ export class ArtSelect extends FormApplication {
       ART_SELECT_QUEUE.queue = [];
       $(event.target).hide();
     });
+
+    $(html)
+      .find('[name="fuzzyThreshold"]')
+      .change((e) => {
+        $(e.target).siblings('.token-variants-range-value').html(`${e.target.value}%`);
+        this.algorithmOptions.fuzzyThreshold = (100 - e.target.value) / 100;
+      })
+      .change(
+        delay((event) => {
+          this._performSearch(this.search, true);
+        }, 350)
+      );
   }
 
-  _performSearch(search) {
-    if (this.search.trim() === search.trim()) return;
+  _performSearch(search, force = false) {
+    if (!force && this.search.trim() === search.trim()) return;
     showArtSelect(search, {
       callback: this.callback,
       searchType: this.searchType,
@@ -240,6 +262,7 @@ export class ArtSelect extends FormApplication {
       force: true,
       image1: this.image1,
       image2: this.image2,
+      algorithmOptions: this.algorithmOptions,
     });
   }
 

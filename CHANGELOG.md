@@ -5,6 +5,7 @@
 - New search algorithm allowing approximate image searches
 - Can switch between the old '**Exact**' and new '**Fuzzy**' search via the '**Search Algorithm Settings**' :
   - **Percentage match**: Percentage controlling how accurately file/folder name must match
+  - **Add the percent slider to the Art Select window**: slider is added to the pop-ups allowing to change the match accuracy on the fly
   - **Limit**: Maximum number of results to be returned per search
 
 **Compendium Mapper**
@@ -24,6 +25,11 @@
 
 - **game.TokenVariants**: Has been removed
 - **game.modules.get('token-variants').api**: Should be used instead
+
+**Misc.**
+
+- Fixed Token HUD side menu breaking when image/video src is not found
+- Fixed Token HUD World Settings title displaying when user has no GM permissions
 
 # 1.29.2
 

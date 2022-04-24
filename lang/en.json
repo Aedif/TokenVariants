@@ -166,6 +166,10 @@
           "percentage-match": {
             "Name": "Percentage match",
             "Hint": "How accurately file/folder name must match for it to be considered a match."
+          },
+          "art-select-slider": {
+            "Name": "Add the percent slider to the Art Select window",
+            "Hint": "Percentage slider will appear in the Art Select pop-ups, allowing you to change the percentage match on the fly"
           }
         }
       }

@@ -229,6 +229,7 @@ async function registerWorldSettings() {
       fuzzy: false,
       fuzzyLimit: 50,
       fuzzyThreshold: 0.3,
+      fuzzyArtSelectPercentSlider: false,
     },
     onChange: (settings) => (algorithmSettings = settings),
   });
@@ -1047,7 +1048,8 @@ async function findTokens(name, searchType = '', algorithmOptions = {}) {
 }
 
 async function findTokensFuzzy(name, searchType, algorithmOptions) {
-  if (debug) console.log('STARTING: Fuzzy Token Search', name, searchType, caching);
+  if (debug)
+    console.log('STARTING: Fuzzy Token Search', name, searchType, caching, algorithmOptions);
 
   // Select filters based on type of search
   let filters = getFilters(searchType);

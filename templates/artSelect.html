@@ -10,6 +10,20 @@
       <input type="text" id="custom-art-search" name="search" value="{{search}}" />
       <button type="button" id="token-variant-art-clear-queue" {{#unless queue}}hidden{{/unless}}>Clear Queue ({{queue}})</button>
     </div>
+    {{#if fuzzyThreshold}}
+    <div class="form-group">
+      <input
+        type="range"
+        name="fuzzyThreshold"
+        data-dtype="Number"
+        value="{{fuzzyThreshold}}"
+        min="0"
+        max="100"
+        step="1"
+      />
+      <span class="token-variants-range-value">{{fuzzyThreshold}}%</span>
+    </div>
+    {{/if}}
 </div>
   {{#if allImages}} {{#each allImages as |search index|}}
   <div>
