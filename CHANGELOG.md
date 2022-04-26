@@ -1,3 +1,13 @@
+# 1.33.1
+
+On request added a new Pop-up setting: **GM Only**
+
+- Restricts pop-ups to GM users only, even if '**Use File browser**' and '**Configure Token Settings**' permissions are granted.
+
+Misc.
+
+- Fixed '**On Token Create**' and '**On Token Copy+Paste**' pop-up settings conflicting with each other in certain cases.
+
 # 1.30.1
 
 **Fuzzy Search**

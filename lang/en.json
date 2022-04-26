@@ -51,6 +51,10 @@
         "Name": "Pop-up Settings",
         "Hint": "Enable/disable pop-up features",
         "window": {
+          "gm-only": {
+            "Name": "GM Only",
+            "Hint": "Restrict pop-ups to GM users only, even if 'Use File browser' and 'Configure Token Settings' permissions are granted."
+          },
           "two-pop-ups": {
             "Name": "Display separate pop-ups for Portrait and Token art",
             "Hint": "When enabled 2 separate pop-ups will be displayed upon Actor/Token creation, first to select the Portrait art, and second to select the Token art."

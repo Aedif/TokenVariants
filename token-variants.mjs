@@ -752,6 +752,10 @@ async function initialize() {
       // Check if pop-up is enabled and if so open it
       const popupSettings = game.settings.get('token-variants', 'popupSettings');
 
+      if (!game.user.isGM && popupSettings.gmOnly) {
+        return;
+      }
+
       if (popupSettings.disableAutoPopupOnActorCreate && !keyPressed('popupOverride')) {
         return;
       } else if (disablePopupForType(actor)) {
@@ -841,6 +845,11 @@ async function initialize() {
 
       // Check if pop-up is enabled and if so open it
       const popupSettings = game.settings.get('token-variants', 'popupSettings');
+
+      if (!game.user.isGM && popupSettings.gmOnly) {
+        return;
+      }
+
       let dirKeyDown = keyPressed('popupOverride');
 
       if (vDown && popupSettings.disableAutoPopupOnTokenCopyPaste) {
@@ -848,7 +857,7 @@ async function initialize() {
       }
 
       if (!dirKeyDown || (dirKeyDown && vDown)) {
-        if (popupSettings.disableAutoPopupOnTokenCreate) {
+        if (popupSettings.disableAutoPopupOnTokenCreate && !vDown) {
           return;
         } else if (disablePopupForType(token.actor)) {
           return;
@@ -1079,7 +1088,7 @@ async function findTokensFuzzy(name, searchType, algorithmOptions) {
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
-    ignoreLocation: runSearchOnPath,
+    ignoreLocation: true,
     threshold: algorithmOptions.fuzzyThreshold,
   });
 
