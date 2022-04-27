@@ -49,7 +49,7 @@ In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, 
 - For your ForgeVTT asset library the format is as follows: **forgevtt:{path}**
   - This is far slower than using API keys and **Forge Asset Library Paths** setting.
 - Imgur galleries can be linked with: **imgur:galleryID**
-  - e.g. https://imgur.com/gallery/**JweWCpf** -> imgur:**JweWCpf\*\*
+  - e.g. https://imgur.com/gallery/ **JweWCpf** -> imgur:**JweWCpf**
   - Imgur paths can be automatically converted to RollTables
   - **!!!** Imgur galleries cannot be accessed when running Foundry on 'localhost'.
 
