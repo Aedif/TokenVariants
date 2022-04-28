@@ -13,7 +13,7 @@ Main features include:
 - Sourcing images from local folders, rolltables, Imgur galleries, and s3 buckets
 - Pop-ups on Actor/Token create to select images found based on Actor/Token name
 - Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
-- Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRD].png
+- Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRT].png
 - Wildcard images shown in the Token HUD
 - Aided and/or automatic mapping of images to actor compendiums
 - Assigning art to status effects and Visibility/Combat states, updating tokens once conditions such as 'Dead' and 'Paralysis' have been applied
