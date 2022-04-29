@@ -9,6 +9,7 @@ import {
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import ActiveEffectConfig from './activeEffectConfig.js';
+import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { doImageSearch } from '../token-variants.mjs';
 
 // not call if still caching
@@ -21,6 +22,16 @@ export async function renderHud(hud, html, token, searchText = '') {
     token.actorId &&
     game.actors.get(token.actorId)
   ) {
+    $('.control-icon[data-action="effects"]')
+      .find('img:first')
+      .click((event) => {
+        event.preventDefault();
+        if (keyPressed('config')) {
+          event.stopPropagation();
+          new ActiveEffectConfigList(token).render(true);
+        }
+      });
+
     $('.control-icon[data-action="visibility"]')
       .find('img')
       .click((event) => {

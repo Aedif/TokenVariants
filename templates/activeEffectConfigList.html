@@ -1,0 +1,58 @@
+<form>
+  <section>
+    <ol class="token-variant-table">
+      <li class="table-row table-header flexrow">
+        <div class="effect-controls">
+          <a class="create-mapping" title="Add new mapping"><i class="fas fa-plus"></i></a>
+        </div>
+        <div class="effect-name"><label>Effect Name</label></div>
+        <div class="effect-priority"><label>Priority</label></div>
+        <div class="effect-image"><label>Image</label></div>
+      </li>
+
+      {{#each mappings as |mapping index|}}
+      <li class="table-row flexrow" data-index="{{index}}">
+        <div class="effect-controls">
+          <a class="delete-mapping" title="Delete mapping"><i class="fas fa-trash"></i></a>
+        </div>
+        <div class="effect-name">
+          <input
+            type="text"
+            name="mappings.{{index}}.effectName"
+            value="{{mapping.effectName}}"
+            placeholder="effect name"
+          />
+        </div>
+        <div class="effect-priority">
+          <input
+            type="number"
+            name="mappings.{{index}}.priority"
+            value="{{mapping.priority}}"
+            placeholder="priority"
+          />
+        </div>
+        <div class="effect-image">
+          <img height="50" width="50" src="{{mapping.imgSrc}}" title="{{mapping.imgName}}" />
+          <input
+            class="imgSrc"
+            type="hidden"
+            name="mappings.{{index}}.imgSrc"
+            value="{{mapping.imgSrc}}"
+          />
+          <input
+            class="imgName"
+            type="hidden"
+            name="mappings.{{index}}.imgName"
+            value="{{mapping.imgName}}"
+          />
+        </div>
+      </li>
+      {{/each}}
+    </ol>
+  </section>
+  <footer class="sheet-footer flexrow">
+    <button class="save-mappings" type="button">
+      <i class="far fa-save"></i>{{localize "token-variants.common.apply"}}
+    </button>
+  </footer>
+</form>

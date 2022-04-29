@@ -1,6 +1,15 @@
-# 1.33.1
+# 1.32.1
 
-On request added a new Pop-up setting: **GM Only**
+New Config window added to '**Assign Status Effect**'
+
+- Accessed via Shift+Left-Click
+- Displays all Status Effect image mappings setup for the Actor
+- Allows to assign images to any effect including those not found in the Token HUD menu
+- **Note**: You might notice **token-variants-combat** and **token-variants-visibility** which are effect names used by the module to track Combat and Visibility mappings
+
+# 1.31.1
+
+New Pop-up setting: **GM Only**
 
 - Restricts pop-ups to GM users only, even if '**Use File browser**' and '**Configure Token Settings**' permissions are granted.
 

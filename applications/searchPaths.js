@@ -14,7 +14,7 @@ export class SearchPaths extends FormApplication {
       title: game.i18n.localize('token-variants.settings.search-paths.Name'),
       width: 500,
       height: 'auto',
-      scrollY: ['ol.table-paths'],
+      scrollY: ['ol.token-variant-table'],
       dragDrop: [{ dragSelector: null, dropSelector: null }],
     });
   }
@@ -94,11 +94,11 @@ export class SearchPaths extends FormApplication {
       imgur = true;
     }
 
-    const imgurControl = $(event.currentTarget).closest('.table-path').find('.imgur-control');
+    const imgurControl = $(event.currentTarget).closest('.table-row').find('.imgur-control');
     if (imgur) imgurControl.addClass('active');
     else imgurControl.removeClass('active');
 
-    $(event.currentTarget).closest('.table-path').find('.path-image i').attr('class', image);
+    $(event.currentTarget).closest('.table-row').find('.path-image i').attr('class', image);
   }
 
   async _onCreatePath(event) {
@@ -113,7 +113,7 @@ export class SearchPaths extends FormApplication {
     event.preventDefault();
     await this._onSubmit(event);
 
-    const li = event.currentTarget.closest('.table-path');
+    const li = event.currentTarget.closest('.table-row');
     this.object.paths.splice(li.dataset.index, 1);
     this.render();
   }
@@ -122,7 +122,7 @@ export class SearchPaths extends FormApplication {
     event.preventDefault();
     await this._onSubmit(event);
 
-    const li = event.currentTarget.closest('.table-path');
+    const li = event.currentTarget.closest('.table-row');
     const albumHash = this.object.paths[li.dataset.index].text.split(':')[1];
     const imgurClientId = game.settings.get('token-variants', 'imgurClientId') ?? 'df9d991443bb222';
 
