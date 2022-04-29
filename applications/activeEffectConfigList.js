@@ -17,6 +17,8 @@ export default class ActiveEffectConfigList extends FormApplication {
       resizable: false,
       minimizable: false,
       closeOnSubmit: false,
+      height: 'auto',
+      scrollY: ['ol.token-variant-table'],
       title: 'Config',
       width: 350,
     });
