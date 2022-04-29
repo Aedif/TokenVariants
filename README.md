@@ -13,7 +13,7 @@ Main features include:
 - Sourcing images from local folders, rolltables, Imgur galleries, and s3 buckets
 - Pop-ups on Actor/Token create to select images found based on Actor/Token name
 - Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
-- Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRD].png
+- Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRT].png
 - Wildcard images shown in the Token HUD
 - Aided and/or automatic mapping of images to actor compendiums
 - Assigning art to status effects and Visibility/Combat states, updating tokens once conditions such as 'Dead' and 'Paralysis' have been applied
@@ -49,7 +49,7 @@ In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, 
 - For your ForgeVTT asset library the format is as follows: **forgevtt:{path}**
   - This is far slower than using API keys and **Forge Asset Library Paths** setting.
 - Imgur galleries can be linked with: **imgur:galleryID**
-  - e.g. https://imgur.com/gallery/**JweWCpf** -> imgur:**JweWCpf\*\*
+  - e.g. https://imgur.com/gallery/ **JweWCpf** -> imgur:**JweWCpf**
   - Imgur paths can be automatically converted to RollTables
   - **!!!** Imgur galleries cannot be accessed when running Foundry on 'localhost'.
 
