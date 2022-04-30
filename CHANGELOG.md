@@ -1,3 +1,7 @@
+# 1.32.3
+
+- Fix to prevent the module from performing the same update from multiple user clients
+
 # 1.32.2
 
 - **Assign Status Effect** Config window height will now adjust to the size of the list
