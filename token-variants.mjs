@@ -440,9 +440,17 @@ async function initialize() {
 
   const getEffectsFromActor = (actor) => {
     let effects = [];
-    (actor.data.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.data.disabled) effects.push(activeEffect.data.label);
-    });
+
+    if (game.system.id === 'pf2e') {
+      (actor.data.items || []).forEach((item, id) => {
+        if (item.type === 'condition' && item.isActive) effects.push(item.name);
+      });
+    } else {
+      (actor.data.effects || []).forEach((activeEffect, id) => {
+        if (!activeEffect.data.disabled) effects.push(activeEffect.data.label);
+      });
+    }
+
     return effects;
   };
 
@@ -563,14 +571,14 @@ async function initialize() {
   //
 
   let updateImageOnEffectChange = async function (activeEffect) {
+    const label = game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
     const actor = activeEffect.parent;
     const tokens = actor.getActiveTokens();
     if (tokens.length === 0) return;
 
-    const mappings = activeEffect.parent.getFlag('token-variants', 'effectMappings') || {};
-    let effects = getEffectsFromActor(actor);
-
-    if (activeEffect.data.label in mappings) {
+    const mappings = actor.getFlag('token-variants', 'effectMappings') || {};
+    if (label in mappings) {
+      let effects = getEffectsFromActor(actor);
       for (const token of tokens) {
         if (token.data.actorLink) {
           let tokenEffects = [...effects];
@@ -616,14 +624,52 @@ async function initialize() {
   });
 
   //
+  // Hooks required for PF2e linked actor token updates
+  //
+  Hooks.on('deleteItem', (condition, options, userId) => {
+    if (
+      game.system.id !== 'pf2e' ||
+      condition.type !== 'condition' ||
+      !enableStatusConfig ||
+      !condition.parent ||
+      condition.data.disabled ||
+      game.userId !== userId
+    )
+      return;
+    updateImageOnEffectChange(condition);
+  });
+
+  Hooks.on('createItem', (condition, options, userId) => {
+    if (
+      game.system.id !== 'pf2e' ||
+      condition.type !== 'condition' ||
+      !enableStatusConfig ||
+      !condition.parent ||
+      condition.data.disabled ||
+      game.userId !== userId
+    )
+      return;
+    updateImageOnEffectChange(condition);
+  });
+
+  //
   // Handle image updates for Active Effects applied to Tokens WITHOUT Linked Actors
   // PF2e treats Active Effects differently. Both linked and unlinked tokens must be managed via update token hooks
 
   const getEffects = (token) => {
     if (game.system.id === 'pf2e') {
-      return (token.data.actorData?.items || []).map((ef) => ef.name);
+      if (token.data.actorLink) {
+        return getEffectsFromActor(token.actor);
+      } else {
+        return (token.data.actorData?.items || []).map((ef) => ef.name);
+      }
+    } else {
+      if (token.data.actorLink && token.actor) {
+        return getEffectsFromActor(token.actor);
+      } else {
+        return (token.data.actorData?.effects || []).map((ef) => ef.label);
+      }
     }
-    return (token.data.actorData?.effects || []).map((ef) => ef.label);
   };
 
   Hooks.on('preUpdateToken', (token, change, options, userId) => {

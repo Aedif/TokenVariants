@@ -2,8 +2,8 @@
   "name": "token-variants",
   "title": "Token Variant Art",
   "description": "Searches a customisable list of directories and displays art variants for tokens/actors through pop-ups and a new Token HUD button. Variants can be individually shared with players allowing them to switch out their token art on the fly.",
-  "version": "1.32.3",
-  "download": "https://github.com//Aedif/TokenVariants/releases/download/1.32.3/token-variants.zip",
+  "version": "1.32.4",
+  "download": "https://github.com//Aedif/TokenVariants/releases/download/1.32.4/token-variants.zip",
   "url": "https://github.com/Aedif/TokenVariants",
   "manifest": "https://github.com/Aedif/TokenVariants/releases/latest/download/module.json",
   "author": "Aedif",
@@ -23,7 +23,7 @@
   "styles": [
     "styles/artSelect.css",
     "styles/sideSelect.css",
-    "styles/searchPaths.css",
+    "styles/lists.css",
     "styles/popupSettings.css",
     "styles/general.css"
   ],

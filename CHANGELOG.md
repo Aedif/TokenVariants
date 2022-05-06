@@ -1,6 +1,11 @@
+# 1.32.4
+
+- Fixed tokens with linked actors ignoring status effect mapping's priority
+- PF2e specific: Fixed tokens with linked actors not updating to the status effect mapping
+
 # 1.32.3
 
-- Fix to prevent the module from performing the same update from multiple user clients
+- Fix to prevent the module from performing the same update on multiple user clients
 
 # 1.32.2
 
