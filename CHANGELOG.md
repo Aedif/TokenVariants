@@ -1,3 +1,9 @@
+# 1.32.5
+
+- Fixed some Token HUD world settings not updating when running on updated versions of the module
+- Fixed sharing of images via the Token HUD sometimes resulting in images being shown from an image search even when the user does not have appropriate permissions
+- Fixed Status Effect mapping menu being accessible without proper permissions
+
 # 1.32.4
 
 - Fixed tokens with linked actors ignoring status effect mapping's priority

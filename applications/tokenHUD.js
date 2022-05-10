@@ -16,11 +16,14 @@ import { doImageSearch } from '../token-variants.mjs';
 export async function renderHud(hud, html, token, searchText = '') {
   const hudSettings = game.settings.get('token-variants', 'hudSettings');
   const worldHudSettings = game.settings.get('token-variants', 'worldHudSettings');
+  const userHasConfigRights =
+    game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE');
 
   if (
     game.settings.get('token-variants', 'enableStatusConfig') &&
     token.actorId &&
-    game.actors.get(token.actorId)
+    game.actors.get(token.actorId) &&
+    userHasConfigRights
   ) {
     $('.control-icon[data-action="effects"]')
       .find('img:first')
@@ -87,16 +90,15 @@ export async function renderHud(hud, html, token, searchText = '') {
   const search = searchText ? searchText : token.name;
   if (!search || search.length < 3) return;
 
-  const userHasConfigRights =
-    game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE');
+  const grantSearchToUser = userHasConfigRights || worldHudSettings.enableButtonForAll;
+  const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !grantSearchToUser);
 
-  let artSearch =
-    !searchText && worldHudSettings.displayOnlySharedImages
-      ? null
-      : await doImageSearch(search, {
-          searchType: SEARCH_TYPE.TOKEN,
-          ignoreKeywords: !worldHudSettings.includeKeywords,
-        });
+  let artSearch = noSearch
+    ? null
+    : await doImageSearch(search, {
+        searchType: SEARCH_TYPE.TOKEN,
+        ignoreKeywords: !worldHudSettings.includeKeywords,
+      });
 
   // Merge full search, and keywords into a single array
   let images = [];
@@ -106,7 +108,7 @@ export async function renderHud(hud, html, token, searchText = '') {
     });
   }
 
-  let actorVariants = new Map();
+  let actorVariants = [];
 
   if (tokenActor) {
     actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
@@ -145,7 +147,7 @@ export async function renderHud(hud, html, token, searchText = '') {
     }
   }
 
-  if (!hudSettings.alwaysShowButton && !images.size && !actorVariants.length) return;
+  if (!hudSettings.alwaysShowButton && !images.length && !actorVariants.length) return;
 
   // Retrieving the possibly custom name attached as a flag to the token
   let tokenImageName = '';

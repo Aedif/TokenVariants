@@ -39,13 +39,29 @@ export default class TokenHUDSettings extends FormApplication {
    */
   async _updateObject(event, formData) {
     const worldSettings = game.settings.get('token-variants', 'worldHudSettings');
-    Object.keys(worldSettings).forEach((setting) => {
-      if (settings in formData) worldSettings[setting] = formData[setting];
+
+    const w_settings = [
+      'enableButtonForAll',
+      'displayOnlySharedImages',
+      'disableIfTHWEnabled:',
+      'includeKeywords',
+    ];
+
+    w_settings.forEach((setting) => {
+      if (setting in formData) worldSettings[setting] = formData[setting];
     });
     game.settings.set('token-variants', 'worldHudSettings', worldSettings);
 
     const clientSettings = game.settings.get('token-variants', 'hudSettings');
-    Object.keys(clientSettings).forEach((setting) => {
+    const c_settings = [
+      'enableSideMenu',
+      'displayAsImage',
+      'imageOpacity',
+      'alwaysShowButton',
+      'updateActorImage',
+      'includeWildcard',
+    ];
+    c_settings.forEach((setting) => {
       if (setting in formData) clientSettings[setting] = formData[setting];
     });
     game.settings.set('token-variants', 'hudSettings', clientSettings);
