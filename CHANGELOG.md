@@ -1,3 +1,7 @@
+# 1.33.2
+
+- Fixed module breaking on Foundry v9.x when attempting to read a v8.x specific setting
+
 # 1.33.1
 
 New setting added: '**Import/Export**'

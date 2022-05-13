@@ -378,7 +378,9 @@ export async function fetchAllSettings() {
   TVA_CONFIG.worldHud = game.settings.get('token-variants', 'worldHudSettings');
   TVA_CONFIG.keywordSearch = game.settings.get('token-variants', 'keywordSearch');
   TVA_CONFIG.excludedKeywords = game.settings.get('token-variants', 'excludedKeywords');
-  TVA_CONFIG.actorDirectoryKey = game.settings.get('token-variants', 'actorDirectoryKey');
+  if (!isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
+    TVA_CONFIG.actorDirectoryKey = game.settings.get('token-variants', 'actorDirectoryKey');
+  }
   TVA_CONFIG.runSearchOnPath = game.settings.get('token-variants', 'runSearchOnPath');
   TVA_CONFIG.searchFilters = game.settings.get('token-variants', 'searchFilterSettings');
   TVA_CONFIG.algorithm = game.settings.get('token-variants', 'algorithmSettings');
@@ -411,7 +413,11 @@ export async function importSettingsFromJSON(json) {
   game.settings.set('token-variants', 'worldHudSettings', json.worldHud);
   game.settings.set('token-variants', 'keywordSearch', json.keywordSearch);
   game.settings.set('token-variants', 'excludedKeywords', json.excludedKeywords);
-  game.settings.set('token-variants', 'actorDirectoryKey', json.actorDirectoryKey);
+
+  if (!isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
+    game.settings.set('token-variants', 'actorDirectoryKey', json.actorDirectoryKey);
+  }
+
   game.settings.set('token-variants', 'runSearchOnPath', json.runSearchOnPath);
   game.settings.set('token-variants', 'searchFilterSettings', json.searchFilters);
   game.settings.set('token-variants', 'algorithmSettings', json.algorithm);
