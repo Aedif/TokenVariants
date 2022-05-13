@@ -1,9 +1,8 @@
+import { TVA_CONFIG } from '../scripts/settings.js';
+
 export default class PopUpSettings extends FormApplication {
   constructor() {
-    super(
-      {},
-      { title: game.i18n.localize('token-variants.settings.pop-up.Name') }
-    );
+    super({}, { title: game.i18n.localize('token-variants.settings.pop-up.Name') });
   }
 
   static get defaultOptions() {
@@ -22,12 +21,10 @@ export default class PopUpSettings extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    const popupSettings = game.settings.get('token-variants', 'popupSettings');
+    const popupSettings = TVA_CONFIG.popup;
 
     // Get all actor types defined by the game system
-    const actorTypes = (game.system.entityTypes ?? game.system.documentTypes)[
-      'Actor'
-    ];
+    const actorTypes = (game.system.entityTypes ?? game.system.documentTypes)['Actor'];
     data.actorTypes = actorTypes.reduce((obj, t) => {
       const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
       obj[t] = {

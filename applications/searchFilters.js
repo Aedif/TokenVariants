@@ -1,3 +1,5 @@
+import { TVA_CONFIG } from '../scripts/settings.js';
+
 function addInputValidation(html, regex, include, exclude) {
   let filterRegex = html.find(`[name=${regex}]`)[0];
   let filterInclude = html.find(`[name=${include}]`)[0];
@@ -41,10 +43,7 @@ export default class FilterSettings extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    return mergeObject(
-      data,
-      game.settings.get('token-variants', 'searchFilterSettings')
-    );
+    return mergeObject(data, TVA_CONFIG.searchFilters);
   }
 
   /**
@@ -58,18 +57,8 @@ export default class FilterSettings extends FormApplication {
       'portraitFilterInclude',
       'portraitFilterExclude'
     );
-    addInputValidation(
-      html,
-      'tokenFilterRegex',
-      'tokenFilterInclude',
-      'tokenFilterExclude'
-    );
-    addInputValidation(
-      html,
-      'generalFilterRegex',
-      'generalFilterInclude',
-      'generalFilterExclude'
-    );
+    addInputValidation(html, 'tokenFilterRegex', 'tokenFilterInclude', 'tokenFilterExclude');
+    addInputValidation(html, 'generalFilterRegex', 'generalFilterInclude', 'generalFilterExclude');
   }
 
   /**
@@ -88,15 +77,9 @@ export default class FilterSettings extends FormApplication {
     formData.tokenFilterRegex = validateRegex(formData.tokenFilterRegex);
     formData.portraitFilterRegex = validateRegex(formData.portraitFilterRegex);
 
-    let updatedSettings = mergeObject(
-      game.settings.get('token-variants', 'searchFilterSettings'),
-      formData,
-      { insertKeys: false }
-    );
-    game.settings.set(
-      'token-variants',
-      'searchFilterSettings',
-      updatedSettings
-    );
+    let updatedSettings = mergeObject(TVA_CONFIG.searchFilters, formData, {
+      insertKeys: false,
+    });
+    game.settings.set('token-variants', 'searchFilterSettings', updatedSettings);
   }
 }

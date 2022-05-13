@@ -1,12 +1,12 @@
+import { TVA_CONFIG } from '../scripts/settings.js';
+
 export default class AlgorithmSettings extends FormApplication {
   constructor(dummySettings) {
     super({}, {});
     if (dummySettings) {
-      this.dummySettings = mergeObject(
-        dummySettings,
-        game.settings.get('token-variants', 'algorithmSettings'),
-        { overwrite: false }
-      );
+      this.dummySettings = mergeObject(dummySettings, TVA_CONFIG.algorithm, {
+        overwrite: false,
+      });
     }
   }
 
@@ -24,9 +24,7 @@ export default class AlgorithmSettings extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    const settings = this.dummySettings
-      ? this.dummySettings
-      : game.settings.get('token-variants', 'algorithmSettings');
+    const settings = deepClone(this.dummySettings ? this.dummySettings : TVA_CONFIG.algorithm);
     settings.fuzzyThreshold = 100 - settings.fuzzyThreshold * 100;
     return mergeObject(data, settings);
   }

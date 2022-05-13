@@ -1,3 +1,9 @@
+# 1.33.1
+
+New setting added: '**Import/Export**'
+
+- Brings up a dialog allowing the user to export and import module settings to/from a JSON file
+
 # 1.32.5
 
 - Fixed some Token HUD world settings not updating when running on updated versions of the module

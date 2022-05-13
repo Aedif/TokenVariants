@@ -2,6 +2,7 @@ import { showArtSelect, doImageSearch, cacheTokens } from '../token-variants.mjs
 import { SEARCH_TYPE, updateActorImage, updateTokenImage } from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
 import AlgorithmSettings from './algorithm.js';
+import { TVA_CONFIG } from '../scripts/settings.js';
 
 async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
   let portraitFound = formData.ignorePortrait;
@@ -154,12 +155,10 @@ export default class CompendiumMapConfig extends FormApplication {
 
   async getData(options) {
     let data = super.getData(options);
-    data = mergeObject(data, game.settings.get('token-variants', 'compendiumMapper'));
+    data = mergeObject(data, TVA_CONFIG.compendiumMapper);
     this.algorithmSettings = data.algorithmSettings
       ? data.algorithmSettings
-      : game.settings.get('token-variants', 'algorithmSettings');
-
-    console.log('data', this.algorithmSettings);
+      : deepClone(TVA_CONFIG.algorithm);
 
     const packs = [];
     game.packs.forEach((pack) => {
@@ -168,7 +167,7 @@ export default class CompendiumMapConfig extends FormApplication {
       }
     });
     data.compendiums = packs;
-    data.incKeywords = game.settings.get('token-variants', 'keywordSearch');
+    data.incKeywords = TVA_CONFIG.keywordSearch;
 
     return data;
   }
@@ -198,7 +197,6 @@ export default class CompendiumMapConfig extends FormApplication {
   }
 
   async _onAlgorithmSettings(event) {
-    console.log(this.algorithmSettings);
     new AlgorithmSettings(this.algorithmSettings).render(true);
   }
 

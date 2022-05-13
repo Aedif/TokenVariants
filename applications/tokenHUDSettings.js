@@ -1,3 +1,5 @@
+import { TVA_CONFIG } from '../scripts/settings.js';
+
 export default class TokenHUDSettings extends FormApplication {
   constructor() {
     super({}, { title: `Token HUD Settings` });
@@ -19,9 +21,9 @@ export default class TokenHUDSettings extends FormApplication {
     let data = super.getData(options);
     data.enableWorldSettings = game.user && game.user.isGM;
     if (data.enableWorldSettings) {
-      data = mergeObject(data, game.settings.get('token-variants', 'worldHudSettings'));
+      data = mergeObject(data, TVA_CONFIG.worldHud);
     }
-    data = mergeObject(data, game.settings.get('token-variants', 'hudSettings'));
+    data = mergeObject(data, TVA_CONFIG.hud);
     data.tokenHUDWildcardActive = game.modules.get('token-hud-wildcard')?.active;
     return data;
   }
@@ -38,7 +40,7 @@ export default class TokenHUDSettings extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    const worldSettings = game.settings.get('token-variants', 'worldHudSettings');
+    const worldSettings = TVA_CONFIG.worldHud;
 
     const w_settings = [
       'enableButtonForAll',
@@ -52,7 +54,7 @@ export default class TokenHUDSettings extends FormApplication {
     });
     game.settings.set('token-variants', 'worldHudSettings', worldSettings);
 
-    const clientSettings = game.settings.get('token-variants', 'hudSettings');
+    const clientSettings = TVA_CONFIG.hud;
     const c_settings = [
       'enableSideMenu',
       'displayAsImage',

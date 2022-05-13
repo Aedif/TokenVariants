@@ -11,16 +11,17 @@ import TokenCustomConfig from './tokenCustomConfig.js';
 import ActiveEffectConfig from './activeEffectConfig.js';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { doImageSearch } from '../token-variants.mjs';
+import { TVA_CONFIG } from '../scripts/settings.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '') {
-  const hudSettings = game.settings.get('token-variants', 'hudSettings');
-  const worldHudSettings = game.settings.get('token-variants', 'worldHudSettings');
+  const hudSettings = TVA_CONFIG.hud;
+  const worldHudSettings = TVA_CONFIG.worldHud;
   const userHasConfigRights =
     game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE');
 
   if (
-    game.settings.get('token-variants', 'enableStatusConfig') &&
+    TVA_CONFIG.enableStatusConfig &&
     token.actorId &&
     game.actors.get(token.actorId) &&
     userHasConfigRights
@@ -158,7 +159,7 @@ export async function renderHud(hud, html, token, searchText = '') {
   }
 
   let imagesParsed = [];
-  const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
+  const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
 
   for (const imageObj of images) {
     const img = isImage(imageObj.path);
@@ -297,7 +298,7 @@ async function _onImageClick(event, tokenId) {
     token = token.document ?? token;
   }
 
-  const hudSettings = game.settings.get('token-variants', 'hudSettings');
+  const hudSettings = TVA_CONFIG.hud;
 
   const imgButton = $(event.target).closest('.token-variants-button-select');
   const imgSrc = imgButton.attr('data-name');

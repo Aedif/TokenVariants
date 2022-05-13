@@ -1,6 +1,7 @@
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { isVideo, isImage, keyPressed, SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
+import { TVA_CONFIG } from '../scripts/settings.js';
 
 const ART_SELECT_QUEUE = {
   queue: [],
@@ -88,11 +89,9 @@ export class ArtSelect extends FormApplication {
     this.image1 = image1;
     this.image2 = image2;
     this.searchType = searchType;
-    this.algorithmOptions = mergeObject(
-      algorithmOptions,
-      game.settings.get('token-variants', 'algorithmSettings'),
-      { overwrite: false }
-    );
+    this.algorithmOptions = mergeObject(algorithmOptions, TVA_CONFIG.algorithm, {
+      overwrite: false,
+    });
   }
 
   static get defaultOptions() {
@@ -111,9 +110,8 @@ export class ArtSelect extends FormApplication {
     //
     // Create buttons
     //
-    const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
+    const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
     const fuzzySearch = this.algorithmOptions.fuzzy;
-    const runSearchOnPath = game.settings.get('token-variants', 'runSearchOnPath');
 
     let allButtons = new Map();
     let artFound = false;
@@ -137,7 +135,7 @@ export class ArtSelect extends FormApplication {
       if (!fuzzySearch) return obj.path;
 
       let percent = Math.ceil((1 - obj.score) * 100) + '%';
-      if (runSearchOnPath) {
+      if (TVA_CONFIG.runSearchOnPath) {
         return percent + '\n' + genLabel(obj.path, obj.indices, '', '', '-') + '\n' + obj.path;
       }
       return percent;
@@ -156,7 +154,7 @@ export class ArtSelect extends FormApplication {
           type: vid || img,
           name: imageObj.name,
           label:
-            fuzzySearch && !runSearchOnPath
+            fuzzySearch && !TVA_CONFIG.runSearchOnPath
               ? genLabel(imageObj.name, imageObj.indices)
               : imageObj.name,
           title: genTitle(imageObj),

@@ -176,6 +176,13 @@
             "Hint": "Percentage slider will appear in the Art Select pop-ups, allowing you to change the percentage match on the fly"
           }
         }
+      },
+      "import-export": {
+        "Hint": "Import/Export module settings",
+        "window": {
+          "import-dialog": "Import Token Variant Art settings",
+          "source-data": "Source Data"
+        }
       }
     },
     "common": {
@@ -193,7 +200,9 @@
       "enable": "Enable",
       "exact": "Exact",
       "fuzzy": "Fuzzy",
-      "limit": "Limit"
+      "limit": "Limit",
+      "import": "Import",
+      "export": "Export"
     },
     "windows": {
       "art-select": {
@@ -211,7 +220,7 @@
       "warn": {
         "profile-image-not-found": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
         "path-not-found": "Unable to find path: ",
-        "invalid-table": "The table \"{tableId}\" could not be found",
+        "invalid-table": "The table \"{rollTableName}\" could not be found",
         "update-image-no-token-actor": "Calling 'updateImage' with no valid Token or Actor as update target.",
         "imgur-localhost": "Imgur galleries cannot be accessed through clients running on 'localhost'"
       },

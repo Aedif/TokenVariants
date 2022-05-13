@@ -1,3 +1,5 @@
+import { TVA_CONFIG } from '../scripts/settings.js';
+
 export class SearchPaths extends FormApplication {
   constructor() {
     super({}, {});
@@ -37,7 +39,7 @@ export class SearchPaths extends FormApplication {
   }
 
   async _getPaths() {
-    const paths = (game.settings.get('token-variants', 'searchPaths') || []).flat();
+    const paths = (TVA_CONFIG.searchPaths || []).flat();
 
     // To maintain compatibility with previous versions
     if (paths.length > 0 && !(paths[0] instanceof Object)) {
@@ -124,7 +126,7 @@ export class SearchPaths extends FormApplication {
 
     const li = event.currentTarget.closest('.table-row');
     const albumHash = this.object.paths[li.dataset.index].text.split(':')[1];
-    const imgurClientId = game.settings.get('token-variants', 'imgurClientId') ?? 'df9d991443bb222';
+    const imgurClientId = TVA_CONFIG.imgurClientId ?? 'df9d991443bb222';
 
     fetch('https://api.imgur.com/3/gallery/album/' + albumHash, {
       headers: {
@@ -221,7 +223,7 @@ export class SearchPaths extends FormApplication {
 
 export class ForgeSearchPaths extends SearchPaths {
   async _getPaths() {
-    const forgePaths = game.settings.get('token-variants', 'forgeSearchPaths') || {};
+    const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
     this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
     this.apiKey = forgePaths[this.userId]?.apiKey;
     return forgePaths[this.userId]?.paths || [];
@@ -233,7 +235,7 @@ export class ForgeSearchPaths extends SearchPaths {
 
   _updatePaths() {
     if (this.userId) {
-      const forgePaths = game.settings.get('token-variants', 'forgeSearchPaths') || {};
+      const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
       forgePaths[this.userId] = {
         paths: this._cleanPaths(),
         apiKey: this.apiKey,

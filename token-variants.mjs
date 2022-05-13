@@ -1,17 +1,11 @@
-import { SearchPaths, ForgeSearchPaths } from './applications/searchPaths.js';
+import { registerSettings, TVA_CONFIG, exportSettingsToJSON } from './scripts/settings.js';
 import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
-import TokenHUDSettings from './applications/tokenHUDSettings.js';
-import FilterSettings from './applications/searchFilters.js';
-import RandomizerSettings from './applications/randomizerSettings.js';
-import PopUpSettings from './applications/popupSettings.js';
 import {
   getFileName,
   getFileNameWithExt,
   getFilters,
   simplifyTokenName,
   simplifyPath,
-  parseSearchPaths,
-  parseKeywords,
   getTokenConfigForUpdate,
   SEARCH_TYPE,
   callForgeVTT,
@@ -24,26 +18,10 @@ import {
   queueTokenUpdate,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
-import CompendiumMapConfig from './applications/compendiumMap.js';
-import AlgorithmSettings from './applications/algorithm.js';
 import { Fuse } from './scripts/fuse/fuse.js';
 
 // Tracks if module has been initialized
 let initialized = false;
-
-// Default path where the script will look for token art
-const DEFAULT_TOKEN_PATHS = [
-  {
-    text: 'modules/caeora-maps-tokens-assets/assets/tokens/',
-    cache: true,
-  },
-];
-
-// Controls whether a keyword search is to be performed in addition to full-name search
-let keywordSearch = false;
-let excludedKeywords = [];
-
-let algorithmSettings;
 
 // True if in the middle of caching image paths
 let caching = false;
@@ -53,25 +31,6 @@ let cachedImages = [];
 
 // Tokens found with caching disabled
 let foundImages = [];
-
-// Controls whether separate popups are displayed for portrait and token art
-let twoPopups = false;
-let noTwoPopupsPrompt = false;
-
-// Prevent registering of right-click listener on the character sheet
-let disableActorPortraitListener = false;
-
-// Enables console logs
-let debug = false;
-
-let runSearchOnPath = false;
-
-let imgurClientId;
-let enableStatusConfig = false;
-let disableNotifs = false;
-
-// Search paths parsed into a format usable in search functions
-let parsedSearchPaths;
 
 // showArtSelect(...) can take a while to fully execute and it is possible for it to be called
 // multiple times in very quick succession especially if copy pasting tokens or importing actors.
@@ -83,336 +42,6 @@ const showArtSelectExecuting = { inProgress: false };
 let multiSearch = false;
 let usedImages = new Set();
 
-async function registerWorldSettings() {
-  game.settings.register('token-variants', 'debug', {
-    scope: 'world',
-    config: false,
-    type: Boolean,
-    default: false,
-    onChange: (val) => (debug = val),
-  });
-
-  game.settings.registerMenu('token-variants', 'searchPaths', {
-    name: game.i18n.localize('token-variants.settings.search-paths.Name'),
-    hint: game.i18n.localize('token-variants.settings.search-paths.Hint'),
-    icon: 'fas fa-exchange-alt',
-    type: SearchPaths,
-    restricted: true,
-  });
-
-  game.settings.register('token-variants', 'searchPaths', {
-    scope: 'world',
-    config: false,
-    type: Array,
-    default: DEFAULT_TOKEN_PATHS,
-    onChange: async function (_) {
-      if (game.user.can('SETTINGS_MODIFY'))
-        await game.settings.set('token-variants', 'forgevttPaths', []);
-      parsedSearchPaths = await parseSearchPaths(debug);
-      cacheTokens();
-    },
-  });
-
-  game.settings.register('token-variants', 'forgeSearchPaths', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: {},
-    onChange: async function (_) {
-      if (game.user.can('SETTINGS_MODIFY'))
-        await game.settings.set('token-variants', 'forgevttPaths', []);
-      parsedSearchPaths = await parseSearchPaths(debug);
-      cacheTokens();
-    },
-  });
-
-  // World level Token HUD setting
-  game.settings.register('token-variants', 'worldHudSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: {
-      enableButtonForAll: false,
-      displayOnlySharedImages: false,
-      disableIfTHWEnabled: false,
-      includeKeywords: false,
-    },
-  });
-
-  game.settings.register('token-variants', 'keywordSearch', {
-    name: game.i18n.localize('token-variants.settings.keywords-search.Name'),
-    hint: game.i18n.localize('token-variants.settings.keywords-search.Hint'),
-    scope: 'world',
-    config: true,
-    type: Boolean,
-    default: true,
-    onChange: (kSearch) => (keywordSearch = kSearch),
-  });
-
-  game.settings.register('token-variants', 'excludedKeywords', {
-    name: game.i18n.localize('token-variants.settings.excluded-keywords.Name'),
-    hint: game.i18n.localize('token-variants.settings.excluded-keywords.Hint'),
-    scope: 'world',
-    config: true,
-    type: String,
-    default: 'and,for',
-    onChange: (keywords) => (excludedKeywords = parseKeywords(keywords)),
-  });
-
-  if (!isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
-    game.settings.register('token-variants', 'actorDirectoryKey', {
-      name: game.i18n.localize('token-variants.settings.actor-directory-key.Name'),
-      hint: game.i18n.localize('token-variants.settings.actor-directory-key.Hint'),
-      scope: 'world',
-      config: true,
-      type: String,
-      choices: {
-        Control: 'Ctrl',
-        Shift: 'Shift',
-        Alt: 'Alt',
-      },
-      default: 'Control',
-    });
-  }
-
-  game.settings.register('token-variants', 'runSearchOnPath', {
-    name: game.i18n.localize('token-variants.settings.run-search-on-path.Name'),
-    hint: game.i18n.localize('token-variants.settings.run-search-on-path.Hint'),
-    scope: 'world',
-    config: true,
-    type: Boolean,
-    default: false,
-    onChange: (val) => (runSearchOnPath = val),
-  });
-
-  game.settings.registerMenu('token-variants', 'searchFilterMenu', {
-    name: game.i18n.localize('token-variants.settings.search-filters.Name'),
-    hint: game.i18n.localize('token-variants.settings.search-filters.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: FilterSettings,
-    restricted: true,
-  });
-
-  game.settings.register('token-variants', 'searchFilterSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: {
-      portraitFilterInclude: '',
-      portraitFilterExclude: '',
-      portraitFilterRegex: '',
-      tokenFilterInclude: '',
-      tokenFilterExclude: '',
-      tokenFilterRegex: '',
-      generalFilterInclude: '',
-      generalFilterExclude: '',
-      generalFilterRegex: '',
-    },
-  });
-
-  game.settings.registerMenu('token-variants', 'algorithmMenu', {
-    name: game.i18n.localize('token-variants.settings.algorithm.Name'),
-    hint: game.i18n.localize('token-variants.settings.algorithm.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: AlgorithmSettings,
-    restricted: true,
-  });
-
-  game.settings.register('token-variants', 'algorithmSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: {
-      exact: true,
-      fuzzy: false,
-      fuzzyLimit: 50,
-      fuzzyThreshold: 0.3,
-      fuzzyArtSelectPercentSlider: false,
-    },
-    onChange: (settings) => (algorithmSettings = settings),
-  });
-
-  game.settings.register('token-variants', 'forgevttPaths', {
-    scope: 'world',
-    config: false,
-    type: Array,
-    default: [],
-  });
-
-  game.settings.register('token-variants', 'tokenConfigs', {
-    scope: 'world',
-    config: false,
-    type: Array,
-    default: [],
-  });
-
-  game.settings.registerMenu('token-variants', 'randomizerMenu', {
-    name: game.i18n.localize('token-variants.settings.randomizer.Name'),
-    hint: game.i18n.localize('token-variants.settings.randomizer.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: RandomizerSettings,
-    restricted: true,
-  });
-
-  game.settings.register('token-variants', 'randomizerSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: {
-      actorCreate: false,
-      tokenCreate: false,
-      tokenCopyPaste: false,
-      tokenName: true,
-      keywords: false,
-      shared: false,
-      representedActorDisable: false,
-      linkedActorDisable: true,
-      popupOnDisable: false,
-      diffImages: false,
-      syncImages: false,
-    },
-  });
-
-  game.settings.registerMenu('token-variants', 'popupMenu', {
-    name: game.i18n.localize('token-variants.settings.pop-up.Name'),
-    hint: game.i18n.localize('token-variants.settings.pop-up.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: PopUpSettings,
-    restricted: true,
-  });
-
-  game.settings.register('token-variants', 'popupSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: {
-      disableAutoPopupOnActorCreate: false,
-      disableAutoPopupOnTokenCreate: false,
-      disableAutoPopupOnTokenCopyPaste: false,
-      twoPopups: false,
-      twoPopupsNoDialog: false,
-      disableActorPortraitArtSelect: false,
-    },
-    onChange: (settings) => {
-      twoPopups = settings.twoPopups;
-      noTwoPopupsPrompt = settings.twoPopupsNoDialog;
-      disableActorPortraitListener = settings.disableActorPortraitArtSelect;
-    },
-  });
-
-  game.settings.register('token-variants', 'imgurClientId', {
-    name: game.i18n.localize('token-variants.settings.imgur-client-id.Name'),
-    hint: game.i18n.localize('token-variants.settings.imgur-client-id.Hint'),
-    scope: 'world',
-    config: true,
-    type: String,
-    onChange: (id) => (imgurClientId = id),
-  });
-
-  game.settings.register('token-variants', 'enableStatusConfig', {
-    name: game.i18n.localize('token-variants.settings.status-config.Name'),
-    hint: game.i18n.localize('token-variants.settings.status-config.Hint'),
-    scope: 'world',
-    config: true,
-    default: false,
-    type: Boolean,
-    onChange: (enable) => (enableStatusConfig = enable),
-  });
-
-  game.settings.register('token-variants', 'disableNotifs', {
-    name: game.i18n.localize('token-variants.settings.disable-notifs.Name'),
-    hint: game.i18n.localize('token-variants.settings.disable-notifs.Hint'),
-    scope: 'world',
-    config: true,
-    default: false,
-    type: Boolean,
-    onChange: (disable) => (disableNotifs = disable),
-  });
-
-  game.settings.registerMenu('token-variants', 'compendiumMapper', {
-    name: game.i18n.localize('token-variants.settings.compendium-mapper.Name'),
-    hint: game.i18n.localize('token-variants.settings.compendium-mapper.Hint'),
-    scope: 'world',
-    icon: 'fas fa-cogs',
-    type: CompendiumMapConfig,
-    restricted: true,
-  });
-
-  game.settings.register('token-variants', 'compendiumMapper', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: {
-      missingOnly: false,
-      diffImages: false,
-      showImages: true,
-      incKeywords: true,
-      cache: false,
-      autoDisplayArtSelect: true,
-      syncImages: false,
-    },
-  });
-
-  // Backwards compatibility for setting format used in versions <=1.18.2
-  const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
-  tokenConfigs.forEach((config) => {
-    if (!config.hasOwnProperty('tvImgSrc')) {
-      config['tvImgSrc'] = config.imgSrc;
-      config['tvImgName'] = config.name;
-      config['tvTab_image'] = true;
-      delete config.imgSrc;
-      delete config.name;
-    }
-  });
-  game.settings.set('token-variants', 'tokenConfigs', tokenConfigs);
-  // end of compatibility code
-
-  const popupSettings = game.settings.get('token-variants', 'popupSettings');
-  twoPopups = popupSettings.twoPopups;
-  noTwoPopupsPrompt = popupSettings.twoPopupsNoDialog;
-  disableActorPortraitListener = popupSettings.disableActorPortraitArtSelect;
-
-  keywordSearch = game.settings.get('token-variants', 'keywordSearch');
-  debug = game.settings.get('token-variants', 'debug');
-  runSearchOnPath = game.settings.get('token-variants', 'runSearchOnPath');
-  parsedSearchPaths = await parseSearchPaths(debug);
-  imgurClientId = game.settings.get('token-variants', 'imgurClientId');
-  enableStatusConfig = game.settings.get('token-variants', 'enableStatusConfig');
-  disableNotifs = game.settings.get('token-variants', 'disableNotifs');
-  algorithmSettings = game.settings.get('token-variants', 'algorithmSettings');
-}
-
-function registerHUD() {
-  game.settings.registerMenu('token-variants', 'tokenHUDSettings', {
-    name: game.i18n.localize('token-variants.settings.token-hud.Name'),
-    hint: game.i18n.localize('token-variants.settings.token-hud.Hint'),
-    scope: 'client',
-    icon: 'fas fa-exchange-alt',
-    type: TokenHUDSettings,
-    restricted: false,
-  });
-
-  game.settings.register('token-variants', 'hudSettings', {
-    scope: 'client',
-    config: false,
-    type: Object,
-    default: {
-      enableSideMenu: true,
-      displayAsImage: true,
-      imageOpacity: 50,
-      alwaysShowButton: false,
-      updateActorImage: false,
-      includeWildcard: true,
-    },
-  });
-
-  Hooks.on('renderTokenHUD', renderHud);
-}
-
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -422,18 +51,7 @@ async function initialize() {
     return;
   }
 
-  if (typeof ForgeAPI !== 'undefined') {
-    game.settings.registerMenu('token-variants', 'forgeSearchPaths', {
-      name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),
-      hint: game.i18n.localize('token-variants.settings.forge-search-paths.Hint'),
-      icon: 'fas fa-exchange-alt',
-      type: ForgeSearchPaths,
-      scope: 'client',
-      restricted: false,
-    });
-  }
-
-  await registerWorldSettings();
+  await registerSettings();
 
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
   startBatchUpdater();
@@ -531,7 +149,7 @@ async function initialize() {
   };
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
-    if (!enableStatusConfig || game.userId !== userId) return;
+    if (!TVA_CONFIG.enableStatusConfig || game.userId !== userId) return;
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
 
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
@@ -555,12 +173,12 @@ async function initialize() {
   };
 
   Hooks.on('deleteCombatant', (combatant, options, userId) => {
-    if (!enableStatusConfig || game.userId !== userId) return;
+    if (!TVA_CONFIG.enableStatusConfig || game.userId !== userId) return;
     deleteCombatant(combatant);
   });
 
   Hooks.on('deleteCombat', (combat, options, userId) => {
-    if (!enableStatusConfig || game.userId !== userId) return;
+    if (!TVA_CONFIG.enableStatusConfig || game.userId !== userId) return;
     combat.combatants.forEach((combatant) => {
       deleteCombatant(combatant);
     });
@@ -592,7 +210,7 @@ async function initialize() {
 
   Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
     if (
-      !enableStatusConfig ||
+      !TVA_CONFIG.enableStatusConfig ||
       !activeEffect.parent ||
       activeEffect.data.disabled ||
       game.userId !== userId
@@ -603,7 +221,7 @@ async function initialize() {
 
   Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
     if (
-      !enableStatusConfig ||
+      !TVA_CONFIG.enableStatusConfig ||
       !activeEffect.parent ||
       activeEffect.data.disabled ||
       game.userId !== userId
@@ -614,7 +232,7 @@ async function initialize() {
 
   Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
     if (
-      !enableStatusConfig ||
+      !TVA_CONFIG.enableStatusConfig ||
       !activeEffect.parent ||
       !('disabled' in change) ||
       game.userId !== userId
@@ -630,7 +248,7 @@ async function initialize() {
     if (
       game.system.id !== 'pf2e' ||
       condition.type !== 'condition' ||
-      !enableStatusConfig ||
+      !TVA_CONFIG.enableStatusConfig ||
       !condition.parent ||
       condition.data.disabled ||
       game.userId !== userId
@@ -643,7 +261,7 @@ async function initialize() {
     if (
       game.system.id !== 'pf2e' ||
       condition.type !== 'condition' ||
-      !enableStatusConfig ||
+      !TVA_CONFIG.enableStatusConfig ||
       !condition.parent ||
       condition.data.disabled ||
       game.userId !== userId
@@ -675,7 +293,7 @@ async function initialize() {
   Hooks.on('preUpdateToken', (token, change, options, userId) => {
     if (game.userId !== userId) return;
     if (token.data.actorLink && game.system.id !== 'pf2e') return;
-    if (!enableStatusConfig || !token.actor) return;
+    if (!TVA_CONFIG.enableStatusConfig || !token.actor) return;
 
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
@@ -729,7 +347,7 @@ async function initialize() {
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
     if (game.userId !== userId) return;
-    if (!enableStatusConfig) return;
+    if (!TVA_CONFIG.enableStatusConfig) return;
     if (options['token-variants'] && token.actor) {
       updateWithEffectMapping(
         token,
@@ -750,9 +368,8 @@ async function initialize() {
     };
 
     const disablePopupForType = (actor) => {
-      const popupSettings = game.settings.get('token-variants', 'popupSettings');
       if (!actor) return false;
-      return popupSettings[`${actor.type}Disable`] ?? false;
+      return TVA_CONFIG.popup[`${actor.type}Disable`] ?? false;
     };
 
     // Workaround for forgeSearchPaths setting to be updated by non-GM clients
@@ -772,7 +389,7 @@ async function initialize() {
       if (userId && game.user.id != userId) return;
 
       // Check if random search is enabled and if so perform it
-      const randSettings = game.settings.get('token-variants', 'randomizerSettings');
+      const randSettings = TVA_CONFIG.randomizer;
       if (randSettings.actorCreate) {
         let performRandomSearch = true;
         if (randSettings.linkedActorDisable && actor.data.token.actorLink)
@@ -791,6 +408,7 @@ async function initialize() {
           if (!img) return;
 
           if (randSettings.diffImages) {
+            console.log('Am i here?', randSettings);
             let imgToken;
             if (randSettings.syncImages) {
               imgToken = await doSyncSearch(actor.data.name, img[1], { actor: actor });
@@ -804,8 +422,6 @@ async function initialize() {
             if (imgToken) {
               await updateTokenImage(imgToken[0], { actor: actor, imgName: imgToken[1] });
             }
-          } else if (randSettings.portraitToToken) {
-            await updateTokenImage(img[0], { actor: actor, imgName: img[1] });
           }
           return;
         }
@@ -815,13 +431,11 @@ async function initialize() {
       }
 
       // Check if pop-up is enabled and if so open it
-      const popupSettings = game.settings.get('token-variants', 'popupSettings');
-
-      if (!game.user.isGM && popupSettings.gmOnly) {
+      if (!game.user.isGM && TVA_CONFIG.popup.gmOnly) {
         return;
       }
 
-      if (popupSettings.disableAutoPopupOnActorCreate && !keyPressed('popupOverride')) {
+      if (TVA_CONFIG.popup.disableAutoPopupOnActorCreate && !keyPressed('popupOverride')) {
         return;
       } else if (disablePopupForType(actor)) {
         return;
@@ -835,7 +449,7 @@ async function initialize() {
             imgName: name,
             token: token,
           });
-          if (twoPopups) twoPopupPrompt(actor, imgSrc, name, token);
+          if (TVA_CONFIG.popup.twoPopups) twoPopupPrompt(actor, imgSrc, name, token);
           else {
             updateTokenImage(imgSrc, {
               actor: actor,
@@ -844,9 +458,9 @@ async function initialize() {
             });
           }
         },
-        searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
+        searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
         object: actor,
-        preventClose: twoPopups,
+        preventClose: TVA_CONFIG.popup.twoPopups,
       });
     });
 
@@ -855,7 +469,7 @@ async function initialize() {
 
       // Check if random search is enabled and if so perform it
 
-      const randSettings = game.settings.get('token-variants', 'randomizerSettings');
+      const randSettings = TVA_CONFIG.randomizer;
       let vDown = keyPressed('v');
 
       if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
@@ -909,20 +523,18 @@ async function initialize() {
       }
 
       // Check if pop-up is enabled and if so open it
-      const popupSettings = game.settings.get('token-variants', 'popupSettings');
-
-      if (!game.user.isGM && popupSettings.gmOnly) {
+      if (!game.user.isGM && TVA_CONFIG.popup.gmOnly) {
         return;
       }
 
       let dirKeyDown = keyPressed('popupOverride');
 
-      if (vDown && popupSettings.disableAutoPopupOnTokenCopyPaste) {
+      if (vDown && TVA_CONFIG.popup.disableAutoPopupOnTokenCopyPaste) {
         return;
       }
 
       if (!dirKeyDown || (dirKeyDown && vDown)) {
-        if (popupSettings.disableAutoPopupOnTokenCreate && !vDown) {
+        if (TVA_CONFIG.popup.disableAutoPopupOnTokenCreate && !vDown) {
           return;
         } else if (disablePopupForType(token.actor)) {
           return;
@@ -931,7 +543,7 @@ async function initialize() {
 
       showArtSelect(token.data.name, {
         callback: async function (imgSrc, imgName) {
-          if (twoPopups) {
+          if (TVA_CONFIG.popup.twoPopups) {
             await updateActorImage(token.actor, imgSrc, {
               imgName: imgName,
               token: token,
@@ -945,18 +557,18 @@ async function initialize() {
             });
           }
         },
-        searchType: twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
+        searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
         object: token,
-        preventClose: twoPopups,
+        preventClose: TVA_CONFIG.popup.twoPopups,
       });
     });
     Hooks.on('renderTokenConfig', modTokenConfig);
     Hooks.on('renderActorSheet', modActorSheet);
     await cacheTokens();
-  } else if ((game.settings.get('token-variants', 'worldHudSettings') ?? {}).enableButtonForAll) {
+  } else if ((TVA_CONFIG.worldHud ?? {}).enableButtonForAll) {
     await cacheTokens();
   }
-  registerHUD();
+  Hooks.on('renderTokenHUD', renderHud);
 
   initialized = true;
 }
@@ -1003,7 +615,7 @@ function modTokenConfig(tokenConfig, html, _) {
  * the 'Art Select' screen.
  */
 function modActorSheet(actorSheet, html, options) {
-  if (!options.editable || disableActorPortraitListener) return;
+  if (!options.editable || TVA_CONFIG.popup.disableActorPortraitArtSelect) return;
 
   let profile = null;
   let profileQueries = {
@@ -1050,20 +662,20 @@ function modActorSheet(actorSheet, html, options) {
 export async function cacheTokens() {
   if (caching) return;
   caching = true;
-  if (!disableNotifs)
+  if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
-  if (debug) console.log('STARTING: Token Caching');
+  if (TVA_CONFIG.debug) console.log('STARTING: Token Caching');
   cachedImages = [];
 
   await findTokensExact('', '');
   cachedImages = foundImages;
 
   foundImages = [];
-  if (debug) console.log('ENDING: Token Caching');
+  if (TVA_CONFIG.debug) console.log('ENDING: Token Caching');
 
   caching = false;
-  if (!disableNotifs)
+  if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(
       game.i18n.format('token-variants.notifications.info.caching-finished', {
         imageCount: cachedImages.length,
@@ -1080,7 +692,9 @@ export async function cacheTokens() {
  */
 function exactSearchMatchesImage(simplifiedSearch, imagePath, imageName, filters) {
   // Is the search text contained in the name/path
-  const simplified = runSearchOnPath ? simplifyPath(imagePath) : simplifyTokenName(imageName);
+  const simplified = TVA_CONFIG.runSearchOnPath
+    ? simplifyPath(imagePath)
+    : simplifyTokenName(imageName);
   if (!simplified.includes(simplifiedSearch)) {
     return false;
   }
@@ -1092,7 +706,7 @@ function exactSearchMatchesImage(simplifiedSearch, imagePath, imageName, filters
 function imagePassesFilter(imageName, imagePath, filters) {
   // Filters are applied to path depending on the 'runSearchOnPath' setting, and actual or custom rolltable name
   let text;
-  if (runSearchOnPath) {
+  if (TVA_CONFIG.runSearchOnPath) {
     text = decodeURIComponent(imagePath);
   } else if (getFileName(imagePath) === imageName) {
     text = getFileNameWithExt(imagePath);
@@ -1113,7 +727,7 @@ function imagePassesFilter(imageName, imagePath, filters) {
 }
 
 async function findTokens(name, searchType = '', algorithmOptions = {}) {
-  const algOptions = mergeObject(algorithmOptions, algorithmSettings, { overwrite: false });
+  const algOptions = mergeObject(algorithmOptions, TVA_CONFIG.algorithm, { overwrite: false });
   if (algOptions.exact) {
     return findTokensExact(name, searchType);
   } else {
@@ -1122,7 +736,7 @@ async function findTokens(name, searchType = '', algorithmOptions = {}) {
 }
 
 async function findTokensFuzzy(name, searchType, algorithmOptions) {
-  if (debug)
+  if (TVA_CONFIG.debug)
     console.log('STARTING: Fuzzy Token Search', name, searchType, caching, algorithmOptions);
 
   // Select filters based on type of search
@@ -1149,7 +763,7 @@ async function findTokensFuzzy(name, searchType, algorithmOptions) {
   });
 
   const fuse = new Fuse(allPaths, {
-    keys: [runSearchOnPath ? 'path' : 'name'],
+    keys: [TVA_CONFIG.runSearchOnPath ? 'path' : 'name'],
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
@@ -1165,7 +779,7 @@ async function findTokensFuzzy(name, searchType, algorithmOptions) {
     return r.item;
   });
 
-  if (debug) console.log('ENDING: Fuzzy Token Search', foundImages);
+  if (TVA_CONFIG.debug) console.log('ENDING: Fuzzy Token Search', foundImages);
 
   return foundImages;
 }
@@ -1174,7 +788,7 @@ async function findTokensFuzzy(name, searchType, algorithmOptions) {
  * Search for tokens matching the supplied name
  */
 async function findTokensExact(name, searchType) {
-  if (debug) console.log('STARTING: Exact Token Search', name, searchType, caching);
+  if (TVA_CONFIG.debug) console.log('STARTING: Exact Token Search', name, searchType, caching);
 
   foundImages = [];
 
@@ -1191,15 +805,15 @@ async function findTokensExact(name, searchType) {
       foundImages.push(pathObj);
   });
 
-  if (debug) console.log('ENDING: Exact Token Search', foundImages);
+  if (TVA_CONFIG.debug) console.log('ENDING: Exact Token Search', foundImages);
   return foundImages;
 }
 
 async function walkAllPaths() {
-  for (let path of parsedSearchPaths.get('data')) {
+  for (let path of TVA_CONFIG.parsedSearchPaths.get('data')) {
     if ((path.cache && caching) || (!path.cache && !caching)) await walkFindTokens(path.text, {});
   }
-  for (let [bucket, paths] of parsedSearchPaths.get('s3')) {
+  for (let [bucket, paths] of TVA_CONFIG.parsedSearchPaths.get('s3')) {
     for (let path of paths) {
       if ((path.cache && caching) || (!path.cache && !caching))
         await walkFindTokens(path.text, {
@@ -1207,26 +821,26 @@ async function walkAllPaths() {
         });
     }
   }
-  for (let path of parsedSearchPaths.get('forge')) {
+  for (let path of TVA_CONFIG.parsedSearchPaths.get('forge')) {
     if ((path.cache && caching) || (!path.cache && !caching))
       await walkFindTokens(path.text, {
         forge: true,
       });
   }
-  for (let path of parsedSearchPaths.get('rolltable')) {
+  for (let path of TVA_CONFIG.parsedSearchPaths.get('rolltable')) {
     if ((path.cache && caching) || (!path.cache && !caching))
       await walkFindTokens(path.text, {
         rollTableName: path.text,
       });
   }
-  for (let path of parsedSearchPaths.get('forgevtt')) {
+  for (let path of TVA_CONFIG.parsedSearchPaths.get('forgevtt')) {
     if ((path.cache && caching) || (!path.cache && !caching))
       await walkFindTokens(path.text, {
         forgevtt: true,
         apiKey: path.apiKey,
       });
   }
-  for (let path of parsedSearchPaths.get('imgur')) {
+  for (let path of TVA_CONFIG.parsedSearchPaths.get('imgur')) {
     if ((path.cache && caching) || (!path.cache && !caching))
       await walkFindTokens(path.text, {
         imgur: true,
@@ -1234,9 +848,6 @@ async function walkAllPaths() {
   }
 }
 
-/**
- * Walks the directory tree and finds all the matching token art
- */
 async function walkFindTokens(
   path,
   {
@@ -1248,87 +859,87 @@ async function walkFindTokens(
     imgur = false,
   } = {}
 ) {
-  if (!bucket && !path) return;
-
+  const dirs = [path];
   let files = {};
-  try {
-    if (bucket) {
-      files = await FilePicker.browse('s3', path, {
-        bucket: bucket,
-      });
-    } else if (forge) {
-      files = await FilePicker.browse('', path, {
-        wildcard: true,
-      });
-    } else if (forgevtt) {
-      if (apiKey) {
-        const response = await callForgeVTT(path, apiKey);
-        files.files = response.files.map((f) => f.url);
-      } else {
-        files = await FilePicker.browse('forgevtt', path, {
-          recursive: true,
+  while (dirs.length > 0) {
+    let dir = dirs.pop();
+    try {
+      if (bucket) {
+        files = await FilePicker.browse('s3', dir, {
+          bucket: bucket,
         });
-      }
-    } else if (imgur && location.hostname !== 'localhost') {
-      await fetch('https://api.imgur.com/3/gallery/album/' + path, {
-        headers: {
-          Authorization: 'Client-ID ' + (imgurClientId ? imgurClientId : 'df9d991443bb222'),
-          Accept: 'application/json',
-        },
-      })
-        .then((response) => response.json())
-        .then(async function (result) {
-          if (!result.success) {
-            return;
-          }
-          result.data.images.forEach((img) => {
-            const path = img.link;
-            const rtName = img.title ?? img.description ?? getFileName(img.link);
-            foundImages.push({ path: path, name: rtName });
+      } else if (forge) {
+        files = await FilePicker.browse('', dir, {
+          wildcard: true,
+        });
+      } else if (forgevtt) {
+        if (apiKey) {
+          const response = await callForgeVTT(dir, apiKey);
+          files.files = response.files.map((f) => f.url);
+        } else {
+          files = await FilePicker.browse('forgevtt', dir, {
+            recursive: true,
           });
-        })
-        .catch((error) => console.log('Token Variant Art: ', error));
-      return;
-    } else if (rollTableName) {
-      const table = game.tables.contents.find((t) => t.name === rollTableName);
-      if (!table) {
-        ui.notifications.warn(
-          game.i18n.format('token-variants.notifications.warn.invalid-table', {
-            rollTableName,
-          })
-        );
-      } else {
-        for (let baseTableData of table.data.results) {
-          const path = baseTableData.data.img;
-          const rtName = baseTableData.data.text;
-          foundImages.push({ path: path, name: rtName });
         }
+      } else if (imgur && location.hostname !== 'localhost') {
+        await fetch('https://api.imgur.com/3/gallery/album/' + dir, {
+          headers: {
+            Authorization:
+              'Client-ID ' +
+              (TVA_CONFIG.imgurClientId ? TVA_CONFIG.imgurClientId : 'df9d991443bb222'),
+            Accept: 'application/json',
+          },
+        })
+          .then((response) => response.json())
+          .then(async function (result) {
+            if (!result.success) {
+              return;
+            }
+            result.data.images.forEach((img) => {
+              const path = img.link;
+              const rtName = img.title ?? img.description ?? getFileName(img.link);
+              foundImages.push({ path: path, name: rtName });
+            });
+          })
+          .catch((error) => console.log('Token Variant Art: ', error));
+        return;
+      } else if (rollTableName) {
+        const table = game.tables.contents.find((t) => t.name === rollTableName);
+        if (!table) {
+          ui.notifications.warn(
+            game.i18n.format('token-variants.notifications.warn.invalid-table', {
+              rollTableName,
+            })
+          );
+        } else {
+          for (let baseTableData of table.data.results) {
+            const path = baseTableData.data.img;
+            const rtName = baseTableData.data.text;
+            foundImages.push({ path: path, name: rtName });
+          }
+        }
+        return;
+      } else {
+        files = await FilePicker.browse('data', dir);
       }
+    } catch (err) {
+      console.log(
+        `${game.i18n.localize('token-variants.notifications.warn.path-not-found')} ${path}`
+      );
       return;
-    } else {
-      files = await FilePicker.browse('data', path);
     }
-  } catch (err) {
-    console.log(
-      `${game.i18n.localize('token-variants.notifications.warn.path-not-found')} ${path}`
-    );
-    return;
-  }
 
-  if (files.target == '.') return;
+    if (files.target == '.') continue;
 
-  for (let tokenSrc of files.files) {
-    const tName = getFileName(tokenSrc);
-    foundImages.push({ path: tokenSrc, name: tName });
-  }
+    for (let tokenSrc of files.files) {
+      foundImages.push({ path: tokenSrc, name: getFileName(tokenSrc) });
+    }
 
-  if (forgevtt) return;
+    if (forgevtt) continue;
 
-  for (let dir of files.dirs) {
-    await walkFindTokens(dir, {
-      bucket: bucket,
-      forge: forge,
-    });
+    for (let f_dir of files.dirs) {
+      dirs.push(f_dir);
+    }
   }
 }
 
@@ -1396,7 +1007,7 @@ export async function showArtSelect(
 }
 
 async function _randSearchUtil(search, { searchType = SEARCH_TYPE.BOTH, actor = null } = {}) {
-  const randSettings = game.settings.get('token-variants', 'randomizerSettings');
+  const randSettings = TVA_CONFIG.randomizer;
   if (!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return null;
 
   // Gather all images
@@ -1506,17 +1117,19 @@ export async function doImageSearch(
 
   search = search.trim();
 
-  if (debug) console.log('STARTING: Art Search', search, searchType);
+  if (TVA_CONFIG.debug) console.log('STARTING: Art Search', search, searchType);
 
   let searches = [search];
   let allImages = new Map();
 
-  if (keywordSearch && !ignoreKeywords) {
-    excludedKeywords = parseKeywords(game.settings.get('token-variants', 'excludedKeywords'));
+  if (TVA_CONFIG.keywordSearch && !ignoreKeywords) {
     searches = searches.concat(
       search
         .split(/\W/)
-        .filter((word) => word.length > 2 && !excludedKeywords.includes(word.toLowerCase()))
+        .filter(
+          (word) =>
+            word.length > 2 && !TVA_CONFIG.parsedExcludedKeywords.includes(word.toLowerCase())
+        )
         .reverse()
     );
   }
@@ -1536,7 +1149,7 @@ export async function doImageSearch(
   }
   multiSearch = false;
 
-  if (debug) console.log('ENDING: Art Search');
+  if (TVA_CONFIG.debug) console.log('ENDING: Art Search');
 
   if (simpleResults) {
     allImages = Array.from(usedImages).map((obj) => obj.path);
@@ -1547,7 +1160,7 @@ export async function doImageSearch(
 }
 
 function twoPopupPrompt(actor, imgSrc, imgName, token) {
-  if (twoPopups && noTwoPopupsPrompt) {
+  if (TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.noTwoPopupsPrompt) {
     showArtSelect((token ?? actor.data.token).name, {
       callback: (imgSrc, name) =>
         updateTokenImage(imgSrc, {
@@ -1559,7 +1172,7 @@ function twoPopupPrompt(actor, imgSrc, imgName, token) {
       object: token ? token : actor,
       force: true,
     });
-  } else if (twoPopups) {
+  } else if (TVA_CONFIG.popup.twoPopups) {
     let d = new Dialog({
       title: 'Portrait -> Token',
       content: `<p>${game.i18n.localize('token-variants.windows.art-select.apply-same-art')}</p>`,
@@ -1614,5 +1227,6 @@ Hooks.on('init', function () {
     doRandomSearch,
     showArtSelect,
     updateTokenImage,
+    exportSettingsToJSON,
   };
 });

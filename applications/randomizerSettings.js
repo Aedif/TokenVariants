@@ -1,3 +1,5 @@
+import { TVA_CONFIG } from '../scripts/settings.js';
+
 export default class RandomizerSettings extends FormApplication {
   constructor() {
     super({}, { title: game.i18n.localize('token-variants.settings.randomizer.Name') });
@@ -20,7 +22,7 @@ export default class RandomizerSettings extends FormApplication {
   async getData(options) {
     const data = super.getData(options);
 
-    const randomizerSettings = game.settings.get('token-variants', 'randomizerSettings');
+    const randomizerSettings = TVA_CONFIG.randomizer;
 
     // Get all actor types defined by the game system
     const actorTypes = (game.system.entityTypes ?? game.system.documentTypes)['Actor'];

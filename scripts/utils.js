@@ -1,3 +1,5 @@
+import { TVA_CONFIG } from './settings.js';
+
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
 // Types of searches
@@ -240,7 +242,7 @@ export function keyPressed(key) {
     return PRESSED_KEYS[key];
   }
 
-  if (key === 'popupOverride') key = game.settings.get('token-variants', 'actorDirectoryKey');
+  if (key === 'popupOverride') key = TVA_CONFIG.actorDirectoryKey;
   else if (key === 'v') key = 'v';
   else if (key === 'config') key = 'Shift';
   return keyboard.isDown(key);
@@ -288,7 +290,7 @@ export function registerKeybinds() {
  * Retrieves a custom token configuration if one exists for the given image
  */
 export function getTokenConfig(imgSrc, imgName) {
-  const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
+  const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
   return tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
 }
 
@@ -314,7 +316,7 @@ export function getTokenConfigForUpdate(imgSrc, imgName) {
  * Adds or removes a custom token configuration
  */
 export function setTokenConfig(imgSrc, imgName, tokenConfig) {
-  const tokenConfigs = (game.settings.get('token-variants', 'tokenConfigs') || []).flat();
+  const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
   const tcIndex = tokenConfigs.findIndex(
     (config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName
   );
@@ -362,7 +364,7 @@ export function simplifyPath(path) {
 }
 
 async function _parseForgeAssetPaths() {
-  const forgePaths = game.settings.get('token-variants', 'forgeSearchPaths') || {};
+  const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
   const userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : '';
   const searchPaths = [];
 
@@ -387,14 +389,14 @@ async function _parseForgeAssetPaths() {
 /**
  * Parses the searchPaths setting into a Map, distinguishing s3 buckets from local paths
  */
-export async function parseSearchPaths(debug = false) {
-  if (debug) console.log('STARTING: Search Path Parse');
+export async function parseSearchPaths() {
+  if (TVA_CONFIG.debug) console.log('STARTING: Search Path Parse');
 
   const regexpBucket = /s3:(.*):(.*)/;
   const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
   const FORGE_ASSETS_LIBRARY_URL_PREFIX = 'https://assets.forge-vtt.com/';
 
-  const searchPathList = (game.settings.get('token-variants', 'searchPaths') || []).flat();
+  const searchPathList = (TVA_CONFIG.searchPaths || []).flat();
 
   // To maintain compatibility with previous versions
   if (searchPathList.length > 0 && !(searchPathList[0] instanceof Object)) {
@@ -484,7 +486,7 @@ export async function parseSearchPaths(debug = false) {
     }
   }
 
-  let forgePathsSetting = (game.settings.get('token-variants', 'forgevttPaths') || []).flat();
+  let forgePathsSetting = (TVA_CONFIG.forgevttPaths || []).flat();
 
   // To maintain compatibility with previous versions
   if (forgePathsSetting.length > 0 && !(forgePathsSetting[0] instanceof Object)) {
@@ -510,7 +512,7 @@ export async function parseSearchPaths(debug = false) {
 
   searchPaths.set('forgevtt', await _parseForgeAssetPaths());
 
-  if (debug) console.log('ENDING: Search Path Parse', searchPaths);
+  if (TVA_CONFIG.debug) console.log('ENDING: Search Path Parse', searchPaths);
 
   return searchPaths;
 }
@@ -586,7 +588,7 @@ export async function callForgeVTT(path, apiKey) {
  */
 export function getFilters(searchType) {
   // Select filters based on type of search
-  let filters = game.settings.get('token-variants', 'searchFilterSettings');
+  let filters = TVA_CONFIG.searchFilters;
   switch (searchType) {
     case SEARCH_TYPE.BOTH:
       filters = {
