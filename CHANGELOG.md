@@ -1,6 +1,11 @@
+# 1.33.3
+
+- Fixed 'Disable Cache Notifications' setting not working since update 1.33.1
+- Import function no longer expects all settings to be present in the exported setting's file.
+
 # 1.33.2
 
-- Fixed module breaking on Foundry v9.x when attempting to read a v8.x specific setting
+- Fixed module breaking on Foundry v9.x due to attempting to read an unregistered v8.x specific setting
 
 # 1.33.1
 

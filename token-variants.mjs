@@ -564,9 +564,9 @@ async function initialize() {
     });
     Hooks.on('renderTokenConfig', modTokenConfig);
     Hooks.on('renderActorSheet', modActorSheet);
-    await cacheTokens();
+    cacheTokens();
   } else if ((TVA_CONFIG.worldHud ?? {}).enableButtonForAll) {
-    await cacheTokens();
+    cacheTokens();
   }
   Hooks.on('renderTokenHUD', renderHud);
 

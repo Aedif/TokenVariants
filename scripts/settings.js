@@ -11,6 +11,7 @@ import ImportExport from '../applications/importExport.js';
 
 export const TVA_CONFIG = {
   debug: false,
+  disableNotifs: false,
   searchPaths: [
     {
       text: 'modules/caeora-maps-tokens-assets/assets/tokens/',
@@ -390,6 +391,7 @@ export async function fetchAllSettings() {
   TVA_CONFIG.imgurClientId = game.settings.get('token-variants', 'imgurClientId');
   TVA_CONFIG.enableStatusConfig = game.settings.get('token-variants', 'enableStatusConfig');
   TVA_CONFIG.compendiumMapper = game.settings.get('token-variants', 'compendiumMapper');
+  TVA_CONFIG.disableNotifs = game.settings.get('token-variants', 'disableNotifs');
 
   // Some settings need to be parsed
   TVA_CONFIG.parsedSearchPaths = await parseSearchPaths();
@@ -407,27 +409,41 @@ export function exportSettingsToJSON() {
 export async function importSettingsFromJSON(json) {
   if (typeof json === 'string') json = JSON.parse(json);
 
-  game.settings.set('token-variants', 'debug', json.debug);
-  game.settings.set('token-variants', 'forgevttPaths', json.forgevttPaths);
-  game.settings.set('token-variants', 'hudSettings', json.hud);
-  game.settings.set('token-variants', 'worldHudSettings', json.worldHud);
-  game.settings.set('token-variants', 'keywordSearch', json.keywordSearch);
-  game.settings.set('token-variants', 'excludedKeywords', json.excludedKeywords);
+  if ('debug' in json) game.settings.set('token-variants', 'debug', json.debug);
+  if ('disableNotifs' in json)
+    game.settings.set('token-variants', 'disableNotifs', json.disableNotifs);
+  if ('forgevttPaths' in json)
+    game.settings.set('token-variants', 'forgevttPaths', json.forgevttPaths);
+  if ('hud' in json) game.settings.set('token-variants', 'hudSettings', json.hud);
+  if ('worldHud' in json) game.settings.set('token-variants', 'worldHudSettings', json.worldHud);
+  if ('keywordSearch' in json)
+    game.settings.set('token-variants', 'keywordSearch', json.keywordSearch);
+  if ('excludedKeywords' in json)
+    game.settings.set('token-variants', 'excludedKeywords', json.excludedKeywords);
 
   if (!isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
-    game.settings.set('token-variants', 'actorDirectoryKey', json.actorDirectoryKey);
+    if ('actorDirectoryKey' in json)
+      game.settings.set('token-variants', 'actorDirectoryKey', json.actorDirectoryKey);
   }
 
-  game.settings.set('token-variants', 'runSearchOnPath', json.runSearchOnPath);
-  game.settings.set('token-variants', 'searchFilterSettings', json.searchFilters);
-  game.settings.set('token-variants', 'algorithmSettings', json.algorithm);
-  game.settings.set('token-variants', 'tokenConfigs', json.tokenConfigs);
-  game.settings.set('token-variants', 'randomizerSettings', json.randomizer);
-  game.settings.set('token-variants', 'popupSettings', json.popup);
-  game.settings.set('token-variants', 'imgurClientId', json.imgurClientId);
-  game.settings.set('token-variants', 'enableStatusConfig', json.enableStatusConfig);
-  game.settings.set('token-variants', 'compendiumMapper', json.compendiumMapper);
+  if ('runSearchOnPath' in json)
+    game.settings.set('token-variants', 'runSearchOnPath', json.runSearchOnPath);
+  if ('searchFilters' in json)
+    game.settings.set('token-variants', 'searchFilterSettings', json.searchFilters);
+  if ('algorithm' in json) game.settings.set('token-variants', 'algorithmSettings', json.algorithm);
+  if ('tokenConfigs' in json)
+    game.settings.set('token-variants', 'tokenConfigs', json.tokenConfigs);
+  if ('randomizer' in json)
+    game.settings.set('token-variants', 'randomizerSettings', json.randomizer);
+  if ('popup' in json) game.settings.set('token-variants', 'popupSettings', json.popup);
+  if ('imgurClientId' in json)
+    game.settings.set('token-variants', 'imgurClientId', json.imgurClientId);
+  if ('enableStatusConfig' in json)
+    game.settings.set('token-variants', 'enableStatusConfig', json.enableStatusConfig);
+  if ('compendiumMapper' in json)
+    game.settings.set('token-variants', 'compendiumMapper', json.compendiumMapper);
 
-  game.settings.set('token-variants', 'searchPaths', json.searchPaths);
-  game.settings.set('token-variants', 'forgeSearchPaths', json.forgeSearchPaths);
+  if ('searchPaths' in json) game.settings.set('token-variants', 'searchPaths', json.searchPaths);
+  if ('forgeSearchPaths' in json)
+    game.settings.set('token-variants', 'forgeSearchPaths', json.forgeSearchPaths);
 }
