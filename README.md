@@ -91,10 +91,6 @@ When enabled two separate pop-ups will be displayed upon Actor/Token creation, f
 
 Will disable the confirmation prompt displayed when the **Disable separate pop-ups for Portrait and Token art** is enabled. Two pop-ups will always be shown.
 
-#### Disable right-click pop-up on the character sheet portrait
-
-Will disable the Art Select window popping up when right-clicking the portrait on the character sheet.
-
 #### Disable Automatic Pop-ups
 
 Automatic pop-ups can be disabled for type of actor (PC, NPC, Vehicle) and the type of event (Actor Create, Token Create, Token Copy+Paste).
@@ -112,10 +108,6 @@ This art can be shared with players by right-clicking on the images, which makes
 By default the side menu uses the token's name as the search criteria. However a custom search can be performed by right-clicking on the new Token HUD button while the side menu is open:
 
 !["Token Hud Search"](./docs/token_hud_search.png)
-
-### Enable Token HUD button for everyone
-
-If checked will allow all players to access the new Token HUD button. Note that this may potentially reveal art that the players are not supposed to see. For a more controlled way of allowing your players to switch between different variants consider "sharing" it via right-clicking the art in the new Token HUD menu.
 
 #### Always show HUD Button
 
@@ -190,6 +182,12 @@ The window is accessed by Shift+Left-Clicking on the status buttons or the Activ
 Auto-updates or queues up 'Art Select' window for all Actors within a Compendium.
 
 !["Compendium Mapper"](./docs/compendium_mapper.png)
+
+## Permissions
+
+Allows to enable and disable module features based on the user's role.
+
+!["Permission Configuration"](./docs/permissions.png)
 
 ## Installation
 

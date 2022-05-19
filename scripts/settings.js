@@ -110,8 +110,8 @@ export const TVA_CONFIG = {
       4: true,
     },
     hud: {
-      1: false,
-      2: false,
+      1: true,
+      2: true,
       3: true,
       4: true,
     },
@@ -389,7 +389,7 @@ export async function registerSettings() {
 
   game.settings.registerMenu('token-variants', 'permissions', {
     name: 'Permissions',
-    hint: 'Module permissions',
+    hint: 'Control access to module features based on user role',
     scope: 'world',
     icon: 'fas fa-user-lock',
     type: TVAPermissions,
@@ -405,7 +405,6 @@ export async function registerSettings() {
       if (!userRequiresImageCache(TVA_CONFIG.permissions) && userRequiresImageCache(val)) {
         cacheTokens();
       }
-      console.log('PERMISSIONS CHANGED', val);
       TVA_CONFIG.permissions = val;
     },
   });

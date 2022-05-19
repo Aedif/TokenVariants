@@ -16,7 +16,6 @@ export default class TVAPermissions extends FormApplication {
   async getData(options) {
     let data = super.getData(options);
     data = mergeObject(data, TVA_CONFIG.permissions);
-    console.log(data);
     return data;
   }
 

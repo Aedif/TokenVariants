@@ -1,7 +1,15 @@
+# 1.34.1
+
+- Removed '**Disable right-click pop-up on the character sheet portrait**' setting
+- Removed '**Enable Token HUD button for everyone**' setting
+- Removed '**GM Only**' setting
+- Added a new '**Permissions**' setting
+  - Allows to control access to module features based on user role
+
 # 1.33.3
 
-- Fixed 'Disable Cache Notifications' setting not working since update 1.33.1
-- Import function no longer expects all settings to be present in the exported setting's file.
+- Fixed '**Disable Cache Notifications**' setting not working since release 1.33.1
+- Import function no longer expects all settings to be present in the exported setting's file
 
 # 1.33.2
 
