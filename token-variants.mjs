@@ -64,8 +64,6 @@ async function initialize() {
 
   await registerSettings();
 
-  console.log('testest', userRequiresImageCache());
-
   if (userRequiresImageCache()) {
     cacheTokens();
   }

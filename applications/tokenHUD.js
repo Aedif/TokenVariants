@@ -138,16 +138,25 @@ export async function renderHud(hud, html, token, searchText = '') {
       mergeImages(actorVariants);
 
       // Merge wildcard images
-      if (hudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
-        const wildcardImages = (await tokenActor.getTokenImages()).map((variant) => {
-          return { imgSrc: variant, names: [getFileName(variant)] };
-        });
+      if (
+        hudSettings.includeWildcard &&
+        !worldHudSettings.displayOnlySharedImages &&
+        tokenActor.data.token.randomImg
+      ) {
+        const wildcardImages = (await tokenActor.getTokenImages())
+          .filter((img) => !img.includes('*'))
+          .map((variant) => {
+            return { imgSrc: variant, names: [getFileName(variant)] };
+          });
         mergeImages(wildcardImages);
       }
     }
   }
 
-  if (!hudSettings.alwaysShowButton && !images.length && !actorVariants.length) return;
+  // If no images have been found check if the HUD button should be displayed regardless
+  if (!images.length && !actorVariants.length) {
+    if (!(FULL_ACCESS && hudSettings.alwaysShowButton)) return;
+  }
 
   // Retrieving the possibly custom name attached as a flag to the token
   let tokenImageName = '';

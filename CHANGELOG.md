@@ -1,3 +1,7 @@
+# 1.34.2
+
+- Fixed Token HUD button being shown with '**Include wildcard images**' enabled even when no wildcard images have been found
+
 # 1.34.1
 
 - Removed '**Disable right-click pop-up on the character sheet portrait**' setting
