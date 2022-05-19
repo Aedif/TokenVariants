@@ -1,5 +1,10 @@
 import { showArtSelect, doImageSearch, cacheTokens } from '../token-variants.mjs';
-import { SEARCH_TYPE, updateActorImage, updateTokenImage } from '../scripts/utils.js';
+import {
+  SEARCH_TYPE,
+  updateActorImage,
+  updateTokenImage,
+  userRequiresImageCache,
+} from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
 import AlgorithmSettings from './algorithm.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
@@ -205,7 +210,7 @@ export default class CompendiumMapConfig extends FormApplication {
       return;
     }
 
-    if (formData.cache) {
+    if (formData.cache || !userRequiresImageCache()) {
       await cacheTokens();
     }
 

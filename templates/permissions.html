@@ -1,0 +1,72 @@
+<form>
+  <p class="notes">Configure which User role has permission to access which module features.</p>
+
+  <header class="table-header flexrow">
+    <label class="index">Features</label>
+    <label>Player</label>
+    <label>Trusted Player</label>
+    <label>Assistant GM</label>
+    <label>Game Master</label>
+  </header>
+
+  <ul class="permissions-list">
+    <li class="permission form-group">
+      <label class="index">Automatic Pop-ups</label>
+      <div class="form-fields">
+        <input type="checkbox" name="popups.1" {{#if popups.[1]}}checked{{/if}} />
+        <input type="checkbox" name="popups.2" {{#if popups.[2]}}checked{{/if}} />
+        <input type="checkbox" name="popups.3" {{#if popups.[3]}}checked{{/if}} />
+        <input type="checkbox" name="popups.4" {{#if popups.[4]}}checked{{/if}} />
+      </div>
+      <p class="hint">Allow players with this role to be shown automatic Art Select pop-ups.</p>
+    </li>
+
+    <li class="permission form-group">
+      <label class="index">Portrait Right-click</label>
+      <div class="form-fields">
+        <input type="checkbox" name="portrait_right_click.1" {{#if portrait_right_click.[1]}}checked{{/if}} />
+        <input type="checkbox" name="portrait_right_click.2" {{#if portrait_right_click.[2]}}checked{{/if}} />
+        <input type="checkbox" name="portrait_right_click.3" {{#if portrait_right_click.[3]}}checked{{/if}} />
+        <input type="checkbox" name="portrait_right_click.4" {{#if portrait_right_click.[4]}}checked{{/if}} />
+      </div>
+      <p class="hint">Allow players with this role to open the Art Select from the Actor sheet.</p>
+    </li>
+
+    <li class="permission form-group">
+      <label class="index">Token Image Path button</label>
+      <div class="form-fields">
+        <input type="checkbox" name="image_path_button.1" {{#if image_path_button.[1]}}checked{{/if}} />
+        <input type="checkbox" name="image_path_button.2" {{#if image_path_button.[2]}}checked{{/if}} />
+        <input type="checkbox" name="image_path_button.3" {{#if image_path_button.[3]}}checked{{/if}} />
+        <input type="checkbox" name="image_path_button.4" {{#if image_path_button.[4]}}checked{{/if}} />
+      </div>
+      <p class="hint">Allow players with this role to open the Art Select from token configuration window.</p>
+    </li>
+
+    <li class="permission form-group">
+      <label class="index">Token HUD button</label>
+      <div class="form-fields">
+        <input type="checkbox" name="hud.1" {{#if hud.[1]}}checked{{/if}} />
+        <input type="checkbox" name="hud.2" {{#if hud.[2]}}checked{{/if}} />
+        <input type="checkbox" name="hud.3" {{#if hud.[3]}}checked{{/if}} />
+        <input type="checkbox" name="hud.4" {{#if hud.[4]}}checked{{/if}} />
+      </div>
+      <p class="hint">Allow players with this role access to the Token HUD button (Shared and Wildcard art only)</p>
+    </li>
+
+    <li class="permission form-group">
+      <label class="index">Token HUD button FULL ACCESS</label>
+      <div class="form-fields">
+        <input type="checkbox" name="hudFullAccess.1" {{#if hudFullAccess.[1]}}checked{{/if}} />
+        <input type="checkbox" name="hudFullAccess.2" {{#if hudFullAccess.[2]}}checked{{/if}} />
+        <input type="checkbox" name="hudFullAccess.3" {{#if hudFullAccess.[3]}}checked{{/if}} />
+        <input type="checkbox" name="hudFullAccess.4" {{#if hudFullAccess.[4]}}checked{{/if}} />
+      </div>
+      <p class="hint">Allow players with this role unrestricted access to all art via the Token HUD button</p>
+    </li>
+  </ul>
+
+  <div class="form-group">
+    <button type="submit" name="submit"><i class="fas fa-save"></i> Save Configuration</button>
+  </div>
+</form>

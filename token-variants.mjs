@@ -16,6 +16,7 @@ import {
   stringSimilarity,
   startBatchUpdater,
   queueTokenUpdate,
+  userRequiresImageCache,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
@@ -29,7 +30,7 @@ let caching = false;
 // A cached map of all the found tokens
 let cachedImages = [];
 
-// Tokens found with caching disabled
+// To track tokens found during image search
 let foundImages = [];
 
 // showArtSelect(...) can take a while to fully execute and it is possible for it to be called
@@ -42,6 +43,16 @@ const showArtSelectExecuting = { inProgress: false };
 let multiSearch = false;
 let usedImages = new Set();
 
+function disableRandomSearchForType(randSettings, actor) {
+  if (!actor) return false;
+  return randSettings[`${actor.type}Disable`] ?? false;
+}
+
+function disablePopupForType(actor) {
+  if (!actor) return false;
+  return TVA_CONFIG.popup[`${actor.type}Disable`] ?? false;
+}
+
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -52,6 +63,12 @@ async function initialize() {
   }
 
   await registerSettings();
+
+  console.log('testest', userRequiresImageCache());
+
+  if (userRequiresImageCache()) {
+    cacheTokens();
+  }
 
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
   startBatchUpdater();
@@ -361,216 +378,204 @@ async function initialize() {
     showArtSelectExecuting.inProgress = false;
   });
 
-  if (game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE')) {
-    const disableRandomSearchForType = (randSettings, actor) => {
-      if (!actor) return false;
-      return randSettings[`${actor.type}Disable`] ?? false;
-    };
+  // Workaround for forgeSearchPaths setting to be updated by non-GM clients
+  game.socket?.on(`module.token-variants`, (message) => {
+    if (message.handlerName === 'forgeSearchPaths' && message.type === 'UPDATE') {
+      if (!game.user.isGM) return;
+      const isResponsibleGM = !game.users
+        .filter((user) => user.isGM && (user.active || user.isActive))
+        .some((other) => other.data._id < game.user.data._id);
+      if (!isResponsibleGM) return;
+      game.settings.set('token-variants', 'forgeSearchPaths', message.args);
+    }
+  });
 
-    const disablePopupForType = (actor) => {
-      if (!actor) return false;
-      return TVA_CONFIG.popup[`${actor.type}Disable`] ?? false;
-    };
+  // Handle actor/token art replacement
+  Hooks.on('createActor', createActor);
+  Hooks.on('createToken', createToken);
 
-    // Workaround for forgeSearchPaths setting to be updated by non-GM clients
-    game.socket?.on(`module.token-variants`, (message) => {
-      if (message.handlerName === 'forgeSearchPaths' && message.type === 'UPDATE') {
-        if (!game.user.isGM) return;
-        const isResponsibleGM = !game.users
-          .filter((user) => user.isGM && (user.active || user.isActive))
-          .some((other) => other.data._id < game.user.data._id);
-        if (!isResponsibleGM) return;
-        game.settings.set('token-variants', 'forgeSearchPaths', message.args);
-      }
-    });
+  Hooks.on('renderTokenConfig', modTokenConfig);
+  Hooks.on('renderActorSheet', modActorSheet);
 
-    // Handle actor/token art replacement
-    Hooks.on('createActor', async (actor, options, userId) => {
-      if (userId && game.user.id != userId) return;
-
-      // Check if random search is enabled and if so perform it
-      const randSettings = TVA_CONFIG.randomizer;
-      if (randSettings.actorCreate) {
-        let performRandomSearch = true;
-        if (randSettings.linkedActorDisable && actor.data.token.actorLink)
-          performRandomSearch = false;
-        if (disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
-
-        if (performRandomSearch) {
-          const img = await doRandomSearch(actor.data.name, {
-            searchType: SEARCH_TYPE.PORTRAIT,
-            actor: actor,
-          });
-          if (img) {
-            await updateActorImage(actor, img[0], { imgName: img[1] });
-          }
-
-          if (!img) return;
-
-          if (randSettings.diffImages) {
-            console.log('Am i here?', randSettings);
-            let imgToken;
-            if (randSettings.syncImages) {
-              imgToken = await doSyncSearch(actor.data.name, img[1], { actor: actor });
-            } else {
-              imgToken = await doRandomSearch(actor.data.name, {
-                searchType: SEARCH_TYPE.TOKEN,
-                actor: actor,
-              });
-            }
-
-            if (imgToken) {
-              await updateTokenImage(imgToken[0], { actor: actor, imgName: imgToken[1] });
-            }
-          }
-          return;
-        }
-        if (!randSettings.popupOnDisable) {
-          return;
-        }
-      }
-
-      // Check if pop-up is enabled and if so open it
-      if (!game.user.isGM && TVA_CONFIG.popup.gmOnly) {
-        return;
-      }
-
-      if (TVA_CONFIG.popup.disableAutoPopupOnActorCreate && !keyPressed('popupOverride')) {
-        return;
-      } else if (disablePopupForType(actor)) {
-        return;
-      }
-
-      showArtSelect(actor.data.name, {
-        callback: async function (imgSrc, name) {
-          const actTokens = actor.getActiveTokens();
-          const token = actTokens.length === 1 ? actTokens[0] : null;
-          await updateActorImage(actor, imgSrc, {
-            imgName: name,
-            token: token,
-          });
-          if (TVA_CONFIG.popup.twoPopups) twoPopupPrompt(actor, imgSrc, name, token);
-          else {
-            updateTokenImage(imgSrc, {
-              actor: actor,
-              imgName: name,
-              token: token,
-            });
-          }
-        },
-        searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
-        object: actor,
-        preventClose: TVA_CONFIG.popup.twoPopups,
-      });
-    });
-
-    Hooks.on('createToken', async (token, options, userId) => {
-      if (userId && game.user.id != userId) return;
-
-      // Check if random search is enabled and if so perform it
-
-      const randSettings = TVA_CONFIG.randomizer;
-      let vDown = keyPressed('v');
-
-      if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
-        let performRandomSearch = true;
-        if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
-        if (randSettings.linkedActorDisable && token.data.actorLink) performRandomSearch = false;
-        if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
-
-        if (performRandomSearch) {
-          const img = await doRandomSearch(token.data.name, {
-            searchType: SEARCH_TYPE.TOKEN,
-            actor: token.actor,
-          });
-          if (img) {
-            await updateTokenImage(img[0], {
-              token: token,
-              actor: token.actor,
-              imgName: img[1],
-            });
-          }
-
-          if (!img) return;
-
-          if (randSettings.diffImages) {
-            let imgPortrait;
-            if (randSettings.syncImages) {
-              imgPortrait = await doSyncSearch(token.data.name, img[1], {
-                actor: token.actor,
-                searchType: SEARCH_TYPE.PORTRAIT,
-              });
-            } else {
-              imgPortrait = await doRandomSearch(token.data.name, {
-                searchType: SEARCH_TYPE.PORTRAIT,
-                actor: token.actor,
-              });
-            }
-
-            if (imgPortrait) {
-              await updateActorImage(token.actor, imgPortrait[0]);
-            }
-          } else if (randSettings.tokenToPortrait) {
-            await updateActorImage(token.actor, img[0]);
-          }
-          return;
-        }
-        if (!randSettings.popupOnDisable) {
-          return;
-        }
-      } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste) {
-        return;
-      }
-
-      // Check if pop-up is enabled and if so open it
-      if (!game.user.isGM && TVA_CONFIG.popup.gmOnly) {
-        return;
-      }
-
-      let dirKeyDown = keyPressed('popupOverride');
-
-      if (vDown && TVA_CONFIG.popup.disableAutoPopupOnTokenCopyPaste) {
-        return;
-      }
-
-      if (!dirKeyDown || (dirKeyDown && vDown)) {
-        if (TVA_CONFIG.popup.disableAutoPopupOnTokenCreate && !vDown) {
-          return;
-        } else if (disablePopupForType(token.actor)) {
-          return;
-        }
-      }
-
-      showArtSelect(token.data.name, {
-        callback: async function (imgSrc, imgName) {
-          if (TVA_CONFIG.popup.twoPopups) {
-            await updateActorImage(token.actor, imgSrc, {
-              imgName: imgName,
-              token: token,
-            });
-            twoPopupPrompt(token.actor, imgSrc, imgName, token);
-          } else {
-            updateTokenImage(imgSrc, {
-              actor: token.actor,
-              imgName: imgName,
-              token: token,
-            });
-          }
-        },
-        searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
-        object: token,
-        preventClose: TVA_CONFIG.popup.twoPopups,
-      });
-    });
-    Hooks.on('renderTokenConfig', modTokenConfig);
-    Hooks.on('renderActorSheet', modActorSheet);
-    cacheTokens();
-  } else if ((TVA_CONFIG.worldHud ?? {}).enableButtonForAll) {
-    cacheTokens();
-  }
   Hooks.on('renderTokenHUD', renderHud);
 
   initialized = true;
+}
+
+async function createToken(token, options, userId) {
+  if (userId && game.user.id != userId) return;
+
+  // Check if random search is enabled and if so perform it
+
+  const randSettings = TVA_CONFIG.randomizer;
+  let vDown = keyPressed('v');
+
+  if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
+    let performRandomSearch = true;
+    if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
+    if (randSettings.linkedActorDisable && token.data.actorLink) performRandomSearch = false;
+    if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
+
+    if (performRandomSearch) {
+      const img = await doRandomSearch(token.data.name, {
+        searchType: SEARCH_TYPE.TOKEN,
+        actor: token.actor,
+      });
+      if (img) {
+        await updateTokenImage(img[0], {
+          token: token,
+          actor: token.actor,
+          imgName: img[1],
+        });
+      }
+
+      if (!img) return;
+
+      if (randSettings.diffImages) {
+        let imgPortrait;
+        if (randSettings.syncImages) {
+          imgPortrait = await doSyncSearch(token.data.name, img[1], {
+            actor: token.actor,
+            searchType: SEARCH_TYPE.PORTRAIT,
+          });
+        } else {
+          imgPortrait = await doRandomSearch(token.data.name, {
+            searchType: SEARCH_TYPE.PORTRAIT,
+            actor: token.actor,
+          });
+        }
+
+        if (imgPortrait) {
+          await updateActorImage(token.actor, imgPortrait[0]);
+        }
+      } else if (randSettings.tokenToPortrait) {
+        await updateActorImage(token.actor, img[0]);
+      }
+      return;
+    }
+    if (!randSettings.popupOnDisable) {
+      return;
+    }
+  } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste) {
+    return;
+  }
+
+  // Check if pop-up is enabled and if so open it
+  if (!TVA_CONFIG.permissions.popups[game.user.role]) {
+    return;
+  }
+
+  let dirKeyDown = keyPressed('popupOverride');
+
+  if (vDown && TVA_CONFIG.popup.disableAutoPopupOnTokenCopyPaste) {
+    return;
+  }
+
+  if (!dirKeyDown || (dirKeyDown && vDown)) {
+    if (TVA_CONFIG.popup.disableAutoPopupOnTokenCreate && !vDown) {
+      return;
+    } else if (disablePopupForType(token.actor)) {
+      return;
+    }
+  }
+
+  showArtSelect(token.data.name, {
+    callback: async function (imgSrc, imgName) {
+      if (TVA_CONFIG.popup.twoPopups) {
+        await updateActorImage(token.actor, imgSrc, {
+          imgName: imgName,
+          token: token,
+        });
+        twoPopupPrompt(token.actor, imgSrc, imgName, token);
+      } else {
+        updateTokenImage(imgSrc, {
+          actor: token.actor,
+          imgName: imgName,
+          token: token,
+        });
+      }
+    },
+    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
+    object: token,
+    preventClose: TVA_CONFIG.popup.twoPopups,
+  });
+}
+
+async function createActor(actor, options, userId) {
+  if (userId && game.user.id != userId) return;
+
+  // Check if random search is enabled and if so perform it
+  const randSettings = TVA_CONFIG.randomizer;
+  if (randSettings.actorCreate) {
+    let performRandomSearch = true;
+    if (randSettings.linkedActorDisable && actor.data.token.actorLink) performRandomSearch = false;
+    if (disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
+
+    if (performRandomSearch) {
+      const img = await doRandomSearch(actor.data.name, {
+        searchType: SEARCH_TYPE.PORTRAIT,
+        actor: actor,
+      });
+      if (img) {
+        await updateActorImage(actor, img[0], { imgName: img[1] });
+      }
+
+      if (!img) return;
+
+      if (randSettings.diffImages) {
+        let imgToken;
+        if (randSettings.syncImages) {
+          imgToken = await doSyncSearch(actor.data.name, img[1], { actor: actor });
+        } else {
+          imgToken = await doRandomSearch(actor.data.name, {
+            searchType: SEARCH_TYPE.TOKEN,
+            actor: actor,
+          });
+        }
+
+        if (imgToken) {
+          await updateTokenImage(imgToken[0], { actor: actor, imgName: imgToken[1] });
+        }
+      }
+      return;
+    }
+    if (!randSettings.popupOnDisable) {
+      return;
+    }
+  }
+
+  // Check if pop-up is enabled and if so open it
+  if (!TVA_CONFIG.permissions.popups[game.user.role]) {
+    return;
+  }
+
+  if (TVA_CONFIG.popup.disableAutoPopupOnActorCreate && !keyPressed('popupOverride')) {
+    return;
+  } else if (disablePopupForType(actor)) {
+    return;
+  }
+
+  showArtSelect(actor.data.name, {
+    callback: async function (imgSrc, name) {
+      const actTokens = actor.getActiveTokens();
+      const token = actTokens.length === 1 ? actTokens[0] : null;
+      await updateActorImage(actor, imgSrc, {
+        imgName: name,
+        token: token,
+      });
+      if (TVA_CONFIG.popup.twoPopups) twoPopupPrompt(actor, imgSrc, name, token);
+      else {
+        updateTokenImage(imgSrc, {
+          actor: actor,
+          imgName: name,
+          token: token,
+        });
+      }
+    },
+    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
+    object: actor,
+    preventClose: TVA_CONFIG.popup.twoPopups,
+  });
 }
 
 /**
@@ -578,34 +583,36 @@ async function initialize() {
  * ArtSelect using the token's name.
  */
 function modTokenConfig(tokenConfig, html, _) {
-  let fields = html[0].getElementsByClassName('image');
-  for (let field of fields) {
-    if (field.getAttribute('name') == 'img') {
-      let el = document.createElement('button');
-      el.type = 'button';
-      el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
-      el.className = 'token-variants-image-select-button';
-      el.innerHTML = '<i class="fas fa-images"></i>';
-      el.tabIndex = -1;
-      el.setAttribute('data-type', 'imagevideo');
-      el.setAttribute('data-target', 'img');
-      el.onclick = async () => {
-        showArtSelect(tokenConfig.object.data.name, {
-          callback: (imgSrc, name) => {
-            field.value = imgSrc;
-            const tokenConfig = getTokenConfigForUpdate(imgSrc, name);
-            if (tokenConfig) {
-              for (var key in tokenConfig) {
-                $(html).find(`[name="${key}"]`).val(tokenConfig[key]);
+  if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
+    let fields = html[0].getElementsByClassName('image');
+    for (let field of fields) {
+      if (field.getAttribute('name') == 'img') {
+        let el = document.createElement('button');
+        el.type = 'button';
+        el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
+        el.className = 'token-variants-image-select-button';
+        el.innerHTML = '<i class="fas fa-images"></i>';
+        el.tabIndex = -1;
+        el.setAttribute('data-type', 'imagevideo');
+        el.setAttribute('data-target', 'img');
+        el.onclick = async () => {
+          showArtSelect(tokenConfig.object.data.name, {
+            callback: (imgSrc, name) => {
+              field.value = imgSrc;
+              const tokenConfig = getTokenConfigForUpdate(imgSrc, name);
+              if (tokenConfig) {
+                for (var key in tokenConfig) {
+                  $(html).find(`[name="${key}"]`).val(tokenConfig[key]);
+                }
               }
-            }
-          },
-          searchType: SEARCH_TYPE.TOKEN,
-          object: tokenConfig.object,
-        });
-      };
-      field.parentNode.append(el);
-      return;
+            },
+            searchType: SEARCH_TYPE.TOKEN,
+            object: tokenConfig.object,
+          });
+        };
+        field.parentNode.append(el);
+        return;
+      }
     }
   }
 }
@@ -615,45 +622,45 @@ function modTokenConfig(tokenConfig, html, _) {
  * the 'Art Select' screen.
  */
 function modActorSheet(actorSheet, html, options) {
-  if (!options.editable || TVA_CONFIG.popup.disableActorPortraitArtSelect) return;
+  if (options.editable && TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
+    let profile = null;
+    let profileQueries = {
+      all: ['.profile', '.profile-img', '.profile-image'],
+      pf2e: ['.player-image', '.actor-icon', '.sheet-header img', '.actor-image'],
+    };
 
-  let profile = null;
-  let profileQueries = {
-    all: ['.profile', '.profile-img', '.profile-image'],
-    pf2e: ['.player-image', '.actor-icon', '.sheet-header img', '.actor-image'],
-  };
-
-  for (let query of profileQueries.all) {
-    profile = html[0].querySelector(query);
-    if (profile) break;
-  }
-
-  if (!profile && game.system.id in profileQueries) {
-    for (let query of profileQueries[game.system.id]) {
+    for (let query of profileQueries.all) {
       profile = html[0].querySelector(query);
       if (profile) break;
     }
-  }
 
-  if (!profile) {
-    console.log(game.i18n.localize('token-variants.notifications.warn.profile-image-not-found'));
-    return;
-  }
+    if (!profile && game.system.id in profileQueries) {
+      for (let query of profileQueries[game.system.id]) {
+        profile = html[0].querySelector(query);
+        if (profile) break;
+      }
+    }
 
-  profile.addEventListener(
-    'contextmenu',
-    function (ev) {
-      showArtSelect(actorSheet.object.name, {
-        callback: (imgSrc, name) =>
-          updateActorImage(actorSheet.object, imgSrc, {
-            imgName: name,
-          }),
-        searchType: SEARCH_TYPE.PORTRAIT,
-        object: actorSheet.object,
-      });
-    },
-    false
-  );
+    if (!profile) {
+      console.log(game.i18n.localize('token-variants.notifications.warn.profile-image-not-found'));
+      return;
+    }
+
+    profile.addEventListener(
+      'contextmenu',
+      function (ev) {
+        showArtSelect(actorSheet.object.name, {
+          callback: (imgSrc, name) =>
+            updateActorImage(actorSheet.object, imgSrc, {
+              imgName: name,
+            }),
+          searchType: SEARCH_TYPE.PORTRAIT,
+          object: actorSheet.object,
+        });
+      },
+      false
+    );
+  }
 }
 
 /**

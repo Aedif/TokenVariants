@@ -42,12 +42,7 @@ export default class TokenHUDSettings extends FormApplication {
   async _updateObject(event, formData) {
     const worldSettings = TVA_CONFIG.worldHud;
 
-    const w_settings = [
-      'enableButtonForAll',
-      'displayOnlySharedImages',
-      'disableIfTHWEnabled:',
-      'includeKeywords',
-    ];
+    const w_settings = ['displayOnlySharedImages', 'disableIfTHWEnabled:', 'includeKeywords'];
 
     w_settings.forEach((setting) => {
       if (setting in formData) worldSettings[setting] = formData[setting];

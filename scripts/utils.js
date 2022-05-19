@@ -621,3 +621,14 @@ export function getFilters(searchType) {
   if (filters.regex) filters.regex = new RegExp(filters.regex);
   return filters;
 }
+
+export function userRequiresImageCache(perm) {
+  const permissions = perm ? perm : TVA_CONFIG.permissions;
+  const role = game.user.role;
+  return (
+    permissions.popups[role] ||
+    permissions.portrait_right_click[role] ||
+    permissions.image_path_button[role] ||
+    permissions.hudFullAccess[role]
+  );
+}

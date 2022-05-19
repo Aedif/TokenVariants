@@ -17,14 +17,14 @@ import { TVA_CONFIG } from '../scripts/settings.js';
 export async function renderHud(hud, html, token, searchText = '') {
   const hudSettings = TVA_CONFIG.hud;
   const worldHudSettings = TVA_CONFIG.worldHud;
-  const userHasConfigRights =
-    game.user && game.user.can('FILES_BROWSE') && game.user.can('TOKEN_CONFIGURE');
+  const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
+  const PARTIAL_ACCESS = TVA_CONFIG.permissions.hud[game.user.role];
 
   if (
     TVA_CONFIG.enableStatusConfig &&
+    game.user.isGM &&
     token.actorId &&
-    game.actors.get(token.actorId) &&
-    userHasConfigRights
+    game.actors.get(token.actorId)
   ) {
     $('.control-icon[data-action="effects"]')
       .find('img:first')
@@ -81,7 +81,7 @@ export async function renderHud(hud, html, token, searchText = '') {
       });
   }
 
-  if (!hudSettings.enableSideMenu) return;
+  if (!hudSettings.enableSideMenu || (!PARTIAL_ACCESS && !FULL_ACCESS)) return;
 
   const tokenActor = game.actors.get(token.actorId);
   if (worldHudSettings.disableIfTHWEnabled && game.modules.get('token-hud-wildcard')?.active) {
@@ -91,8 +91,7 @@ export async function renderHud(hud, html, token, searchText = '') {
   const search = searchText ? searchText : token.name;
   if (!search || search.length < 3) return;
 
-  const grantSearchToUser = userHasConfigRights || worldHudSettings.enableButtonForAll;
-  const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !grantSearchToUser);
+  const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
 
   let artSearch = noSearch
     ? null
@@ -171,7 +170,7 @@ export async function renderHud(hud, html, token, searchText = '') {
       )
     );
     let shared = false;
-    if (userHasConfigRights) {
+    if (game.user.isGM) {
       actorVariants.forEach((variant) => {
         if (variant.imgSrc === imageObj.path && variant.names.includes(imageObj.name)) {
           shared = true;
@@ -211,7 +210,7 @@ export async function renderHud(hud, html, token, searchText = '') {
   divR
     .find('.token-variants-side-search')
     .on('keyup', (event) => _onImageSearchKeyUp(event, hud, html, token));
-  if (userHasConfigRights) {
+  if (FULL_ACCESS) {
     divR.find('#token-variants-side-button').on('contextmenu', _onSideButtonRightClick);
     divR
       .find('.token-variants-button-select')
@@ -306,7 +305,7 @@ async function _onImageClick(event, tokenId) {
 
   if (!imgSrc || !name) return;
 
-  if (keyPressed('config')) {
+  if (keyPressed('config') && game.user.isGM) {
     const toggleCog = (saved) => {
       const cog = imgButton.find('.fa-cog');
       if (saved) {

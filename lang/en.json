@@ -51,10 +51,6 @@
         "Name": "Pop-up Settings",
         "Hint": "Enable/disable pop-up features",
         "window": {
-          "gm-only": {
-            "Name": "GM Only",
-            "Hint": "Restrict pop-ups to GM users only, even if 'Use File browser' and 'Configure Token Settings' permissions are granted."
-          },
           "two-pop-ups": {
             "Name": "Display separate pop-ups for Portrait and Token art",
             "Hint": "When enabled 2 separate pop-ups will be displayed upon Actor/Token creation, first to select the Portrait art, and second to select the Token art."
@@ -62,10 +58,6 @@
           "no-dialog": {
             "Name": "Disable prompt between Portrait and Token art select",
             "Hint": "Will disable the prompt displayed upon Token/Actor creation when two separate pop-ups setting is enabled."
-          },
-          "disable-actor-portrait": {
-            "Name": "Disable right-click pop-up on the character sheet portrait",
-            "Hint": "Will disable the Art Select window popping up when right clicking the portrait on the character sheet."
           },
           "disable-automatic-pop-ups-for": "Disable Automatic Pop-ups for",
           "on-actor-create": "On Actor Create",
@@ -80,10 +72,6 @@
           "enable-token-hud": {
             "Name": "Enable Token HUD Button",
             "Hint": "Enable extra Token HUD button for selecting token art."
-          },
-          "enable-token-hud-for-all": {
-            "Name": "Enable Token HUD button for everyone",
-            "Hint": "If checked will add the Token HUD button for all players. Note: May reveal art unintended for players to see."
           },
           "display-shared-only": {
             "Name": "Display only shared images",

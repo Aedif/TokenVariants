@@ -1,5 +1,5 @@
 import { cacheTokens } from '../token-variants.mjs';
-import { parseSearchPaths, parseKeywords } from './utils.js';
+import { parseSearchPaths, parseKeywords, userRequiresImageCache } from './utils.js';
 import { SearchPaths, ForgeSearchPaths } from '../applications/searchPaths.js';
 import TokenHUDSettings from '../applications/tokenHUDSettings.js';
 import PopUpSettings from '../applications/popupSettings.js';
@@ -8,6 +8,7 @@ import FilterSettings from '../applications/searchFilters.js';
 import AlgorithmSettings from '../applications/algorithm.js';
 import RandomizerSettings from '../applications/randomizerSettings.js';
 import ImportExport from '../applications/importExport.js';
+import TVAPermissions from '../applications/permissions.js';
 
 export const TVA_CONFIG = {
   debug: false,
@@ -22,7 +23,6 @@ export const TVA_CONFIG = {
   forgeSearchPaths: {},
   parsedSearchPaths: [],
   worldHud: {
-    enableButtonForAll: false,
     displayOnlySharedImages: false,
     disableIfTHWEnabled: false,
     includeKeywords: false,
@@ -70,7 +70,6 @@ export const TVA_CONFIG = {
     disableAutoPopupOnTokenCopyPaste: false,
     twoPopups: false,
     twoPopupsNoDialog: false,
-    disableActorPortraitArtSelect: false,
   },
   imgurClientId: '',
   enableStatusConfig: false,
@@ -90,6 +89,38 @@ export const TVA_CONFIG = {
     alwaysShowButton: false,
     updateActorImage: false,
     includeWildcard: true,
+  },
+  permissions: {
+    popups: {
+      1: false,
+      2: false,
+      3: true,
+      4: true,
+    },
+    portrait_right_click: {
+      1: false,
+      2: false,
+      3: true,
+      4: true,
+    },
+    image_path_button: {
+      1: false,
+      2: false,
+      3: true,
+      4: true,
+    },
+    hud: {
+      1: false,
+      2: false,
+      3: true,
+      4: true,
+    },
+    hudFullAccess: {
+      1: false,
+      2: false,
+      3: true,
+      4: true,
+    },
   },
 };
 
@@ -131,7 +162,7 @@ export async function registerSettings() {
         await game.settings.set('token-variants', 'forgevttPaths', []);
       TVA_CONFIG.searchPaths = val;
       TVA_CONFIG.parsedSearchPaths = await parseSearchPaths();
-      cacheTokens();
+      if (userRequiresImageCache()) cacheTokens();
     },
   });
 
@@ -145,7 +176,7 @@ export async function registerSettings() {
         await game.settings.set('token-variants', 'forgevttPaths', []);
       TVA_CONFIG.forgeSearchPaths = val;
       TVA_CONFIG.parsedSearchPaths = await parseSearchPaths();
-      cacheTokens();
+      if (userRequiresImageCache()) cacheTokens();
     },
   });
 
@@ -356,6 +387,29 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.hud = val),
   });
 
+  game.settings.registerMenu('token-variants', 'permissions', {
+    name: 'Permissions',
+    hint: 'Module permissions',
+    scope: 'world',
+    icon: 'fas fa-user-lock',
+    type: TVAPermissions,
+    restricted: true,
+  });
+
+  game.settings.register('token-variants', 'permissions', {
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: TVA_CONFIG.permissions,
+    onChange: (val) => {
+      if (!userRequiresImageCache(TVA_CONFIG.permissions) && userRequiresImageCache(val)) {
+        cacheTokens();
+      }
+      console.log('PERMISSIONS CHANGED', val);
+      TVA_CONFIG.permissions = val;
+    },
+  });
+
   game.settings.registerMenu('token-variants', 'importExport', {
     name: `${game.i18n.localize('token-variants.common.import')}/${game.i18n.localize(
       'token-variants.common.export'
@@ -392,6 +446,7 @@ export async function fetchAllSettings() {
   TVA_CONFIG.enableStatusConfig = game.settings.get('token-variants', 'enableStatusConfig');
   TVA_CONFIG.compendiumMapper = game.settings.get('token-variants', 'compendiumMapper');
   TVA_CONFIG.disableNotifs = game.settings.get('token-variants', 'disableNotifs');
+  TVA_CONFIG.permissions = game.settings.get('token-variants', 'permissions');
 
   // Some settings need to be parsed
   TVA_CONFIG.parsedSearchPaths = await parseSearchPaths();
@@ -442,6 +497,7 @@ export async function importSettingsFromJSON(json) {
     game.settings.set('token-variants', 'enableStatusConfig', json.enableStatusConfig);
   if ('compendiumMapper' in json)
     game.settings.set('token-variants', 'compendiumMapper', json.compendiumMapper);
+  if ('permissions' in json) game.settings.set('token-variants', 'permissions', json.permissions);
 
   if ('searchPaths' in json) game.settings.set('token-variants', 'searchPaths', json.searchPaths);
   if ('forgeSearchPaths' in json)
