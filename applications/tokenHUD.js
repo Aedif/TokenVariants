@@ -138,17 +138,44 @@ export async function renderHud(hud, html, token, searchText = '') {
       mergeImages(actorVariants);
 
       // Merge wildcard images
-      if (
-        hudSettings.includeWildcard &&
-        !worldHudSettings.displayOnlySharedImages &&
-        tokenActor.data.token.randomImg
-      ) {
-        const wildcardImages = (await tokenActor.getTokenImages())
-          .filter((img) => !img.includes('*'))
-          .map((variant) => {
-            return { imgSrc: variant, names: [getFileName(variant)] };
-          });
-        mergeImages(wildcardImages);
+      if (hudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
+        const protoImg = tokenActor.data.token.img;
+        if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
+          // Modified version of Actor.getTokenImages()
+          const getTokenImages = async () => {
+            if (tokenActor._tokenImages) return tokenActor._tokenImages;
+
+            let source = 'data';
+            let pattern = tokenActor.data.token.img;
+            const browseOptions = { wildcard: true };
+
+            // Support non-user sources
+            if (/\.s3\./.test(pattern)) {
+              source = 's3';
+              const { bucket, keyPrefix } = FilePicker.parseS3URL(pattern);
+              if (bucket) {
+                browseOptions.bucket = bucket;
+                pattern = keyPrefix;
+              }
+            } else if (pattern.startsWith('icons/')) source = 'public';
+
+            // Retrieve wildcard content
+            try {
+              const content = await FilePicker.browse(source, pattern, browseOptions);
+              tokenActor._tokenImages = content.files;
+            } catch (err) {
+              tokenActor._tokenImages = [];
+            }
+            return tokenActor._tokenImages;
+          };
+
+          const wildcardImages = (await getTokenImages())
+            .filter((img) => !img.includes('*'))
+            .map((variant) => {
+              return { imgSrc: variant, names: [getFileName(variant)] };
+            });
+          mergeImages(wildcardImages);
+        }
       }
     }
   }

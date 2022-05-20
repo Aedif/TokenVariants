@@ -1,3 +1,8 @@
+# 1.34.3
+
+- Token HUD setting '**Include wildcard images**' will no longer require '**Randomize Wildcard Images**' to be enabled in the Proto Token configuration in order for the module to display all the found wildcard art.
+- Fixed Token Hud Wildcard '**Disable button**' setting not saving
+
 # 1.34.2
 
 - Fixed Token HUD button being shown with '**Include wildcard images**' enabled even when no wildcard images have been found
