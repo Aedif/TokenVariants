@@ -13,6 +13,7 @@ Main features include:
 - Sourcing images from local folders, rolltables, Imgur galleries, and s3 buckets
 - Pop-ups on Actor/Token create to select images found based on Actor/Token name
 - Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
+- Displaying different images for the same token for each user
 - Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRT].png
 - Wildcard images shown in the Token HUD
 - Aided and/or automatic mapping of images to actor compendiums
@@ -169,11 +170,17 @@ Images displayed in the **Art Select** window or the **TokenHUD** side menu can 
 
 Once configured these settings will be applied to the token every time you switch to these images using the **Token Variant Art** module.
 
+## Image to User mappings
+
+Images displayed in the Token HUD can be Shift-Right clicked to open a window that allows you to map an image to be displayed to a specific user.
+
+!["User Image Mapping"](./docs/user_to_image.png)
+
 ## Enable Status Config
 
 Allows to map images to Visibility/Combat status and Active Effects.
 
-!["Image Configuration"](./docs/status_config.png)
+!["Status Configuration"](./docs/status_config.png)
 
 The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
 

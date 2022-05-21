@@ -1,3 +1,8 @@
+# 1.35.1
+
+- New feature: Show a different token image to each user
+  -- Overrides custom Status Effect image mappings (irrespective of their priority)
+
 # 1.34.3
 
 - Token HUD setting '**Include wildcard images**' will no longer require '**Randomize Wildcard Images**' to be enabled in the Proto Token configuration in order for the module to display all the found wildcard art.

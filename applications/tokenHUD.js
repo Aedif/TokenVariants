@@ -398,10 +398,7 @@ function _onImageRightClick(event, tokenId) {
         .prop('title', title);
     };
     new UserList(token, imgSrc, regenStyle).render(true);
-    return;
-  }
-
-  if (token.actor) {
+  } else if (token.actor) {
     let tokenActor = game.actors.get(token.actor.id);
     let variants = tokenActor.getFlag('token-variants', 'variants') || [];
 
