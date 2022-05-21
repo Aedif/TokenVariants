@@ -15,7 +15,7 @@ export default class UserList extends FormApplication {
       template: 'modules/token-variants/templates/userList.html',
       resizable: false,
       minimizable: false,
-      title: 'User List',
+      title: 'User To Image',
       width: 260,
     });
   }
@@ -30,6 +30,7 @@ export default class UserList extends FormApplication {
         name: user.name,
         apply: user.id in mappings && mappings[user.id] === this.img,
         userId: user.id,
+        color: user.data.color,
       });
     });
     data.users = users;
@@ -41,6 +42,7 @@ export default class UserList extends FormApplication {
     let newMappings = {};
 
     const affectedImages = [this.img];
+    const affectedUsers = [];
 
     for (const [userId, apply] of Object.entries(formData)) {
       if (apply) {
@@ -48,9 +50,13 @@ export default class UserList extends FormApplication {
 
         if (mappings[userId] && mappings[userId] !== this.img) {
           affectedImages.push(mappings[userId]);
+          affectedUsers.push(userId);
+        } else if (!mappings[userId]) {
+          affectedUsers.push(userId);
         }
       } else if (mappings[userId] === this.img) {
         delete mappings[userId];
+        affectedUsers.push(userId);
       }
     }
 
@@ -67,11 +73,11 @@ export default class UserList extends FormApplication {
       this.regenStyle(this.token, img);
     }
 
-    checkAndDisplayUserSpecificImage(this.token);
+    if (affectedUsers.includes(game.userId)) checkAndDisplayUserSpecificImage(this.token, true);
     // Broadcast the update to the user specific image
     const message = {
       handlerName: 'userMappingChange',
-      args: this.token.id,
+      args: { tokenId: this.token.id, users: affectedUsers },
       type: 'UPDATE',
     };
     game.socket?.emit('module.token-variants', message);

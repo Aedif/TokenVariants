@@ -639,7 +639,7 @@ export function userRequiresImageCache(perm) {
  * @param {*} checks Number of checks/recursive calls to wait for the previous draw() operation to end
  * @returns
  */
-export async function checkAndDisplayUserSpecificImage(token, checks = 40) {
+export async function checkAndDisplayUserSpecificImage(token, forceDraw = false, checks = 40) {
   if (!token.document) {
     token = canvas.tokens.get(token.id);
   }
@@ -655,17 +655,27 @@ export async function checkAndDisplayUserSpecificImage(token, checks = 40) {
       checks--;
       if (checks > 1)
         new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-          checkAndDisplayUserSpecificImage(token)
+          checkAndDisplayUserSpecificImage(token, forceDraw, checks)
         );
-      //if (checks > 1) delay(1).then(() => checkAndDisplayUserSpecificImage(token));
       return;
     }
 
     // Change the image on the client side, without actually updating the token
     token.data.img = img;
     token.document.data.img = img;
+
     const visible = token.visible;
+    const hadActiveHud = token.hasActiveHUD;
+
     await token.draw();
     token.visible = visible;
+    if (hadActiveHud) canvas.tokens.hud.bind(token);
+  } else if (forceDraw && token.icon.texture) {
+    const visible = token.visible;
+    const hadActiveHud = token.hasActiveHUD;
+
+    await token.draw();
+    token.visible = visible;
+    if (hadActiveHud) canvas.tokens.hud.bind(token);
   }
 }

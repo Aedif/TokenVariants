@@ -382,8 +382,8 @@ async function initialize() {
     showArtSelectExecuting.inProgress = false;
   });
 
-  // Workaround for forgeSearchPaths setting to be updated by non-GM clients
   game.socket?.on(`module.token-variants`, (message) => {
+    // Workaround for forgeSearchPaths setting to be updated by non-GM clients
     if (message.handlerName === 'forgeSearchPaths' && message.type === 'UPDATE') {
       if (!game.user.isGM) return;
       const isResponsibleGM = !game.users
@@ -393,9 +393,12 @@ async function initialize() {
       game.settings.set('token-variants', 'forgeSearchPaths', message.args);
     }
 
+    // User specific token image update
     if (message.handlerName === 'userMappingChange' && message.type === 'UPDATE') {
-      const tkn = canvas.tokens.get(message.args);
-      if (tkn) checkAndDisplayUserSpecificImage(tkn);
+      if (message.args.users.includes(game.userId)) {
+        const tkn = canvas.tokens.get(message.args.tokenId);
+        if (tkn) checkAndDisplayUserSpecificImage(tkn, true);
+      }
     }
   });
 
