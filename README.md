@@ -31,6 +31,41 @@ e.g.
 - '**Mage**' will match: **09_mage.png**, **red-MAGE-64.png**, **mage-s_fire.jpg**
 - '**Half-Red Dragon Veteran**' will match: **HalfRedDragonVeteran.png**, **hAlF_rEd_dRAgon-VETERAN.png**
 
+
+## Table of Contents  
+
+  * [Settings](#settings)
+    + [Search Paths](#search-paths)
+    + [Forge Asset Library Paths](#forge-asset-library-paths)
+    + [Search Filter Settings](#search-filter-settings)
+    + [Search Algorithm Settings](#search-algorithm-settings)
+    + [Randomizer Settings](#randomizer-settings)
+    + [Pop-up Settings](#pop-up-settings)
+      - [Disable separate pop-ups for Portrait and Token art](#disable-separate-pop-ups-for-portrait-and-token-art)
+      - [Disable prompt between Portrait and Token art select](#disable-prompt-between-portrait-and-token-art-select)
+      - [Disable Automatic Pop-ups](#disable-automatic-pop-ups)
+    + [Token HUD Settings](#token-hud-settings)
+      - [Enable Token HUD Button](#enable-token-hud-button)
+      - [Always show HUD Button](#always-show-hud-button)
+      - [Display as image](#display-as-image)
+      - [Opacity of token preview](#opacity-of-token-preview)
+      - [Update Actor portrait](#update-actor-portrait)
+      - [Include wildcard images](#include-wildcard-images)
+      - [Enable Token HUD button for everyone](#enable-token-hud-button-for-everyone)
+      - [Display only shared images](#display-only-shared-images)
+      - [Include keywords in the search](#include-keywords-in-the-search)
+    + [Search by Keyword](#search-by-keyword)
+    + [Excluded Keywords](#excluded-keywords)
+    + [Actor Directory Popup key](#actor-directory-popup-key)
+    + [Match name to folder](#match-name-to-folder)
+  * [Image configuration](#image-configuration)
+  * [Image to User mappings](#image-to-user-mappings)
+  * [Enable Status Config](#enable-status-config)
+  * [Compendium Mapper](#compendium-mapper)
+  * [Permissions](#permissions)
+  * [Installation](#installation)
+  * [API](#api)
+
 ## Settings
 
 ### Search Paths
