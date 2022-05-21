@@ -17,6 +17,7 @@ import {
   startBatchUpdater,
   queueTokenUpdate,
   userRequiresImageCache,
+  checkAndDisplayUserSpecificImage,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
@@ -361,6 +362,11 @@ async function initialize() {
   });
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
+    // console.log('CHANGE', token, change, options);
+    if (change.img) {
+      checkAndDisplayUserSpecificImage(token);
+    }
+
     if (game.userId !== userId) return;
     if (!TVA_CONFIG.enableStatusConfig) return;
     if (options['token-variants'] && token.actor) {
@@ -385,6 +391,11 @@ async function initialize() {
         .some((other) => other.data._id < game.user.data._id);
       if (!isResponsibleGM) return;
       game.settings.set('token-variants', 'forgeSearchPaths', message.args);
+    }
+
+    if (message.handlerName === 'userMappingChange' && message.type === 'UPDATE') {
+      const tkn = canvas.tokens.get(message.args);
+      if (tkn) checkAndDisplayUserSpecificImage(tkn);
     }
   });
 
@@ -929,7 +940,9 @@ async function walkFindTokens(
       }
     } catch (err) {
       console.log(
-        `${game.i18n.localize('token-variants.notifications.warn.path-not-found')} ${path}`
+        `Token Variant Art | ${game.i18n.localize(
+          'token-variants.notifications.warn.path-not-found'
+        )} ${path}`
       );
       return;
     }
@@ -1234,4 +1247,8 @@ Hooks.on('init', function () {
     updateTokenImage,
     exportSettingsToJSON,
   };
+});
+
+Hooks.on('canvasReady', async function () {
+  canvas.tokens.placeables.forEach(checkAndDisplayUserSpecificImage);
 });

@@ -74,3 +74,46 @@
   font-size: 13px;
   margin: 5px 0 0;
 }
+
+/**
+ * User List Configuration Form
+ */
+#token-variants-user-list header.table-header {
+  background: rgba(0, 0, 0, 0.5);
+  padding: 5px;
+  border: 1px solid #191813;
+  text-align: center;
+  color: #f0f0e0;
+  font-weight: bold;
+  text-shadow: 1px 1px #000;
+}
+#token-variants-user-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 400px;
+  overflow: hidden auto;
+  scrollbar-width: thin;
+}
+#token-variants-user-list li {
+  border-bottom: 1px solid #7a7971;
+  text-align: left;
+}
+#token-variants-user-list li .form-fields {
+  justify-content: space-around;
+  text-align: left;
+}
+#token-variants-user-list li input[type='checkbox'] {
+  margin: 0;
+}
+#token-variants-user-list .index {
+  flex: 0 0 40px;
+  text-align: left;
+  font-weight: bold;
+}
+#token-variants-user-list .hint {
+  flex: 0 0 100%;
+  color: #4b4a44;
+  font-size: 13px;
+  margin: 5px 0 0;
+}

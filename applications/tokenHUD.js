@@ -12,6 +12,7 @@ import ActiveEffectConfig from './activeEffectConfig.js';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { doImageSearch } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
+import UserList from './userList.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '') {
@@ -195,6 +196,8 @@ export async function renderHud(hud, html, token, searchText = '') {
 
   let imagesParsed = [];
   const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
+  const tkn = canvas.tokens.get(token._id);
+  const userMappings = tkn.document.getFlag('token-variants', 'userMappings') || {};
 
   for (const imageObj of images) {
     const img = isImage(imageObj.path);
@@ -214,6 +217,8 @@ export async function renderHud(hud, html, token, searchText = '') {
       });
     }
 
+    const [title, style] = genTitleAndStyle(userMappings, imageObj.path, imageObj.name);
+
     imagesParsed.push({
       route: imageObj.path,
       name: imageObj.name,
@@ -222,6 +227,8 @@ export async function renderHud(hud, html, token, searchText = '') {
       vid,
       shared: shared,
       hasConfig: hasConfig,
+      title: title,
+      style: style ? 'box-shadow: ' + style + ';' : null,
     });
   }
 
@@ -329,9 +336,6 @@ async function _onImageClick(event, tokenId) {
 
   let token = canvas.tokens.controlled.find((t) => t.data._id === tokenId);
   if (!token) return;
-  else {
-    token = token.document ?? token;
-  }
 
   const hudSettings = TVA_CONFIG.hud;
 
@@ -352,7 +356,7 @@ async function _onImageClick(event, tokenId) {
     };
     new TokenCustomConfig(token, {}, imgSrc, name, toggleCog).render(true);
   } else if (token.data.img === imgSrc) {
-    let tokenImageName = token.getFlag('token-variants', 'name');
+    let tokenImageName = token.document.getFlag('token-variants', 'name');
     if (!tokenImageName) tokenImageName = getFileName(token.data.img);
     if (tokenImageName !== name) {
       await updateTokenImage(imgSrc, { token: token, imgName: name });
@@ -374,15 +378,28 @@ function _onImageRightClick(event, tokenId) {
 
   let token = canvas.tokens.controlled.find((t) => t.data._id === tokenId);
   if (!token) return;
-  else {
-    token = token.document ?? token;
-  }
 
   const imgButton = $(event.target).closest('.token-variants-button-select');
   const imgSrc = imgButton.attr('data-name');
   const name = imgButton.attr('data-filename');
 
   if (!imgSrc || !name) return;
+
+  if (keyPressed('config') && game.user.isGM) {
+    const regenStyle = (token, img) => {
+      const mappings = token.document.getFlag('token-variants', 'userMappings') || {};
+      const name = imgButton.attr('data-filename');
+      const [title, style] = genTitleAndStyle(mappings, img, name);
+
+      imgButton
+        .closest('.token-variants-wrap')
+        .find(`button[data-name='${img}']`)
+        .css('box-shadow', style)
+        .prop('title', title);
+    };
+    new UserList(token, imgSrc, regenStyle).render(true);
+    return;
+  }
 
   if (token.actor) {
     let tokenActor = game.actors.get(token.actor.id);
@@ -436,4 +453,24 @@ function _onImageSearchKeyUp(event, hud, html, tokenData) {
       renderHud(hud, html, tokenData, event.target.value);
     }
   }
+}
+
+function genTitleAndStyle(mappings, imgSrc, name) {
+  let title = name;
+  let style = '';
+  let offset = 2;
+  for (const [userId, img] of Object.entries(mappings)) {
+    if (img === imgSrc) {
+      const user = game.users.get(userId);
+      if (!user) continue;
+      if (style.length === 0) {
+        style = `inset 0 0 0 ${offset}px ${user.data.color}`;
+      } else {
+        style += `, inset 0 0 0 ${offset}px ${user.data.color}`;
+      }
+      offset += 2;
+      title += `\nDisplayed to: ${user.data.name}`;
+    }
+  }
+  return [title, style];
 }

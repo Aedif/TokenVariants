@@ -1,0 +1,32 @@
+<form>
+    <section>
+
+      <header class="table-header flexrow">
+        <div class="index"><label></label></div>
+        <div><label>Username</label></div>
+        <div><label>Apply</label></div>
+      </header>
+
+    <ul>  
+        {{#each users}}
+        <li class="form-group">
+          <div class="index">
+            <img height="32" width="32" src="{{this.avatar}}" />
+          </div>
+          <div class="form-fields">
+            <label>{{this.name}}</label>
+          </div>
+          <div class="form-fields">
+            <input type="checkbox" name="{{this.userId}}" {{#if this.apply}}checked{{/if}} />
+          </div>
+        </li>
+        {{/each}}
+      </ol>
+    </section>
+    <footer class="sheet-footer flexrow">
+      <button type="submit">
+        <i class="far fa-save"></i>{{localize "token-variants.common.apply"}}
+      </button>
+    </footer>
+  </form>
+  

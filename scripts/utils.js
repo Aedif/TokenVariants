@@ -632,3 +632,40 @@ export function userRequiresImageCache(perm) {
     permissions.hudFullAccess[role]
   );
 }
+
+/**
+ * Overwrite Token image on the client side if 'userMappings' flag has been set.
+ * @param {*} token Token to overwrite the image for
+ * @param {*} checks Number of checks/recursive calls to wait for the previous draw() operation to end
+ * @returns
+ */
+export async function checkAndDisplayUserSpecificImage(token, checks = 40) {
+  if (!token.document) {
+    token = canvas.tokens.get(token.id);
+  }
+
+  const mappings = token.document.getFlag('token-variants', 'userMappings') || {};
+  const img = mappings[game.userId];
+  if (img && img !== token.data.img) {
+    // This function may be called while the Token is in the middle of loading it's textures.
+    // Attempting to perform a draw() call then would result in multiple overlapped images.
+    // We should wait for the texture to be loaded and change the image after. As a failsafe
+    // give up after a certain number of checks.
+    if (!token.icon.texture) {
+      checks--;
+      if (checks > 1)
+        new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
+          checkAndDisplayUserSpecificImage(token)
+        );
+      //if (checks > 1) delay(1).then(() => checkAndDisplayUserSpecificImage(token));
+      return;
+    }
+
+    // Change the image on the client side, without actually updating the token
+    token.data.img = img;
+    token.document.data.img = img;
+    const visible = token.visible;
+    await token.draw();
+    token.visible = visible;
+  }
+}
