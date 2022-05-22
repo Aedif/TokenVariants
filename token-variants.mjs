@@ -361,6 +361,40 @@ async function initialize() {
     }
   });
 
+  // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
+  if (typeof libWrapper === 'function') {
+    libWrapper.register(
+      'token-variants',
+      'PlaceableObject.prototype._onDragLeftStart',
+      function (wrapped, ...args) {
+        // Change all the controlled tokens' source data if needed before they are cloned and drawn
+        const targets = this.layer.options.controllableObjects ? this.layer.controlled : [this];
+        const toUndo = [];
+        for (const token of targets) {
+          const mappings = token.document?.getFlag('token-variants', 'userMappings') || {};
+          const img = mappings[game.userId];
+          if (img) {
+            toUndo.push([token, token.data._source.img]);
+            token.data._source.img = img;
+            token.document.data.img = img;
+          }
+        }
+
+        // Call _onDragLeftStart function to draw the new image
+        let result = wrapped(...args);
+
+        // Now that the image is drawn, reset the source data back to the original
+        for (const [token, img] of toUndo) {
+          token.data._source.img = img;
+          token.document.data.img = img;
+        }
+
+        return result;
+      },
+      'WRAPPER'
+    );
+  }
+
   Hooks.on('updateToken', async function (token, change, options, userId) {
     // console.log('CHANGE', token, change, options);
     if (change.img) {

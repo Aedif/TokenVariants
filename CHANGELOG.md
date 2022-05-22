@@ -1,3 +1,8 @@
+# 1.35.2
+
+- Fixed the "ghost" of the token image during drag not reflecting the user mapping
+  - The fix relies on '**libWrapper**' being enabled, all other module features are not affected by this dependency
+
 # 1.35.1
 
 - New feature: Show a different token image to each user
