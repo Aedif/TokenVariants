@@ -31,6 +31,29 @@ e.g.
 - '**Mage**' will match: **09_mage.png**, **red-MAGE-64.png**, **mage-s_fire.jpg**
 - '**Half-Red Dragon Veteran**' will match: **HalfRedDragonVeteran.png**, **hAlF_rEd_dRAgon-VETERAN.png**
 
+
+## Table of Contents  
+
+  * [Settings](#settings)
+    + [Search Paths](#search-paths)
+    + [Forge Asset Library Paths](#forge-asset-library-paths)
+    + [Search Filter Settings](#search-filter-settings)
+    + [Search Algorithm Settings](#search-algorithm-settings)
+    + [Randomizer Settings](#randomizer-settings)
+    + [Pop-up Settings](#pop-up-settings)
+    + [Token HUD Settings](#token-hud-settings)
+    + [Search by Keyword](#search-by-keyword)
+    + [Excluded Keywords](#excluded-keywords)
+    + [Actor Directory Popup key](#actor-directory-popup-key)
+    + [Match name to folder](#match-name-to-folder)
+  * [Image configuration](#image-configuration)
+  * [Image to User mappings](#image-to-user-mappings)
+  * [Enable Status Config](#enable-status-config)
+  * [Compendium Mapper](#compendium-mapper)
+  * [Permissions](#permissions)
+  * [Installation](#installation)
+  * [API](#api)
+
 ## Settings
 
 ### Search Paths
