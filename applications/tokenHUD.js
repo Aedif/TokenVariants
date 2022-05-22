@@ -228,7 +228,7 @@ export async function renderHud(hud, html, token, searchText = '') {
       shared: shared,
       hasConfig: hasConfig,
       title: title,
-      style: style ? 'box-shadow: ' + style + ';' : null,
+      style: game.user.isGM && style ? 'box-shadow: ' + style + ';' : null,
     });
   }
 

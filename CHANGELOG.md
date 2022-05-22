@@ -1,5 +1,6 @@
 # 1.35.2
 
+- When a specific image is mapped to a user that image will no longer be highlighted in the Token HUD for non-gm players
 - Fixed the "ghost" of the token image during drag not reflecting the user mapping
   - The fix relies on '**libWrapper**' being enabled, all other module features are not affected by this dependency
 
