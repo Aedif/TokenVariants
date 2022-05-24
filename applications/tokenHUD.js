@@ -10,9 +10,10 @@ import {
 import TokenCustomConfig from './tokenCustomConfig.js';
 import ActiveEffectConfig from './activeEffectConfig.js';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
-import { doImageSearch } from '../token-variants.mjs';
+import { doImageSearch, findTokensFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
+import { Fuse } from '../scripts/fuse/fuse.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '') {
@@ -337,7 +338,7 @@ async function _onImageClick(event, tokenId) {
   let token = canvas.tokens.controlled.find((t) => t.data._id === tokenId);
   if (!token) return;
 
-  const hudSettings = TVA_CONFIG.hud;
+  const worldHudSettings = TVA_CONFIG.worldHud;
 
   const imgButton = $(event.target).closest('.token-variants-button-select');
   const imgSrc = imgButton.attr('data-name');
@@ -360,14 +361,22 @@ async function _onImageClick(event, tokenId) {
     if (!tokenImageName) tokenImageName = getFileName(token.data.img);
     if (tokenImageName !== name) {
       await updateTokenImage(imgSrc, { token: token, imgName: name });
-      if (token.actor && hudSettings.updateActorImage) {
-        updateActorImage(token.actor, imgSrc, { imgName: name });
+      if (token.actor && worldHudSettings.updateActorImage) {
+        if (worldHudSettings.useNameSimilarity) {
+          updateActorWithSimilarName(imgSrc, name, token.actor);
+        } else {
+          updateActorImage(token.actor, imgSrc, { imgName: name });
+        }
       }
     }
   } else {
     await updateTokenImage(imgSrc, { token: token, imgName: name });
-    if (token.actor && hudSettings.updateActorImage) {
-      updateActorImage(token.actor, imgSrc, { imgName: name });
+    if (token.actor && worldHudSettings.updateActorImage) {
+      if (worldHudSettings.useNameSimilarity) {
+        updateActorWithSimilarName(imgSrc, name, token.actor);
+      } else {
+        updateActorImage(token.actor, imgSrc, { imgName: name });
+      }
     }
   }
 }
@@ -470,4 +479,22 @@ function genTitleAndStyle(mappings, imgSrc, name) {
     }
   }
   return [title, style];
+}
+
+async function updateActorWithSimilarName(imgSrc, imgName, actor) {
+  const results = await findTokensFuzzy(
+    imgName,
+    SEARCH_TYPE.PORTRAIT,
+    {
+      fuzzyThreshold: 0.4,
+      fuzzyLimit: 50,
+    },
+    true
+  );
+
+  if (results && results.length !== 0) {
+    updateActorImage(actor, results[0].path, { imgName: results[0].name });
+  } else {
+    updateActorImage(actor, imgSrc, { imgName: imgName });
+  }
 }

@@ -26,6 +26,15 @@ export const TVA_CONFIG = {
     displayOnlySharedImages: false,
     disableIfTHWEnabled: false,
     includeKeywords: false,
+    updateActorImage: false,
+    useNameSimilarity: false,
+  },
+  hud: {
+    enableSideMenu: true,
+    displayAsImage: true,
+    imageOpacity: 50,
+    alwaysShowButton: false,
+    includeWildcard: true,
   },
   keywordSearch: true,
   excludedKeywords: 'and,for',
@@ -81,14 +90,6 @@ export const TVA_CONFIG = {
     cache: false,
     autoDisplayArtSelect: true,
     syncImages: false,
-  },
-  hud: {
-    enableSideMenu: true,
-    displayAsImage: true,
-    imageOpacity: 50,
-    alwaysShowButton: false,
-    updateActorImage: false,
-    includeWildcard: true,
   },
   permissions: {
     popups: {

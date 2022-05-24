@@ -45,16 +45,6 @@
   </div>
 
   <div class="form-group">
-    <label>{{localize "token-variants.settings.token-hud.window.update-actor-image.Name"}}</label>
-    <div class="form-fields">
-      <input type="checkbox" name="updateActorImage" data-dtype="Boolean" {{#if updateActorImage}}checked{{/if}}>
-    </div>
-    <p class="notes">
-      {{localize "token-variants.settings.token-hud.window.update-actor-image.Hint"}}
-    </p>
-  </div>
-
-  <div class="form-group">
     <label>{{localize "token-variants.settings.token-hud.window.include-wildcard.Name"}}</label>
     <div class="form-fields">
       <input type="checkbox" name="includeWildcard" data-dtype="Boolean" {{#if includeWildcard}}checked{{/if}}>
@@ -87,6 +77,31 @@
       <input type="checkbox" name="includeKeywords" data-dtype="Boolean" {{#if includeKeywords}}checked{{/if}}>
     </div>
   </div>
+
+  <hr/>
+
+  <div class="form-group">
+    <label>{{localize "token-variants.settings.token-hud.window.update-actor-image.Name"}}</label>
+    <div class="form-fields">
+      <input type="checkbox" name="updateActorImage" data-dtype="Boolean" {{#if updateActorImage}}checked{{/if}}>
+    </div>
+    <p class="notes">
+      {{localize "token-variants.settings.token-hud.window.update-actor-image.Hint"}}
+    </p>
+  </div>
+
+  <div class="form-group">
+    <label>Use a similarly named file</label>
+    <div class="form-fields">
+      <input type="checkbox" name="useNameSimilarity" data-dtype="Boolean" {{#if useNameSimilarity}}checked{{/if}}>
+    </div>
+    <p class="notes">
+      Instead of using the same image for the portrait the module will perform a Portrait image search and attempt to find a similarly named image.
+    </p>
+  </div>
+
+  <hr/>
+
   {{/if}} {{#if tokenHUDWildcardActive}}
 
   <h2><b>Token HUD Wildcard</b></h2>

@@ -13,11 +13,11 @@ import {
   registerKeybinds,
   updateActorImage,
   updateTokenImage,
-  stringSimilarity,
   startBatchUpdater,
   queueTokenUpdate,
   userRequiresImageCache,
   checkAndDisplayUserSpecificImage,
+  flattenSearchResults,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
@@ -788,7 +788,7 @@ async function findTokens(name, searchType = '', algorithmOptions = {}) {
   }
 }
 
-async function findTokensFuzzy(name, searchType, algorithmOptions) {
+export async function findTokensFuzzy(name, searchType, algorithmOptions, forceSearchName = false) {
   if (TVA_CONFIG.debug)
     console.log('STARTING: Fuzzy Token Search', name, searchType, caching, algorithmOptions);
 
@@ -816,7 +816,7 @@ async function findTokensFuzzy(name, searchType, algorithmOptions) {
   });
 
   const fuse = new Fuse(allPaths, {
-    keys: [TVA_CONFIG.runSearchOnPath ? 'path' : 'name'],
+    keys: [!forceSearchName && TVA_CONFIG.runSearchOnPath ? 'path' : 'name'],
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
@@ -1095,26 +1095,26 @@ async function _randSearchUtil(search, { searchType = SEARCH_TYPE.BOTH, actor = 
 
 async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, actor = null } = {}) {
   if (caching) return null;
-  const results = await _randSearchUtil(search, { searchType: searchType, actor: actor });
-  if (!results) return results;
 
-  // Find image with the name most similar to target
-  let mostSimilar = { imgSrc: '', imgName: '', similarity: 0.0 };
+  const results = flattenSearchResults(
+    await _randSearchUtil(search, { searchType: searchType, actor: actor })
+  );
 
-  results.forEach((images) => {
-    images.forEach((imageObj) => {
-      const similarity = stringSimilarity(imageObj.name, target);
-      if (mostSimilar.similarity < similarity) {
-        mostSimilar = { imgSrc: imageObj.path, imgName: imageObj.name, similarity: similarity };
-      }
-    });
+  // Find the image with the most similar name
+  const fuse = new Fuse(results, {
+    keys: ['name'],
+    minMatchCharLength: 1,
+    ignoreLocation: true,
+    threshold: 0.4,
   });
 
-  if (mostSimilar.imgName) {
-    return [mostSimilar.imgSrc, mostSimilar.imgName];
-  }
+  const fResults = fuse.search(target);
 
-  return null;
+  if (fResults && fResults.length !== 0) {
+    return [fResults[0].item.path, fResults[0].item.name];
+  } else {
+    return null;
+  }
 }
 
 /**
@@ -1140,6 +1140,7 @@ async function doRandomSearch(
   let randImageNum = Math.floor(Math.random() * total);
   for (const [_, images] of results.entries()) {
     if (randImageNum < images.length) {
+      if (callback) callback([images[randImageNum].path, images[randImageNum].name]);
       return [images[randImageNum].path, images[randImageNum].name];
     } else {
       randImageNum -= images.length;
@@ -1287,5 +1288,5 @@ Hooks.on('init', function () {
 });
 
 Hooks.on('canvasReady', async function () {
-  canvas.tokens.placeables.forEach(checkAndDisplayUserSpecificImage);
+  canvas.tokens.placeables.forEach((tkn) => checkAndDisplayUserSpecificImage(tkn));
 });

@@ -23,8 +23,9 @@ export default class TokenHUDSettings extends FormApplication {
     if (data.enableWorldSettings) {
       data = mergeObject(data, TVA_CONFIG.worldHud);
     }
-    data = mergeObject(data, TVA_CONFIG.hud);
+    data = mergeObject(data, TVA_CONFIG.hud, { overwrite: false });
     data.tokenHUDWildcardActive = game.modules.get('token-hud-wildcard')?.active;
+    console.log(data);
     return data;
   }
 
@@ -42,7 +43,13 @@ export default class TokenHUDSettings extends FormApplication {
   async _updateObject(event, formData) {
     const worldSettings = TVA_CONFIG.worldHud;
 
-    const w_settings = ['displayOnlySharedImages', 'disableIfTHWEnabled', 'includeKeywords'];
+    const w_settings = [
+      'displayOnlySharedImages',
+      'disableIfTHWEnabled',
+      'includeKeywords',
+      'updateActorImage',
+      'useNameSimilarity',
+    ];
 
     w_settings.forEach((setting) => {
       if (setting in formData) worldSettings[setting] = formData[setting];
@@ -55,7 +62,6 @@ export default class TokenHUDSettings extends FormApplication {
       'displayAsImage',
       'imageOpacity',
       'alwaysShowButton',
-      'updateActorImage',
       'includeWildcard',
     ];
     c_settings.forEach((setting) => {
