@@ -34,6 +34,12 @@ export default class TokenHUDSettings extends FormApplication {
    */
   activateListeners(html) {
     super.activateListeners(html);
+    html.find('input[name="updateActorImage"]').change((event) => {
+      $(event.target)
+        .closest('form')
+        .find('input[name="useNameSimilarity"]')
+        .prop('disabled', !event.target.checked);
+    });
   }
 
   /**

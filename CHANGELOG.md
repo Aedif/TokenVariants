@@ -1,3 +1,11 @@
+# 1.36.1
+
+- Fixed Token Magic FX conflict where filters would not be applied on scene load
+- **Token HUD Settings** > **Update Actor Portrait**, is now a world setting
+- Added a new setting **Token HUD Settings** > **Update Actor Portrait** > **Use a similarly named file**
+  - Instead of using the same image applied to the token the module will perform a 'Portrait' search and apply an image with a name closest to the one used for the token
+  - Relies on **Search Filter Settings** being configured appropriately so that the module can distinguish between Token and Portrait images
+
 # 1.35.2
 
 - When a specific image is mapped to a user that image will no longer be highlighted in the Token HUD for non-gm players
