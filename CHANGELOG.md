@@ -1,3 +1,7 @@
+# 1.36.2
+
+- Fixed an issue with **Forge Asset Library Paths** setting not properly reading and storing paths
+
 # 1.36.1
 
 - Fixed Token Magic FX conflict where filters would not be applied on scene load
