@@ -170,7 +170,7 @@ export async function registerSettings() {
   game.settings.register('token-variants', 'forgeSearchPaths', {
     scope: 'world',
     config: false,
-    type: Array,
+    type: Object,
     default: TVA_CONFIG.forgeSearchPaths,
     onChange: async function (val) {
       if (game.user.can('SETTINGS_MODIFY'))
@@ -429,6 +429,15 @@ export async function fetchAllSettings() {
   TVA_CONFIG.searchPaths = game.settings.get('token-variants', 'searchPaths');
   TVA_CONFIG.forgevttPaths = game.settings.get('token-variants', 'forgevttPaths');
   TVA_CONFIG.forgeSearchPaths = game.settings.get('token-variants', 'forgeSearchPaths');
+  // Fix for search paths being accidentally stored as an array instead of an object
+  if (Array.isArray(TVA_CONFIG.forgeSearchPaths)) {
+    if (TVA_CONFIG.forgeSearchPaths.length !== 0) {
+      TVA_CONFIG.forgeSearchPaths = TVA_CONFIG.forgeSearchPaths[0];
+    } else {
+      TVA_CONFIG.forgeSearchPaths = {};
+    }
+  }
+
   TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
   TVA_CONFIG.worldHud = game.settings.get('token-variants', 'worldHudSettings');
   TVA_CONFIG.keywordSearch = game.settings.get('token-variants', 'keywordSearch');
