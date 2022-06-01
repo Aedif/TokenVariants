@@ -18,28 +18,8 @@ export default class TokenHUDSettings extends FormApplication {
   }
 
   async getData(options) {
-    let data = super.getData(options);
-    data.enableWorldSettings = game.user && game.user.isGM;
-    if (data.enableWorldSettings) {
-      data = mergeObject(data, TVA_CONFIG.worldHud);
-    }
-    data = mergeObject(data, TVA_CONFIG.hud, { overwrite: false });
-    data.tokenHUDWildcardActive = game.modules.get('token-hud-wildcard')?.active;
-    console.log(data);
-    return data;
-  }
-
-  /**
-   * @param {JQuery} html
-   */
-  activateListeners(html) {
-    super.activateListeners(html);
-    html.find('input[name="updateActorImage"]').change((event) => {
-      $(event.target)
-        .closest('form')
-        .find('input[name="useNameSimilarity"]')
-        .prop('disabled', !event.target.checked);
-    });
+    const data = super.getData(options);
+    return mergeObject(data, TVA_CONFIG.hud);
   }
 
   /**
@@ -47,32 +27,6 @@ export default class TokenHUDSettings extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    const worldSettings = TVA_CONFIG.worldHud;
-
-    const w_settings = [
-      'displayOnlySharedImages',
-      'disableIfTHWEnabled',
-      'includeKeywords',
-      'updateActorImage',
-      'useNameSimilarity',
-    ];
-
-    w_settings.forEach((setting) => {
-      if (setting in formData) worldSettings[setting] = formData[setting];
-    });
-    game.settings.set('token-variants', 'worldHudSettings', worldSettings);
-
-    const clientSettings = TVA_CONFIG.hud;
-    const c_settings = [
-      'enableSideMenu',
-      'displayAsImage',
-      'imageOpacity',
-      'alwaysShowButton',
-      'includeWildcard',
-    ];
-    c_settings.forEach((setting) => {
-      if (setting in formData) clientSettings[setting] = formData[setting];
-    });
-    game.settings.set('token-variants', 'hudSettings', clientSettings);
+    game.settings.set('token-variants', 'hudSettings', mergeObject(TVA_CONFIG.hud, formData));
   }
 }

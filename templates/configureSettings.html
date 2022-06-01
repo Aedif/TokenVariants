@@ -1,0 +1,527 @@
+<form>
+    <!-- Navigation Tabs -->
+    <nav class="sheet-tabs tabs tva-setting-nav" data-group="primary-tabs">
+        <a class="item" data-tab="searchPaths"><i class="fas fa-dice-d20"></i> Search Paths</a>
+        <a class="item" data-tab="searchFilters"><i class="fas fa-cogs"></i> Search Filters</a>
+        <a class="item" data-tab="searchAlgorithm"><i class="fas fa-plug"></i> Search Algorithm</a>
+        <a class="item" data-tab="randomizer"><i class="fas fa-plug"></i> Randomizer</a>
+        <hr>
+        <a class="item" data-tab="popup"><i class="fas fa-plug"></i> Pop-up</a>
+        <a class="item" data-tab="permissions"><i class="fas fa-user-lock"></i> Permissions</a>
+        <a class="item" data-tab="worldHud"><i class="fas fa-user-lock"></i> Token HUD</a>
+        <a class="item" data-tab="misc"><i class="fas fa-user-lock"></i> Misc</a>
+    </nav>
+
+    <!-- Main Content Section -->
+    <section class="content">
+        <!-- SEARCH PATHS -->
+        <div class="tab" data-tab="searchPaths" data-group="primary-tabs">
+            <ol class="token-variant-table">
+                <li class="table-row table-header flexrow">
+                  <div class="path-image">
+                    <a class="create-path" title="Add new path"><i class="fas fa-plus"></i></a>
+                  </div>
+                  <div class="path-text"><label>Path</label></div>
+                  <div class="path-cache"><label>Cache</label></div>
+                  <div class="path-controls"></div>
+                </li>
+          
+                {{#each searchPaths as |path index|}}
+                <li class="table-row flexrow">
+                  <div class="path-image">
+                    <i class="{{path.icon}}"></i>
+                  </div>
+                  <div class="path-text">
+                    <input class="searchPath" type="text" name="searchPaths.text" value="{{path.text}}" placeholder="Path to image source"
+                    />
+                  </div>
+                  <div class="imgur-control {{#if (eq path.type 'imgur')}}active{{/if}}">
+                    <a class="convert-imgur" title="Convert to Rolltable">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                  </div>
+                  <div class="path-cache">
+                    <input type="checkbox" name="searchPaths.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>
+                  </div>
+                  <div class="path-controls">
+                    <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
+                  </div>
+                </li>
+                {{/each}}
+              </ol>
+        </div>
+
+        <!-- SEARCH FILTERS -->
+        <div class="tab" data-tab="searchFilters" data-group="primary-tabs">
+          <label>{{localize "token-variants.settings.search-filters.window.portrait-filter.Name"}}</label>
+          <div class="form-group">
+              <label>{{localize "token-variants.common.include"}}</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.portraitFilterInclude" value="{{searchFilters.portraitFilterInclude}}" data-dtype="String">
+              </div>
+              &nbsp;&nbsp;
+              <label>{{localize "token-variants.common.exclude"}}</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.portraitFilterExclude" value="{{searchFilters.portraitFilterExclude}}" data-dtype="String">
+              </div>
+              &nbsp;&nbsp;
+              <label>RegEx</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.portraitFilterRegex" value="{{searchFilters.portraitFilterRegex}}" data-dtype="String">
+              </div>
+              <p class="notes">{{localize "token-variants.settings.search-filters.window.portrait-filter.Hint"}}</p>
+          </div>
+      
+          <hr />
+      
+          <label>{{localize "token-variants.settings.search-filters.window.token-filter.Name"}}</label>
+          <div class="form-group">
+              <label>{{localize "token-variants.common.include"}}</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.tokenFilterInclude" value="{{searchFilters.tokenFilterInclude}}" data-dtype="String">
+              </div>
+              &nbsp;&nbsp;
+              <label>{{localize "token-variants.common.exclude"}}</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.tokenFilterExclude" value="{{searchFilters.tokenFilterExclude}}" data-dtype="String">
+              </div>
+              &nbsp;&nbsp;
+              <label>RegEx</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.tokenFilterRegex" value="{{searchFilters.tokenFilterRegex}}" data-dtype="String">
+              </div>
+              <p class="notes">{{localize "token-variants.settings.search-filters.window.token-filter.Hint"}}</p>
+          </div>
+      
+          <hr />
+      
+          <label>{{localize "token-variants.settings.search-filters.window.general-filter.Name"}}</label>
+          <div class="form-group">
+              <label>{{localize "token-variants.common.include"}}</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.generalFilterInclude" value="{{searchFilters.generalFilterInclude}}" data-dtype="String">
+              </div>
+              &nbsp;&nbsp;
+              <label>{{localize "token-variants.common.exclude"}}</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.generalFilterExclude" value="{{searchFilters.generalFilterExclude}}" data-dtype="String">
+              </div>
+              &nbsp;&nbsp;
+              <label>RegEx</label>
+              <div class="form-fields">
+                  <input type="text" name="searchFilters.generalFilterRegex" value="{{searchFilters.generalFilterRegex}}" data-dtype="String">
+              </div>
+              <p class="notes">{{localize "token-variants.settings.search-filters.window.general-filter.Hint"}}</p>
+          </div>
+        </div>
+
+        <!-- SEARCH ALGORITHM -->
+        <div class="tab" data-tab="searchAlgorithm" data-group="primary-tabs">
+            <h2>{{localize "token-variants.common.exact"}}</h2>
+            <div class="form-group">
+              <label>{{localize "token-variants.common.enable"}}</label>
+              <input type="checkbox" name="algorithm.exact" data-dtype="Boolean" {{#if algorithm.exact}}checked{{/if}}>
+              <p class="notes">{{localize "token-variants.settings.algorithm.window.exact-hint"}}</p>
+            </div>
+          
+            <h2>{{localize "token-variants.common.fuzzy"}}</h2>
+            <div class="form-group">
+              <label>{{localize "token-variants.common.enable"}}</label>
+              <input type="checkbox" name="algorithm.fuzzy" data-dtype="Boolean" {{#if algorithm.fuzzy}}checked{{/if}}>
+              <p class="notes">{{localize "token-variants.settings.algorithm.window.fuzzy-hint"}}</p>
+            </div>
+          
+            <div class="form-group">
+              <label>{{localize "token-variants.settings.algorithm.window.percentage-match.Name"}}</label>
+              <input
+                type="range"
+                name="algorithm.fuzzyThreshold"
+                data-dtype="Number"
+                value="{{algorithm.fuzzyThreshold}}"
+                min="0"
+                max="100"
+                step="1"
+              />
+              <span class="token-variants-range-value">{{algorithm.fuzzyThreshold}}%</span>
+              <p class="notes">
+                {{localize "token-variants.settings.algorithm.window.percentage-match.Hint"}}
+              </p>
+            </div>
+          
+            <div class="form-group">
+              <label>{{localize "token-variants.settings.algorithm.window.art-select-slider.Name"}}</label>
+              <input type="checkbox" name="algorithm.fuzzyArtSelectPercentSlider" data-dtype="Boolean" {{#if
+                algorithm.fuzzyArtSelectPercentSlider}}checked{{/if}}>
+              <p class="notes">
+                {{localize "token-variants.settings.algorithm.window.art-select-slider.Hint"}}
+              </p>
+            </div>
+          
+            <div class="form-group">
+              <label>{{localize "token-variants.common.limit"}}</label>
+              <input
+                type="text"
+                name="algorithm.fuzzyLimit"
+                value="{{algorithm.fuzzyLimit}}"
+                placeholder="1"
+                data-dtype="Number"
+              />
+              <p class="notes">{{localize "token-variants.settings.algorithm.window.limit-hint"}}</p>
+            </div>
+        </div>
+
+        <!-- Randomizer -->
+        <div class="tab" data-tab="randomizer" data-group="primary-tabs">
+            <h2>{{localize "token-variants.common.randomize"}}</h2>
+
+            <div class="form-group">
+              <label>
+                {{localize "token-variants.settings.randomizer.window.portrait-image-on-actor-create"}}
+              </label>
+              <input type="checkbox" name="randomizer.actorCreate" data-dtype="Boolean" {{#if randomizer.actorCreate}}checked{{/if}}>
+            </div>
+          
+            <hr />
+          
+            <div class="form-group">
+              <label>
+                {{localize "token-variants.settings.randomizer.window.token-image-on-token-create"}}
+              </label>
+              <input type="checkbox" name="randomizer.tokenCreate" data-dtype="Boolean" {{#if randomizer.tokenCreate}}checked{{/if}}>
+            </div>
+          
+            <div class="form-group">
+              <label>
+                {{localize "token-variants.settings.randomizer.window.token-image-on-token-copy-paste"}}
+              </label>
+              <input type="checkbox" name="randomizer.tokenCopyPaste" data-dtype="Boolean" {{#if randomizer.tokenCopyPaste}}checked{{/if}}>
+            </div>
+          
+            <div class="form-group">
+              <label>&nbsp;&nbsp;&nbsp;&nbsp; {{localize "token-variants.settings.randomizer.window.token-to-portrait"}}</label>
+              <input type="checkbox" name="randomizer.tokenToPortrait" data-dtype="Boolean" {{#if randomizer.tokenToPortrait}}checked{{/if}} {{#if randomizer.tokenToPortraitDisabled}}disabled{{/if}}>
+            </div>
+          
+            <hr />
+          
+            <div class="form-group">
+              <label>{{localize "token-variants.settings.randomizer.window.different-images"}}</label>
+              <input type="checkbox" name="randomizer.diffImages" data-dtype="Boolean" {{#if randomizer.diffImages}}checked{{/if}}>
+            </div>
+          
+            <div class="form-group">
+              <label>&nbsp;&nbsp;&nbsp;&nbsp; {{localize "token-variants.settings.randomizer.window.sync-images"}}</label>
+              <input type="checkbox" name="randomizer.syncImages" data-dtype="Boolean" {{#if randomizer.syncImages}}checked{{/if}} {{#unless randomizer.diffImages}}disabled{{/unless}}>
+            </div>
+          
+            <h2>{{localize "token-variants.settings.randomizer.window.search-types-heading"}}</h2>
+          
+            <div class="form-group">
+              <label>{{localize "token-variants.common.name"}}</label>
+              <input type="checkbox" name="randomizer.tokenName" data-dtype="Boolean" {{#if randomizer.tokenName}}checked{{/if}}>
+            </div>
+          
+            <div class="form-group">
+              <label>{{localize "token-variants.common.keywords"}}</label>
+              <input type="checkbox" name="randomizer.keywords" data-dtype="Boolean" {{#if randomizer.keywords}}checked{{/if}}>
+            </div>
+          
+            <div class="form-group">
+              <label>{{localize "token-variants.common.shared"}} <i class="fas fa-share"></i></label>
+              <input type="checkbox" name="randomizer.shared" data-dtype="Boolean" {{#if randomizer.shared}}checked{{/if}}>
+            </div>
+          
+            <h2>{{localize "token-variants.settings.randomizer.window.disable-for"}}</h2>
+          
+            <div class="form-group">
+              <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.tokens-with-represented-actor"}}</label>
+              <input type="checkbox" name="randomizer.representedActorDisable" data-dtype="Boolean" {{#if randomizer.representedActorDisable}}checked{{/if}}>
+            </div>
+          
+            <div class="form-group">
+              <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.tokens-with-linked-actor-data"}}</label>
+              <input type="checkbox" name="randomizer.linkedActorDisable" data-dtype="Boolean" {{#if randomizer.linkedActorDisable}}checked{{/if}}>
+            </div>
+          
+            <hr />
+          
+            <h3>Actor Types</h3>
+          
+            {{#each randomizer.actorTypes}}
+            <div class="form-group">
+              <label>&nbsp;&nbsp;&nbsp;&nbsp;{{this.label}}</label>
+              <input type="checkbox" name="randomizer.{{@key}}Disable" data-dtype="Boolean" {{#if this.disable}}checked{{/if}}>
+            </div>
+            {{/each}}
+          
+            <hr />
+          
+            <div class="form-group">
+              <h4>{{localize "token-variants.settings.randomizer.window.pop-up-if-randomization-disabled"}}</h4>
+              <input type="checkbox" name="randomizer.popupOnDisable" data-dtype="Boolean" {{#if randomizer.popupOnDisable}}checked{{/if}}>
+            </div>
+        </div>
+
+        <!-- Pop-up -->
+        <div class="tab token-variants-popup-settings" data-tab="popup" data-group="primary-tabs">
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.pop-up.window.two-pop-ups.Name"}}</label>
+            <input type="checkbox" name="popup.twoPopups" data-dtype="Boolean" {{#if popup.twoPopups}}checked{{/if}}>
+            <p class="notes">{{localize "token-variants.settings.pop-up.window.two-pop-ups.Hint"}}</p>
+          </div>
+        
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.pop-up.window.no-dialog.Name"}}</label>
+            <input type="checkbox" name="popup.twoPopupsNoDialog" data-dtype="Boolean" {{#if popup.twoPopupsNoDialog}}checked{{/if}}>
+            <p class="notes">{{localize "token-variants.settings.pop-up.window.no-dialog.Hint"}}</p>
+          </div>
+        
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.pop-up.window.disable-automatic-pop-ups-for"}}</label>
+          </div>
+        
+          {{#each popup.actorTypes}}
+          <header class="table-header flexrow">
+            {{#each this}}
+            <label>{{this.label}}</label>
+            {{/each}}
+          </header>
+          <ul class="setting-list">
+            <li class="setting form-group">
+              <div class="form-fields">
+                {{#each this}} <input type="checkbox" name="popup.{{this.type}}Disable" data-dtype="Boolean" {{#if
+                  this.disable}}checked{{/if}}> {{/each}}
+              </div>
+            </li>
+          </ul>
+          {{/each}}
+        
+          <header class="table-header flexrow">
+            <label class="index">{{localize "token-variants.settings.pop-up.window.on-actor-create"}}</label>
+            <label>{{localize "token-variants.settings.pop-up.window.on-token-create"}}</label>
+            <label>{{localize "token-variants.settings.pop-up.window.on-token-copy-paste"}}</label>
+          </header>
+          <ul class="setting-list">
+            <li class="setting form-group">
+              <div class="form-fields">
+                <input type="checkbox" name="popup.disableAutoPopupOnActorCreate" data-dtype="Boolean" {{#if popup.disableAutoPopupOnActorCreate}}checked{{/if}}>
+                <input type="checkbox" name="popup.disableAutoPopupOnTokenCreate" data-dtype="Boolean" {{#if popup.disableAutoPopupOnTokenCreate}}checked{{/if}}>
+                <input type="checkbox" name="popup.disableAutoPopupOnTokenCopyPaste" data-dtype="Boolean" {{#if popup.disableAutoPopupOnTokenCopyPaste}}checked{{/if}}>
+              </div>
+            </li>
+          </ul>
+        </div>
+        <div class="tab token-variants-permissions" data-tab="permissions" data-group="primary-tabs">
+          <p class="notes">Configure which User role has permission to access which module features.</p>
+
+          <header class="table-header flexrow">
+            <label class="index">Features</label>
+            <label>Player</label>
+            <label>Trusted Player</label>
+            <label>Assistant GM</label>
+            <label>Game Master</label>
+          </header>
+        
+          <ul class="permissions-list">
+            <li class="permission form-group">
+              <label class="index">Automatic Pop-ups</label>
+              <div class="form-fields">
+                <input type="checkbox" name="permissions.popups.1" {{#if permissions.popups.[1]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.popups.2" {{#if permissions.popups.[2]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.popups.3" {{#if permissions.popups.[3]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.popups.4" {{#if permissions.popups.[4]}}checked{{/if}} />
+              </div>
+              <p class="hint">Allow players with this role to be shown automatic Art Select pop-ups.</p>
+            </li>
+        
+            <li class="permission form-group">
+              <label class="index">Portrait Right-click</label>
+              <div class="form-fields">
+                <input type="checkbox" name="permissions.portrait_right_click.1" {{#if permissions.portrait_right_click.[1]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.portrait_right_click.2" {{#if permissions.portrait_right_click.[2]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.portrait_right_click.3" {{#if permissions.portrait_right_click.[3]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.portrait_right_click.4" {{#if permissions.portrait_right_click.[4]}}checked{{/if}} />
+              </div>
+              <p class="hint">Allow players with this role to open the Art Select from the Actor sheet.</p>
+            </li>
+        
+            <li class="permission form-group">
+              <label class="index">Token Image Path button</label>
+              <div class="form-fields">
+                <input type="checkbox" name="permissions.image_path_button.1" {{#if permissions.image_path_button.[1]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.image_path_button.2" {{#if permissions.image_path_button.[2]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.image_path_button.3" {{#if permissions.image_path_button.[3]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.image_path_button.4" {{#if permissions.image_path_button.[4]}}checked{{/if}} />
+              </div>
+              <p class="hint">Allow players with this role to open the Art Select from token configuration window.</p>
+            </li>
+        
+            <li class="permission form-group">
+              <label class="index">Token HUD button</label>
+              <div class="form-fields">
+                <input type="checkbox" name="permissions.hud.1" {{#if permissions.hud.[1]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.hud.2" {{#if permissions.hud.[2]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.hud.3" {{#if permissions.hud.[3]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.hud.4" {{#if permissions.hud.[4]}}checked{{/if}} />
+              </div>
+              <p class="hint">Allow players with this role access to the Token HUD button (Shared and Wildcard art only)</p>
+            </li>
+        
+            <li class="permission form-group">
+              <label class="index">Token HUD button FULL ACCESS</label>
+              <div class="form-fields">
+                <input type="checkbox" name="permissions.hudFullAccess.1" {{#if permissions.hudFullAccess.[1]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.hudFullAccess.2" {{#if permissions.hudFullAccess.[2]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.hudFullAccess.3" {{#if permissions.hudFullAccess.[3]}}checked{{/if}} />
+                <input type="checkbox" name="permissions.hudFullAccess.4" {{#if permissions.hudFullAccess.[4]}}checked{{/if}} />
+              </div>
+              <p class="hint">Allow players with this role unrestricted access to all art via the Token HUD button</p>
+            </li>
+          </ul>
+        </div>
+        <div class="tab" data-tab="worldHud" data-group="primary-tabs">
+          <h2>World Settings</h2>
+
+          <div class="form-group">
+            <label
+              >{{localize "token-variants.settings.token-hud.window.display-shared-only.Name"}}
+              <i class="fas fa-share"></i
+            ></label>
+            <div class="form-fields">
+              <input type="checkbox" name="worldHud.displayOnlySharedImages" data-dtype="Boolean" {{#if worldHud.displayOnlySharedImages}}checked{{/if}}>
+            </div>
+            <p class="notes">
+              {{localize "token-variants.settings.token-hud.window.display-shared-only.Hint"}}
+            </p>
+          </div>
+        
+          <div class="form-group">
+            <label> {{localize "token-variants.settings.compendium-mapper.window.include-keywords"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="worldHud.includeKeywords" data-dtype="Boolean" {{#if worldHud.includeKeywords}}checked{{/if}}>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.token-hud.window.include-wildcard.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="worldHud.includeWildcard" data-dtype="Boolean" {{#if worldHud.includeWildcard}}checked{{/if}}>
+            </div>
+            <p class="notes">
+              {{localize "token-variants.settings.token-hud.window.include-wildcard.Hint"}}
+            </p>
+          </div>
+        
+          <hr/>
+        
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.token-hud.window.update-actor-image.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="worldHud.updateActorImage" data-dtype="Boolean" {{#if worldHud.updateActorImage}}checked{{/if}}>
+            </div>
+            <p class="notes">
+              {{localize "token-variants.settings.token-hud.window.update-actor-image.Hint"}}
+            </p>
+          </div>
+        
+          <div class="form-group">
+            <label>Use a similarly named file</label>
+            <div class="form-fields">
+              <input type="checkbox" name="worldHud.useNameSimilarity" data-dtype="Boolean" {{#if worldHud.useNameSimilarity}}checked{{/if}} {{#unless worldHud.updateActorImage}}disabled{{/unless}}>
+            </div>
+            <p class="notes">
+              Instead of using the same image for the portrait the module will perform a Portrait image search and attempt to find a similarly named image.
+            </p>
+          </div>
+        
+          <hr/>
+        
+          {{#if worldHud.tokenHUDWildcardActive}}
+        
+          <h2><b>Token HUD Wildcard</b></h2>
+        
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.token-hud.window.disable-if-token-hud-wildcard-active.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="worldHud.disableIfTHWEnabled" data-dtype="Boolean" {{#if worldHud.disableIfTHWEnabled}}checked{{/if}}>
+            </div>
+            <p class="notes">
+              {{localize "token-variants.settings.token-hud.window.disable-if-token-hud-wildcard-active.Hint"}}
+            </p>
+          </div>
+          {{/if}}
+        </div>
+
+        <div class="tab" data-tab="misc" data-group="primary-tabs">
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.keywords-search.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="keywordSearch" data-dtype="Boolean" {{#if keywordSearch}}checked{{/if}}>
+            </div>
+            <p class="notes">{{localize "token-variants.settings.keywords-search.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.excluded-keywords.Name"}}</label>
+            <div class="form-fields">
+              <input type="text" name="excludedKeywords" data-dtype="String" value="{{excludedKeywords}}">
+            </div>
+            <p class="notes">{{localize "token-variants.settings.excluded-keywords.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.actor-directory-key.Name"}}</label>
+            <div class="form-fields">
+                <select name="actorDirectoryKey">
+                    <option value="Control" {{#if (eq actorDirectoryKey 'Control')}}selected=""{{/if}}>Ctrl</option>
+                    <option value="Shift" {{#if (eq actorDirectoryKey 'Shift')}}selected=""{{/if}}>Shift</option>
+                    <option value="Alt" {{#if (eq actorDirectoryKey 'Alt')}}selected=""{{/if}}>Alt</option>
+                </select>
+            </div>
+            <p class="notes">{{localize "token-variants.settings.actor-directory-key.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.run-search-on-path.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="runSearchOnPath" data-dtype="Boolean" {{#if runSearchOnPath}}checked{{/if}}>
+            </div>
+            <p class="notes">{{localize "token-variants.settings.run-search-on-path.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.imgur-client-id.Name"}}</label>
+            <div class="form-fields">
+              <input type="text" name="imgurClientId" data-dtype="String" value="{{imgurClientId}}">
+            </div>
+            <p class="notes">{{localize "token-variants.settings.imgur-client-id.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.status-config.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="enableStatusConfig" data-dtype="Boolean" {{#if enableStatusConfig}}checked{{/if}}>
+            </div>
+            <p class="notes">{{localize "token-variants.settings.status-config.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="disableNotifs" data-dtype="Boolean" {{#if disableNotifs}}checked{{/if}}>
+            </div>
+            <p class="notes">{{localize "token-variants.settings.disable-notifs.Hint"}}</p>
+          </div>
+        </div>
+    </section>
+
+    <!-- Settings Footer -->
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit">
+            <i class="far fa-save"></i> Save Changes
+        </button>
+        <button type="button" name="reset">
+            <i class="fas fa-undo"></i> Reset Defaults
+        </button>
+    </footer>
+</form>

@@ -1,7 +1,7 @@
 /* ---------------------------------------- */
 /* Pop-up Settings                          */
 /* ---------------------------------------- */
-#token-variants-popup-settings header.table-header {
+.token-variants-popup-settings header.table-header {
   background: rgba(0, 0, 0, 0.5);
   padding: 5px;
   border: 1px solid #191813;
@@ -11,11 +11,11 @@
   text-shadow: 1px 1px #000;
 }
 
-#token-variants-popup-settings li.setting .form-fields {
+.token-variants-popup-settings li.setting .form-fields {
   justify-content: space-around;
 }
 
-#token-variants-popup-settings ul.setting-list {
+.token-variants-popup-settings ul.setting-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -36,7 +36,7 @@
 /**
  * Role Permission Configuration Form
  */
-#token-variants-permissions header.table-header {
+.token-variants-permissions header.table-header {
   background: rgba(0, 0, 0, 0.5);
   padding: 5px;
   border: 1px solid #191813;
@@ -45,7 +45,7 @@
   font-weight: bold;
   text-shadow: 1px 1px #000;
 }
-#token-variants-permissions ul.permissions-list {
+.token-variants-permissions ul.permissions-list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -53,22 +53,22 @@
   overflow: hidden auto;
   scrollbar-width: thin;
 }
-#token-variants-permissions li.permission {
+.token-variants-permissions li.permission {
   padding: 5px;
   border-bottom: 1px solid #7a7971;
 }
-#token-variants-permissions li.permission .form-fields {
+.token-variants-permissions li.permission .form-fields {
   justify-content: space-around;
 }
-#token-variants-permissions li.permission input[type='checkbox'] {
+.token-variants-permissions li.permission input[type='checkbox'] {
   margin: 0;
 }
-#token-variants-permissions .index {
+.token-variants-permissions .index {
   flex: 0 0 200px;
   text-align: left;
   font-weight: bold;
 }
-#token-variants-permissions .hint {
+.token-variants-permissions .hint {
   flex: 0 0 100%;
   color: #4b4a44;
   font-size: 13px;
@@ -116,4 +116,21 @@
   color: #4b4a44;
   font-size: 13px;
   margin: 5px 0 0;
+}
+
+/**
+ * Config Settings
+ */
+.tva-setting-nav {
+  display: flex;
+  flex-flow: wrap;
+  height: 64px !important;
+}
+
+.tva-setting-nav hr {
+  width: 100%;
+  flex-basis: 100%;
+  height: 0;
+  margin: 0;
+  border: 0;
 }

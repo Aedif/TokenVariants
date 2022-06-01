@@ -343,14 +343,14 @@ async function _parseForgeAssetPaths() {
 /**
  * Parses the searchPaths setting into a Map, distinguishing s3 buckets from local paths
  */
-export async function parseSearchPaths() {
-  if (TVA_CONFIG.debug) console.log('STARTING: Search Path Parse');
+export async function parseSearchPaths(config) {
+  if (config.debug) console.log('STARTING: Search Path Parse');
 
   const regexpBucket = /s3:(.*):(.*)/;
   const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
   const FORGE_ASSETS_LIBRARY_URL_PREFIX = 'https://assets.forge-vtt.com/';
 
-  const searchPathList = (TVA_CONFIG.searchPaths || []).flat();
+  const searchPathList = (config.searchPaths || []).flat();
 
   // To maintain compatibility with previous versions
   if (searchPathList.length > 0 && !(searchPathList[0] instanceof Object)) {
@@ -440,7 +440,7 @@ export async function parseSearchPaths() {
     }
   }
 
-  let forgePathsSetting = (TVA_CONFIG.forgevttPaths || []).flat();
+  let forgePathsSetting = (config.forgevttPaths || []).flat();
 
   // To maintain compatibility with previous versions
   if (forgePathsSetting.length > 0 && !(forgePathsSetting[0] instanceof Object)) {
@@ -466,7 +466,7 @@ export async function parseSearchPaths() {
 
   searchPaths.set('forgevtt', await _parseForgeAssetPaths());
 
-  if (TVA_CONFIG.debug) console.log('ENDING: Search Path Parse', searchPaths);
+  if (config.debug) console.log('ENDING: Search Path Parse', searchPaths);
 
   return searchPaths;
 }

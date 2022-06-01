@@ -140,7 +140,7 @@ export async function renderHud(hud, html, token, searchText = '') {
       mergeImages(actorVariants);
 
       // Merge wildcard images
-      if (hudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
+      if (worldHudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
         const protoImg = tokenActor.data.token.img;
         if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
           // Modified version of Actor.getTokenImages()

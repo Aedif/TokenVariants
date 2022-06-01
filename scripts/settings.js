@@ -1,14 +1,10 @@
 import { cacheTokens } from '../token-variants.mjs';
 import { parseSearchPaths, parseKeywords, userRequiresImageCache } from './utils.js';
-import { SearchPaths, ForgeSearchPaths } from '../applications/searchPaths.js';
+import { ForgeSearchPaths } from '../applications/searchPaths.js';
 import TokenHUDSettings from '../applications/tokenHUDSettings.js';
-import PopUpSettings from '../applications/popupSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
-import FilterSettings from '../applications/searchFilters.js';
-import AlgorithmSettings from '../applications/algorithm.js';
-import RandomizerSettings from '../applications/randomizerSettings.js';
 import ImportExport from '../applications/importExport.js';
-import TVAPermissions from '../applications/permissions.js';
+import ConfigureSettings from '../applications/configureSettings.js';
 
 export const TVA_CONFIG = {
   debug: false,
@@ -19,7 +15,6 @@ export const TVA_CONFIG = {
       cache: true,
     },
   ],
-  forgevttPaths: [],
   forgeSearchPaths: {},
   parsedSearchPaths: [],
   worldHud: {
@@ -28,13 +23,13 @@ export const TVA_CONFIG = {
     includeKeywords: false,
     updateActorImage: false,
     useNameSimilarity: false,
+    includeWildcard: true,
   },
   hud: {
     enableSideMenu: true,
     displayAsImage: true,
     imageOpacity: 50,
     alwaysShowButton: false,
-    includeWildcard: true,
   },
   keywordSearch: true,
   excludedKeywords: 'and,for',
@@ -126,6 +121,24 @@ export const TVA_CONFIG = {
 };
 
 export async function registerSettings() {
+  // TEST
+  game.settings.registerMenu('token-variants', 'settings', {
+    name: 'Configure Settings',
+    hint: 'Configure Token Variant Art settings',
+    scope: 'world',
+    icon: 'fas fa-user-lock',
+    type: ConfigureSettings,
+    restricted: true,
+  });
+
+  game.settings.register('token-variants', 'settings', {
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: {},
+  });
+  // TEST END
+
   game.settings.register('token-variants', 'debug', {
     scope: 'world',
     config: false,
@@ -145,26 +158,12 @@ export async function registerSettings() {
     });
   }
 
-  game.settings.registerMenu('token-variants', 'searchPaths', {
-    name: game.i18n.localize('token-variants.settings.search-paths.Name'),
-    hint: game.i18n.localize('token-variants.settings.search-paths.Hint'),
-    icon: 'fas fa-exchange-alt',
-    type: SearchPaths,
-    restricted: true,
-  });
-
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'searchPaths', {
     scope: 'world',
     config: false,
     type: Array,
     default: TVA_CONFIG.searchPaths,
-    onChange: async function (val) {
-      if (game.user.can('SETTINGS_MODIFY'))
-        await game.settings.set('token-variants', 'forgevttPaths', []);
-      TVA_CONFIG.searchPaths = val;
-      TVA_CONFIG.parsedSearchPaths = await parseSearchPaths();
-      if (userRequiresImageCache()) cacheTokens();
-    },
   });
 
   game.settings.register('token-variants', 'forgeSearchPaths', {
@@ -187,83 +186,48 @@ export async function registerSettings() {
     config: false,
     type: Object,
     default: TVA_CONFIG.worldHud,
-    onChange: (val) => (TVA_CONFIG.worldHud = val),
   });
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'keywordSearch', {
-    name: game.i18n.localize('token-variants.settings.keywords-search.Name'),
-    hint: game.i18n.localize('token-variants.settings.keywords-search.Hint'),
     scope: 'world',
-    config: true,
+    config: false,
     type: Boolean,
     default: TVA_CONFIG.keywordSearch,
-    onChange: (val) => (TVA_CONFIG.keywordSearch = val),
   });
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'excludedKeywords', {
-    name: game.i18n.localize('token-variants.settings.excluded-keywords.Name'),
-    hint: game.i18n.localize('token-variants.settings.excluded-keywords.Hint'),
     scope: 'world',
-    config: true,
+    config: false,
     type: String,
     default: 'and,for',
-    onChange: (val) => {
-      TVA_CONFIG.excludedKeywords = val;
-      TVA_CONFIG.parsedExcludedKeywords = parseKeywords(val);
-    },
   });
 
+  // Deprecated 01/06/2022
   if (!isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
     game.settings.register('token-variants', 'actorDirectoryKey', {
-      name: game.i18n.localize('token-variants.settings.actor-directory-key.Name'),
-      hint: game.i18n.localize('token-variants.settings.actor-directory-key.Hint'),
       scope: 'world',
-      config: true,
+      config: false,
       type: String,
-      choices: {
-        Control: 'Ctrl',
-        Shift: 'Shift',
-        Alt: 'Alt',
-      },
       default: TVA_CONFIG.actorDirectoryKey,
-      onChange: (val) => (TVA_CONFIG.actorDirectoryKey = val),
     });
   }
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'runSearchOnPath', {
-    name: game.i18n.localize('token-variants.settings.run-search-on-path.Name'),
-    hint: game.i18n.localize('token-variants.settings.run-search-on-path.Hint'),
     scope: 'world',
-    config: true,
+    config: false,
     type: Boolean,
     default: TVA_CONFIG.runSearchOnPath,
-    onChange: (val) => (TVA_CONFIG.runSearchOnPath = val),
   });
 
-  game.settings.registerMenu('token-variants', 'searchFilterMenu', {
-    name: game.i18n.localize('token-variants.settings.search-filters.Name'),
-    hint: game.i18n.localize('token-variants.settings.search-filters.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: FilterSettings,
-    restricted: true,
-  });
-
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'searchFilterSettings', {
     scope: 'world',
     config: false,
     type: Object,
     default: TVA_CONFIG.searchFilters,
-    onChange: (val) => (TVA_CONFIG.searchFilters = val),
-  });
-
-  game.settings.registerMenu('token-variants', 'algorithmMenu', {
-    name: game.i18n.localize('token-variants.settings.algorithm.Name'),
-    hint: game.i18n.localize('token-variants.settings.algorithm.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: AlgorithmSettings,
-    restricted: true,
   });
 
   game.settings.register('token-variants', 'algorithmSettings', {
@@ -271,7 +235,6 @@ export async function registerSettings() {
     config: false,
     type: Object,
     default: TVA_CONFIG.algorithm,
-    onChange: (val) => (TVA_CONFIG.algorithm = val),
   });
 
   game.settings.register('token-variants', 'forgevttPaths', {
@@ -290,68 +253,53 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.tokenConfigs = val),
   });
 
-  game.settings.registerMenu('token-variants', 'randomizerMenu', {
-    name: game.i18n.localize('token-variants.settings.randomizer.Name'),
-    hint: game.i18n.localize('token-variants.settings.randomizer.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: RandomizerSettings,
-    restricted: true,
-  });
-
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'randomizerSettings', {
     scope: 'world',
     config: false,
     type: Object,
     default: TVA_CONFIG.randomizer,
-    onChange: (val) => (TVA_CONFIG.randomizer = val),
   });
 
-  game.settings.registerMenu('token-variants', 'popupMenu', {
-    name: game.i18n.localize('token-variants.settings.pop-up.Name'),
-    hint: game.i18n.localize('token-variants.settings.pop-up.Hint'),
-    scope: 'world',
-    icon: 'fas fa-exchange-alt',
-    type: PopUpSettings,
-    restricted: true,
-  });
-
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'popupSettings', {
     scope: 'world',
     config: false,
     type: Object,
     default: TVA_CONFIG.popup,
-    onChange: (val) => (TVA_CONFIG.popup = val),
   });
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'imgurClientId', {
-    name: game.i18n.localize('token-variants.settings.imgur-client-id.Name'),
-    hint: game.i18n.localize('token-variants.settings.imgur-client-id.Hint'),
     scope: 'world',
-    config: true,
+    config: false,
     type: String,
     default: TVA_CONFIG.imgurClientId,
-    onChange: (val) => (TVA_CONFIG.imgurClientId = val),
   });
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'enableStatusConfig', {
-    name: game.i18n.localize('token-variants.settings.status-config.Name'),
-    hint: game.i18n.localize('token-variants.settings.status-config.Hint'),
     scope: 'world',
-    config: true,
+    config: false,
     default: TVA_CONFIG.enableStatusConfig,
     type: Boolean,
-    onChange: (val) => (TVA_CONFIG.enableStatusConfig = val),
   });
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'disableNotifs', {
-    name: game.i18n.localize('token-variants.settings.disable-notifs.Name'),
-    hint: game.i18n.localize('token-variants.settings.disable-notifs.Hint'),
     scope: 'world',
-    config: true,
+    config: false,
     default: TVA_CONFIG.disableNotifs,
     type: Boolean,
-    onChange: (val) => (TVA_CONFIG.disableNotifs = val),
+  });
+
+  game.settings.registerMenu('token-variants', 'tokenHUDSettings', {
+    name: game.i18n.localize('token-variants.settings.token-hud.Name'),
+    hint: game.i18n.localize('token-variants.settings.token-hud.Hint'),
+    scope: 'client',
+    icon: 'fas fa-exchange-alt',
+    type: TokenHUDSettings,
+    restricted: false,
   });
 
   game.settings.registerMenu('token-variants', 'compendiumMapper', {
@@ -371,15 +319,6 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.compendiumMapper = val),
   });
 
-  game.settings.registerMenu('token-variants', 'tokenHUDSettings', {
-    name: game.i18n.localize('token-variants.settings.token-hud.Name'),
-    hint: game.i18n.localize('token-variants.settings.token-hud.Hint'),
-    scope: 'client',
-    icon: 'fas fa-exchange-alt',
-    type: TokenHUDSettings,
-    restricted: false,
-  });
-
   game.settings.register('token-variants', 'hudSettings', {
     scope: 'client',
     config: false,
@@ -388,26 +327,11 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.hud = val),
   });
 
-  game.settings.registerMenu('token-variants', 'permissions', {
-    name: 'Permissions',
-    hint: 'Control access to module features based on user role',
-    scope: 'world',
-    icon: 'fas fa-user-lock',
-    type: TVAPermissions,
-    restricted: true,
-  });
-
   game.settings.register('token-variants', 'permissions', {
     scope: 'world',
     config: false,
     type: Object,
     default: TVA_CONFIG.permissions,
-    onChange: (val) => {
-      if (!userRequiresImageCache(TVA_CONFIG.permissions) && userRequiresImageCache(val)) {
-        cacheTokens();
-      }
-      TVA_CONFIG.permissions = val;
-    },
   });
 
   game.settings.registerMenu('token-variants', 'importExport', {
@@ -421,7 +345,22 @@ export async function registerSettings() {
     restricted: true,
   });
 
-  await fetchAllSettings();
+  // Implemented on 30/05/2022
+  // This code should be kept here for long enough to make sure vast majority of users
+  // have ran the module and generated the new setting.
+  const settings = game.settings.get('token-variants', 'settings');
+  if (Object.keys(settings).length === 0) {
+    await fetchAllSettings();
+    const initSettings = deepClone(TVA_CONFIG);
+    delete initSettings.parsedSearchPaths;
+    delete initSettings.parsedExcludedKeywords;
+    game.settings.set('token-variants', 'settings', initSettings);
+  } else {
+    mergeObject(TVA_CONFIG, settings);
+    // Some settings need to be parsed
+    TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
+    TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
+  }
 }
 
 export async function fetchAllSettings() {
@@ -458,7 +397,7 @@ export async function fetchAllSettings() {
   TVA_CONFIG.permissions = game.settings.get('token-variants', 'permissions');
 
   // Some settings need to be parsed
-  TVA_CONFIG.parsedSearchPaths = await parseSearchPaths();
+  TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
   TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
 }
 
@@ -508,7 +447,80 @@ export async function importSettingsFromJSON(json) {
     game.settings.set('token-variants', 'compendiumMapper', json.compendiumMapper);
   if ('permissions' in json) game.settings.set('token-variants', 'permissions', json.permissions);
 
-  if ('searchPaths' in json) game.settings.set('token-variants', 'searchPaths', json.searchPaths);
+  // if ('searchPaths' in json) game.settings.set('token-variants', 'searchPaths', json.searchPaths);
   if ('forgeSearchPaths' in json)
     game.settings.set('token-variants', 'forgeSearchPaths', json.forgeSearchPaths);
+}
+
+export async function updateSettings(newSettings) {
+  // Generate a diff, it will be required when doing post-processing of the modified settings
+  const diff = _arrayAwareDiffObject(TVA_CONFIG, newSettings);
+  console.log('DIFF', diff);
+
+  let requiresImageCache = false;
+  if ('permissions' in diff) {
+    if (
+      !userRequiresImageCache(TVA_CONFIG.permissions) &&
+      userRequiresImageCache(newSettings.permissions)
+    )
+      requiresImageCache = true;
+  }
+
+  // Update live settings
+  mergeObject(TVA_CONFIG, newSettings);
+
+  // Save settings
+  _saveSettings(TVA_CONFIG);
+
+  // Check if any setting need to be parsed post-update
+  if ('searchPaths' in diff) {
+    TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
+    if (userRequiresImageCache(TVA_CONFIG)) requiresImageCache = true;
+  }
+  if ('excludedKeywords' in diff) {
+    TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
+  }
+
+  // Cache/re-cache images if necessary
+  if (requiresImageCache) {
+    cacheTokens();
+  }
+}
+
+async function _saveSettings(settings) {
+  const newSettings = deepClone(settings);
+  delete newSettings.parsedSearchPaths;
+  delete newSettings.parsedExcludedKeywords;
+  game.settings.set('token-variants', 'settings', newSettings);
+}
+
+export function _arrayAwareDiffObject(original, other, { inner = false } = {}) {
+  function _difference(v0, v1) {
+    let t0 = getType(v0);
+    let t1 = getType(v1);
+    if (t0 !== t1) return [true, v1];
+    if (t0 === 'Array') return [!_arrayEquality(v0, v1), v1];
+    if (t0 === 'Object') {
+      if (isObjectEmpty(v0) !== isObjectEmpty(v1)) return [true, v1];
+      let d = _arrayAwareDiffObject(v0, v1, { inner });
+      return [!isObjectEmpty(d), d];
+    }
+    return [v0 !== v1, v1];
+  }
+
+  // Recursively call the _difference function
+  return Object.keys(other).reduce((obj, key) => {
+    if (inner && !(key in original)) return obj;
+    let [isDifferent, difference] = _difference(original[key], other[key]);
+    if (isDifferent) obj[key] = difference;
+    return obj;
+  }, {});
+}
+
+function _arrayEquality(a1, a2) {
+  if (!(a2 instanceof Array) || a2.length !== a1.length) return false;
+  return a1.every((v, i) => {
+    if (getType(v) === 'Object') return Object.keys(_arrayAwareDiffObject(v, a2[i])).length === 0;
+    return a2[i] === v;
+  });
 }

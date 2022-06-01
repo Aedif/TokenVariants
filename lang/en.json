@@ -66,7 +66,7 @@
         }
       },
       "token-hud": {
-        "Name": "Token HUD Settings",
+        "Name": "Token HUD Client Settings",
         "Hint": "Settings for the Token HUD Button",
         "window": {
           "enable-token-hud": {
