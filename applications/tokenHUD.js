@@ -13,7 +13,6 @@ import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { doImageSearch, findTokensFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
-import { Fuse } from '../scripts/fuse/fuse.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '') {
