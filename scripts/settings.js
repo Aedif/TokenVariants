@@ -1,7 +1,7 @@
 import { cacheTokens } from '../token-variants.mjs';
 import { parseSearchPaths, parseKeywords, userRequiresImageCache } from './utils.js';
 import { ForgeSearchPaths } from '../applications/searchPaths.js';
-import TokenHUDSettings from '../applications/tokenHUDSettings.js';
+import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
 import ImportExport from '../applications/importExport.js';
 import ConfigureSettings from '../applications/configureSettings.js';
@@ -298,7 +298,7 @@ export async function registerSettings() {
     hint: game.i18n.localize('token-variants.settings.token-hud.Hint'),
     scope: 'client',
     icon: 'fas fa-exchange-alt',
-    type: TokenHUDSettings,
+    type: TokenHUDClientSettings,
     restricted: false,
   });
 

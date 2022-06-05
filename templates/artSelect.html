@@ -10,7 +10,7 @@
       <input type="text" id="custom-art-search" name="search" value="{{search}}" />
       <button type="button" id="token-variant-art-clear-queue" {{#unless queue}}hidden{{/unless}}>Clear Queue ({{queue}})</button>
     </div>
-    {{#if fuzzyThreshold}}
+    {{#if displaySlider}}
     <div class="form-group">
       <input
         type="range"

@@ -182,12 +182,12 @@ export class ArtSelect extends FormApplication {
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.PORTRAIT;
     data.image2_active =
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.TOKEN;
-    data.fuzzyThreshold =
-      this.algorithmOptions.fuzzy && this.algorithmOptions.fuzzyArtSelectPercentSlider
-        ? this.algorithmOptions.fuzzyThreshold
-        : null;
-    if (data.fuzzyThreshold) {
+    data.displaySlider =
+      this.algorithmOptions.fuzzy && this.algorithmOptions.fuzzyArtSelectPercentSlider;
+    data.fuzzyThreshold = this.algorithmOptions.fuzzyThreshold;
+    if (data.displaySlider) {
       data.fuzzyThreshold = 100 - data.fuzzyThreshold * 100;
+      data.fuzzyThreshold = data.fuzzyThreshold.toFixed(0);
     }
     return data;
   }
@@ -242,7 +242,9 @@ export class ArtSelect extends FormApplication {
     $(html)
       .find('[name="fuzzyThreshold"]')
       .change((e) => {
-        $(e.target).siblings('.token-variants-range-value').html(`${e.target.value}%`);
+        $(e.target)
+          .siblings('.token-variants-range-value')
+          .html(`${parseFloat(e.target.value).toFixed(0)}%`);
         this.algorithmOptions.fuzzyThreshold = (100 - e.target.value) / 100;
       })
       .change(

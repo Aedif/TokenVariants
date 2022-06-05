@@ -1,6 +1,6 @@
 import { TVA_CONFIG } from '../scripts/settings.js';
 
-export default class TokenHUDSettings extends FormApplication {
+export default class TokenHUDClientSettings extends FormApplication {
   constructor() {
     super({}, { title: `Token HUD Settings` });
   }
@@ -9,7 +9,7 @@ export default class TokenHUDSettings extends FormApplication {
     return mergeObject(super.defaultOptions, {
       id: 'token-variants-hud-settings',
       classes: ['sheet'],
-      template: 'modules/token-variants/templates/tokenHUDSettings.html',
+      template: 'modules/token-variants/templates/tokenHUDClientSettings.html',
       resizable: false,
       minimizable: false,
       title: '',
