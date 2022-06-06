@@ -1,4 +1,9 @@
-import { registerSettings, TVA_CONFIG, exportSettingsToJSON } from './scripts/settings.js';
+import {
+  registerSettings,
+  TVA_CONFIG,
+  exportSettingsToJSON,
+  updateSettings,
+} from './scripts/settings.js';
 import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
 import {
   getFileName,
@@ -424,7 +429,7 @@ async function initialize() {
         .filter((user) => user.isGM && (user.active || user.isActive))
         .some((other) => other.data._id < game.user.data._id);
       if (!isResponsibleGM) return;
-      game.settings.set('token-variants', 'forgeSearchPaths', message.args);
+      updateSettings({ forgeSearchPaths: message.args });
     }
 
     // User specific token image update
@@ -874,12 +879,6 @@ async function walkAllPaths() {
         });
     }
   }
-  for (let path of TVA_CONFIG.parsedSearchPaths.get('forge')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        forge: true,
-      });
-  }
   for (let path of TVA_CONFIG.parsedSearchPaths.get('rolltable')) {
     if ((path.cache && caching) || (!path.cache && !caching))
       await walkFindTokens(path.text, {
@@ -903,24 +902,13 @@ async function walkAllPaths() {
 
 async function walkFindTokens(
   dir,
-  {
-    bucket = '',
-    forge = false,
-    rollTableName = '',
-    forgevtt = false,
-    apiKey = '',
-    imgur = false,
-  } = {}
+  { bucket = '', rollTableName = '', forgevtt = false, apiKey = '', imgur = false } = {}
 ) {
   let files = {};
   try {
     if (bucket) {
       files = await FilePicker.browse('s3', dir, {
         bucket: bucket,
-      });
-    } else if (forge) {
-      files = await FilePicker.browse('', dir, {
-        wildcard: true,
       });
     } else if (forgevtt) {
       if (apiKey) {
@@ -992,7 +980,7 @@ async function walkFindTokens(
   if (forgevtt) return;
 
   for (let f_dir of files.dirs) {
-    await walkFindTokens(f_dir, { bucket, forge, rollTableName, forgevtt, apiKey, imgur });
+    await walkFindTokens(f_dir, { bucket, rollTableName, forgevtt, apiKey, imgur });
   }
 }
 
@@ -1214,7 +1202,7 @@ export async function doImageSearch(
 }
 
 function twoPopupPrompt(actor, imgSrc, imgName, token) {
-  if (TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.noTwoPopupsPrompt) {
+  if (TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog) {
     showArtSelect((token ?? actor.data.token).name, {
       callback: (imgSrc, name) =>
         updateTokenImage(imgSrc, {

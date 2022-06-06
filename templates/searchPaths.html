@@ -1,6 +1,5 @@
 <form>
   <section>
-    {{#if forge}}
     <h2 class="module-header">The Forge</h2>
     <div class="form-group">
       <label>API Secret Key</label>
@@ -9,7 +8,6 @@
       </div>
       <p class="notes">{{localize "token-variants.settings.forge-search-paths.window.Hint"}}</p>
     </div>
-    {{/if}}
 
     <ol class="token-variant-table">
       <li class="table-row table-header flexrow">
@@ -18,26 +16,14 @@
         </div>
         <div class="path-text"><label>Path</label></div>
         <div class="path-cache"><label>Cache</label></div>
-        {{#if forge}}
         <div class="path-share"><label>Share</label></div>
-        {{/if}}
         <div class="path-controls"></div>
       </li>
 
       {{#each paths as |path index|}}
       <li class="table-row flexrow" data-index="{{index}}">
         <div class="path-image">
-          {{#if (eq path.type "local")}}
-          <i class="fas fa-folder"></i>
-          {{/if}} {{#if (eq path.type "s3")}}
-          <i class="fas fa-database"></i>
-          {{/if}} {{#if (eq path.type "forge")}}
           <i class="fas fa-hammer"></i>
-          {{/if}} {{#if (eq path.type "rolltable")}}
-          <i class="fas fa-dice"></i>
-          {{/if}} {{#if (eq path.type "imgur")}}
-          <i class="fas fa-info"></i>
-          {{/if}}
         </div>
         <div class="path-text">
           <input
@@ -47,21 +33,14 @@
             placeholder="Path to image source"
           />
         </div>
-        <div class="imgur-control {{#if (eq path.type 'imgur')}}active{{/if}}">
-          <a class="convert-imgur" title="Convert to Rolltable"
-            ><i class="fas fa-angle-double-left"></i
-          ></a>
-        </div>
         <div class="path-cache">
           <input type="checkbox" name="paths.{{index}}.cache" data-dtype="Boolean" {{#if
           path.cache}}checked{{/if}}/>
         </div>
-        {{#if ../forge}}
         <div class="path-share">
           <input type="checkbox" name="paths.{{index}}.share" data-dtype="Boolean" {{#if
           path.share}}checked{{/if}}/>
         </div>
-        {{/if}}
         <div class="path-controls">
           <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
         </div>
@@ -71,12 +50,8 @@
   </section>
   <footer class="sheet-footer flexrow">
     <p class="notes">
-      <b>Formats:</b><br />
-      path/to/token/art<br />
-      {{#unless forge}} s3:my_bucket:token/art/folder/<br />
-      rolltable:rolltableName<br />
-      forgevtt:folder/in/my/asset/library/<br />
-      {{/unless}} imgur:galleryId
+      <b>Format:</b><br />
+      Assets Library/token_art/dragons <b>-></b> token_art/dragons
     </p>
   </footer>
 </form>

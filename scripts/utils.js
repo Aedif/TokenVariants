@@ -442,30 +442,6 @@ export async function parseSearchPaths(config) {
     }
   }
 
-  let forgePathsSetting = (config.forgevttPaths || []).flat();
-
-  // To maintain compatibility with previous versions
-  if (forgePathsSetting.length > 0 && !(forgePathsSetting[0] instanceof Object)) {
-    forgePathsSetting.forEach((path, i) => {
-      forgePathsSetting[i] = { text: path, cache: true };
-    });
-  }
-  // end of compatibility code
-
-  let uniqueForgePaths = new Set();
-  forgePathsSetting.forEach((path) => {
-    uniqueForgePaths.add(path.text);
-  });
-  allForgePaths.forEach((path) => {
-    if (!uniqueForgePaths.has(path.text)) {
-      forgePathsSetting.push(path);
-    }
-  });
-
-  searchPaths.set('forge', forgePathsSetting);
-  if (game.user.can('SETTINGS_MODIFY'))
-    game.settings.set('token-variants', 'forgevttPaths', forgePathsSetting);
-
   searchPaths.set('forgevtt', await _parseForgeAssetPaths());
 
   if (config.debug) console.log('ENDING: Search Path Parse', searchPaths);

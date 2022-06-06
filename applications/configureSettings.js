@@ -56,9 +56,9 @@ export default class ConfigureSettings extends FormApplication {
       return obj;
     }, {});
 
-    data.randomizer.tokenToPortraitDisabled = !(
-      settings.randomizer.tokenCreate || settings.randomizer.tokenCopyPaste
-    );
+    data.randomizer.tokenToPortraitDisabled =
+      !(settings.randomizer.tokenCreate || settings.randomizer.tokenCopyPaste) ||
+      data.randomizer.diffImages;
 
     // === Pop-up ===
     data.popup = deepClone(settings.popup);
@@ -172,6 +172,7 @@ export default class ConfigureSettings extends FormApplication {
     const syncImages = html.find('input[name="randomizer.syncImages"]');
     diffImages.change(() => {
       syncImages.prop('disabled', !diffImages.is(':checked'));
+      tokenToPortrait.prop('disabled', diffImages.is(':checked'));
     });
 
     // Token HUD

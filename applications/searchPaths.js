@@ -1,6 +1,6 @@
-import { TVA_CONFIG } from '../scripts/settings.js';
+import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 
-export class SearchPaths extends FormApplication {
+export class ForgeSearchPaths extends FormApplication {
   constructor() {
     super({}, {});
   }
@@ -27,7 +27,6 @@ export class SearchPaths extends FormApplication {
     const paths = this.object.paths.map((path) => {
       const r = {};
       r.text = path.text;
-      r.type = this._determineType(path.text);
       r.cache = path.cache;
       r.share = path.share;
       return r;
@@ -35,37 +34,15 @@ export class SearchPaths extends FormApplication {
 
     const data = super.getData(options);
     data.paths = paths;
+    data.apiKey = this.apiKey;
     return data;
   }
 
   async _getPaths() {
-    const paths = (TVA_CONFIG.searchPaths || []).flat();
-
-    // To maintain compatibility with previous versions
-    if (paths.length > 0 && !(paths[0] instanceof Object)) {
-      paths.forEach((path, i) => {
-        paths[i] = { text: path, cache: true };
-      });
-    }
-    // end of compatibility code
-
-    return paths;
-  }
-
-  _determineType(path) {
-    const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
-
-    if (path.startsWith('s3:')) {
-      return 's3';
-    } else if (path.startsWith('rolltable:')) {
-      return 'rolltable';
-    } else if (path.startsWith('forgevtt:') || path.match(regexpForge)) {
-      return 'forge';
-    } else if (path.startsWith('imgur:')) {
-      return 'imgur';
-    }
-
-    return 'local';
+    const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
+    this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
+    this.apiKey = forgePaths[this.userId]?.apiKey;
+    return forgePaths[this.userId]?.paths || [];
   }
 
   /**
@@ -75,32 +52,8 @@ export class SearchPaths extends FormApplication {
     super.activateListeners(html);
     html.find('a.create-path').click(this._onCreatePath.bind(this));
     html.find('a.delete-path').click(this._onDeletePath.bind(this));
-    html.find('a.convert-imgur').click(this._onConvertImgur.bind(this));
     html.find('button.reset').click(this._onReset.bind(this));
     html.find('button.update').click(this._onUpdate.bind(this));
-    html.on('input', '[type=text]', this._onTextChange.bind(this));
-  }
-
-  async _onTextChange(event) {
-    const type = this._determineType(event.target.value);
-    let image = 'fas fa-folder';
-    let imgur = false;
-    if (type === 'rolltable') {
-      image = 'fas fa-dice';
-    } else if (type === 's3') {
-      image = 'fas fa-database';
-    } else if (type === 'forge') {
-      image = 'fas fa-hammer';
-    } else if (type === 'imgur') {
-      image = 'fas fa-info';
-      imgur = true;
-    }
-
-    const imgurControl = $(event.currentTarget).closest('.table-row').find('.imgur-control');
-    if (imgur) imgurControl.addClass('active');
-    else imgurControl.removeClass('active');
-
-    $(event.currentTarget).closest('.table-row').find('.path-image i').attr('class', image);
   }
 
   async _onCreatePath(event) {
@@ -118,61 +71,6 @@ export class SearchPaths extends FormApplication {
     const li = event.currentTarget.closest('.table-row');
     this.object.paths.splice(li.dataset.index, 1);
     this.render();
-  }
-
-  async _onConvertImgur(event) {
-    event.preventDefault();
-    await this._onSubmit(event);
-
-    const li = event.currentTarget.closest('.table-row');
-    const albumHash = this.object.paths[li.dataset.index].text.split(':')[1];
-    const imgurClientId = TVA_CONFIG.imgurClientId ?? 'df9d991443bb222';
-
-    fetch('https://api.imgur.com/3/gallery/album/' + albumHash, {
-      headers: {
-        Authorization: 'Client-ID ' + imgurClientId,
-        Accept: 'application/json',
-      },
-    })
-      .then((response) => response.json())
-      .then(
-        async function (result) {
-          if (!result.success && location.hostname === 'localhost') {
-            ui.notifications.warn(
-              game.i18n.format('token-variants.notifications.warn.imgur-localhost')
-            );
-            return;
-          }
-
-          const data = result.data;
-
-          let resultsArray = [];
-          data.images.forEach((img, i) => {
-            resultsArray.push({
-              type: 0,
-              text: img.title ?? img.description ?? '',
-              weight: 1,
-              range: [i + 1, i + 1],
-              collection: 'Text',
-              drawn: false,
-              img: img.link,
-            });
-          });
-
-          await RollTable.create({
-            name: data.title,
-            description: 'Token Variant Art auto generated RollTable: ' + data.link,
-            results: resultsArray,
-            replacement: true,
-            displayRoll: true,
-            img: 'modules/token-variants/img/token-images.svg',
-          });
-
-          this.object.paths[li.dataset.index].text = 'rolltable:' + data.title;
-          this.render();
-        }.bind(this)
-      )
-      .catch((error) => console.log('Token Variant Art: ', error));
   }
 
   _onReset(event) {
@@ -194,8 +92,10 @@ export class SearchPaths extends FormApplication {
       this.object.paths[index] = {
         text: path.text,
         cache: path.cache,
+        share: path.share,
       };
     });
+    this.apiKey = expanded.apiKey;
   }
 
   _cleanPaths() {
@@ -210,30 +110,6 @@ export class SearchPaths extends FormApplication {
   }
 
   _updatePaths() {
-    const paths = this._cleanPaths();
-    game.settings.set('token-variants', 'searchPaths', paths);
-  }
-
-  async close(options = {}) {
-    await this._onSubmit(event);
-    this._updatePaths();
-    return super.close(options);
-  }
-}
-
-export class ForgeSearchPaths extends SearchPaths {
-  async _getPaths() {
-    const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
-    this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
-    this.apiKey = forgePaths[this.userId]?.apiKey;
-    return forgePaths[this.userId]?.paths || [];
-  }
-
-  _determineType(path) {
-    return 'forge';
-  }
-
-  _updatePaths() {
     if (this.userId) {
       const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
       forgePaths[this.userId] = {
@@ -242,7 +118,7 @@ export class ForgeSearchPaths extends SearchPaths {
       };
 
       if (game.user.isGM) {
-        game.settings.set('token-variants', 'forgeSearchPaths', forgePaths);
+        updateSettings({ forgeSearchPaths: forgePaths });
       } else {
         // Workaround for forgeSearchPaths setting to be updated by non-GM clients
         const message = {
@@ -255,23 +131,9 @@ export class ForgeSearchPaths extends SearchPaths {
     }
   }
 
-  async _updateObject(event, formData) {
-    const expanded = expandObject(formData);
-    expanded.paths = expanded.hasOwnProperty('paths') ? Object.values(expanded.paths) : [];
-    expanded.paths.forEach((path, index) => {
-      this.object.paths[index] = {
-        text: path.text,
-        cache: path.cache,
-        share: path.share,
-      };
-    });
-    this.apiKey = expanded.apiKey;
-  }
-
-  async getData(options) {
-    const data = await super.getData(options);
-    data.forge = true;
-    data.apiKey = this.apiKey;
-    return data;
+  async close(options = {}) {
+    await this._onSubmit(event);
+    this._updatePaths();
+    return super.close(options);
   }
 }

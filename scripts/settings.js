@@ -165,21 +165,15 @@ export async function registerSettings() {
     default: TVA_CONFIG.searchPaths,
   });
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'forgeSearchPaths', {
     scope: 'world',
     config: false,
     type: Object,
     default: TVA_CONFIG.forgeSearchPaths,
-    onChange: async function (val) {
-      if (game.user.can('SETTINGS_MODIFY'))
-        await game.settings.set('token-variants', 'forgevttPaths', []);
-      TVA_CONFIG.forgeSearchPaths = val;
-      TVA_CONFIG.parsedSearchPaths = await parseSearchPaths();
-      if (userRequiresImageCache()) cacheTokens();
-    },
   });
 
-  // World level Token HUD setting
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'worldHudSettings', {
     scope: 'world',
     config: false,
@@ -234,14 +228,6 @@ export async function registerSettings() {
     config: false,
     type: Object,
     default: TVA_CONFIG.algorithm,
-  });
-
-  game.settings.register('token-variants', 'forgevttPaths', {
-    scope: 'world',
-    config: false,
-    type: Array,
-    default: TVA_CONFIG.forgevttPaths,
-    onChange: (val) => (TVA_CONFIG.forgevttPaths = val),
   });
 
   game.settings.register('token-variants', 'tokenConfigs', {
@@ -360,12 +346,14 @@ export async function registerSettings() {
     TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
     TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
   }
+
+  // Read client settings
+  TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
 }
 
 export async function fetchAllSettings() {
   TVA_CONFIG.debug = game.settings.get('token-variants', 'debug');
   TVA_CONFIG.searchPaths = game.settings.get('token-variants', 'searchPaths');
-  TVA_CONFIG.forgevttPaths = game.settings.get('token-variants', 'forgevttPaths');
   TVA_CONFIG.forgeSearchPaths = game.settings.get('token-variants', 'forgeSearchPaths');
   // Fix for search paths being accidentally stored as an array instead of an object
   if (Array.isArray(TVA_CONFIG.forgeSearchPaths)) {
@@ -435,7 +423,7 @@ export async function updateSettings(newSettings) {
   _saveSettings(TVA_CONFIG);
 
   // Check if any setting need to be parsed post-update
-  if ('searchPaths' in diff) {
+  if ('searchPaths' in diff || 'forgeSearchPaths' in diff) {
     TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
     if (userRequiresImageCache(TVA_CONFIG.permissions)) requiresImageCache = true;
   }
