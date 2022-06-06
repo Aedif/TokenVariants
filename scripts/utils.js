@@ -486,7 +486,7 @@ export function parseKeywords(keywords) {
  */
 export function isImage(path) {
   var extension = path.split('.');
-  extension = extension[extension.length - 1];
+  extension = extension[extension.length - 1].toLowerCase();
   return ['jpg', 'jpeg', 'png', 'svg', 'webp', 'gif'].includes(extension);
 }
 
@@ -495,8 +495,8 @@ export function isImage(path) {
  */
 export function isVideo(path) {
   var extension = path.split('.');
-  extension = extension[extension.length - 1];
-  return ['webm', 'mp4', 'm4v'].includes(extension);
+  extension = extension[extension.length - 1].toLowerCase();
+  return CONST.VIDEO_FILE_EXTENSIONS.includes(extension);
 }
 
 /**

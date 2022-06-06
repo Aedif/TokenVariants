@@ -121,7 +121,6 @@ export const TVA_CONFIG = {
 };
 
 export async function registerSettings() {
-  // TEST
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',
     hint: 'Configure Token Variant Art settings',
@@ -138,7 +137,6 @@ export async function registerSettings() {
     type: Object,
     default: {},
   });
-  // TEST END
 
   game.settings.register('token-variants', 'debug', {
     scope: 'world',

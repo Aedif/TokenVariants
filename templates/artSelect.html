@@ -37,8 +37,8 @@
         class="token-variants-grid-box {{#unless image.type}}token-variants-unrecognised{{/unless}}"
         title="{{image.title}}"
         data-name="{{image.path}}"
-        data-filename="{{image.name}}"
-      ></span>
+        data-filename="{{image.name}}">
+      </span>
       {{#if image.img}}
       <img class="token-variants-grid-image" src="{{image.path}}" />
       {{/if}} {{#if image.vid}}
@@ -47,8 +47,8 @@
         src="{{image.path}}"
         alt="{{image.name}}"
         autoplay
-        loop
-      ></video>
+        loop>
+      </video>
       {{/if}} {{#unless image.type}}
       <p class="token-variants-grid-image" alt="{{image.name}}">{{image.path}}</p>
       {{/unless}}

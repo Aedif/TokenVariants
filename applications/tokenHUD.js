@@ -225,6 +225,7 @@ export async function renderHud(hud, html, token, searchText = '') {
       used: imageObj.path === token.img && imageObj.name === tokenImageName,
       img,
       vid,
+      unknownType: !img && !vid,
       shared: shared,
       hasConfig: hasConfig,
       title: title,

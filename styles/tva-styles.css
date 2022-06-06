@@ -196,6 +196,11 @@
   white-space: nowrap;
 }
 
+.token-variants-grid > div > p.token-variants-grid-image {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
 .token-variants-grid > div > span {
   white-space: nowrap;
 }
