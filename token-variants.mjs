@@ -401,7 +401,6 @@ async function initialize() {
   }
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
-    // console.log('CHANGE', token, change, options);
     if (change.img) {
       checkAndDisplayUserSpecificImage(token);
     }

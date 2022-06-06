@@ -7,7 +7,7 @@ import {
 } from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
 import AlgorithmSettings from './algorithm.js';
-import { TVA_CONFIG } from '../scripts/settings.js';
+import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 
 async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
   let portraitFound = formData.ignorePortrait;
@@ -270,7 +270,7 @@ export default class CompendiumMapConfig extends FormApplication {
    */
   async _updateObject(event, formData) {
     formData.algorithmSettings = this.algorithmSettings;
-    game.settings.set('token-variants', 'compendiumMapper', formData);
+    updateSettings({ compendiumMapper: formData });
     if (formData.compendium) {
       this.startMapping(formData);
     }

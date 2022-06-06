@@ -223,6 +223,7 @@ export async function registerSettings() {
     default: TVA_CONFIG.searchFilters,
   });
 
+  // Deprecated 01/06/2022
   game.settings.register('token-variants', 'algorithmSettings', {
     scope: 'world',
     config: false,
@@ -405,7 +406,6 @@ export async function importSettingsFromJSON(json) {
 export async function updateSettings(newSettings) {
   // Generate a diff, it will be required when doing post-processing of the modified settings
   const diff = _arrayAwareDiffObject(TVA_CONFIG, newSettings);
-  console.log('DIFF', diff);
 
   let requiresImageCache = false;
   if ('permissions' in diff) {

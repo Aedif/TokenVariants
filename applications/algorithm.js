@@ -3,11 +3,9 @@ import { TVA_CONFIG } from '../scripts/settings.js';
 export default class AlgorithmSettings extends FormApplication {
   constructor(dummySettings) {
     super({}, {});
-    if (dummySettings) {
-      this.dummySettings = mergeObject(dummySettings, TVA_CONFIG.algorithm, {
-        overwrite: false,
-      });
-    }
+    this.dummySettings = mergeObject(dummySettings, TVA_CONFIG.algorithm, {
+      overwrite: false,
+    });
   }
 
   static get defaultOptions() {
@@ -58,13 +56,7 @@ export default class AlgorithmSettings extends FormApplication {
   async _updateObject(event, formData) {
     formData.fuzzyLimit = parseInt(formData.fuzzyLimit);
     if (isNaN(formData.fuzzyLimit) || formData.fuzzyLimit < 1) formData.fuzzyLimit = 50;
-
     formData.fuzzyThreshold = (100 - formData.fuzzyThreshold) / 100;
-
-    if (this.dummySettings) {
-      mergeObject(this.dummySettings, formData);
-    } else {
-      game.settings.set('token-variants', 'algorithmSettings', formData);
-    }
+    mergeObject(this.dummySettings, formData);
   }
 }

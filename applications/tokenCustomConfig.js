@@ -35,8 +35,6 @@ export default class TokenCustomConfig extends TokenConfig {
       }
     });
 
-    console.log(filtered);
-
     const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);
     if (this.callback) this.callback(saved);
   }
@@ -128,13 +126,13 @@ export default class TokenCustomConfig extends TokenConfig {
   async _onCheckboxChange(event) {
     const checkbox = $(event.target);
     checkbox.closest('.form-group').css({
-      'outline-color': checkbox.is(':checked') ? 'green' : 'orange',
+      'outline-color': checkbox.is(':checked') ? 'green' : '#ffcc6e',
       'outline-width': '2px',
-      'outline-style': 'solid',
+      'outline-style': 'dotted',
       'margin-bottom': '5px',
     });
     checkbox.closest('.tva-config-checkbox').css({
-      'outline-color': checkbox.is(':checked') ? 'green' : 'orange',
+      'outline-color': checkbox.is(':checked') ? 'green' : '#ffcc6e',
       'outline-width': '2px',
       'outline-style': 'solid',
     });

@@ -338,7 +338,6 @@ export default class ConfigureSettings extends FormApplication {
   async _updateObject(event, formData) {
     const settings = this.settings;
     formData = expandObject(formData);
-    console.log(formData);
 
     // Search Paths
     const searchPaths = [];
