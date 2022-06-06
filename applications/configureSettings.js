@@ -342,6 +342,11 @@ export default class ConfigureSettings extends FormApplication {
     // Search Paths
     const searchPaths = [];
     if (formData.searchPaths) {
+      if (!Array.isArray(formData.searchPaths.cache)) {
+        formData.searchPaths.cache = [formData.searchPaths.cache];
+        formData.searchPaths.text = [formData.searchPaths.text];
+      }
+
       for (let i = 0; i < formData.searchPaths.text.length; i++) {
         if (formData.searchPaths.text[i] !== '') {
           searchPaths.push({

@@ -349,9 +349,6 @@ export async function parseSearchPaths(config) {
   if (config.debug) console.log('STARTING: Search Path Parse');
 
   const regexpBucket = /s3:(.*):(.*)/;
-  const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
-  const FORGE_ASSETS_LIBRARY_URL_PREFIX = 'https://assets.forge-vtt.com/';
-
   const searchPathList = (config.searchPaths || []).flat();
 
   // To maintain compatibility with previous versions
@@ -367,8 +364,6 @@ export async function parseSearchPaths(config) {
   searchPaths.set('s3', new Map());
   searchPaths.set('rolltable', []);
   searchPaths.set('imgur', []);
-
-  let allForgePaths = [];
 
   for (const path of searchPathList) {
     if (path.text.startsWith('s3:')) {
@@ -388,55 +383,6 @@ export async function parseSearchPaths(config) {
       searchPaths.get('rolltable').push({ text: path.text.split(':')[1], cache: path.cache });
     } else if (path.text.startsWith('imgur:')) {
       searchPaths.get('imgur').push({ text: path.text.split(':')[1], cache: path.cache });
-    } else if (
-      path.text.startsWith('forgevtt:') ||
-      path.text.startsWith(FORGE_ASSETS_LIBRARY_URL_PREFIX)
-    ) {
-      let url = '';
-      if (path.text.startsWith(FORGE_ASSETS_LIBRARY_URL_PREFIX)) {
-        url = path.text;
-      } else if (typeof ForgeAPI !== 'undefined') {
-        const status = ForgeAPI.lastStatus || (await ForgeAPI.status().catch(console.error)) || {};
-        if (status.isAdmin) {
-          url =
-            FORGE_ASSETS_LIBRARY_URL_PREFIX +
-            (await ForgeAPI.getUserId()) +
-            '/' +
-            path.text.split(':')[1];
-        }
-      }
-
-      const match = url.match(regexpForge);
-      if (match) {
-        const userId = match[2];
-        const fPath = match[3];
-        if (typeof ForgeAPI !== 'undefined') {
-          if (userId == (await ForgeAPI.getUserId())) {
-            try {
-              let files = await FilePicker.browse(
-                'forgevtt',
-                `${FORGE_ASSETS_LIBRARY_URL_PREFIX}${userId}/${fPath}`,
-                { recursive: true }
-              );
-              files.dirs.push(fPath);
-              allForgePaths = allForgePaths.concat(
-                files.dirs.map((p) => {
-                  if (!p.endsWith('/')) p += '/';
-                  return {
-                    text: `${FORGE_ASSETS_LIBRARY_URL_PREFIX}${userId}/${p}*`,
-                    cache: path.cache,
-                  };
-                })
-              );
-            } catch (err) {
-              console.log(err);
-            }
-          } else {
-            if (!url.endsWith('/')) url += '/';
-            allForgePaths.push({ text: url + '*', cache: path.cache });
-          }
-        }
-      }
     } else {
       searchPaths.get('data').push({ text: path.text, cache: path.cache });
     }

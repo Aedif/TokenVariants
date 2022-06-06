@@ -150,7 +150,7 @@ export async function registerSettings() {
     game.settings.registerMenu('token-variants', 'forgeSearchPaths', {
       name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),
       hint: game.i18n.localize('token-variants.settings.forge-search-paths.Hint'),
-      icon: 'fas fa-exchange-alt',
+      icon: 'fas fa-search',
       type: ForgeSearchPaths,
       scope: 'client',
       restricted: false,

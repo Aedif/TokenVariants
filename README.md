@@ -31,28 +31,27 @@ e.g.
 - '**Mage**' will match: **09_mage.png**, **red-MAGE-64.png**, **mage-s_fire.jpg**
 - '**Half-Red Dragon Veteran**' will match: **HalfRedDragonVeteran.png**, **hAlF_rEd_dRAgon-VETERAN.png**
 
+## Table of Contents
 
-## Table of Contents  
-
-  * [Settings](#settings)
-    + [Search Paths](#search-paths)
-    + [Forge Asset Library Paths](#forge-asset-library-paths)
-    + [Search Filter Settings](#search-filter-settings)
-    + [Search Algorithm Settings](#search-algorithm-settings)
-    + [Randomizer Settings](#randomizer-settings)
-    + [Pop-up Settings](#pop-up-settings)
-    + [Token HUD Settings](#token-hud-settings)
-    + [Search by Keyword](#search-by-keyword)
-    + [Excluded Keywords](#excluded-keywords)
-    + [Actor Directory Popup key](#actor-directory-popup-key)
-    + [Match name to folder](#match-name-to-folder)
-  * [Image configuration](#image-configuration)
-  * [Image to User mappings](#image-to-user-mappings)
-  * [Enable Status Config](#enable-status-config)
-  * [Compendium Mapper](#compendium-mapper)
-  * [Permissions](#permissions)
-  * [Installation](#installation)
-  * [API](#api)
+- [Settings](#settings)
+  - [Search Paths](#search-paths)
+  - [Forge Asset Library Paths](#forge-asset-library-paths)
+  - [Search Filter Settings](#search-filter-settings)
+  - [Search Algorithm Settings](#search-algorithm-settings)
+  - [Randomizer Settings](#randomizer-settings)
+  - [Pop-up Settings](#pop-up-settings)
+  - [Token HUD Settings](#token-hud-settings)
+  - [Search by Keyword](#search-by-keyword)
+  - [Excluded Keywords](#excluded-keywords)
+  - [Actor Directory Popup key](#actor-directory-popup-key)
+  - [Match name to folder](#match-name-to-folder)
+- [Image configuration](#image-configuration)
+- [Image to User mappings](#image-to-user-mappings)
+- [Enable Status Config](#enable-status-config)
+- [Compendium Mapper](#compendium-mapper)
+- [Permissions](#permissions)
+- [Installation](#installation)
+- [API](#api)
 
 ## Settings
 
@@ -70,12 +69,11 @@ In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, 
 
 - To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket use the following format: **s3:{bucket-name}:{path}**
 - Rolltables can be added using: **rolltable:{rolltable name}**
-- For your ForgeVTT asset library the format is as follows: **forgevtt:{path}**
-  - This is far slower than using API keys and **Forge Asset Library Paths** setting.
 - Imgur galleries can be linked with: **imgur:galleryID**
   - e.g. https://imgur.com/gallery/ **JweWCpf** -> imgur:**JweWCpf**
   - Imgur paths can be automatically converted to RollTables
-  - **!!!** Imgur galleries cannot be accessed when running Foundry on 'localhost'.
+  - **!!!** Imgur galleries cannot be accessed when running Foundry on 'localhost'
+- For your ForgeVTT asset library see **Forge Asset Library Paths** setting
 
 By default the module will scan these sources only when the world is loaded or when the **Search Paths** settings have changed. If new art is added while the world is still open it will not be found by the module. Disabling '**Cache**' will force the scan to be done every time an art search is performed at a potentially significant cost to speed at which the art is displayed to the user depending on the number of images.
 
@@ -304,3 +302,9 @@ e.g.
 ## **cacheTokens()**
 
 When called will trigger the refresh of the token cache.
+
+## **TVA_CONFIG**
+
+Currently active settings
+
+- **game.modules.get('token-variants').api.TVA_CONFIG**

@@ -1,3 +1,25 @@
+# 2.0.0
+
+**!!!** **forgevtt:path/to/art** type paths will no longer work **!!!**
+
+- '**Search Paths**' setting will no longer support ForgeVTT asset library paths
+- '**Forge Asset Library Paths**' setting is to be used instead
+- The old method of reading from Forge's Asset Libraries utilized a hack which was extremely slow and was causing confusion to the user's. '**Forge Asset Library Paths**' which has been implemented for a while now is **significantly** faster and has been the preferred method, which as of this version is now mandatory.
+
+Settings
+
+- Majority of module's setting can now be found and configured under one window: '**Configure Settings**'
+- **Token HUD** > **Include wildcard images** is now a world setting
+
+Misc.
+
+- Fixed **Art Select**'s fuzzy algorithm slider breaking when set to 100%
+- Unknown type files should no longer break the formatting in the **Art Select** and **Token HUD** side menu
+
+Custom Token Configuration
+
+- Can now be controlled per field rather than tab
+
 # 1.36.2
 
 - Fixed an issue with **Forge Asset Library Paths** setting not properly reading and storing paths
