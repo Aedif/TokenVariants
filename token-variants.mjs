@@ -902,7 +902,7 @@ async function walkAllPaths() {
 }
 
 async function walkFindTokens(
-  path,
+  dir,
   {
     bucket = '',
     forge = false,
@@ -912,89 +912,87 @@ async function walkFindTokens(
     imgur = false,
   } = {}
 ) {
-  const dirs = [path];
   let files = {};
-  while (dirs.length > 0) {
-    let dir = dirs.pop();
-    try {
-      if (bucket) {
-        files = await FilePicker.browse('s3', dir, {
-          bucket: bucket,
-        });
-      } else if (forge) {
-        files = await FilePicker.browse('', dir, {
-          wildcard: true,
-        });
-      } else if (forgevtt) {
-        if (apiKey) {
-          const response = await callForgeVTT(dir, apiKey);
-          files.files = response.files.map((f) => f.url);
-        } else {
-          files = await FilePicker.browse('forgevtt', dir, {
-            recursive: true,
-          });
-        }
-      } else if (imgur && location.hostname !== 'localhost') {
-        await fetch('https://api.imgur.com/3/gallery/album/' + dir, {
-          headers: {
-            Authorization:
-              'Client-ID ' +
-              (TVA_CONFIG.imgurClientId ? TVA_CONFIG.imgurClientId : 'df9d991443bb222'),
-            Accept: 'application/json',
-          },
-        })
-          .then((response) => response.json())
-          .then(async function (result) {
-            if (!result.success) {
-              return;
-            }
-            result.data.images.forEach((img) => {
-              const path = img.link;
-              const rtName = img.title ?? img.description ?? getFileName(img.link);
-              foundImages.push({ path: path, name: rtName });
-            });
-          })
-          .catch((error) => console.log('Token Variant Art: ', error));
-        return;
-      } else if (rollTableName) {
-        const table = game.tables.contents.find((t) => t.name === rollTableName);
-        if (!table) {
-          ui.notifications.warn(
-            game.i18n.format('token-variants.notifications.warn.invalid-table', {
-              rollTableName,
-            })
-          );
-        } else {
-          for (let baseTableData of table.data.results) {
-            const path = baseTableData.data.img;
-            const rtName = baseTableData.data.text;
-            foundImages.push({ path: path, name: rtName });
-          }
-        }
-        return;
+  try {
+    if (bucket) {
+      files = await FilePicker.browse('s3', dir, {
+        bucket: bucket,
+      });
+    } else if (forge) {
+      files = await FilePicker.browse('', dir, {
+        wildcard: true,
+      });
+    } else if (forgevtt) {
+      if (apiKey) {
+        const response = await callForgeVTT(dir, apiKey);
+        files.files = response.files.map((f) => f.url);
       } else {
-        files = await FilePicker.browse('data', dir);
+        files = await FilePicker.browse('forgevtt', dir, {
+          recursive: true,
+        });
       }
-    } catch (err) {
-      console.log(
-        `Token Variant Art | ${game.i18n.localize(
-          'token-variants.notifications.warn.path-not-found'
-        )} ${path}`
-      );
+    } else if (imgur && location.hostname !== 'localhost') {
+      await fetch('https://api.imgur.com/3/gallery/album/' + dir, {
+        headers: {
+          Authorization:
+            'Client-ID ' +
+            (TVA_CONFIG.imgurClientId ? TVA_CONFIG.imgurClientId : 'df9d991443bb222'),
+          Accept: 'application/json',
+        },
+      })
+        .then((response) => response.json())
+        .then(async function (result) {
+          if (!result.success) {
+            return;
+          }
+          result.data.images.forEach((img) => {
+            const path = img.link;
+            const rtName = img.title ?? img.description ?? getFileName(img.link);
+            foundImages.push({ path: path, name: rtName });
+          });
+        })
+        .catch((error) => console.log('Token Variant Art: ', error));
       return;
+    } else if (rollTableName) {
+      const table = game.tables.contents.find((t) => t.name === rollTableName);
+      if (!table) {
+        ui.notifications.warn(
+          game.i18n.format('token-variants.notifications.warn.invalid-table', {
+            rollTableName,
+          })
+        );
+      } else {
+        for (let baseTableData of table.data.results) {
+          const path = baseTableData.data.img;
+          const rtName = baseTableData.data.text;
+          foundImages.push({ path: path, name: rtName });
+        }
+      }
+      return;
+    } else {
+      files = await FilePicker.browse('data', dir);
     }
+  } catch (err) {
+    console.log(
+      `Token Variant Art | ${game.i18n.localize(
+        'token-variants.notifications.warn.path-not-found'
+      )} ${path}`
+    );
+    return;
+  }
 
-    if (files.target == '.') continue;
+  if (files.target == '.') return;
 
-    for (let tokenSrc of files.files) {
+  if (files.files) {
+    files.files.forEach((tokenSrc) => {
       foundImages.push({ path: tokenSrc, name: getFileName(tokenSrc) });
-    }
+    });
+  }
 
-    if (forgevtt) continue;
+  if (forgevtt) return;
 
-    for (let f_dir of files.dirs) {
-      dirs.push(f_dir);
-    }
+  for (let f_dir of files.dirs) {
+    await walkFindTokens(f_dir, { bucket, forge, rollTableName, forgevtt, apiKey, imgur });
   }
 }
 

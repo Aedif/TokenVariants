@@ -1,8 +1,0 @@
-input[type='range'] + .token-variants-range-value {
-  display: block;
-  flex: 0 1 48px;
-  text-align: center;
-  border: 1px solid #b5b3a4;
-  padding: 2px;
-  margin-left: 10px;
-}

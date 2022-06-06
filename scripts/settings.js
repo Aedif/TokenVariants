@@ -125,8 +125,9 @@ export async function registerSettings() {
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',
     hint: 'Configure Token Variant Art settings',
+    label: 'Settings',
     scope: 'world',
-    icon: 'fas fa-user-lock',
+    icon: 'fas fa-cog',
     type: ConfigureSettings,
     restricted: true,
   });
@@ -297,7 +298,7 @@ export async function registerSettings() {
     name: game.i18n.localize('token-variants.settings.token-hud.Name'),
     hint: game.i18n.localize('token-variants.settings.token-hud.Hint'),
     scope: 'client',
-    icon: 'fas fa-exchange-alt',
+    icon: 'fas fa-images',
     type: TokenHUDClientSettings,
     restricted: false,
   });

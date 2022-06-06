@@ -34,7 +34,7 @@
     {{#each search.[1] as |image|}}
     <div>
       <span
-        class="token-variants-grid-box"
+        class="token-variants-grid-box {{#unless image.type}}token-variants-unrecognised{{/unless}}"
         title="{{image.title}}"
         data-name="{{image.path}}"
         data-filename="{{image.name}}"
@@ -50,7 +50,7 @@
         loop
       ></video>
       {{/if}} {{#unless image.type}}
-      <span class="token-variants-grid-image" alt="{{image.name}}">{{image.path}}</span>
+      <p class="token-variants-grid-image" alt="{{image.name}}">{{image.path}}</p>
       {{/unless}}
       <i class="fas fa-cog fa-lg {{#if image.hasConfig}}active{{/if}}"></i>
       <p>{{{image.label}}}</p>

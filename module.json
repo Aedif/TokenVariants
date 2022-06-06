@@ -20,13 +20,7 @@
   "compatibleCoreVersion": "9",
   "esmodules": ["token-variants.mjs"],
   "scripts": [],
-  "styles": [
-    "styles/artSelect.css",
-    "styles/sideSelect.css",
-    "styles/lists.css",
-    "styles/popupSettings.css",
-    "styles/general.css"
-  ],
+  "styles": ["styles/tva-styles.css"],
   "languages": [
     {
       "lang": "en",

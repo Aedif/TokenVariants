@@ -99,7 +99,7 @@
           },
           "include-wildcard": {
             "Name": "Include wildcard images",
-            "Hint": "If prototype token has been setup with 'Randomize Wildcard Images', these will be included in the HUD menu."
+            "Hint": "If prototype token has been setup with a wildcard image they will be included in the HUD menu."
           }
         }
       },

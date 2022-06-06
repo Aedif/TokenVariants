@@ -24,6 +24,8 @@ export default class ConfigureSettings extends FormApplication {
     const data = super.getData(options);
     const settings = this.settings;
 
+    data.v8 = (game.version ?? game.data.version).startsWith('0.8');
+
     // === Search Paths ===
     const paths = settings.searchPaths.map((path) => {
       const r = {};

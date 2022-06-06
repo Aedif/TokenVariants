@@ -1,15 +1,15 @@
 <form>
     <!-- Navigation Tabs -->
     <nav class="sheet-tabs tabs tva-setting-nav" data-group="primary-tabs">
-        <a class="item" data-tab="searchPaths"><i class="fas fa-dice-d20"></i> Search Paths</a>
-        <a class="item" data-tab="searchFilters"><i class="fas fa-cogs"></i> Search Filters</a>
+        <a class="item" data-tab="searchPaths"><i class="fas fa-search"></i> Search Paths</a>
+        <a class="item" data-tab="searchFilters"><i class="fas fa-filter"></i> Search Filters</a>
         <a class="item" data-tab="searchAlgorithm"><i class="fas fa-plug"></i> Search Algorithm</a>
-        <a class="item" data-tab="randomizer"><i class="fas fa-plug"></i> Randomizer</a>
+        <a class="item" data-tab="randomizer"><i class="fas fa-dice"></i> Randomizer</a>
         <hr>
-        <a class="item" data-tab="popup"><i class="fas fa-plug"></i> Pop-up</a>
+        <a class="item" data-tab="popup"><i class="fas fa-book-open"></i> Pop-up</a>
         <a class="item" data-tab="permissions"><i class="fas fa-user-lock"></i> Permissions</a>
-        <a class="item" data-tab="worldHud"><i class="fas fa-user-lock"></i> Token HUD</a>
-        <a class="item" data-tab="misc"><i class="fas fa-user-lock"></i> Misc</a>
+        <a class="item" data-tab="worldHud"><i class="fas fa-images"></i> Token HUD</a>
+        <a class="item" data-tab="misc"><i class="fas fa-bars"></i> Misc</a>
     </nav>
 
     <!-- Main Content Section -->
@@ -117,57 +117,83 @@
 
         <!-- SEARCH ALGORITHM -->
         <div class="tab" data-tab="searchAlgorithm" data-group="primary-tabs">
-            <h2>{{localize "token-variants.common.exact"}}</h2>
-            <div class="form-group">
-              <label>{{localize "token-variants.common.enable"}}</label>
-              <input type="checkbox" name="algorithm.exact" data-dtype="Boolean" {{#if algorithm.exact}}checked{{/if}}>
-              <p class="notes">{{localize "token-variants.settings.algorithm.window.exact-hint"}}</p>
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.keywords-search.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="keywordSearch" data-dtype="Boolean" {{#if keywordSearch}}checked{{/if}}>
             </div>
-          
-            <h2>{{localize "token-variants.common.fuzzy"}}</h2>
-            <div class="form-group">
-              <label>{{localize "token-variants.common.enable"}}</label>
-              <input type="checkbox" name="algorithm.fuzzy" data-dtype="Boolean" {{#if algorithm.fuzzy}}checked{{/if}}>
-              <p class="notes">{{localize "token-variants.settings.algorithm.window.fuzzy-hint"}}</p>
+            <p class="notes">{{localize "token-variants.settings.keywords-search.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.excluded-keywords.Name"}}</label>
+            <div class="form-fields">
+              <input type="text" name="excludedKeywords" data-dtype="String" value="{{excludedKeywords}}">
             </div>
-          
-            <div class="form-group">
-              <label>{{localize "token-variants.settings.algorithm.window.percentage-match.Name"}}</label>
-              <input
-                type="range"
-                name="algorithm.fuzzyThreshold"
-                data-dtype="Number"
-                value="{{algorithm.fuzzyThreshold}}"
-                min="0"
-                max="100"
-                step="1"
-              />
-              <span class="token-variants-range-value">{{algorithm.fuzzyThreshold}}%</span>
-              <p class="notes">
-                {{localize "token-variants.settings.algorithm.window.percentage-match.Hint"}}
-              </p>
+            <p class="notes">{{localize "token-variants.settings.excluded-keywords.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.run-search-on-path.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="runSearchOnPath" data-dtype="Boolean" {{#if runSearchOnPath}}checked{{/if}}>
             </div>
-          
-            <div class="form-group">
-              <label>{{localize "token-variants.settings.algorithm.window.art-select-slider.Name"}}</label>
-              <input type="checkbox" name="algorithm.fuzzyArtSelectPercentSlider" data-dtype="Boolean" {{#if
-                algorithm.fuzzyArtSelectPercentSlider}}checked{{/if}}>
-              <p class="notes">
-                {{localize "token-variants.settings.algorithm.window.art-select-slider.Hint"}}
-              </p>
-            </div>
-          
-            <div class="form-group">
-              <label>{{localize "token-variants.common.limit"}}</label>
-              <input
-                type="text"
-                name="algorithm.fuzzyLimit"
-                value="{{algorithm.fuzzyLimit}}"
-                placeholder="1"
-                data-dtype="Number"
-              />
-              <p class="notes">{{localize "token-variants.settings.algorithm.window.limit-hint"}}</p>
-            </div>
+            <p class="notes">{{localize "token-variants.settings.run-search-on-path.Hint"}}</p>
+          </div>
+
+          <h1>Search Method</h1>
+<hr>
+          <h2>{{localize "token-variants.common.exact"}}</h2>
+          <div class="form-group">
+            <label>{{localize "token-variants.common.enable"}}</label>
+            <input type="checkbox" name="algorithm.exact" data-dtype="Boolean" {{#if algorithm.exact}}checked{{/if}}>
+            <p class="notes">{{localize "token-variants.settings.algorithm.window.exact-hint"}}</p>
+          </div>
+        
+          <h2>{{localize "token-variants.common.fuzzy"}}</h2>
+          <div class="form-group">
+            <label>{{localize "token-variants.common.enable"}}</label>
+            <input type="checkbox" name="algorithm.fuzzy" data-dtype="Boolean" {{#if algorithm.fuzzy}}checked{{/if}}>
+            <p class="notes">{{localize "token-variants.settings.algorithm.window.fuzzy-hint"}}</p>
+          </div>
+        
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.algorithm.window.percentage-match.Name"}}</label>
+            <input
+              type="range"
+              name="algorithm.fuzzyThreshold"
+              data-dtype="Number"
+              value="{{algorithm.fuzzyThreshold}}"
+              min="0"
+              max="100"
+              step="1"
+            />
+            <span class="token-variants-range-value">{{algorithm.fuzzyThreshold}}%</span>
+            <p class="notes">
+              {{localize "token-variants.settings.algorithm.window.percentage-match.Hint"}}
+            </p>
+          </div>
+        
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.algorithm.window.art-select-slider.Name"}}</label>
+            <input type="checkbox" name="algorithm.fuzzyArtSelectPercentSlider" data-dtype="Boolean" {{#if
+              algorithm.fuzzyArtSelectPercentSlider}}checked{{/if}}>
+            <p class="notes">
+              {{localize "token-variants.settings.algorithm.window.art-select-slider.Hint"}}
+            </p>
+          </div>
+        
+          <div class="form-group">
+            <label>{{localize "token-variants.common.limit"}}</label>
+            <input
+              type="text"
+              name="algorithm.fuzzyLimit"
+              value="{{algorithm.fuzzyLimit}}"
+              placeholder="1"
+              data-dtype="Number"
+            />
+            <p class="notes">{{localize "token-variants.settings.algorithm.window.limit-hint"}}</p>
+          </div>
         </div>
 
         <!-- Randomizer -->
@@ -453,22 +479,7 @@
         </div>
 
         <div class="tab" data-tab="misc" data-group="primary-tabs">
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.keywords-search.Name"}}</label>
-            <div class="form-fields">
-              <input type="checkbox" name="keywordSearch" data-dtype="Boolean" {{#if keywordSearch}}checked{{/if}}>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.keywords-search.Hint"}}</p>
-          </div>
-
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.excluded-keywords.Name"}}</label>
-            <div class="form-fields">
-              <input type="text" name="excludedKeywords" data-dtype="String" value="{{excludedKeywords}}">
-            </div>
-            <p class="notes">{{localize "token-variants.settings.excluded-keywords.Hint"}}</p>
-          </div>
-
+          {{#if v8}}
           <div class="form-group">
             <label>{{localize "token-variants.settings.actor-directory-key.Name"}}</label>
             <div class="form-fields">
@@ -480,22 +491,7 @@
             </div>
             <p class="notes">{{localize "token-variants.settings.actor-directory-key.Hint"}}</p>
           </div>
-
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.run-search-on-path.Name"}}</label>
-            <div class="form-fields">
-              <input type="checkbox" name="runSearchOnPath" data-dtype="Boolean" {{#if runSearchOnPath}}checked{{/if}}>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.run-search-on-path.Hint"}}</p>
-          </div>
-
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.imgur-client-id.Name"}}</label>
-            <div class="form-fields">
-              <input type="text" name="imgurClientId" data-dtype="String" value="{{imgurClientId}}">
-            </div>
-            <p class="notes">{{localize "token-variants.settings.imgur-client-id.Hint"}}</p>
-          </div>
+          {{/if}}
 
           <div class="form-group">
             <label>{{localize "token-variants.settings.status-config.Name"}}</label>
@@ -511,6 +507,14 @@
               <input type="checkbox" name="disableNotifs" data-dtype="Boolean" {{#if disableNotifs}}checked{{/if}}>
             </div>
             <p class="notes">{{localize "token-variants.settings.disable-notifs.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.imgur-client-id.Name"}}</label>
+            <div class="form-fields">
+              <input type="text" name="imgurClientId" data-dtype="String" value="{{imgurClientId}}">
+            </div>
+            <p class="notes">{{localize "token-variants.settings.imgur-client-id.Hint"}}</p>
           </div>
         </div>
     </section>
