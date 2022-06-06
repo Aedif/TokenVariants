@@ -1,4 +1,4 @@
-import { TVA_CONFIG } from './settings.js';
+import { TVA_CONFIG, updateSettings } from './settings.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -255,15 +255,17 @@ export function getTokenConfig(imgSrc, imgName) {
 export function getTokenConfigForUpdate(imgSrc, imgName) {
   const tokenConfig = getTokenConfig(imgSrc, imgName);
   if (tokenConfig) {
-    delete tokenConfig.tvImgSrc;
-    delete tokenConfig.tvImgName;
-    for (var key in tokenConfig) {
+    const config = deepClone(tokenConfig);
+    delete config.tvImgSrc;
+    delete config.tvImgName;
+    for (var key in config) {
       if (key.startsWith('tvTab_')) {
-        delete tokenConfig[key];
+        delete config[key];
       }
     }
+    return config;
   }
-  return tokenConfig;
+  return undefined;
 }
 
 /**
@@ -288,7 +290,7 @@ export function setTokenConfig(imgSrc, imgName, tokenConfig) {
   } else if (!deleteConfig) {
     tokenConfigs.push(tokenConfig);
   }
-  game.settings.set('token-variants', 'tokenConfigs', tokenConfigs);
+  updateSettings({ tokenConfigs: tokenConfigs });
   return !deleteConfig;
 }
 
@@ -496,7 +498,7 @@ export function isImage(path) {
 export function isVideo(path) {
   var extension = path.split('.');
   extension = extension[extension.length - 1].toLowerCase();
-  return CONST.VIDEO_FILE_EXTENSIONS.includes(extension);
+  return ['mp4', 'ogg', 'webm', 'm4v'].includes(extension);
 }
 
 /**

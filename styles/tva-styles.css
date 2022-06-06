@@ -449,3 +449,13 @@ ol.token-variant-table .table-row .effect-image {
 .token-sheet .token-variants-default.active {
   display: block;
 }
+
+/* ---------------------------------------- */
+/* Token Custom Config                      */
+/* ---------------------------------------- */
+
+.tva-config-checkbox {
+  flex: 0 !important;
+  outline: 1px solid #fcba03;
+  margin-left: 5px;
+}

@@ -22,21 +22,20 @@ export default class TokenCustomConfig extends TokenConfig {
     const filtered = {};
 
     const form = $(event.target).closest('form');
-    form.find('.token-variants-config-control').each(function (index) {
-      const input = $(this).find('input');
-      const checked = input.is(':checked');
 
-      if (checked) {
-        filtered[`tvTab_${input.attr('data-token-variants-tab')}`] = checked;
+    form.find('.form-group').each(function (_) {
+      const tva_checkbox = $(this).find('.tva-config-checkbox > input');
+      if (tva_checkbox.length && tva_checkbox.is(':checked')) {
         $(this)
-          .closest('.tab')
           .find('[name]')
-          .each(function (index) {
+          .each(function (_) {
             const name = $(this).attr('name');
             filtered[name] = formData[name];
           });
       }
     });
+
+    console.log(filtered);
 
     const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);
     if (this.callback) this.callback(saved);
@@ -70,19 +69,39 @@ export default class TokenCustomConfig extends TokenConfig {
 
     // Add checkboxes to control inclusion of specific tabs in the custom config
     const tokenConfig = getTokenConfig(this.imgSrc, this.imgName);
+
+    $(html).on('change', '.tva-config-checkbox', this._onCheckboxChange);
+
+    // Add checkboxes to each form-group to control highlighting and which fields will are to be saved
     $(html)
-      .find('.tabs')
-      .find('.item')
+      .find('.form-group')
       .each(function (index) {
-        const type = $(this).attr('data-tab');
-        const checked = tokenConfig && tokenConfig[`tvTab_${type}`];
-        const control = `<div class="form-group token-variants-config-control">
-                          <label>&nbsp;Store <u>${type}</u> tab config</label>
-                          <input type="checkbox" data-token-variants-tab="${type}" data-dtype="Boolean" ${
-          checked ? 'checked' : ''
-        }>
-                         </div>`;
-        $(html).find(`.tab[data-tab="${type}"]`).prepend(control);
+        // Checkbox is not added for the Image Path group
+        if (!$(this).find('[name="img"]').length) {
+          let savedField = false;
+          if (tokenConfig) {
+            $(this)
+              .find('[name]')
+              .each(function (_) {
+                const name = $(this).attr('name');
+                if (name in tokenConfig) {
+                  savedField = true;
+                }
+              });
+          }
+
+          const checkbox = $(
+            `<div class="tva-config-checkbox"><input type="checkbox" data-dtype="Boolean" ${
+              savedField ? 'checked=""' : ''
+            }></div>`
+          );
+          if ($(this).find('p.hint').length) {
+            $(this).find('p.hint').before(checkbox);
+          } else {
+            $(this).append(checkbox);
+          }
+          checkbox.find('input').trigger('change');
+        }
       });
 
     // Add 'update' and 'remove' config buttons
@@ -104,6 +123,21 @@ export default class TokenCustomConfig extends TokenConfig {
     $(html).find('.tabs > .item[data-tab="appearance"] > i').trigger('click');
 
     document.activeElement.blur(); // Hack fix for key UP/DOWN effects not registering after config has been opened
+  }
+
+  async _onCheckboxChange(event) {
+    const checkbox = $(event.target);
+    checkbox.closest('.form-group').css({
+      'outline-color': checkbox.is(':checked') ? 'green' : 'orange',
+      'outline-width': '2px',
+      'outline-style': 'solid',
+      'margin-bottom': '5px',
+    });
+    checkbox.closest('.tva-config-checkbox').css({
+      'outline-color': checkbox.is(':checked') ? 'green' : 'orange',
+      'outline-width': '2px',
+      'outline-style': 'solid',
+    });
   }
 
   async _onRemoveConfig(event) {

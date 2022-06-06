@@ -1282,6 +1282,7 @@ Hooks.on('init', function () {
     showArtSelect,
     updateTokenImage,
     exportSettingsToJSON,
+    TVA_CONFIG,
   };
 });
 
