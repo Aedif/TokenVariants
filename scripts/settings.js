@@ -1,4 +1,4 @@
-import { cacheTokens } from '../token-variants.mjs';
+import { cacheImages, saveCache } from '../token-variants.mjs';
 import { parseSearchPaths, parseKeywords, userRequiresImageCache } from './utils.js';
 import { ForgeSearchPaths } from '../applications/searchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
@@ -77,6 +77,7 @@ export const TVA_CONFIG = {
   },
   imgurClientId: '',
   enableStatusConfig: false,
+  staticCache: false,
   compendiumMapper: {
     missingOnly: false,
     diffImages: false,
@@ -136,6 +137,40 @@ export async function registerSettings() {
     config: false,
     type: Object,
     default: {},
+    onChange: async (val) => {
+      // Generate a diff, it will be required when doing post-processing of the modified settings
+      const diff = _arrayAwareDiffObject(TVA_CONFIG, val);
+
+      let requiresImageCache = false;
+      if ('permissions' in diff) {
+        if (
+          !userRequiresImageCache(TVA_CONFIG.permissions) &&
+          userRequiresImageCache(val.permissions)
+        )
+          requiresImageCache = true;
+      }
+
+      // Update live settings
+      mergeObject(TVA_CONFIG, val);
+
+      // Check if any setting need to be parsed post-update
+      if ('searchPaths' in diff || 'forgeSearchPaths' in diff) {
+        TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
+        if (userRequiresImageCache(TVA_CONFIG.permissions)) requiresImageCache = true;
+      }
+      if ('excludedKeywords' in diff) {
+        TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
+      }
+
+      // Cache/re-cache images if necessary
+      if (requiresImageCache) {
+        await cacheImages();
+      }
+
+      if (diff.staticCache) {
+        saveCache();
+      }
+    },
   });
 
   game.settings.register('token-variants', 'debug', {
@@ -404,44 +439,10 @@ export async function importSettingsFromJSON(json) {
 }
 
 export async function updateSettings(newSettings) {
-  // Generate a diff, it will be required when doing post-processing of the modified settings
-  const diff = _arrayAwareDiffObject(TVA_CONFIG, newSettings);
-
-  let requiresImageCache = false;
-  if ('permissions' in diff) {
-    if (
-      !userRequiresImageCache(TVA_CONFIG.permissions) &&
-      userRequiresImageCache(newSettings.permissions)
-    )
-      requiresImageCache = true;
-  }
-
-  // Update live settings
-  mergeObject(TVA_CONFIG, newSettings);
-
-  // Save settings
-  _saveSettings(TVA_CONFIG);
-
-  // Check if any setting need to be parsed post-update
-  if ('searchPaths' in diff || 'forgeSearchPaths' in diff) {
-    TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
-    if (userRequiresImageCache(TVA_CONFIG.permissions)) requiresImageCache = true;
-  }
-  if ('excludedKeywords' in diff) {
-    TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
-  }
-
-  // Cache/re-cache images if necessary
-  if (requiresImageCache) {
-    cacheTokens();
-  }
-}
-
-async function _saveSettings(settings) {
-  const newSettings = deepClone(settings);
-  delete newSettings.parsedSearchPaths;
-  delete newSettings.parsedExcludedKeywords;
-  game.settings.set('token-variants', 'settings', newSettings);
+  const settings = mergeObject(deepClone(TVA_CONFIG), newSettings);
+  delete settings.parsedSearchPaths;
+  delete settings.parsedExcludedKeywords;
+  game.settings.set('token-variants', 'settings', settings);
 }
 
 export function _arrayAwareDiffObject(original, other, { inner = false } = {}) {

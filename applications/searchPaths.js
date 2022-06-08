@@ -39,7 +39,7 @@ export class ForgeSearchPaths extends FormApplication {
   }
 
   async _getPaths() {
-    const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
+    const forgePaths = deepClone(TVA_CONFIG.forgeSearchPaths) || {};
     this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
     this.apiKey = forgePaths[this.userId]?.apiKey;
     return forgePaths[this.userId]?.paths || [];
@@ -111,7 +111,7 @@ export class ForgeSearchPaths extends FormApplication {
 
   _updatePaths() {
     if (this.userId) {
-      const forgePaths = TVA_CONFIG.forgeSearchPaths || {};
+      const forgePaths = deepClone(TVA_CONFIG.forgeSearchPaths) || {};
       forgePaths[this.userId] = {
         paths: this._cleanPaths(),
         apiKey: this.apiKey,

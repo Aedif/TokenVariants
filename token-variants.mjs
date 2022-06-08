@@ -71,7 +71,7 @@ async function initialize() {
   await registerSettings();
 
   if (userRequiresImageCache()) {
-    cacheTokens();
+    cacheImages();
   }
 
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
@@ -713,12 +713,38 @@ function modActorSheet(actorSheet, html, options) {
   }
 }
 
+export async function saveCache() {
+  let file = new File([JSON.stringify(cachedImages)], 'cache.json', {
+    type: 'text/plain',
+  });
+  FilePicker.upload('data', 'modules/token-variants/', file);
+}
+
+async function _readCacheFromFile() {
+  await jQuery.getJSON('modules/token-variants/cache.json', (json) => {
+    if (Array.isArray(json)) {
+      cachedImages = json;
+    }
+  });
+}
+
 /**
  * Search for and cache all the found token art
  */
-export async function cacheTokens() {
+export async function cacheImages() {
   if (caching) return;
   caching = true;
+
+  if (!initialized && TVA_CONFIG.staticCache) {
+    await _readCacheFromFile();
+    if (!TVA_CONFIG.disableNotifs)
+      ui.notifications.info(
+        `Token Variant Art: Using Static Cache (${cachedImages.length} images)`
+      );
+    caching = false;
+    return;
+  }
+
   if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
@@ -738,6 +764,10 @@ export async function cacheTokens() {
         imageCount: cachedImages.length,
       })
     );
+
+  if (initialized && TVA_CONFIG.staticCache) {
+    saveCache();
+  }
 }
 
 /**
@@ -963,7 +993,7 @@ async function walkFindTokens(
     console.log(
       `Token Variant Art | ${game.i18n.localize(
         'token-variants.notifications.warn.path-not-found'
-      )} ${path}`
+      )} ${dir}`
     );
     return;
   }
@@ -1262,7 +1292,11 @@ Hooks.once('ready', initialize);
 Hooks.on('init', function () {
   registerKeybinds();
 
+  // Kepping the old caching function name for the API
+  const cacheTokens = () => cacheImages();
+
   game.modules.get('token-variants').api = {
+    cacheImages,
     cacheTokens,
     doImageSearch,
     doRandomSearch,

@@ -103,6 +103,7 @@ export default class ConfigureSettings extends FormApplication {
     data.imgurClientId = settings.imgurClientId;
     data.enableStatusConfig = settings.enableStatusConfig;
     data.disableNotifs = settings.disableNotifs;
+    data.staticCache = settings.staticCache;
 
     return data;
   }
@@ -398,6 +399,7 @@ export default class ConfigureSettings extends FormApplication {
       imgurClientId: formData.imgurClientId,
       enableStatusConfig: formData.enableStatusConfig,
       disableNotifs: formData.disableNotifs,
+      staticCache: formData.staticCache,
     });
 
     // Save settings

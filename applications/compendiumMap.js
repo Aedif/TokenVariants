@@ -1,4 +1,4 @@
-import { showArtSelect, doImageSearch, cacheTokens } from '../token-variants.mjs';
+import { showArtSelect, doImageSearch, cacheImages } from '../token-variants.mjs';
 import {
   SEARCH_TYPE,
   updateActorImage,
@@ -211,7 +211,7 @@ export default class CompendiumMapConfig extends FormApplication {
     }
 
     if (formData.cache || !userRequiresImageCache()) {
-      await cacheTokens();
+      await cacheImages();
     }
 
     const compendium = game.packs.get(formData.compendium);

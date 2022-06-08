@@ -4,3 +4,4 @@ jsconfig.json
 .vscode/settings.json
 docs/TokenVariantArtSceneBG.png
 docs/TokenVariantArtSceneBG.xcf
+cache.json

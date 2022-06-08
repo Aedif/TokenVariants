@@ -510,6 +510,14 @@
           </div>
 
           <div class="form-group">
+            <label>Static Cache</label>
+            <div class="form-fields">
+              <input type="checkbox" name="staticCache" data-dtype="Boolean" {{#if staticCache}}checked{{/if}}>
+            </div>
+            <p class="notes">Cached images will be stored in a file and read upon world load. Cache will be refreshed on search path changes.</p>
+          </div>
+
+          <div class="form-group">
             <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
             <div class="form-fields">
               <input type="checkbox" name="disableNotifs" data-dtype="Boolean" {{#if disableNotifs}}checked{{/if}}>
