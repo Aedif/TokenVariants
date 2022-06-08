@@ -509,13 +509,23 @@
             <p class="notes">{{localize "token-variants.settings.status-config.Hint"}}</p>
           </div>
 
+          <hr>
           <div class="form-group">
             <label>Static Cache</label>
             <div class="form-fields">
               <input type="checkbox" name="staticCache" data-dtype="Boolean" {{#if staticCache}}checked{{/if}}>
             </div>
-            <p class="notes">Cached images will be stored in a file and read upon world load. Cache will be refreshed on search path changes.</p>
+            <p class="notes">Cached images will be stored in a file and read upon world load. Cache will be refreshed on search path changes or by clicking the button bellow.</p>
           </div>
+
+          <div class="form-group">
+            <label></label>
+            <button class="token-variants-cache-images" type="button">
+                <i class="fas fa-sync-alt"></i>
+                <label>Cache Images</label>
+            </button>
+          </div>
+          <hr>
 
           <div class="form-group">
             <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>

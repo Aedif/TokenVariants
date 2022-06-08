@@ -183,6 +183,16 @@ When enabled all searches will be done both on the file names as well as the fil
 
 e.g. '**Dragon**' will match "token_art/**dragon**s/red/avatar.png" as well as "tokens/monsters/Red**Dragon**.png"
 
+### Static Cache
+
+This setting can be used to speed up image caching.
+
+When enabled the image cache will be stored in a file and read on game world load. The cache will only be refreshed when '**Search Paths**' or '**Forge Asset Library Paths**' settings change, or by manually re-caching by clicking the '**Cache Images**' button.
+
+Re-caching can also be performed by running the following in a macro:
+
+**game.modules.get("token-variants").api.cacheImages()**
+
 ## Image configuration
 
 Images displayed in the **Art Select** window or the **TokenHUD** side menu can be shift+left-clicked to open a configuration pop-up:
@@ -299,9 +309,9 @@ e.g.
 
 - game.modules.get('token-variants').api.updateTokenImage("tokenImages/dragon/RedDragon.jpg", {token: canvas.tokens.controlled[0]});
 
-## **cacheTokens()**
+## **cacheImages()**
 
-When called will trigger the refresh of the token cache.
+When called will trigger the refresh of the image cache.
 
 ## **TVA_CONFIG**
 

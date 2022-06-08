@@ -1,3 +1,15 @@
+# 2.1.0
+
+New setting: **Misc** > **Static Cache**
+
+- Can be used to speed up image caching
+- When enabled the image cache will be stored in a file and read on game load
+- The cache will only be refreshed when '**Search Paths**' or '**Forge Asset Library Paths**' settings change, or by manually re-caching by clicking the '**Cache Images**' button
+- Re-caching can also be performed by running the following in a macro:
+  - **game.modules.get("token-variants").api.cacheImages()**
+
+_Note: If running on ForgeVTT or some other hosting service it may take 5 minutes or more for cache file updates to be reflected in your browser_
+
 # 2.0.0
 
 **!!!** **forgevtt:path/to/art** type paths will no longer work **!!!**

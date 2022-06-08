@@ -714,18 +714,37 @@ function modActorSheet(actorSheet, html, options) {
 }
 
 export async function saveCache() {
-  let file = new File([JSON.stringify(cachedImages)], 'cache.json', {
+  const data = [['path', 'name']];
+
+  for (const img of cachedImages) {
+    data.push([img.path, img.name]);
+  }
+
+  let file = new File([JSON.stringify(data)], 'cache.json', {
     type: 'text/plain',
   });
   FilePicker.upload('data', 'modules/token-variants/', file);
 }
 
 async function _readCacheFromFile() {
-  await jQuery.getJSON('modules/token-variants/cache.json', (json) => {
-    if (Array.isArray(json)) {
-      cachedImages = json;
-    }
-  });
+  try {
+    await jQuery.getJSON('modules/token-variants/cache.json', (json) => {
+      cachedImages = [];
+      if (json[0][0] === 'path' && json[0][1] == 'name') {
+        for (let i = 1; i < json.length; i++) {
+          cachedImages.push({ path: json[i][0], name: json[i][1] });
+        }
+      }
+      if (!TVA_CONFIG.disableNotifs)
+        ui.notifications.info(
+          `Token Variant Art: Using Static Cache (${cachedImages.length} images)`
+        );
+    });
+  } catch (error) {
+    ui.notifications.warn('Token Variant Art: Static Cache not found');
+    cachedImages = [];
+  }
+  caching = false;
 }
 
 /**
@@ -736,12 +755,7 @@ export async function cacheImages() {
   caching = true;
 
   if (!initialized && TVA_CONFIG.staticCache) {
-    await _readCacheFromFile();
-    if (!TVA_CONFIG.disableNotifs)
-      ui.notifications.info(
-        `Token Variant Art: Using Static Cache (${cachedImages.length} images)`
-      );
-    caching = false;
+    _readCacheFromFile();
     return;
   }
 
@@ -765,7 +779,7 @@ export async function cacheImages() {
       })
     );
 
-  if (initialized && TVA_CONFIG.staticCache) {
+  if (initialized && TVA_CONFIG.staticCache && game.user.isGM) {
     saveCache();
   }
 }

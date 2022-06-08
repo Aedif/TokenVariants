@@ -1,4 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { cacheImages } from '../token-variants.mjs';
 
 export default class ConfigureSettings extends FormApplication {
   constructor() {
@@ -183,6 +184,9 @@ export default class ConfigureSettings extends FormApplication {
         .find('input[name="worldHud.useNameSimilarity"]')
         .prop('disabled', !event.target.checked);
     });
+
+    // Static Cache
+    html.find('button.token-variants-cache-images').click(() => cacheImages());
   }
 
   /**
