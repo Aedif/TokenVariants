@@ -532,10 +532,7 @@ async function createToken(token, options, userId) {
   showArtSelect(token.data.name, {
     callback: async function (imgSrc, imgName) {
       if (TVA_CONFIG.popup.twoPopups) {
-        await updateActorImage(token.actor, imgSrc, {
-          imgName: imgName,
-          token: token,
-        });
+        await updateActorImage(token.actor, imgSrc);
         twoPopupPrompt(token.actor, imgSrc, imgName, token);
       } else {
         updateTokenImage(imgSrc, {
@@ -567,7 +564,7 @@ async function createActor(actor, options, userId) {
         actor: actor,
       });
       if (img) {
-        await updateActorImage(actor, img[0], { imgName: img[1] });
+        await updateActorImage(actor, img[0]);
       }
 
       if (!img) return;
@@ -609,10 +606,7 @@ async function createActor(actor, options, userId) {
     callback: async function (imgSrc, name) {
       const actTokens = actor.getActiveTokens();
       const token = actTokens.length === 1 ? actTokens[0] : null;
-      await updateActorImage(actor, imgSrc, {
-        imgName: name,
-        token: token,
-      });
+      await updateActorImage(actor, imgSrc);
       if (TVA_CONFIG.popup.twoPopups) twoPopupPrompt(actor, imgSrc, name, token);
       else {
         updateTokenImage(imgSrc, {
@@ -700,10 +694,7 @@ function modActorSheet(actorSheet, html, options) {
       'contextmenu',
       function (ev) {
         showArtSelect(actorSheet.object.name, {
-          callback: (imgSrc, name) =>
-            updateActorImage(actorSheet.object, imgSrc, {
-              imgName: name,
-            }),
+          callback: (imgSrc, name) => updateActorImage(actorSheet.object, imgSrc),
           searchType: SEARCH_TYPE.PORTRAIT,
           object: actorSheet.object,
         });

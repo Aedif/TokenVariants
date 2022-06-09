@@ -1,4 +1,5 @@
 import { TVA_CONFIG, updateSettings } from './settings.js';
+import { showArtSelect } from '../token-variants.mjs';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -234,6 +235,87 @@ export function registerKeybinds() {
     },
     onUp: () => {
       PRESSED_KEYS.config = false;
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'showArtSelectPortrait', {
+    name: 'Show Art Select: Portrait',
+    hint: 'Brings up an Art Select pop-up to change the portrait images of the selected tokens.',
+    editable: [
+      {
+        key: 'Digit1',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      for (const token of canvas.tokens.controlled) {
+        const actor = game.actors.get(token.data.actorId);
+        if (!actor) continue;
+        showArtSelect(actor.data.name, {
+          callback: async function (imgSrc, name) {
+            await updateActorImage(actor, imgSrc);
+          },
+          searchType: SEARCH_TYPE.PORTRAIT,
+          object: actor,
+        });
+      }
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'showArtSelectToken', {
+    name: 'Show Art Select: Token',
+    hint: 'Brings up an Art Select pop-up to change the token images of the selected tokens.',
+    editable: [
+      {
+        key: 'Digit2',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      for (const token of canvas.tokens.controlled) {
+        showArtSelect(token.data.name, {
+          callback: async function (imgSrc, imgName) {
+            updateTokenImage(imgSrc, {
+              actor: token.actor,
+              imgName: imgName,
+              token: token,
+            });
+          },
+          searchType: SEARCH_TYPE.TOKEN,
+          object: token,
+        });
+      }
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'showArtSelectGeneral', {
+    name: 'Show Art Select: Portrait+Token',
+    hint: 'Brings up an Art Select pop-up to change both Portrait and Token images of the selected tokens.',
+    editable: [
+      {
+        key: 'Digit3',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      for (const token of canvas.tokens.controlled) {
+        const actor = game.actors.get(token.data.actorId);
+        showArtSelect(token.data.name, {
+          callback: async function (imgSrc, imgName) {
+            if (actor) await updateActorImage(actor, imgSrc);
+            updateTokenImage(imgSrc, {
+              actor: token.actor,
+              imgName: imgName,
+              token: token,
+            });
+          },
+          searchType: SEARCH_TYPE.BOTH,
+          object: token,
+        });
+      }
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,

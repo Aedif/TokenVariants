@@ -1,6 +1,15 @@
+# 2.2.0
+
+New keybindings available only on Foundry V9:
+
+- Show Art Select: Portrait
+- Show Art Select: Token
+- Show Art Select: Portrait+Token
+  - Allows to quickly bring up the **Art Select** window for one or more tokens already placed on the canvas and change their Portrait and Token images.
+
 # 2.1.1
 
-- Videos in the '**Art Select**' window and the **Token HUD menu** are now **MUTED**
+- Videos in the '**Art Select**' window and the **Token HUD** menu are now **MUTED**
 
 # 2.1.0
 
