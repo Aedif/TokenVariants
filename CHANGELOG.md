@@ -1,3 +1,7 @@
+# 2.1.1
+
+- Videos in the '**Art Select**' window and the **Token HUD menu** are now **MUTED**
+
 # 2.1.0
 
 New setting: **Misc** > **Static Cache**
