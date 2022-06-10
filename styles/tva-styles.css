@@ -296,7 +296,8 @@ ol.token-variant-table .table-row .path-image img {
 ol.token-variant-table .table-row .path-text {
   flex: 1;
 }
-ol.token-variant-table .table-row .path-cache {
+ol.token-variant-table .table-row .path-cache,
+ol.token-variant-table .table-row .path-tiles {
   flex: 0 0 50px;
   text-align: center;
 }
@@ -344,6 +345,7 @@ ol.token-variant-table .table-row .effect-image {
 /* ---------------------------------------- */
 /* Token HUD Settings                       */
 /* ---------------------------------------- */
+#tile-hud .token-variants-wrap,
 #token-hud .token-variants-wrap {
   position: absolute;
   left: 75px;
@@ -357,14 +359,18 @@ ol.token-variant-table .table-row .effect-image {
   grid-template-columns: 100px 100px 100px;
   overflow-y: auto;
 }
+#tile-hud .token-variants-wrap.list,
 #token-hud .token-variants-wrap.list {
   grid-template-columns: unset !important;
   max-width: 450px;
 }
 
+#tile-hud .token-variants-wrap.active,
 #token-hud .token-variants-wrap.active {
   visibility: visible;
 }
+
+#tile-hud .token-variants-button-select,
 #token-hud .token-variants-button-select {
   max-width: 300px;
   overflow-wrap: break-word;
@@ -377,10 +383,12 @@ ol.token-variant-table .table-row .effect-image {
   position: relative;
 }
 
+#tile-hud .token-variants-button-select.hide,
 #token-hud .token-variants-button-select.hide {
   display: none;
 }
 
+#tile-hud .token-variants-button-select .fa-share,
 #token-hud .token-variants-button-select .fa-share {
   position: absolute;
   left: 0;
@@ -389,6 +397,7 @@ ol.token-variant-table .table-row .effect-image {
   pointer-events: none;
 }
 
+#tile-hud .token-variants-button-select .fa-cog,
 #token-hud .token-variants-button-select .fa-cog {
   position: absolute;
   right: 0;
@@ -397,26 +406,32 @@ ol.token-variant-table .table-row .effect-image {
   pointer-events: none;
 }
 
+#tile-hud .token-variants-button-select .fa-cog.active,
 #token-hud .token-variants-button-select .fa-cog.active {
   opacity: 1;
 }
 
+#tile-hud .token-variants-button-select .fa-share.active,
 #token-hud .token-variants-button-select .fa-share.active {
   opacity: 1;
 }
 
+#tile-hud .token-variants-side-search,
 #token-hud .token-variants-side-search {
   display: none;
 }
 
+#tile-hud .token-variants-side-search.active,
 #token-hud .token-variants-side-search.active {
   display: block;
 }
 
+#tile-hud .token-variants-button-select:hover .token-variants-button-image,
 #token-hud .token-variants-button-select:hover .token-variants-button-image {
   opacity: 1 !important;
 }
 
+#tile-hud .token-variants-button-select.list,
 #token-hud .token-variants-button-select.list {
   max-width: 440px;
   width: 100% !important;
@@ -424,6 +439,7 @@ ol.token-variant-table .table-row .effect-image {
   line-height: 40px !important;
 }
 
+#tile-hud .token-variants-button-image,
 #token-hud .token-variants-button-image {
   width: 100px;
   height: 100px;
@@ -437,15 +453,32 @@ ol.token-variant-table .table-row .effect-image {
   opacity: 1 !important;
   filter: grayscale(100%);
 }
+
+#tile-hud .token-variants-button-disabled span,
+#tile-hud .token-variants-button-disabled img,
+#tile-hud .token-variants-button-disabled video {
+  opacity: 1 !important;
+  filter: grayscale(100%);
+}
+
 #token-hud .token-variants-button-disabled span,
 #token-hud .token-variants-button-disabled:hover img,
 #token-hud .token-variants-button-disabled:hover video {
   color: #ccc;
 }
 
+#tile-hud .token-variants-button-disabled span,
+#tile-hud .token-variants-button-disabled:hover img,
+#tile-hud .token-variants-button-disabled:hover video {
+  color: #ccc;
+}
+
+.tile-sheet .token-variants-default,
 .token-sheet .token-variants-default {
   display: none;
 }
+
+.tile-sheet .token-variants-default.active,
 .token-sheet .token-variants-default.active {
   display: block;
 }

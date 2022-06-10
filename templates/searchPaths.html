@@ -17,6 +17,9 @@
         <div class="path-text"><label>Path</label></div>
         <div class="path-cache"><label>Cache</label></div>
         <div class="path-share"><label>Share</label></div>
+        {{#if tilesEnabled}}
+        <div class="path-tiles"><label>Tiles</label></div>
+        {{/if}}
         <div class="path-controls"></div>
       </li>
 
@@ -26,21 +29,19 @@
           <i class="fas fa-hammer"></i>
         </div>
         <div class="path-text">
-          <input
-            type="text"
-            name="paths.{{index}}.text"
-            value="{{path.text}}"
-            placeholder="Path to image source"
-          />
+          <input type="text" name="paths.{{index}}.text" value="{{path.text}}" placeholder="Path to image source"/>
         </div>
         <div class="path-cache">
-          <input type="checkbox" name="paths.{{index}}.cache" data-dtype="Boolean" {{#if
-          path.cache}}checked{{/if}}/>
+          <input type="checkbox" name="paths.{{index}}.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>
         </div>
         <div class="path-share">
-          <input type="checkbox" name="paths.{{index}}.share" data-dtype="Boolean" {{#if
-          path.share}}checked{{/if}}/>
+          <input type="checkbox" name="paths.{{index}}.share" data-dtype="Boolean" {{#if path.share}}checked{{/if}}/>
         </div>
+        {{#if ../tilesEnabled}}
+        <div class="path-tiles">
+          <input type="checkbox" name="paths.{{index}}.tiles" data-dtype="Boolean" {{#if path.tiles}}checked{{/if}}/>
+        </div>
+        {{/if}}
         <div class="path-controls">
           <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
         </div>

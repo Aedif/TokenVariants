@@ -33,6 +33,7 @@ export default class ConfigureSettings extends FormApplication {
       r.text = path.text;
       r.icon = this._pathIcon(path.text);
       r.cache = path.cache;
+      r.tiles = path.tiles;
       return r;
     });
     data.searchPaths = paths;
@@ -105,6 +106,7 @@ export default class ConfigureSettings extends FormApplication {
     data.enableStatusConfig = settings.enableStatusConfig;
     data.disableNotifs = settings.disableNotifs;
     data.staticCache = settings.staticCache;
+    data.tilesEnabled = settings.tilesEnabled;
 
     return data;
   }
@@ -276,7 +278,7 @@ export default class ConfigureSettings extends FormApplication {
   async _onCreatePath(event) {
     event.preventDefault();
     const table = $(event.currentTarget).closest('.token-variant-table');
-    const row = `
+    let row = `
     <li class="table-row flexrow">
         <div class="path-image">
             <i class="${this._pathIcon('')}"></i>
@@ -289,7 +291,17 @@ export default class ConfigureSettings extends FormApplication {
         </div>
         <div class="path-cache">
             <input type="checkbox" name="searchPaths.cache" data-dtype="Boolean" checked/>
+        </div>`;
+
+    if (this.settings.tilesEnabled) {
+      row += `
+        <div class="path-tiles">
+          <input type="checkbox" name="searchPaths.tiles" data-dtype="Boolean"/>
         </div>
+      `;
+    }
+
+    row += `
         <div class="path-controls">
             <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
         </div>
@@ -297,13 +309,42 @@ export default class ConfigureSettings extends FormApplication {
   `;
     table.append(row);
 
+    this._reIndexPaths(table);
+
     this.setPosition(); // Auto-resize window
+  }
+
+  async _reIndexPaths(table) {
+    table
+      .find('.path-text')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.text`);
+      });
+
+    table
+      .find('.path-cache')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.cache`);
+      });
+
+    table
+      .find('.path-tiles')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.tiles`);
+      });
   }
 
   async _onDeletePath(event) {
     event.preventDefault();
+
     const li = event.currentTarget.closest('.table-row');
     li.remove();
+
+    const table = $(event.currentTarget).closest('.token-variant-table');
+    this._reIndexPaths(table);
 
     this.setPosition(); // Auto-resize window
   }
@@ -345,23 +386,9 @@ export default class ConfigureSettings extends FormApplication {
     formData = expandObject(formData);
 
     // Search Paths
-    const searchPaths = [];
-    if (formData.searchPaths) {
-      if (!Array.isArray(formData.searchPaths.cache)) {
-        formData.searchPaths.cache = [formData.searchPaths.cache];
-        formData.searchPaths.text = [formData.searchPaths.text];
-      }
-
-      for (let i = 0; i < formData.searchPaths.text.length; i++) {
-        if (formData.searchPaths.text[i] !== '') {
-          searchPaths.push({
-            text: formData.searchPaths.text[i],
-            cache: formData.searchPaths.cache[i],
-          });
-        }
-      }
-    }
-    settings.searchPaths = searchPaths;
+    settings.searchPaths = formData.hasOwnProperty('searchPaths')
+      ? Object.values(formData.searchPaths)
+      : [];
 
     // Search Filters
     if (!this._validRegex(formData.searchFilters.portraitFilterRegex)) {
@@ -404,6 +431,7 @@ export default class ConfigureSettings extends FormApplication {
       enableStatusConfig: formData.enableStatusConfig,
       disableNotifs: formData.disableNotifs,
       staticCache: formData.staticCache,
+      tilesEnabled: formData.tilesEnabled,
     });
 
     // Save settings

@@ -23,6 +23,9 @@
                   </div>
                   <div class="path-text"><label>Path</label></div>
                   <div class="path-cache"><label>Cache</label></div>
+                  {{#if tilesEnabled}}
+                  <div class="path-tiles"><label>Tiles</label></div>
+                  {{/if}}
                   <div class="path-controls"></div>
                 </li>
           
@@ -32,7 +35,7 @@
                     <i class="{{path.icon}}"></i>
                   </div>
                   <div class="path-text">
-                    <input class="searchPath" type="text" name="searchPaths.text" value="{{path.text}}" placeholder="Path to image source"
+                    <input class="searchPath" type="text" name="searchPaths.{{index}}.text" value="{{path.text}}" placeholder="Path to image source"
                     />
                   </div>
                   <div class="imgur-control {{#if (eq path.type 'imgur')}}active{{/if}}">
@@ -41,8 +44,13 @@
                     </a>
                   </div>
                   <div class="path-cache">
-                    <input type="checkbox" name="searchPaths.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>
+                    <input type="checkbox" name="searchPaths.{{index}}.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>
                   </div>
+                  {{#if ../tilesEnabled}}
+                  <div class="path-tiles">
+                    <input type="checkbox" name="searchPaths.{{index}}.tiles" data-dtype="Boolean" {{#if path.tiles}}checked{{/if}}/>
+                  </div>
+                  {{/if}}
                   <div class="path-controls">
                     <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
                   </div>
@@ -526,6 +534,14 @@
             </button>
           </div>
           <hr>
+
+          <div class="form-group">
+            <label>Tile HUD</label>
+            <div class="form-fields">
+              <input type="checkbox" name="tilesEnabled" data-dtype="Boolean" {{#if tilesEnabled}}checked{{/if}}>
+            </div>
+            <p class="notes">Enables Tile specific search paths and a Tile HUD button.</p>
+          </div>
 
           <div class="form-group">
             <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
