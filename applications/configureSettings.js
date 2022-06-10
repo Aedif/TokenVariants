@@ -309,13 +309,42 @@ export default class ConfigureSettings extends FormApplication {
   `;
     table.append(row);
 
+    this._reIndexPaths(table);
+
     this.setPosition(); // Auto-resize window
+  }
+
+  async _reIndexPaths(table) {
+    table
+      .find('.path-text')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.text`);
+      });
+
+    table
+      .find('.path-cache')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.cache`);
+      });
+
+    table
+      .find('.path-tiles')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.tiles`);
+      });
   }
 
   async _onDeletePath(event) {
     event.preventDefault();
+
     const li = event.currentTarget.closest('.table-row');
     li.remove();
+
+    const table = $(event.currentTarget).closest('.token-variant-table');
+    this._reIndexPaths(table);
 
     this.setPosition(); // Auto-resize window
   }
@@ -357,23 +386,9 @@ export default class ConfigureSettings extends FormApplication {
     formData = expandObject(formData);
 
     // Search Paths
-    const searchPaths = [];
-    if (formData.searchPaths) {
-      if (!Array.isArray(formData.searchPaths.cache)) {
-        formData.searchPaths.cache = [formData.searchPaths.cache];
-        formData.searchPaths.text = [formData.searchPaths.text];
-        if (this.settings.tilesEnabled) formData.searchPaths.tiles = [formData.searchPaths.tiles];
-      }
-
-      for (let i = 0; i < formData.searchPaths.text.length; i++) {
-        if (formData.searchPaths.text[i] !== '') {
-          const sp = { text: formData.searchPaths.text[i], cache: formData.searchPaths.cache[i] };
-          if (this.settings.tilesEnabled) sp.tiles = formData.searchPaths.tiles[i];
-          searchPaths.push(sp);
-        }
-      }
-    }
-    settings.searchPaths = searchPaths;
+    settings.searchPaths = formData.hasOwnProperty('searchPaths')
+      ? Object.values(formData.searchPaths)
+      : [];
 
     // Search Filters
     if (!this._validRegex(formData.searchFilters.portraitFilterRegex)) {
