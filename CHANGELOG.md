@@ -1,3 +1,13 @@
+# 2.3.0
+
+New setting: **Misc** > **Tile HUD**
+
+- With the new setting enabled **Search Paths** will include an option to specify a path as a Tile image source
+- Adds a new button to the Tile HUD including some of the features of the Token HUD button
+  - Right-click to perform tile image searches
+  - Right-click images to pin them to the tile
+  - Shift+Left-click the button to assign a name to the tile which will be used in the search
+
 # 2.2.0
 
 New keybindings available only on Foundry V9:
