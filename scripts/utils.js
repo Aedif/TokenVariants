@@ -8,6 +8,7 @@ export const SEARCH_TYPE = {
   PORTRAIT: 'portrait',
   TOKEN: 'token',
   BOTH: 'both',
+  TILE: 'tile',
 };
 
 export const PRESSED_KEYS = {
@@ -391,10 +392,10 @@ export function getFileNameWithExt(path) {
 }
 
 /**
- * Simplifies token and monster names.
+ * Simplify name.
  */
-export function simplifyTokenName(tokenName) {
-  return tokenName.replace(simplifyRegex, '').toLowerCase();
+export function simplifyName(name) {
+  return name.replace(simplifyRegex, '').toLowerCase();
 }
 
 export function simplifyPath(path) {
@@ -456,17 +457,21 @@ export async function parseSearchPaths(config) {
         let buckets = searchPaths.get('s3');
 
         if (buckets.has(bucket)) {
-          buckets.get(bucket).push({ text: bPath, cache: path.cache });
+          buckets.get(bucket).push({ text: bPath, cache: path.cache, tiles: path.tiles });
         } else {
-          buckets.set(bucket, [{ text: bPath, cache: path.cache }]);
+          buckets.set(bucket, [{ text: bPath, cache: path.cache, tiles: path.tiles }]);
         }
       }
     } else if (path.text.startsWith('rolltable:')) {
-      searchPaths.get('rolltable').push({ text: path.text.split(':')[1], cache: path.cache });
+      searchPaths
+        .get('rolltable')
+        .push({ text: path.text.split(':')[1], cache: path.cache, tiles: path.tiles });
     } else if (path.text.startsWith('imgur:')) {
-      searchPaths.get('imgur').push({ text: path.text.split(':')[1], cache: path.cache });
+      searchPaths
+        .get('imgur')
+        .push({ text: path.text.split(':')[1], cache: path.cache, tiles: path.tiles });
     } else {
-      searchPaths.get('data').push({ text: path.text, cache: path.cache });
+      searchPaths.get('data').push({ text: path.text, cache: path.cache, tiles: path.tiles });
     }
   }
 
@@ -483,7 +488,7 @@ export async function parseSearchPaths(config) {
 export function parseKeywords(keywords) {
   return keywords
     .split(/\W/)
-    .map((word) => simplifyTokenName(word))
+    .map((word) => simplifyName(word))
     .filter((word) => word != '');
 }
 

@@ -29,12 +29,14 @@ export class ForgeSearchPaths extends FormApplication {
       r.text = path.text;
       r.cache = path.cache;
       r.share = path.share;
+      r.tiles = path.tiles;
       return r;
     });
 
     const data = super.getData(options);
     data.paths = paths;
     data.apiKey = this.apiKey;
+    data.tilesEnabled = TVA_CONFIG.tilesEnabled && game.user.isGM;
     return data;
   }
 
@@ -60,7 +62,7 @@ export class ForgeSearchPaths extends FormApplication {
     event.preventDefault();
     await this._onSubmit(event);
 
-    this.object.paths.push({ text: '', cache: true, share: true });
+    this.object.paths.push({ text: '', cache: true, share: true, tiles: false });
     this.render();
   }
 
@@ -93,6 +95,7 @@ export class ForgeSearchPaths extends FormApplication {
         text: path.text,
         cache: path.cache,
         share: path.share,
+        tiles: path.tiles,
       };
     });
     this.apiKey = expanded.apiKey;

@@ -23,6 +23,9 @@
                   </div>
                   <div class="path-text"><label>Path</label></div>
                   <div class="path-cache"><label>Cache</label></div>
+                  {{#if tilesEnabled}}
+                  <div class="path-tiles"><label>Tiles</label></div>
+                  {{/if}}
                   <div class="path-controls"></div>
                 </li>
           
@@ -43,6 +46,11 @@
                   <div class="path-cache">
                     <input type="checkbox" name="searchPaths.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>
                   </div>
+                  {{#if ../tilesEnabled}}
+                  <div class="path-tiles">
+                    <input type="checkbox" name="searchPaths.tiles" data-dtype="Boolean" {{#if path.tiles}}checked{{/if}}/>
+                  </div>
+                  {{/if}}
                   <div class="path-controls">
                     <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
                   </div>
@@ -526,6 +534,14 @@
             </button>
           </div>
           <hr>
+
+          <div class="form-group">
+            <label>Tile Support</label>
+            <div class="form-fields">
+              <input type="checkbox" name="tilesEnabled" data-dtype="Boolean" {{#if tilesEnabled}}checked{{/if}}>
+            </div>
+            <p class="notes">Enables Tile specific search paths and a Tile HUD button.</p>
+          </div>
 
           <div class="form-group">
             <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>

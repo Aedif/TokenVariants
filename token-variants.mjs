@@ -9,7 +9,7 @@ import {
   getFileName,
   getFileNameWithExt,
   getFilters,
-  simplifyTokenName,
+  simplifyName,
   simplifyPath,
   getTokenConfigForUpdate,
   SEARCH_TYPE,
@@ -25,6 +25,7 @@ import {
   flattenSearchResults,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
+import { renderTileHUD } from './applications/tileHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
 
 // Tracks if module has been initialized
@@ -33,10 +34,11 @@ let initialized = false;
 // True if in the middle of caching image paths
 let caching = false;
 
-// A cached map of all the found tokens
-let cachedImages = [];
+// A cached map of all the found tokens/portraits
+let cachedTokenImages = [];
+let cachedTileImages = [];
 
-// To track tokens found during image search
+// To track images found during image search
 let foundImages = [];
 
 // showArtSelect(...) can take a while to fully execute and it is possible for it to be called
@@ -448,6 +450,7 @@ async function initialize() {
   Hooks.on('renderActorSheet', modActorSheet);
 
   Hooks.on('renderTokenHUD', renderHud);
+  Hooks.on('renderTileHUD', renderTileHUD);
 
   initialized = true;
 }
@@ -707,7 +710,7 @@ function modActorSheet(actorSheet, html, options) {
 export async function saveCache() {
   const data = [['path', 'name']];
 
-  for (const img of cachedImages) {
+  for (const img of cachedTokenImages) {
     data.push([img.path, img.name]);
   }
 
@@ -720,20 +723,20 @@ export async function saveCache() {
 async function _readCacheFromFile() {
   try {
     await jQuery.getJSON('modules/token-variants/cache.json', (json) => {
-      cachedImages = [];
+      cachedTokenImages = [];
       if (json[0][0] === 'path' && json[0][1] == 'name') {
         for (let i = 1; i < json.length; i++) {
-          cachedImages.push({ path: json[i][0], name: json[i][1] });
+          cachedTokenImages.push({ path: json[i][0], name: json[i][1] });
         }
       }
       if (!TVA_CONFIG.disableNotifs)
         ui.notifications.info(
-          `Token Variant Art: Using Static Cache (${cachedImages.length} images)`
+          `Token Variant Art: Using Static Cache (${cachedTokenImages.length} images)`
         );
     });
   } catch (error) {
     ui.notifications.warn('Token Variant Art: Static Cache not found');
-    cachedImages = [];
+    cachedTokenImages = [];
   }
   caching = false;
 }
@@ -754,19 +757,30 @@ export async function cacheImages() {
     ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
   if (TVA_CONFIG.debug) console.log('STARTING: Token Caching');
-  cachedImages = [];
+  cachedTokenImages = [];
 
   await findTokensExact('', '');
-  cachedImages = foundImages;
+  cachedTokenImages = foundImages;
 
   foundImages = [];
   if (TVA_CONFIG.debug) console.log('ENDING: Token Caching');
+
+  if (TVA_CONFIG.tilesEnabled) {
+    if (TVA_CONFIG.debug) console.log('STARTING: Tile Caching');
+    cachedTileImages = [];
+
+    await findTilesExact('');
+    cachedTileImages = foundImages;
+
+    foundImages = [];
+    if (TVA_CONFIG.debug) console.log('ENDING: Tile Caching');
+  }
 
   caching = false;
   if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(
       game.i18n.format('token-variants.notifications.info.caching-finished', {
-        imageCount: cachedImages.length,
+        imageCount: cachedTileImages.length + cachedTokenImages.length,
       })
     );
 
@@ -784,9 +798,7 @@ export async function cacheImages() {
  */
 function exactSearchMatchesImage(simplifiedSearch, imagePath, imageName, filters) {
   // Is the search text contained in the name/path
-  const simplified = TVA_CONFIG.runSearchOnPath
-    ? simplifyPath(imagePath)
-    : simplifyTokenName(imageName);
+  const simplified = TVA_CONFIG.runSearchOnPath ? simplifyPath(imagePath) : simplifyName(imageName);
   if (!simplified.includes(simplifiedSearch)) {
     return false;
   }
@@ -818,13 +830,78 @@ function imagePassesFilter(imageName, imagePath, filters) {
   return true;
 }
 
-async function findTokens(name, searchType = '', algorithmOptions = {}) {
+async function findImages(name, searchType = '', algorithmOptions = {}) {
   const algOptions = mergeObject(algorithmOptions, TVA_CONFIG.algorithm, { overwrite: false });
-  if (algOptions.exact) {
-    return findTokensExact(name, searchType);
+  if (searchType === SEARCH_TYPE.TILE) {
+    if (algOptions.exact) {
+      return findTilesExact(name);
+    } else {
+      return findTilesFuzzy(name, algOptions);
+    }
   } else {
-    return findTokensFuzzy(name, searchType, algOptions);
+    if (algOptions.exact) {
+      return findTokensExact(name, searchType);
+    } else {
+      return findTokensFuzzy(name, searchType, algOptions);
+    }
   }
+}
+
+async function findTilesExact(name) {
+  if (TVA_CONFIG.debug) console.log('STARTING: Exact Tile Search', name, caching);
+
+  foundImages = [];
+
+  await walkAllPaths(false);
+
+  const simpleName = simplifyName(name);
+  foundImages = foundImages.filter((pathObj) =>
+    exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name)
+  );
+
+  cachedTileImages.forEach((pathObj) => {
+    if (exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name)) foundImages.push(pathObj);
+  });
+
+  if (TVA_CONFIG.debug) console.log('ENDING: Exact Tile Search', foundImages);
+  return foundImages;
+}
+
+async function findTilesFuzzy(name, algorithmOptions) {
+  if (TVA_CONFIG.debug) console.log('STARTING: Fuzzy Tile Search', name, caching, algorithmOptions);
+
+  let allPaths;
+  if (multiSearch) {
+    allPaths = cachedTileImages.filter((imgObj) => !usedImages.has(imgObj));
+  } else {
+    allPaths = [...cachedTileImages];
+  }
+
+  foundImages = [];
+  await walkAllPaths(false);
+
+  allPaths = allPaths.concat(foundImages);
+
+  const fuse = new Fuse(allPaths, {
+    keys: [TVA_CONFIG.runSearchOnPath ? 'path' : 'name'],
+    includeScore: true,
+    includeMatches: true,
+    minMatchCharLength: 1,
+    ignoreLocation: true,
+    threshold: algorithmOptions.fuzzyThreshold,
+  });
+
+  const results = fuse.search(name).slice(0, algorithmOptions.fuzzyLimit);
+
+  foundImages = results.map((r) => {
+    r.item.indices = r.matches[0].indices;
+    r.item.score = r.score;
+    return r.item;
+  });
+
+  if (TVA_CONFIG.debug) console.log('ENDING: Fuzzy Tile Search', foundImages);
+
+  return foundImages;
 }
 
 export async function findTokensFuzzy(name, searchType, algorithmOptions, forceSearchName = false) {
@@ -836,11 +913,11 @@ export async function findTokensFuzzy(name, searchType, algorithmOptions, forceS
 
   let allPaths;
   if (multiSearch) {
-    allPaths = cachedImages.filter(
+    allPaths = cachedTokenImages.filter(
       (imgObj) => !usedImages.has(imgObj) && imagePassesFilter(imgObj.name, imgObj.path, filters)
     );
   } else {
-    allPaths = cachedImages.filter((imgObj) =>
+    allPaths = cachedTokenImages.filter((imgObj) =>
       imagePassesFilter(imgObj.name, imgObj.path, filters)
     );
   }
@@ -886,13 +963,13 @@ async function findTokensExact(name, searchType) {
 
   await walkAllPaths();
 
-  const simpleName = simplifyTokenName(name);
+  const simpleName = simplifyName(name);
   let filters = getFilters(searchType);
   foundImages = foundImages.filter((pathObj) =>
     exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name, filters)
   );
 
-  cachedImages.forEach((pathObj) => {
+  cachedTokenImages.forEach((pathObj) => {
     if (exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name, filters))
       foundImages.push(pathObj);
   });
@@ -901,40 +978,50 @@ async function findTokensExact(name, searchType) {
   return foundImages;
 }
 
-async function walkAllPaths() {
+async function walkAllPaths(tokens = true) {
   for (let path of TVA_CONFIG.parsedSearchPaths.get('data')) {
-    if ((path.cache && caching) || (!path.cache && !caching)) await walkFindTokens(path.text, {});
+    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
+      if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path.text, {});
+    }
   }
   for (let [bucket, paths] of TVA_CONFIG.parsedSearchPaths.get('s3')) {
     for (let path of paths) {
-      if ((path.cache && caching) || (!path.cache && !caching))
-        await walkFindTokens(path.text, {
-          bucket: bucket,
-        });
+      if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
+        if ((path.cache && caching) || (!path.cache && !caching))
+          await walkFindImages(path.text, {
+            bucket: bucket,
+          });
+      }
     }
   }
   for (let path of TVA_CONFIG.parsedSearchPaths.get('rolltable')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        rollTableName: path.text,
-      });
+    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
+      if ((path.cache && caching) || (!path.cache && !caching))
+        await walkFindImages(path.text, {
+          rollTableName: path.text,
+        });
+    }
   }
   for (let path of TVA_CONFIG.parsedSearchPaths.get('forgevtt')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        forgevtt: true,
-        apiKey: path.apiKey,
-      });
+    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
+      if ((path.cache && caching) || (!path.cache && !caching))
+        await walkFindImages(path.text, {
+          forgevtt: true,
+          apiKey: path.apiKey,
+        });
+    }
   }
   for (let path of TVA_CONFIG.parsedSearchPaths.get('imgur')) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindTokens(path.text, {
-        imgur: true,
-      });
+    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
+      if ((path.cache && caching) || (!path.cache && !caching))
+        await walkFindImages(path.text, {
+          imgur: true,
+        });
+    }
   }
 }
 
-async function walkFindTokens(
+async function walkFindImages(
   dir,
   { bucket = '', rollTableName = '', forgevtt = false, apiKey = '', imgur = false } = {}
 ) {
@@ -1014,7 +1101,7 @@ async function walkFindTokens(
   if (forgevtt) return;
 
   for (let f_dir of files.dirs) {
-    await walkFindTokens(f_dir, { bucket, rollTableName, forgevtt, apiKey, imgur });
+    await walkFindImages(f_dir, { bucket, rollTableName, forgevtt, apiKey, imgur });
   }
 }
 
@@ -1210,18 +1297,18 @@ export async function doImageSearch(
     );
   }
 
-  multiSearch = true; // TODO: transfer this logic to findTokens()
+  multiSearch = true; // TODO: transfer this logic to findImages()
   usedImages = new Set();
   for (const search of searches) {
     if (allImages.get(search) !== undefined) continue;
 
-    let results = await findTokens(search, searchType, algorithmOptions);
+    let results = await findImages(search, searchType, algorithmOptions);
     results = results.filter((pathObj) => !usedImages.has(pathObj));
 
     allImages.set(search, results);
     results.forEach(usedImages.add, usedImages);
 
-    multiSearch = true; // TODO: transfer this logic to findTokens()
+    multiSearch = true; // TODO: transfer this logic to findImages()
   }
   multiSearch = false;
 
