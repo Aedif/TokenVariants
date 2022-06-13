@@ -708,10 +708,14 @@ function modActorSheet(actorSheet, html, options) {
 }
 
 export async function saveCache() {
-  const data = [['path', 'name']];
+  const data = { tokenImages: [], tileImages: [] };
 
   for (const img of cachedTokenImages) {
-    data.push([img.path, img.name]);
+    data.tokenImages.push([img.path, img.name]);
+  }
+
+  for (const img of cachedTileImages) {
+    data.tileImages.push([img.path, img.name]);
   }
 
   let file = new File([JSON.stringify(data)], 'cache.json', {
@@ -720,23 +724,38 @@ export async function saveCache() {
   FilePicker.upload('data', 'modules/token-variants/', file);
 }
 
-async function _readCacheFromFile() {
+async function _readCacheFromFile(fileName) {
+  cachedTokenImages = [];
+  cachedTileImages = [];
+
   try {
     await jQuery.getJSON('modules/token-variants/cache.json', (json) => {
-      cachedTokenImages = [];
-      if (json[0][0] === 'path' && json[0][1] == 'name') {
-        for (let i = 1; i < json.length; i++) {
-          cachedTokenImages.push({ path: json[i][0], name: json[i][1] });
+      // Old Cache implementation
+      if (Array.isArray(json)) {
+        if (json[0][0] === 'path' && json[0][1] == 'name') {
+          for (let i = 1; i < json.length; i++) {
+            cachedTokenImages.push({ path: json[i][0], name: json[i][1] });
+          }
+        }
+      } else {
+        for (const img of json.tokenImages) {
+          cachedTokenImages.push({ path: img[0], name: img[1] });
+        }
+        for (const img of json.tileImages) {
+          cachedTileImages.push({ path: img[0], name: img[1] });
         }
       }
       if (!TVA_CONFIG.disableNotifs)
         ui.notifications.info(
-          `Token Variant Art: Using Static Cache (${cachedTokenImages.length} images)`
+          `Token Variant Art: Using Static Cache (${
+            cachedTokenImages.length + cachedTileImages.length
+          } images)`
         );
     });
   } catch (error) {
-    ui.notifications.warn('Token Variant Art: Static Cache not found');
+    ui.notifications.warn(`Token Variant Art: Static Cache not found`);
     cachedTokenImages = [];
+    cachedTileImages = [];
   }
   caching = false;
 }
@@ -749,7 +768,7 @@ export async function cacheImages() {
   caching = true;
 
   if (!initialized && TVA_CONFIG.staticCache) {
-    _readCacheFromFile();
+    await _readCacheFromFile();
     return;
   }
 
