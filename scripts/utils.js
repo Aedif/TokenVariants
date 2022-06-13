@@ -551,9 +551,9 @@ export async function callForgeVTT(path, apiKey) {
  * Retrieves filters based on the type of search.
  * @param {SEARCH_TYPE} searchType
  */
-export function getFilters(searchType) {
+export function getFilters(searchType, filters) {
   // Select filters based on type of search
-  let filters = TVA_CONFIG.searchFilters;
+  filters = filters ? filters : TVA_CONFIG.searchFilters;
   switch (searchType) {
     case SEARCH_TYPE.BOTH:
       filters = {

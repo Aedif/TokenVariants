@@ -1,7 +1,7 @@
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { isVideo, isImage, keyPressed, SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
-import { TVA_CONFIG } from '../scripts/settings.js';
+import { TVA_CONFIG, getSearchOptions } from '../scripts/settings.js';
 
 const ART_SELECT_QUEUE = {
   queue: [],
@@ -61,7 +61,7 @@ export class ArtSelect extends FormApplication {
       allImages = null,
       image1 = '',
       image2 = '',
-      algorithmOptions = {},
+      searchOptions = {},
     } = {}
   ) {
     let title = game.i18n.localize('token-variants.windows.art-select.select-variant');
@@ -89,7 +89,7 @@ export class ArtSelect extends FormApplication {
     this.image1 = image1;
     this.image2 = image2;
     this.searchType = searchType;
-    this.algorithmOptions = mergeObject(algorithmOptions, TVA_CONFIG.algorithm, {
+    this.searchOptions = mergeObject(searchOptions, getSearchOptions(), {
       overwrite: false,
     });
   }
@@ -106,12 +106,13 @@ export class ArtSelect extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
+    const algorithm = this.searchOptions.algorithm;
 
     //
     // Create buttons
     //
     const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
-    const fuzzySearch = this.algorithmOptions.fuzzy;
+    const fuzzySearch = algorithm.fuzzy;
 
     let allButtons = new Map();
     let artFound = false;
@@ -182,9 +183,8 @@ export class ArtSelect extends FormApplication {
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.PORTRAIT;
     data.image2_active =
       this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.TOKEN;
-    data.displaySlider =
-      this.algorithmOptions.fuzzy && this.algorithmOptions.fuzzyArtSelectPercentSlider;
-    data.fuzzyThreshold = this.algorithmOptions.fuzzyThreshold;
+    data.displaySlider = algorithm.fuzzy && algorithm.fuzzyArtSelectPercentSlider;
+    data.fuzzyThreshold = algorithm.fuzzyThreshold;
     if (data.displaySlider) {
       data.fuzzyThreshold = 100 - data.fuzzyThreshold * 100;
       data.fuzzyThreshold = data.fuzzyThreshold.toFixed(0);
@@ -245,7 +245,7 @@ export class ArtSelect extends FormApplication {
         $(e.target)
           .siblings('.token-variants-range-value')
           .html(`${parseFloat(e.target.value).toFixed(0)}%`);
-        this.algorithmOptions.fuzzyThreshold = (100 - e.target.value) / 100;
+        this.searchOptions.algorithm.fuzzyThreshold = (100 - e.target.value) / 100;
       })
       .change(
         delay((event) => {
@@ -263,7 +263,7 @@ export class ArtSelect extends FormApplication {
       force: true,
       image1: this.image1,
       image2: this.image2,
-      algorithmOptions: this.algorithmOptions,
+      searchOptions: this.searchOptions,
     });
   }
 

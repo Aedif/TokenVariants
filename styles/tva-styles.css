@@ -342,6 +342,11 @@ ol.token-variant-table .table-row .effect-image {
   text-align: center;
 }
 
+ol.token-variant-table .table-row .effect-config {
+  flex: 0 0 50px;
+  text-align: center;
+}
+
 /* ---------------------------------------- */
 /* Token HUD Settings                       */
 /* ---------------------------------------- */

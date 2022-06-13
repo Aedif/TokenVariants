@@ -3,6 +3,7 @@ import {
   TVA_CONFIG,
   exportSettingsToJSON,
   updateSettings,
+  getSearchOptions,
 } from './scripts/settings.js';
 import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
 import {
@@ -23,6 +24,7 @@ import {
   userRequiresImageCache,
   checkAndDisplayUserSpecificImage,
   flattenSearchResults,
+  parseKeywords,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -849,19 +851,19 @@ function imagePassesFilter(imageName, imagePath, filters) {
   return true;
 }
 
-async function findImages(name, searchType = '', algorithmOptions = {}) {
-  const algOptions = mergeObject(algorithmOptions, TVA_CONFIG.algorithm, { overwrite: false });
+async function findImages(name, searchType = '', searchOptions = {}) {
+  const sOptions = mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
   if (searchType === SEARCH_TYPE.TILE) {
-    if (algOptions.exact) {
+    if (sOptions.algorithm.exact) {
       return findTilesExact(name);
     } else {
-      return findTilesFuzzy(name, algOptions);
+      return findTilesFuzzy(name, sOptions);
     }
   } else {
-    if (algOptions.exact) {
-      return findTokensExact(name, searchType);
+    if (sOptions.algorithm.exact) {
+      return findTokensExact(name, searchType, sOptions);
     } else {
-      return findTokensFuzzy(name, searchType, algOptions);
+      return findTokensFuzzy(name, searchType, sOptions);
     }
   }
 }
@@ -886,8 +888,8 @@ async function findTilesExact(name) {
   return foundImages;
 }
 
-async function findTilesFuzzy(name, algorithmOptions) {
-  if (TVA_CONFIG.debug) console.log('STARTING: Fuzzy Tile Search', name, caching, algorithmOptions);
+async function findTilesFuzzy(name, searchOptions) {
+  if (TVA_CONFIG.debug) console.log('STARTING: Fuzzy Tile Search', name, caching, searchOptions);
 
   let allPaths;
   if (multiSearch) {
@@ -902,15 +904,15 @@ async function findTilesFuzzy(name, algorithmOptions) {
   allPaths = allPaths.concat(foundImages);
 
   const fuse = new Fuse(allPaths, {
-    keys: [TVA_CONFIG.runSearchOnPath ? 'path' : 'name'],
+    keys: [searchOptions.runSearchOnPath ? 'path' : 'name'],
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
     ignoreLocation: true,
-    threshold: algorithmOptions.fuzzyThreshold,
+    threshold: searchOptions.algorithm.fuzzyThreshold,
   });
 
-  const results = fuse.search(name).slice(0, algorithmOptions.fuzzyLimit);
+  const results = fuse.search(name).slice(0, searchOptions.algorithm.fuzzyLimit);
 
   foundImages = results.map((r) => {
     r.item.indices = r.matches[0].indices;
@@ -923,12 +925,12 @@ async function findTilesFuzzy(name, algorithmOptions) {
   return foundImages;
 }
 
-export async function findTokensFuzzy(name, searchType, algorithmOptions, forceSearchName = false) {
+export async function findTokensFuzzy(name, searchType, searchOptions, forceSearchName = false) {
   if (TVA_CONFIG.debug)
-    console.log('STARTING: Fuzzy Token Search', name, searchType, caching, algorithmOptions);
+    console.log('STARTING: Fuzzy Token Search', name, searchType, caching, searchOptions);
 
   // Select filters based on type of search
-  let filters = getFilters(searchType);
+  let filters = getFilters(searchType, searchOptions.searchFilters);
 
   let allPaths;
   if (multiSearch) {
@@ -951,15 +953,15 @@ export async function findTokensFuzzy(name, searchType, algorithmOptions, forceS
   });
 
   const fuse = new Fuse(allPaths, {
-    keys: [!forceSearchName && TVA_CONFIG.runSearchOnPath ? 'path' : 'name'],
+    keys: [!forceSearchName && searchOptions.matchPath ? 'path' : 'name'],
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
     ignoreLocation: true,
-    threshold: algorithmOptions.fuzzyThreshold,
+    threshold: searchOptions.algorithm.fuzzyThreshold,
   });
 
-  const results = fuse.search(name).slice(0, algorithmOptions.fuzzyLimit);
+  const results = fuse.search(name).slice(0, searchOptions.algorithm.fuzzyLimit);
 
   foundImages = results.map((r) => {
     r.item.indices = r.matches[0].indices;
@@ -975,7 +977,7 @@ export async function findTokensFuzzy(name, searchType, algorithmOptions, forceS
 /**
  * Search for tokens matching the supplied name
  */
-async function findTokensExact(name, searchType) {
+async function findTokensExact(name, searchType, searchOptions = {}) {
   if (TVA_CONFIG.debug) console.log('STARTING: Exact Token Search', name, searchType, caching);
 
   foundImages = [];
@@ -983,7 +985,7 @@ async function findTokensExact(name, searchType) {
   await walkAllPaths();
 
   const simpleName = simplifyName(name);
-  let filters = getFilters(searchType);
+  const filters = getFilters(searchType, searchOptions.searchFilters);
   foundImages = foundImages.filter((pathObj) =>
     exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name, filters)
   );
@@ -1133,11 +1135,7 @@ async function walkFindImages(
  * @param {Token|Actor} [options.object] Token/Actor used when displaying Custom Token Config prompt
  * @param {boolean} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
  * @param {boolean} [options.ignoreKeywords] Override for the 'Search by Keyword' setting
- * @param {object} [options.algorithmOptions] Override for the 'Search Algorithm Settings' setting
- * @param {boolean} [options.algorithmOptions.exact] Force use exact search
- * @param {boolean} [options.algorithmOptions.fuzzy] Force use fuzzy search
- * @param {number} [options.algorithmOptions.fuzzyLimit] Force fuzzy search image return limit
- * @param {number} [options.algorithmOptions.fuzzyThreshold] Force fuzzy search threshold (0.0-1.0)
+ * @param {object} [options.searchOptions] Override search settings
  */
 export async function showArtSelect(
   search,
@@ -1150,7 +1148,7 @@ export async function showArtSelect(
     image1 = '',
     image2 = '',
     ignoreKeywords = false,
-    algorithmOptions = {},
+    searchOptions = {},
   } = {}
 ) {
   if (caching) return;
@@ -1162,7 +1160,7 @@ export async function showArtSelect(
       searchType: searchType,
       object: object,
       preventClose: preventClose,
-      algorithmOptions: algorithmOptions,
+      searchOptions: searchOptions,
     });
     return;
   }
@@ -1172,7 +1170,7 @@ export async function showArtSelect(
   const allImages = await doImageSearch(search, {
     searchType: searchType,
     ignoreKeywords: ignoreKeywords,
-    algorithmOptions: algorithmOptions,
+    searchOptions: searchOptions,
   });
 
   new ArtSelect(search, {
@@ -1183,7 +1181,7 @@ export async function showArtSelect(
     preventClose: preventClose,
     image1: image1,
     image2: image2,
-    algorithmOptions: algorithmOptions,
+    searchOptions: searchOptions,
   }).render(true);
 }
 
@@ -1282,7 +1280,7 @@ async function doRandomSearch(
  * @param {Boolean} [options.ignoreKeywords] Ignores keywords search setting
  * @param {Boolean} [options.simpleResults] Results will be returned as an array of all image paths found
  * @param {Function[]} [options.callback] Function to be called with the found images
- * @param {object} [options.algorithmOptions] See showArtSelect(...)
+ * @param {object} [options.searchOptions] See showArtSelect(...)
  * @returns {Promise<Map<string, Array<object>|Array<string>>} All images found split by original criteria and keywords
  */
 export async function doImageSearch(
@@ -1292,10 +1290,12 @@ export async function doImageSearch(
     ignoreKeywords = false,
     simpleResults = false,
     callback = null,
-    algorithmOptions = {},
+    searchOptions = {},
   } = {}
 ) {
   if (caching) return;
+
+  searchOptions = mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
 
   search = search.trim();
 
@@ -1303,15 +1303,13 @@ export async function doImageSearch(
 
   let searches = [search];
   let allImages = new Map();
+  const keywords = parseKeywords(searchOptions.excludedKeywords);
 
-  if (TVA_CONFIG.keywordSearch && !ignoreKeywords) {
+  if (searchOptions.keywordSearch && !ignoreKeywords) {
     searches = searches.concat(
       search
         .split(/\W/)
-        .filter(
-          (word) =>
-            word.length > 2 && !TVA_CONFIG.parsedExcludedKeywords.includes(word.toLowerCase())
-        )
+        .filter((word) => word.length > 2 && !keywords.includes(word.toLowerCase()))
         .reverse()
     );
   }
@@ -1321,7 +1319,7 @@ export async function doImageSearch(
   for (const search of searches) {
     if (allImages.get(search) !== undefined) continue;
 
-    let results = await findImages(search, searchType, algorithmOptions);
+    let results = await findImages(search, searchType, searchOptions);
     results = results.filter((pathObj) => !usedImages.has(pathObj));
 
     allImages.set(search, results);

@@ -2,9 +2,35 @@ import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { cacheImages } from '../token-variants.mjs';
 
 export default class ConfigureSettings extends FormApplication {
-  constructor() {
+  constructor(
+    dummySettings,
+    {
+      searchPaths = true,
+      searchFilters = true,
+      searchAlgorithm = true,
+      randomizer = true,
+      popup = true,
+      permissions = true,
+      worldHud = true,
+      misc = true,
+    } = {}
+  ) {
     super({}, {});
+    this.enabledTabs = {
+      searchPaths,
+      searchFilters,
+      searchAlgorithm,
+      randomizer,
+      popup,
+      permissions,
+      worldHud,
+      misc,
+    };
     this.settings = foundry.utils.deepClone(TVA_CONFIG);
+    if (dummySettings) {
+      this.settings = mergeObject(this.settings, dummySettings, { insertKeys: false });
+      this.dummySettings = dummySettings;
+    }
   }
 
   static get defaultOptions() {
@@ -26,6 +52,7 @@ export default class ConfigureSettings extends FormApplication {
     const settings = this.settings;
 
     data.v8 = (game.version ?? game.data.version).startsWith('0.8');
+    data.enabledTabs = this.enabledTabs;
 
     // === Search Paths ===
     const paths = settings.searchPaths.map((path) => {
@@ -434,7 +461,106 @@ export default class ConfigureSettings extends FormApplication {
       tilesEnabled: formData.tilesEnabled,
     });
 
-    // Save settings
-    updateSettings(settings);
+    if (this.dummySettings) {
+      // console.log('Dummy before merge', this.dummySettings);
+      console.log(settings);
+      mergeObjectFix(this.dummySettings, settings, { insertKeys: false });
+      console.log('Dummy', this.dummySettings);
+    } else {
+      // Save settings
+      updateSettings(settings);
+    }
+  }
+}
+
+// ========================
+// v8 support, broken merge
+// ========================
+export function mergeObjectFix(
+  original,
+  other = {},
+  {
+    insertKeys = true,
+    insertValues = true,
+    overwrite = true,
+    recursive = true,
+    inplace = true,
+    enforceTypes = false,
+  } = {},
+  _d = 0
+) {
+  other = other || {};
+  if (!(original instanceof Object) || !(other instanceof Object)) {
+    throw new Error('One of original or other are not Objects!');
+  }
+  const options = { insertKeys, insertValues, overwrite, recursive, inplace, enforceTypes };
+
+  // Special handling at depth 0
+  if (_d === 0) {
+    if (!inplace) original = deepClone(original);
+    if (Object.keys(original).some((k) => /\./.test(k))) original = expandObject(original);
+    if (Object.keys(other).some((k) => /\./.test(k))) other = expandObject(other);
+  }
+
+  // Iterate over the other object
+  for (let k of Object.keys(other)) {
+    const v = other[k];
+    if (original.hasOwnProperty(k)) _mergeUpdate(original, k, v, options, _d + 1);
+    else _mergeInsertFix(original, k, v, options, _d + 1);
+  }
+  return original;
+}
+
+function _mergeInsertFix(original, k, v, { insertKeys, insertValues } = {}, _d) {
+  // Recursively create simple objects
+  if (v?.constructor === Object && insertKeys) {
+    original[k] = mergeObjectFix({}, v, { insertKeys: true, inplace: true });
+    return;
+  }
+
+  // Delete a key
+  if (k.startsWith('-=')) {
+    delete original[k.slice(2)];
+    return;
+  }
+
+  // Insert a key
+  const canInsert = (_d <= 1 && insertKeys) || (_d > 1 && insertValues);
+  if (canInsert) original[k] = v;
+}
+
+function _mergeUpdate(
+  original,
+  k,
+  v,
+  { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {},
+  _d
+) {
+  const x = original[k];
+  const tv = getType(v);
+  const tx = getType(x);
+
+  // Recursively merge an inner object
+  if (tv === 'Object' && tx === 'Object' && recursive) {
+    return mergeObjectFix(
+      x,
+      v,
+      {
+        insertKeys: insertKeys,
+        insertValues: insertValues,
+        overwrite: overwrite,
+        inplace: true,
+        enforceTypes: enforceTypes,
+      },
+      _d
+    );
+  }
+
+  // Overwrite an existing value
+  if (overwrite) {
+    if (tx !== 'undefined' && tv !== tx && enforceTypes) {
+      throw new Error(`Mismatched data types encountered during object merge.`);
+    }
+    original[k] = v;
   }
 }

@@ -1,20 +1,21 @@
 <form>
     <!-- Navigation Tabs -->
     <nav class="sheet-tabs tabs tva-setting-nav" data-group="primary-tabs">
-        <a class="item" data-tab="searchPaths"><i class="fas fa-search"></i> Search Paths</a>
-        <a class="item" data-tab="searchFilters"><i class="fas fa-filter"></i> Search Filters</a>
-        <a class="item" data-tab="searchAlgorithm"><i class="fas fa-plug"></i> Search Algorithm</a>
-        <a class="item" data-tab="randomizer"><i class="fas fa-dice"></i> Randomizer</a>
-        <hr>
-        <a class="item" data-tab="popup"><i class="fas fa-book-open"></i> Pop-up</a>
-        <a class="item" data-tab="permissions"><i class="fas fa-user-lock"></i> Permissions</a>
-        <a class="item" data-tab="worldHud"><i class="fas fa-images"></i> Token HUD</a>
-        <a class="item" data-tab="misc"><i class="fas fa-bars"></i> Misc</a>
+      {{#if enabledTabs.searchPaths}}<a class="item" data-tab="searchPaths"><i class="fas fa-search"></i> Search Paths</a>{{/if}}
+      {{#if enabledTabs.searchFilters}}<a class="item" data-tab="searchFilters"><i class="fas fa-filter"></i> Search Filters</a>{{/if}}
+      {{#if enabledTabs.searchAlgorithm}}<a class="item" data-tab="searchAlgorithm"><i class="fas fa-plug"></i> Search Algorithm</a>{{/if}}
+      {{#if enabledTabs.randomizer}}<a class="item" data-tab="randomizer"><i class="fas fa-dice"></i> Randomizer</a>{{/if}}
+      <hr>
+      {{#if enabledTabs.popup}}<a class="item" data-tab="popup"><i class="fas fa-book-open"></i> Pop-up</a>{{/if}}
+      {{#if enabledTabs.permissions}}<a class="item" data-tab="permissions"><i class="fas fa-user-lock"></i> Permissions</a>{{/if}}
+      {{#if enabledTabs.worldHud}}<a class="item" data-tab="worldHud"><i class="fas fa-images"></i> Token HUD</a>{{/if}}
+      {{#if enabledTabs.misc}}<a class="item" data-tab="misc"><i class="fas fa-bars"></i> Misc</a>{{/if}}
     </nav>
 
     <!-- Main Content Section -->
     <section class="content">
         <!-- SEARCH PATHS -->
+        {{#if enabledTabs.searchPaths}}
         <div class="tab" data-tab="searchPaths" data-group="primary-tabs">
             <ol class="token-variant-table">
                 <li class="table-row table-header flexrow">
@@ -66,8 +67,9 @@
                 imgur:galleryId
               </p>
         </div>
-
+        {{/if}}
         <!-- SEARCH FILTERS -->
+        {{#if enabledTabs.searchFilters}}
         <div class="tab" data-tab="searchFilters" data-group="primary-tabs">
           <label>{{localize "token-variants.settings.search-filters.window.portrait-filter.Name"}}</label>
           <div class="form-group">
@@ -130,8 +132,10 @@
               <p class="notes">{{localize "token-variants.settings.search-filters.window.general-filter.Hint"}}</p>
           </div>
         </div>
+        {{/if}}
 
         <!-- SEARCH ALGORITHM -->
+        {{#if enabledTabs.searchAlgorithm}}
         <div class="tab" data-tab="searchAlgorithm" data-group="primary-tabs">
           <div class="form-group">
             <label>{{localize "token-variants.settings.keywords-search.Name"}}</label>
@@ -211,8 +215,10 @@
             <p class="notes">{{localize "token-variants.settings.algorithm.window.limit-hint"}}</p>
           </div>
         </div>
+        {{/if}}
 
         <!-- Randomizer -->
+        {{#if enabledTabs.randomizer}}
         <div class="tab" data-tab="randomizer" data-group="primary-tabs">
             <h2>{{localize "token-variants.common.randomize"}}</h2>
 
@@ -303,8 +309,10 @@
               <input type="checkbox" name="randomizer.popupOnDisable" data-dtype="Boolean" {{#if randomizer.popupOnDisable}}checked{{/if}}>
             </div>
         </div>
+        {{/if}}
 
         <!-- Pop-up -->
+        {{#if enabledTabs.popup}}
         <div class="tab token-variants-popup-settings" data-tab="popup" data-group="primary-tabs">
           <div class="form-group">
             <label>{{localize "token-variants.settings.pop-up.window.two-pop-ups.Name"}}</label>
@@ -353,6 +361,10 @@
             </li>
           </ul>
         </div>
+        {{/if}}
+
+        <!-- Permissions -->
+        {{#if enabledTabs.permissions}}
         <div class="tab token-variants-permissions" data-tab="permissions" data-group="primary-tabs">
           <p class="notes">Configure which User role has permission to access which module features.</p>
 
@@ -421,6 +433,10 @@
             </li>
           </ul>
         </div>
+        {{/if}}
+
+        <!-- World HUD -->
+        {{#if enabledTabs.worldHud}}
         <div class="tab" data-tab="worldHud" data-group="primary-tabs">
           <h2>World Settings</h2>
 
@@ -493,7 +509,10 @@
           </div>
           {{/if}}
         </div>
+        {{/if}}
 
+        <!-- Misc -->
+        {{#if enabledTabs.misc}}
         <div class="tab" data-tab="misc" data-group="primary-tabs">
           {{#if v8}}
           <div class="form-group">
@@ -559,6 +578,8 @@
             <p class="notes">{{localize "token-variants.settings.imgur-client-id.Hint"}}</p>
           </div>
         </div>
+        {{/if}}
+
     </section>
 
     <!-- Settings Footer -->

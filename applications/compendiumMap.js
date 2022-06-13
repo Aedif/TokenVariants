@@ -6,10 +6,10 @@ import {
   userRequiresImageCache,
 } from '../scripts/utils.js';
 import { addToQueue, renderFromQueue } from './artSelect.js';
-import AlgorithmSettings from './algorithm.js';
-import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { getSearchOptions, TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import ConfigureSettings from './configureSettings.js';
 
-async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
+async function autoApply(actor, image1, image2, formData) {
   let portraitFound = formData.ignorePortrait;
   let tokenFound = formData.ignoreToken;
 
@@ -20,8 +20,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
       results = await doImageSearch(actor.data.name, {
         searchType: SEARCH_TYPE.PORTRAIT,
         simpleResults: true,
-        ignoreKeywords: ignoreKeywords,
-        algorithmOptions: formData.algorithmSettings,
+        searchOptions: formData.searchOptions,
       });
 
       if ((results ?? []).length != 0) {
@@ -34,8 +33,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
       results = await doImageSearch(actor.data.token.name, {
         searchType: SEARCH_TYPE.TOKEN,
         simpleResults: true,
-        ignoreKeywords: ignoreKeywords,
-        algorithmOptions: formData.algorithmSettings,
+        searchOptions: formData.searchOptions,
       });
 
       if ((results ?? []).length != 0) {
@@ -47,8 +45,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
     let results = await doImageSearch(actor.data.name, {
       searchType: SEARCH_TYPE.BOTH,
       simpleResults: true,
-      ignoreKeywords: ignoreKeywords,
-      algorithmOptions: formData.algorithmSettings,
+      searchOptions: formData.searchOptions,
     });
 
     if ((results ?? []).length != 0) {
@@ -66,7 +63,7 @@ async function autoApply(actor, image1, image2, ignoreKeywords, formData) {
   }
 }
 
-function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
+function addToArtSelectQueue(actor, image1, image2, formData) {
   if (formData.diffImages) {
     if (!formData.ignorePortrait && !formData.ignoreToken) {
       addToQueue(actor.data.name, {
@@ -75,8 +72,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
         preventClose: true,
         image1: image1,
         image2: image2,
-        ignoreKeywords: ignoreKeywords,
-        algorithmOptions: formData.algorithmSettings,
+        searchOptions: formData.searchOptions,
         callback: async function (imgSrc, _) {
           await updateActorImage(actor, imgSrc);
           showArtSelect(actor.data.token.name, {
@@ -85,7 +81,6 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
             force: true,
             image1: imgSrc,
             image2: image2,
-            ignoreKeywords: ignoreKeywords,
             callback: (imgSrc, name) =>
               updateTokenImage(imgSrc, {
                 actor: actor,
@@ -100,8 +95,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
         object: actor,
         image1: image1,
         image2: image2,
-        ignoreKeywords: ignoreKeywords,
-        algorithmOptions: formData.algorithmSettings,
+        searchOptions: formData.searchOptions,
         callback: async function (imgSrc, name) {
           updateTokenImage(imgSrc, {
             actor: actor,
@@ -115,8 +109,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
         object: actor,
         image1: image1,
         image2: image2,
-        ignoreKeywords: ignoreKeywords,
-        algorithmOptions: formData.algorithmSettings,
+        searchOptions: formData.searchOptions,
         callback: async function (imgSrc, name) {
           await updateActorImage(actor, imgSrc);
         },
@@ -128,8 +121,7 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
       object: actor,
       image1: image1,
       image2: image2,
-      ignoreKeywords: ignoreKeywords,
-      algorithmOptions: formData.algorithmSettings,
+      searchOptions: formData.searchOptions,
       callback: async function (imgSrc, name) {
         await updateActorImage(actor, imgSrc);
         updateTokenImage(imgSrc, {
@@ -144,6 +136,11 @@ function addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData) {
 export default class CompendiumMapConfig extends FormApplication {
   constructor() {
     super({}, {});
+    let searchOptions = deepClone(TVA_CONFIG.compendiumMapper.searchOptions);
+    if (!searchOptions) {
+      searchOptions = deepClone(getSearchOptions());
+    }
+    this.searchOptions = searchOptions;
   }
 
   static get defaultOptions() {
@@ -161,9 +158,6 @@ export default class CompendiumMapConfig extends FormApplication {
   async getData(options) {
     let data = super.getData(options);
     data = mergeObject(data, TVA_CONFIG.compendiumMapper);
-    this.algorithmSettings = data.algorithmSettings
-      ? data.algorithmSettings
-      : deepClone(TVA_CONFIG.algorithm);
 
     const packs = [];
     game.packs.forEach((pack) => {
@@ -172,7 +166,6 @@ export default class CompendiumMapConfig extends FormApplication {
       }
     });
     data.compendiums = packs;
-    data.incKeywords = TVA_CONFIG.keywordSearch;
 
     return data;
   }
@@ -184,7 +177,7 @@ export default class CompendiumMapConfig extends FormApplication {
     super.activateListeners(html);
     html.find('.token-variants-auto-apply').change(this._onAutoApply);
     html.find('.token-variants-diff-images').change(this._onDiffImages);
-    html.find(`.token-variants-algorithm`).on('click', this._onAlgorithmSettings.bind(this));
+    html.find(`.token-variants-search-options`).on('click', this._onSearchOptions.bind(this));
   }
 
   async _onAutoApply(event) {
@@ -201,8 +194,17 @@ export default class CompendiumMapConfig extends FormApplication {
       .prop('disabled', !event.target.checked);
   }
 
-  async _onAlgorithmSettings(event) {
-    new AlgorithmSettings(this.algorithmSettings).render(true);
+  async _onSearchOptions(event) {
+    new ConfigureSettings(this.searchOptions, {
+      searchPaths: false,
+      searchFilters: true,
+      searchAlgorithm: true,
+      randomizer: false,
+      popup: false,
+      permissions: false,
+      worldHud: false,
+      misc: false,
+    }).render(true);
   }
 
   async startMapping(formData) {
@@ -215,7 +217,6 @@ export default class CompendiumMapConfig extends FormApplication {
     }
 
     const compendium = game.packs.get(formData.compendium);
-    const ignoreKeywords = !formData.incKeywords;
 
     const processItem = async function (item) {
       const actor = await compendium.getDocument(item._id);
@@ -239,9 +240,9 @@ export default class CompendiumMapConfig extends FormApplication {
 
       if (includeThisActor || includeThisToken) {
         if (formData.autoApply) {
-          await autoApply(actor, image1, image2, ignoreKeywords, formData);
+          await autoApply(actor, image1, image2, formData);
         } else {
-          addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData);
+          addToArtSelectQueue(actor, image1, image2, formData);
         }
       }
     };
@@ -269,7 +270,7 @@ export default class CompendiumMapConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    formData.algorithmSettings = this.algorithmSettings;
+    formData.searchOptions = this.searchOptions;
     updateSettings({ compendiumMapper: formData });
     if (formData.compendium) {
       this.startMapping(formData);

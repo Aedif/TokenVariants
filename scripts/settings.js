@@ -33,7 +33,6 @@ export const TVA_CONFIG = {
   },
   keywordSearch: true,
   excludedKeywords: 'and,for',
-  parsedExcludedKeywords: [],
   actorDirectoryKey: 'Control',
   runSearchOnPath: false,
   searchFilters: {
@@ -83,7 +82,6 @@ export const TVA_CONFIG = {
     missingOnly: false,
     diffImages: false,
     showImages: true,
-    incKeywords: true,
     cache: false,
     autoDisplayArtSelect: true,
     syncImages: false,
@@ -158,9 +156,6 @@ export async function registerSettings() {
       if ('searchPaths' in diff || 'forgeSearchPaths' in diff) {
         TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
         if (userRequiresImageCache(TVA_CONFIG.permissions)) requiresImageCache = true;
-      }
-      if ('excludedKeywords' in diff) {
-        TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
       }
 
       // Cache/re-cache images if necessary
@@ -381,7 +376,6 @@ export async function registerSettings() {
     mergeObject(TVA_CONFIG, settings);
     // Some settings need to be parsed
     TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
-    TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
   }
 
   // Read client settings
@@ -422,7 +416,6 @@ export async function fetchAllSettings() {
 
   // Some settings need to be parsed
   TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
-  TVA_CONFIG.parsedExcludedKeywords = parseKeywords(TVA_CONFIG.excludedKeywords);
 }
 
 export function exportSettingsToJSON() {
@@ -475,4 +468,14 @@ function _arrayEquality(a1, a2) {
     if (getType(v) === 'Object') return Object.keys(_arrayAwareDiffObject(v, a2[i])).length === 0;
     return a2[i] === v;
   });
+}
+
+export function getSearchOptions() {
+  return {
+    keywordSearch: TVA_CONFIG.keywordSearch,
+    excludedKeywords: TVA_CONFIG.excludedKeywords,
+    runSearchOnPath: TVA_CONFIG.runSearchOnPath,
+    algorithm: TVA_CONFIG.algorithm,
+    searchFilters: TVA_CONFIG.searchFilters,
+  };
 }
