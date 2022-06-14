@@ -151,6 +151,7 @@ export default class ConfigureSettings extends FormApplication {
     html.on('input', '.searchPath', this._onSearchPathTextChange.bind(this));
     $(html).on('click', 'a.delete-path', this._onDeletePath.bind(this));
     $(html).on('click', 'a.convert-imgur', this._onConvertImgurPath.bind(this));
+    $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
 
     // Search Filters
     html.on(
@@ -242,6 +243,21 @@ export default class ConfigureSettings extends FormApplication {
   }
 
   /**
+   * Open a FilePicker so the user can select a local folder to use as an image source
+   */
+  async _onBrowseFolder(event) {
+    const pathInput = $(event.target).closest('.table-row').find('.path-text input');
+    new FilePicker({
+      type: 'folder',
+      activeSource: 'data',
+      current: pathInput.val(),
+      callback: (path) => {
+        pathInput.val(path);
+      },
+    }).render(true);
+  }
+
+  /**
    * Converts Imgur path to a rolltable
    */
   async _onConvertImgurPath(event) {
@@ -308,8 +324,8 @@ export default class ConfigureSettings extends FormApplication {
     const table = $(event.currentTarget).closest('.token-variant-table');
     let row = `
     <li class="table-row flexrow">
-        <div class="path-image">
-            <i class="${this._pathIcon('')}"></i>
+        <div class="path-image source-icon">
+            <a><i class="${this._pathIcon('')}"></i></a>
         </div>
         <div class="path-text">
             <input class="searchPath" type="text" name="searchPaths.text" value="" placeholder="Path to image source"/>

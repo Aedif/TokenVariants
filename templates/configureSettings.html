@@ -32,8 +32,8 @@
           
                 {{#each searchPaths as |path index|}}
                 <li class="table-row flexrow">
-                  <div class="path-image">
-                    <i class="{{path.icon}}"></i>
+                  <div class="path-image source-icon">
+                    <a><i class="{{path.icon}}"></i></a>
                   </div>
                   <div class="path-text">
                     <input class="searchPath" type="text" name="searchPaths.{{index}}.text" value="{{path.text}}" placeholder="Path to image source"
