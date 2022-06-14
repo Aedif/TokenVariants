@@ -247,11 +247,7 @@ Parameters:
   - \{Token|object\} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
   - \{boolean\} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
   - \{boolean\} [options.ignoreKeywords] Override for the 'Search by Keyword' setting
-  - \{object\} [options.algorithmOptions] Override for the 'Search Algorithm Settings' setting
-  - \{boolean\} [options.algorithmOptions.exact] Force use exact search
-  - \{boolean\} [options.algorithmOptions.fuzzy] Force use fuzzy search
-  - \{number\} [options.algorithmOptions.fuzzyLimit] Force fuzzy search image return limit
-  - \{number\} [options.algorithmOptions.fuzzyThreshold] Force fuzzy search threshold (0.0-1.0)
+  - \{object\} [options.searchOptions] Override for the 'Search Algorithm Settings' setting
     e.g.
 
 - game.modules.get('token-variants').api.showArtSelect("")
@@ -269,7 +265,7 @@ Parameters:
   - \{Boolean\} [options.ignoreKeywords] Ignores keywords search setting
   - \{Boolean\} [options.simpleResults] Results will be returned as an array of all image paths found
   - \{Boolean\} [options.callback] Function to be called with the found images
-  - \{object\} [options.algorithmOptions] See showArtSelect(...)
+  - \{object\} [options.searchOptions] See showArtSelect(...)
 - **returns**: \{Promise<Map<string, Array<object>|Array<string>>\} Images found
 
 e.g.

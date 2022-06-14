@@ -8,6 +8,7 @@
         <div class="effect-name"><label>Effect Name</label></div>
         <div class="effect-priority"><label>Priority</label></div>
         <div class="effect-image"><label>Image</label></div>
+        <div class="effect-image"><label>Config</label></div>
       </li>
 
       {{#each mappings as |mapping index|}}
@@ -45,6 +46,10 @@
             name="mappings.{{index}}.imgName"
             value="{{mapping.imgName}}"
           />
+        </div>
+        <div class="effect-config {{#if mapping.hasConfig}}active{{/if}}">
+          <a><i class="fas fa-cog fa-lg"></i></a>
+          <input class="config" type="hidden" name="mappings.{{index}}.config" value="{{mapping.config}}">
         </div>
       </li>
       {{/each}}

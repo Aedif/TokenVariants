@@ -1052,7 +1052,15 @@ async function findTokensExact(name, searchType, searchOptions = {}) {
   );
 
   cachedTokenImages.forEach((pathObj) => {
-    if (exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name, filters, runSearchOnPath))
+    if (
+      exactSearchMatchesImage(
+        simpleName,
+        pathObj.path,
+        pathObj.name,
+        filters,
+        searchOptions.runSearchOnPath
+      )
+    )
       foundImages.push(pathObj);
   });
 

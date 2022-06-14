@@ -347,6 +347,18 @@ ol.token-variant-table .table-row .effect-config {
   text-align: center;
 }
 
+ol.token-variant-table .table-row .effect-config.active {
+  color: orange;
+}
+
+/* ---------------------------------------- */
+/* Active Effect Config                     */
+/* ---------------------------------------- */
+
+#token-variants-active-effect-config .effect-config.active {
+  color: orange;
+}
+
 /* ---------------------------------------- */
 /* Token HUD Settings                       */
 /* ---------------------------------------- */

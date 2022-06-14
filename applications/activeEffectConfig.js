@@ -48,6 +48,7 @@ export default class ActiveEffectConfig extends FormApplication {
       imgName: mapping.imgName,
       priority: mapping.priority || 50,
       config: this.config,
+      hasConfig: this.config ? Object.keys(this.config).length !== 0 : false,
     });
   }
 
@@ -59,19 +60,26 @@ export default class ActiveEffectConfig extends FormApplication {
     html.find('.remove').click(this._onRemove.bind(this));
     html.find('img.image').click(this._onImageClick.bind(this));
     html.find('img.image').contextmenu(this._onImageRightClick.bind(this));
-    html.find('button.config').click(this._onConfigClick.bind(this));
+    html.find('button.effect-config').click(this._onConfigClick.bind(this));
   }
 
   async _onConfigClick(event) {
+    const cog = $(event.target).closest('.effect-config');
+
     new TokenCustomConfig(
       this.token,
       {},
       null,
       null,
       (config) => {
+        if (config && Object.keys(config).length !== 0) {
+          cog.addClass('active');
+        } else {
+          cog.removeClass('active');
+        }
         this.config = config;
       },
-      this.config
+      this.config ? this.config : {}
     ).render(true);
   }
 

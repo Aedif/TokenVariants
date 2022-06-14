@@ -1,5 +1,6 @@
 import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
+import TokenCustomConfig from './tokenCustomConfig.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token) {
@@ -35,9 +36,11 @@ export default class ActiveEffectConfigList extends FormApplication {
       for (const [effectName, attrs] of Object.entries(effectMappings)) {
         mappings.push({
           effectName: effectName,
-          imgName: attrs['imgName'],
-          imgSrc: attrs['imgSrc'],
-          priority: attrs['priority'],
+          imgName: attrs.imgName,
+          imgSrc: attrs.imgSrc,
+          priority: attrs.priority,
+          hasConfig: attrs.config ? Object.keys(attrs.config).length !== 0 : false,
+          config: attrs.config,
         });
       }
     }
@@ -57,6 +60,29 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.save-mappings').click(this._onSaveMappings.bind(this));
     html.find('.effect-image img').click(this._onImageClick.bind(this));
     html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
+    html.find('.effect-config i').click(this._onConfigClick.bind(this));
+  }
+
+  async _onConfigClick(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+    const cog = $(event.target).closest('.effect-config');
+
+    new TokenCustomConfig(
+      this.token,
+      {},
+      null,
+      null,
+      (config) => {
+        if (config && Object.keys(config).length !== 0) {
+          cog.addClass('active');
+        } else {
+          cog.removeClass('active');
+        }
+        mapping.config = config;
+      },
+      mapping.config ? mapping.config : {}
+    ).render(true);
   }
 
   async _onImageClick(event) {
@@ -109,7 +135,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       // First filter out empty mappings
       let mappings = this.object.mappings;
       mappings = mappings.filter(
-        (mapping) => mapping.imgSrc && mapping.imgName && mapping.effectName
+        (mapping) => ((mapping.imgSrc && mapping.imgName) || mapping.config) && mapping.effectName
       );
       // Make sure a priority is assigned
       for (const mapping of mappings) {
@@ -125,6 +151,7 @@ export default class ActiveEffectConfigList extends FormApplication {
             imgName: mapping.imgName,
             imgSrc: mapping.imgSrc,
             priority: mapping.priority,
+            config: mapping.config,
           };
         }
         this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
@@ -139,8 +166,14 @@ export default class ActiveEffectConfigList extends FormApplication {
    */
   async _updateObject(event, formData) {
     const expanded = expandObject(formData);
-    this.object.mappings = expanded.hasOwnProperty('mappings')
-      ? Object.values(expanded.mappings)
-      : [];
+    const mappings = expanded.hasOwnProperty('mappings') ? Object.values(expanded.mappings) : [];
+    for (let i = 0; i < mappings.length; i++) {
+      const m1 = mappings[i];
+      const m2 = this.object.mappings[i];
+      m2.imgSrc = m1.imgSrc;
+      m2.imgName = m1.imgName;
+      m2.priority = m1.priority;
+      m2.effectName = m1.effectName;
+    }
   }
 }
