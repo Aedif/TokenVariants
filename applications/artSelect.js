@@ -106,7 +106,8 @@ export class ArtSelect extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    const algorithm = this.searchOptions.algorithm;
+    const searchOptions = this.searchOptions;
+    const algorithm = searchOptions.algorithm;
 
     //
     // Create buttons
@@ -136,7 +137,7 @@ export class ArtSelect extends FormApplication {
       if (!fuzzySearch) return obj.path;
 
       let percent = Math.ceil((1 - obj.score) * 100) + '%';
-      if (TVA_CONFIG.runSearchOnPath) {
+      if (searchOptions.runSearchOnPath) {
         return percent + '\n' + genLabel(obj.path, obj.indices, '', '', '-') + '\n' + obj.path;
       }
       return percent;
@@ -155,7 +156,7 @@ export class ArtSelect extends FormApplication {
           type: vid || img,
           name: imageObj.name,
           label:
-            fuzzySearch && !TVA_CONFIG.runSearchOnPath
+            fuzzySearch && !searchOptions.runSearchOnPath
               ? genLabel(imageObj.name, imageObj.indices)
               : imageObj.name,
           title: genTitle(imageObj),

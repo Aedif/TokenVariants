@@ -1,5 +1,6 @@
 import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
+import TokenCustomConfig from './tokenCustomConfig.js';
 
 export default class ActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -16,6 +17,10 @@ export default class ActiveEffectConfig extends FormApplication {
     // else
     //   this.objectToFlag = canvas.tokens.get(token._id);
     // this.objectToFlag = this.objectToFlag.document || this.objectToFlag;
+
+    const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
+    const mapping = effectMappings[this.effectName] || {};
+    this.config = mapping.config || {};
   }
 
   static get defaultOptions() {
@@ -42,6 +47,7 @@ export default class ActiveEffectConfig extends FormApplication {
       imgSrc: mapping.imgSrc,
       imgName: mapping.imgName,
       priority: mapping.priority || 50,
+      config: this.config,
     });
   }
 
@@ -53,6 +59,20 @@ export default class ActiveEffectConfig extends FormApplication {
     html.find('.remove').click(this._onRemove.bind(this));
     html.find('img.image').click(this._onImageClick.bind(this));
     html.find('img.image').contextmenu(this._onImageRightClick.bind(this));
+    html.find('button.config').click(this._onConfigClick.bind(this));
+  }
+
+  async _onConfigClick(event) {
+    new TokenCustomConfig(
+      this.token,
+      {},
+      null,
+      null,
+      (config) => {
+        this.config = config;
+      },
+      this.config
+    ).render(true);
   }
 
   async _onImageClick(event) {
@@ -97,9 +117,10 @@ export default class ActiveEffectConfig extends FormApplication {
    */
   async _updateObject(event, formData) {
     if (this.objectToFlag) {
-      if (!formData.imgSrc) this._onRemove();
+      if (!formData.imgSrc && !formData.config) this._onRemove();
       else {
         if (!formData.priority) formData.priority = 50;
+        formData.config = this.config;
         const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
         effectMappings[this.effectName] = formData;
         this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);

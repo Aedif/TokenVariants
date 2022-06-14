@@ -78,6 +78,7 @@ export async function updateTokenImage(
     actorUpdate = {},
     pack = '',
     callback = null,
+    config = undefined,
   } = {}
 ) {
   if (!(token || actor)) {
@@ -113,7 +114,7 @@ export async function updateTokenImage(
   tokenUpdateObj.img = imgSrc;
   tokenUpdateObj['flags.token-variants.name'] = imgName;
 
-  const tokenCustomConfig = getTokenConfigForUpdate(imgSrc, imgName);
+  const tokenCustomConfig = config || getTokenConfigForUpdate(imgSrc, imgName);
   const usingCustomConfig =
     token &&
     (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
@@ -143,7 +144,7 @@ export async function updateTokenImage(
     tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
   } else if (usingCustomConfig) {
     if (token) {
-      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
+      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = false;
       delete tokenUpdateObj['flags.token-variants.defaultConfig'];
       tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
     } else if (actor && !token) {

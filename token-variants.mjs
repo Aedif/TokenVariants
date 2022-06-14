@@ -101,21 +101,8 @@ async function initialize() {
     const tokenImgSrc = token.data.img;
     const tokenImgName =
       (token.document ?? token).getFlag('token-variants', 'name') || getFileName(tokenImgSrc);
-    let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+    const tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
     const tokenUpdateObj = {};
-    // Legacy support, to be removed after reasonable amount of time has been given for defaultImg to have been cleared
-    // from most users' Actors. (19/04/2022)
-    if (!tokenDefaultImg) {
-      tokenDefaultImg = (token.actor.document ?? token.actor).getFlag(
-        'token-variants',
-        'defaultImg'
-      );
-      if (tokenDefaultImg) {
-        tokenUpdateObj['flags.token-variants.defaultImg'] = tokenDefaultImg;
-        await (token.actor.document ?? token.actor).unsetFlag('token-variants', 'defaultImg');
-      }
-    }
-    // end of legacy code
     const hadActiveHUD = (token._object || token).hasActiveHUD;
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
@@ -127,26 +114,57 @@ async function initialize() {
       .sort((ef1, ef2) => ef1.priority - ef2.priority);
 
     if (effects.length > 0) {
-      const effect = effects[effects.length - 1];
-      if (tokenImgSrc !== effect.imgSrc || tokenImgName !== effect.imgName) {
-        if (!tokenDefaultImg) {
-          tokenUpdateObj['flags.token-variants.defaultImg'] = {
-            imgSrc: tokenImgSrc,
-            imgName: tokenImgName,
-          };
+      // Some effect mappings may not have images, find a mapping with one if it exists
+      const newImg = { imgSrc: '', imgName: '' };
+      for (let i = effects.length - 1; i >= 0; i--) {
+        if (effects[i].imgSrc) {
+          newImg.imgSrc = effects[i].imgSrc;
+          newImg.imgName = effects[i].imgName;
+          break;
         }
-        await updateTokenImage(effect.imgSrc, {
-          token: token,
-          imgName: effect.imgName,
-          tokenUpdate: tokenUpdateObj,
-          callback: hadActiveHUD
-            ? () => {
-                canvas.tokens.hud.bind(token._object || token);
-                if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-              }
-            : null,
-        });
       }
+
+      // Collect custom configs to be applied to the token
+      let config;
+      if (TVA_CONFIG.stacking) {
+        config = {};
+        for (const ef of effects) {
+          if (ef.config) mergeObject(config, ef.config);
+        }
+      } else {
+        for (let i = effects.length - 1; i >= 0; i--) {
+          if (effects[i].config && Object.keys(effects[i].config).length !== 0) {
+            config = effects[i].config;
+            break;
+          }
+        }
+      }
+
+      // Use or update the default (original) token image
+      if (!newImg.imgSrc && tokenDefaultImg) {
+        delete tokenUpdateObj['flags.token-variants.defaultImg'];
+        tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
+        newImg.imgSrc = tokenDefaultImg.imgSrc;
+        newImg.imgName = tokenDefaultImg.imgName;
+      } else if (!tokenDefaultImg) {
+        tokenUpdateObj['flags.token-variants.defaultImg'] = {
+          imgSrc: tokenImgSrc,
+          imgName: tokenImgName,
+        };
+      }
+
+      await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : tokenImgSrc, {
+        token: token,
+        imgName: newImg.imgName ? newImg.imgName : tokenImgName,
+        tokenUpdate: tokenUpdateObj,
+        callback: hadActiveHUD
+          ? () => {
+              canvas.tokens.hud.bind(token._object || token);
+              if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+            }
+          : null,
+        config: config,
+      });
     }
 
     // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
@@ -155,21 +173,34 @@ async function initialize() {
       delete tokenUpdateObj['flags.token-variants.defaultImg'];
       tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
 
-      if (tokenDefaultImg.imgSrc !== tokenImgSrc || tokenDefaultImg.imgName !== tokenImgName) {
-        await updateTokenImage(tokenDefaultImg.imgSrc, {
-          token: token,
-          imgName: tokenDefaultImg.imgName,
-          tokenUpdate: tokenUpdateObj,
-          callback: hadActiveHUD
-            ? () => {
-                canvas.tokens.hud.bind(token._object || token);
-                if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-              }
-            : null,
-        });
-      } else {
-        queueTokenUpdate(token.id, tokenUpdateObj);
-      }
+      await updateTokenImage(tokenDefaultImg.imgSrc, {
+        token: token,
+        imgName: tokenDefaultImg.imgName,
+        tokenUpdate: tokenUpdateObj,
+        callback: hadActiveHUD
+          ? () => {
+              canvas.tokens.hud.bind(token._object || token);
+              if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+            }
+          : null,
+      });
+      // If no default image exists but a custom effect is applied, we still want to perform an update to
+      // clear it
+    } else if (
+      effects.length === 0 &&
+      (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')
+    ) {
+      await updateTokenImage(tokenImgSrc, {
+        token: token,
+        imgName: tokenImgName,
+        tokenUpdate: tokenUpdateObj,
+        callback: hadActiveHUD
+          ? () => {
+              canvas.tokens.hud.bind(token._object || token);
+              if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+            }
+          : null,
+      });
     }
   };
 
@@ -346,7 +377,13 @@ async function initialize() {
       performUpdate = newEffects[newEffects.length - 1] in mappings;
     }
     if (effectRemoved) {
-      performUpdate = oldEffects[oldEffects.length - 1] in mappings;
+      // The removed effect could have been anywhere in the array
+      for (const oldEf of oldEffects) {
+        if (!newEffects.includes(oldEf)) {
+          performUpdate = oldEf in mappings;
+          if (performUpdate) break;
+        }
+      }
     }
 
     if (token.inCombat) newEffects.unshift('token-variants-combat');
@@ -780,7 +817,8 @@ export async function cacheImages() {
   if (TVA_CONFIG.debug) console.log('STARTING: Token Caching');
   cachedTokenImages = [];
 
-  await findTokensExact('', '');
+  const sOptions = getSearchOptions();
+  await findTokensExact('', '', sOptions);
   cachedTokenImages = foundImages;
 
   foundImages = [];
@@ -790,7 +828,7 @@ export async function cacheImages() {
     if (TVA_CONFIG.debug) console.log('STARTING: Tile Caching');
     cachedTileImages = [];
 
-    await findTilesExact('');
+    await findTilesExact('', sOptions);
     cachedTileImages = foundImages;
 
     foundImages = [];
@@ -817,21 +855,21 @@ export async function cacheImages() {
  * @param filters filters to be applied
  * @returns true|false
  */
-function exactSearchMatchesImage(simplifiedSearch, imagePath, imageName, filters) {
+function exactSearchMatchesImage(simplifiedSearch, imagePath, imageName, filters, runSearchOnPath) {
   // Is the search text contained in the name/path
-  const simplified = TVA_CONFIG.runSearchOnPath ? simplifyPath(imagePath) : simplifyName(imageName);
+  const simplified = runSearchOnPath ? simplifyPath(imagePath) : simplifyName(imageName);
   if (!simplified.includes(simplifiedSearch)) {
     return false;
   }
 
   if (!filters) return true;
-  return imagePassesFilter(imageName, imagePath, filters);
+  return imagePassesFilter(imageName, imagePath, filters, runSearchOnPath);
 }
 
-function imagePassesFilter(imageName, imagePath, filters) {
+function imagePassesFilter(imageName, imagePath, filters, runSearchOnPath) {
   // Filters are applied to path depending on the 'runSearchOnPath' setting, and actual or custom rolltable name
   let text;
-  if (TVA_CONFIG.runSearchOnPath) {
+  if (runSearchOnPath) {
     text = decodeURIComponent(imagePath);
   } else if (getFileName(imagePath) === imageName) {
     text = getFileNameWithExt(imagePath);
@@ -855,7 +893,7 @@ async function findImages(name, searchType = '', searchOptions = {}) {
   const sOptions = mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
   if (searchType === SEARCH_TYPE.TILE) {
     if (sOptions.algorithm.exact) {
-      return findTilesExact(name);
+      return findTilesExact(name, sOptions);
     } else {
       return findTilesFuzzy(name, sOptions);
     }
@@ -868,7 +906,7 @@ async function findImages(name, searchType = '', searchOptions = {}) {
   }
 }
 
-async function findTilesExact(name) {
+async function findTilesExact(name, searchOptions) {
   if (TVA_CONFIG.debug) console.log('STARTING: Exact Tile Search', name, caching);
 
   foundImages = [];
@@ -877,11 +915,26 @@ async function findTilesExact(name) {
 
   const simpleName = simplifyName(name);
   foundImages = foundImages.filter((pathObj) =>
-    exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name)
+    exactSearchMatchesImage(
+      simpleName,
+      pathObj.path,
+      pathObj.name,
+      null,
+      searchOptions.runSearchOnPath
+    )
   );
 
   cachedTileImages.forEach((pathObj) => {
-    if (exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name)) foundImages.push(pathObj);
+    if (
+      exactSearchMatchesImage(
+        simpleName,
+        pathObj.path,
+        pathObj.name,
+        null,
+        searchOptions.runSearchOnPath
+      )
+    )
+      foundImages.push(pathObj);
   });
 
   if (TVA_CONFIG.debug) console.log('ENDING: Exact Tile Search', foundImages);
@@ -935,11 +988,13 @@ export async function findTokensFuzzy(name, searchType, searchOptions, forceSear
   let allPaths;
   if (multiSearch) {
     allPaths = cachedTokenImages.filter(
-      (imgObj) => !usedImages.has(imgObj) && imagePassesFilter(imgObj.name, imgObj.path, filters)
+      (imgObj) =>
+        !usedImages.has(imgObj) &&
+        imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
     );
   } else {
     allPaths = cachedTokenImages.filter((imgObj) =>
-      imagePassesFilter(imgObj.name, imgObj.path, filters)
+      imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
     );
   }
 
@@ -947,13 +1002,13 @@ export async function findTokensFuzzy(name, searchType, searchOptions, forceSear
   await walkAllPaths();
 
   foundImages.forEach((imgObj) => {
-    if (imagePassesFilter(imgObj.name, imgObj.path, filters)) {
+    if (imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)) {
       allPaths.push(imgObj);
     }
   });
 
   const fuse = new Fuse(allPaths, {
-    keys: [!forceSearchName && searchOptions.matchPath ? 'path' : 'name'],
+    keys: [!forceSearchName && searchOptions.runSearchOnPath ? 'path' : 'name'],
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
@@ -987,11 +1042,17 @@ async function findTokensExact(name, searchType, searchOptions = {}) {
   const simpleName = simplifyName(name);
   const filters = getFilters(searchType, searchOptions.searchFilters);
   foundImages = foundImages.filter((pathObj) =>
-    exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name, filters)
+    exactSearchMatchesImage(
+      simpleName,
+      pathObj.path,
+      pathObj.name,
+      filters,
+      searchOptions.runSearchOnPath
+    )
   );
 
   cachedTokenImages.forEach((pathObj) => {
-    if (exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name, filters))
+    if (exactSearchMatchesImage(simpleName, pathObj.path, pathObj.name, filters, runSearchOnPath))
       foundImages.push(pathObj);
   });
 
