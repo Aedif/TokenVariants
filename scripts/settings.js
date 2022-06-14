@@ -76,6 +76,7 @@ export const TVA_CONFIG = {
   },
   imgurClientId: '',
   enableStatusConfig: false,
+  stackStatusConfig: false,
   staticCache: false,
   tilesEnabled: false,
   compendiumMapper: {

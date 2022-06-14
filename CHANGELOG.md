@@ -1,3 +1,22 @@
+# 2.4.0
+
+Compendium Mapper
+
+- Now supports mapper specific '**Search Filters**' and '**Search Algorithm**' settings
+- This should allow to run the mapper completely independent of the normal module settings
+
+Status Config
+
+- Status Effects (inc. Visiblity and Combat states) can now have Token configurations assigned independent of any image
+- New setting: **Stack Configurations**
+  - Controls the behaviour of multiple configurations being applied on the same token
+  - When enabled configurations will stack instead of overriding each, with higher priority configurations having precedence
+- Fixed a bug causing removed effects not being picked up by the module in certain cases
+
+Misc
+
+- Tile image cache will now also be stored when **Static Cache** setting is enabled
+
 # 2.3.0
 
 New setting: **Misc** > **Tile HUD**

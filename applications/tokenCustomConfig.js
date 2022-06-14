@@ -47,13 +47,12 @@ export default class TokenCustomConfig extends TokenConfig {
   async getData(options) {
     let data = await super.getData(options);
     const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName);
-    console.log(data.object, tokenConfig);
     if (tokenConfig) {
       mergeObject(data.object, tokenConfig, {
         inplace: true,
       });
     }
-    return data;
+    return super.getData(options);
   }
 
   // *************
@@ -84,11 +83,12 @@ export default class TokenCustomConfig extends TokenConfig {
         if (!$(this).find('[name="img"]').length) {
           let savedField = false;
           if (tokenConfig) {
+            const flatConfig = flattenObject(tokenConfig);
             $(this)
               .find('[name]')
               .each(function (_) {
                 const name = $(this).attr('name');
-                if (name in tokenConfig) {
+                if (name in flatConfig) {
                   savedField = true;
                 }
               });

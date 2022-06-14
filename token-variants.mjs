@@ -126,7 +126,7 @@ async function initialize() {
 
       // Collect custom configs to be applied to the token
       let config;
-      if (TVA_CONFIG.stacking) {
+      if (TVA_CONFIG.stackStatusConfig) {
         config = {};
         for (const ef of effects) {
           if (ef.config) mergeObject(config, ef.config);

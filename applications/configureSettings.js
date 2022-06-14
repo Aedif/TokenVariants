@@ -134,6 +134,7 @@ export default class ConfigureSettings extends FormApplication {
     data.disableNotifs = settings.disableNotifs;
     data.staticCache = settings.staticCache;
     data.tilesEnabled = settings.tilesEnabled;
+    data.stackStatusConfig = settings.stackStatusConfig;
 
     return data;
   }
@@ -459,13 +460,11 @@ export default class ConfigureSettings extends FormApplication {
       disableNotifs: formData.disableNotifs,
       staticCache: formData.staticCache,
       tilesEnabled: formData.tilesEnabled,
+      stackStatusConfig: formData.stackStatusConfig,
     });
 
     if (this.dummySettings) {
-      // console.log('Dummy before merge', this.dummySettings);
-      console.log(settings);
       mergeObjectFix(this.dummySettings, settings, { insertKeys: false });
-      console.log('Dummy', this.dummySettings);
     } else {
       // Save settings
       updateSettings(settings);
