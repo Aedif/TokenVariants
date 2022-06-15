@@ -22,8 +22,7 @@ export async function renderHud(hud, html, token, searchText = '') {
   const PARTIAL_ACCESS = TVA_CONFIG.permissions.hud[game.user.role];
 
   if (
-    TVA_CONFIG.enableStatusConfig &&
-    game.user.isGM &&
+    TVA_CONFIG.permissions.statusConfig[game.user.role] &&
     token.actorId &&
     game.actors.get(token.actorId)
   ) {

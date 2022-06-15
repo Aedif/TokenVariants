@@ -75,7 +75,6 @@ export const TVA_CONFIG = {
     twoPopupsNoDialog: false,
   },
   imgurClientId: '',
-  enableStatusConfig: false,
   stackStatusConfig: false,
   staticCache: false,
   tilesEnabled: false,
@@ -113,6 +112,12 @@ export const TVA_CONFIG = {
       4: true,
     },
     hudFullAccess: {
+      1: false,
+      2: false,
+      3: true,
+      4: true,
+    },
+    statusConfig: {
       1: false,
       2: false,
       3: true,
@@ -178,16 +183,16 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.debug = val),
   });
 
-  // if (typeof ForgeAPI !== 'undefined') {
-  game.settings.registerMenu('token-variants', 'forgeSearchPaths', {
-    name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),
-    hint: game.i18n.localize('token-variants.settings.forge-search-paths.Hint'),
-    icon: 'fas fa-search',
-    type: ForgeSearchPaths,
-    scope: 'client',
-    restricted: false,
-  });
-  // }
+  if (typeof ForgeAPI !== 'undefined') {
+    game.settings.registerMenu('token-variants', 'forgeSearchPaths', {
+      name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),
+      hint: game.i18n.localize('token-variants.settings.forge-search-paths.Hint'),
+      icon: 'fas fa-search',
+      type: ForgeSearchPaths,
+      scope: 'client',
+      restricted: false,
+    });
+  }
 
   // Deprecated 01/06/2022
   game.settings.register('token-variants', 'searchPaths', {
@@ -293,14 +298,6 @@ export async function registerSettings() {
     config: false,
     type: String,
     default: TVA_CONFIG.imgurClientId,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'enableStatusConfig', {
-    scope: 'world',
-    config: false,
-    default: TVA_CONFIG.enableStatusConfig,
-    type: Boolean,
   });
 
   // Deprecated 01/06/2022
@@ -410,7 +407,6 @@ export async function fetchAllSettings() {
   TVA_CONFIG.randomizer = game.settings.get('token-variants', 'randomizerSettings');
   TVA_CONFIG.popup = game.settings.get('token-variants', 'popupSettings');
   TVA_CONFIG.imgurClientId = game.settings.get('token-variants', 'imgurClientId');
-  TVA_CONFIG.enableStatusConfig = game.settings.get('token-variants', 'enableStatusConfig');
   TVA_CONFIG.compendiumMapper = game.settings.get('token-variants', 'compendiumMapper');
   TVA_CONFIG.disableNotifs = game.settings.get('token-variants', 'disableNotifs');
   TVA_CONFIG.permissions = game.settings.get('token-variants', 'permissions');

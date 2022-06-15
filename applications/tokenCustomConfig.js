@@ -9,7 +9,7 @@ export default class TokenCustomConfig extends TokenConfig {
       });
     } else {
       token = new TokenDocument(object.data, {
-        actor: object.actor,
+        actor: game.actors.get(object.actorId),
       });
     }
     super(token, options);

@@ -123,10 +123,6 @@
         "Name": "Imgur Client ID",
         "Hint": "Client ID to be used to perform Imgur API calls with."
       },
-      "status-config": {
-        "Name": "Enable Status Config",
-        "Hint": "Enables image mappings to status effects, visibility and combat states."
-      },
       "disable-notifs": {
         "Name": "Disable Cache Notifications",
         "Hint": "Disables notifications shown by the module during caching."

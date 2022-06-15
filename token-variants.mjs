@@ -205,8 +205,9 @@ async function initialize() {
   };
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
-    if (!TVA_CONFIG.enableStatusConfig || game.userId !== userId) return;
+    if (game.userId !== userId) return;
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+    if (!token || !token.actor) return;
 
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
     if (!('token-variants-combat' in mappings)) return;
@@ -219,6 +220,7 @@ async function initialize() {
 
   const deleteCombatant = async function (combatant) {
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
+    if (!token || !token.actor) return;
 
     const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
     if (!('token-variants-combat' in mappings)) return;
@@ -229,12 +231,12 @@ async function initialize() {
   };
 
   Hooks.on('deleteCombatant', (combatant, options, userId) => {
-    if (!TVA_CONFIG.enableStatusConfig || game.userId !== userId) return;
+    if (game.userId !== userId) return;
     deleteCombatant(combatant);
   });
 
   Hooks.on('deleteCombat', (combat, options, userId) => {
-    if (!TVA_CONFIG.enableStatusConfig || game.userId !== userId) return;
+    if (game.userId !== userId) return;
     combat.combatants.forEach((combatant) => {
       deleteCombatant(combatant);
     });
@@ -265,35 +267,17 @@ async function initialize() {
   };
 
   Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
-    if (
-      !TVA_CONFIG.enableStatusConfig ||
-      !activeEffect.parent ||
-      activeEffect.data.disabled ||
-      game.userId !== userId
-    )
-      return;
+    if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
     updateImageOnEffectChange(activeEffect);
   });
 
   Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
-    if (
-      !TVA_CONFIG.enableStatusConfig ||
-      !activeEffect.parent ||
-      activeEffect.data.disabled ||
-      game.userId !== userId
-    )
-      return;
+    if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
     updateImageOnEffectChange(activeEffect);
   });
 
   Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
-    if (
-      !TVA_CONFIG.enableStatusConfig ||
-      !activeEffect.parent ||
-      !('disabled' in change) ||
-      game.userId !== userId
-    )
-      return;
+    if (!activeEffect.parent || !('disabled' in change) || game.userId !== userId) return;
     updateImageOnEffectChange(activeEffect);
   });
 
@@ -304,7 +288,6 @@ async function initialize() {
     if (
       game.system.id !== 'pf2e' ||
       condition.type !== 'condition' ||
-      !TVA_CONFIG.enableStatusConfig ||
       !condition.parent ||
       condition.data.disabled ||
       game.userId !== userId
@@ -317,7 +300,6 @@ async function initialize() {
     if (
       game.system.id !== 'pf2e' ||
       condition.type !== 'condition' ||
-      !TVA_CONFIG.enableStatusConfig ||
       !condition.parent ||
       condition.data.disabled ||
       game.userId !== userId
@@ -349,7 +331,7 @@ async function initialize() {
   Hooks.on('preUpdateToken', (token, change, options, userId) => {
     if (game.userId !== userId) return;
     if (token.data.actorLink && game.system.id !== 'pf2e') return;
-    if (!TVA_CONFIG.enableStatusConfig || !token.actor) return;
+    if (!token.actor) return;
 
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
@@ -447,7 +429,6 @@ async function initialize() {
     }
 
     if (game.userId !== userId) return;
-    if (!TVA_CONFIG.enableStatusConfig) return;
     if (options['token-variants'] && token.actor) {
       updateWithEffectMapping(
         token,

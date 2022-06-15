@@ -1,6 +1,7 @@
 import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
+import { TVA_CONFIG } from '../scripts/settings.js';
 
 export default class ActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -58,7 +59,8 @@ export default class ActiveEffectConfig extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.find('.remove').click(this._onRemove.bind(this));
-    html.find('img.image').click(this._onImageClick.bind(this));
+    if (TVA_CONFIG.permissions.image_path_button[game.user.role])
+      html.find('img.image').click(this._onImageClick.bind(this));
     html.find('img.image').contextmenu(this._onImageRightClick.bind(this));
     html.find('button.effect-config').click(this._onConfigClick.bind(this));
   }

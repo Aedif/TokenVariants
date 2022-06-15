@@ -47,7 +47,6 @@ e.g.
   - [Match name to folder](#match-name-to-folder)
 - [Image configuration](#image-configuration)
 - [Image to User mappings](#image-to-user-mappings)
-- [Enable Status Config](#enable-status-config)
 - [Compendium Mapper](#compendium-mapper)
 - [Permissions](#permissions)
 - [Installation](#installation)
@@ -207,14 +206,6 @@ Images displayed in the Token HUD can be Shift-Right clicked to open a window th
 
 !["User Image Mapping"](./docs/user_to_image.png)
 
-## Enable Status Config
-
-Allows to map images to Visibility/Combat status and Active Effects.
-
-!["Status Configuration"](./docs/status_config.png)
-
-The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
-
 ## Compendium Mapper
 
 Auto-updates or queues up 'Art Select' window for all Actors within a Compendium.
@@ -226,6 +217,14 @@ Auto-updates or queues up 'Art Select' window for all Actors within a Compendium
 Allows to enable and disable module features based on the user's role.
 
 !["Permission Configuration"](./docs/permissions.png)
+
+### Status Config
+
+Allows to map images to Visibility/Combat status and Active Effects.
+
+!["Status Configuration"](./docs/status_config.png)
+
+The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
 
 ## Installation
 

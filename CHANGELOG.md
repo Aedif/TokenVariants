@@ -1,3 +1,12 @@
+# 2.5.0
+
+- **Enable Status Config** setting replaced by the new **Status Config** permission
+  - Allows any role to access status mappings
+  - Configuration can only be changed if the user owns the token/actor
+  - New images can only be selected if the user has **User File Browser** or **Token Configuration Art Select** permissions
+- Renamed **Token Image Path button** permission to **Token Configuration Art Select**
+- **Forge Asset Library Paths** setting should no longer show up when the game is not running on ForgeVTT
+
 # 2.4.0
 
 Compendium Mapper
