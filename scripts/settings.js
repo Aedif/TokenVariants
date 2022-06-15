@@ -1,6 +1,6 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
 import { parseSearchPaths, parseKeywords, userRequiresImageCache } from './utils.js';
-import { ForgeSearchPaths } from '../applications/searchPaths.js';
+import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
 import ImportExport from '../applications/importExport.js';
@@ -13,6 +13,7 @@ export const TVA_CONFIG = {
     {
       text: 'modules/caeora-maps-tokens-assets/assets/tokens/',
       cache: true,
+      source: typeof ForgeAPI === 'undefined' ? 'data' : 'forge-bazaar',
     },
   ],
   forgeSearchPaths: {},
@@ -178,16 +179,16 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.debug = val),
   });
 
-  // if (typeof ForgeAPI !== 'undefined') {
-  game.settings.registerMenu('token-variants', 'forgeSearchPaths', {
-    name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),
-    hint: game.i18n.localize('token-variants.settings.forge-search-paths.Hint'),
-    icon: 'fas fa-search',
-    type: ForgeSearchPaths,
-    scope: 'client',
-    restricted: false,
-  });
-  // }
+  if (typeof ForgeAPI !== 'undefined') {
+    game.settings.registerMenu('token-variants', 'forgeSearchPaths', {
+      name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),
+      hint: game.i18n.localize('token-variants.settings.forge-search-paths.Hint'),
+      icon: 'fas fa-search',
+      type: ForgeSearchPaths,
+      scope: 'client',
+      restricted: false,
+    });
+  }
 
   // Deprecated 01/06/2022
   game.settings.register('token-variants', 'searchPaths', {
