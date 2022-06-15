@@ -9,7 +9,7 @@ export class ForgeSearchPaths extends FormApplication {
     return mergeObject(super.defaultOptions, {
       id: 'token-variants-search-paths',
       classes: ['sheet'],
-      template: 'modules/token-variants/templates/searchPaths.html',
+      template: 'modules/token-variants/templates/forgeSearchPaths.html',
       resizable: true,
       minimizable: false,
       closeOnSubmit: false,
@@ -56,6 +56,22 @@ export class ForgeSearchPaths extends FormApplication {
     html.find('a.delete-path').click(this._onDeletePath.bind(this));
     html.find('button.reset').click(this._onReset.bind(this));
     html.find('button.update').click(this._onUpdate.bind(this));
+    $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
+  }
+
+  /**
+   * Open a FilePicker so the user can select a local folder to use as an image source
+   */
+  async _onBrowseFolder(event) {
+    const pathInput = $(event.target).closest('.table-row').find('.path-text input');
+    new FilePicker({
+      type: 'folder',
+      activeSource: 'data',
+      current: pathInput.val(),
+      callback: (path) => {
+        pathInput.val(path);
+      },
+    }).render(true);
   }
 
   async _onCreatePath(event) {

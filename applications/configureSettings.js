@@ -406,13 +406,11 @@ export default class ConfigureSettings extends FormApplication {
 
   // Return icon appropriate for the path provided
   _pathIcon(path) {
-    const regexpForge = /(.*assets\.forge\-vtt\.com\/)(\w+)\/(.*)/;
-
     if (path.startsWith('s3:')) {
       return 'fas fa-database';
     } else if (path.startsWith('rolltable:')) {
       return 'fas fa-dice';
-    } else if (path.startsWith('forgevtt:') || path.match(regexpForge)) {
+    } else if (path.startsWith('forgevtt:') || path.startsWith('forge-bazaar:')) {
       return 'fas fa-hammer';
     } else if (path.startsWith('imgur:')) {
       return 'fas fa-info';

@@ -1,6 +1,6 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
 import { parseSearchPaths, parseKeywords, userRequiresImageCache } from './utils.js';
-import { ForgeSearchPaths } from '../applications/searchPaths.js';
+import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
 import ImportExport from '../applications/importExport.js';
@@ -13,6 +13,7 @@ export const TVA_CONFIG = {
     {
       text: 'modules/caeora-maps-tokens-assets/assets/tokens/',
       cache: true,
+      source: typeof ForgeAPI === 'undefined' ? 'data' : 'forge-bazaar',
     },
   ],
   forgeSearchPaths: {},
