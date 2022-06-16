@@ -13,6 +13,7 @@ import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { doImageSearch, findTokensFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
+import TokenFlags from './tokenFlags.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '') {
@@ -247,7 +248,7 @@ export async function renderHud(hud, html, token, searchText = '') {
   let divR = html.find('div.right').append(sideSelect);
 
   // Activate listeners
-  divR.find('#token-variants-side-button').click(_onSideButtonClick);
+  divR.find('#token-variants-side-button').click((event) => _onSideButtonClick(event, token._id));
   divR.click(_deactiveTokenVariantsSideSelector);
   divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));
   divR
@@ -267,7 +268,15 @@ export async function renderHud(hud, html, token, searchText = '') {
   }
 }
 
-function _onSideButtonClick(event) {
+function _onSideButtonClick(event, tokenId) {
+  if (game.user.isGM && keyPressed('config')) {
+    const token = canvas.tokens.get(tokenId);
+    if (token) {
+      new TokenFlags(token).render(true);
+    }
+    return;
+  }
+
   // De-activate 'Status Effects'
   const is080 = !isNewerVersion('0.8.0', game.version ?? game.data.version);
   const variantsControlIcon = $(event.target.parentElement);

@@ -208,6 +208,12 @@ Images displayed in the Token HUD can be Shift-Right clicked to open a window th
 
 !["User Image Mapping"](./docs/user_to_image.png)
 
+## Pop-up and Randomizer override
+
+By Shift+Left-clicking the Token HUD button you are able to override certain module features for the specific token/actor.
+
+!["Setting Override"](./docs/override.png)
+
 ## Compendium Mapper
 
 Auto-updates or queues up 'Art Select' window for all Actors within a Compendium.

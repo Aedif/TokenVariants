@@ -482,55 +482,64 @@ async function createToken(token, options, userId) {
 
   const randSettings = TVA_CONFIG.randomizer;
   let vDown = keyPressed('v');
+  const flagTarget = token.actor ? game.actors.get(token.actor.id) : token.document ?? token;
+  const randFlag = flagTarget.getFlag('token-variants', 'randomize');
+  const popupFlag = flagTarget.getFlag('token-variants', 'popups');
 
-  if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
-    let performRandomSearch = true;
-    if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
-    if (randSettings.linkedActorDisable && token.data.actorLink) performRandomSearch = false;
-    if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
+  if (randFlag == null || randFlag) {
+    if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
+      let performRandomSearch = true;
+      if (randFlag == null) {
+        if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
+        if (randSettings.linkedActorDisable && token.data.actorLink) performRandomSearch = false;
+        if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
+      } else {
+        performRandomSearch = randFlag;
+      }
 
-    if (performRandomSearch) {
-      const img = await doRandomSearch(token.data.name, {
-        searchType: SEARCH_TYPE.TOKEN,
-        actor: token.actor,
-      });
-      if (img) {
-        await updateTokenImage(img[0], {
-          token: token,
+      if (performRandomSearch) {
+        const img = await doRandomSearch(token.data.name, {
+          searchType: SEARCH_TYPE.TOKEN,
           actor: token.actor,
-          imgName: img[1],
         });
-      }
-
-      if (!img) return;
-
-      if (randSettings.diffImages) {
-        let imgPortrait;
-        if (randSettings.syncImages) {
-          imgPortrait = await doSyncSearch(token.data.name, img[1], {
+        if (img) {
+          await updateTokenImage(img[0], {
+            token: token,
             actor: token.actor,
-            searchType: SEARCH_TYPE.PORTRAIT,
-          });
-        } else {
-          imgPortrait = await doRandomSearch(token.data.name, {
-            searchType: SEARCH_TYPE.PORTRAIT,
-            actor: token.actor,
+            imgName: img[1],
           });
         }
 
-        if (imgPortrait) {
-          await updateActorImage(token.actor, imgPortrait[0]);
+        if (!img) return;
+
+        if (randSettings.diffImages) {
+          let imgPortrait;
+          if (randSettings.syncImages) {
+            imgPortrait = await doSyncSearch(token.data.name, img[1], {
+              actor: token.actor,
+              searchType: SEARCH_TYPE.PORTRAIT,
+            });
+          } else {
+            imgPortrait = await doRandomSearch(token.data.name, {
+              searchType: SEARCH_TYPE.PORTRAIT,
+              actor: token.actor,
+            });
+          }
+
+          if (imgPortrait) {
+            await updateActorImage(token.actor, imgPortrait[0]);
+          }
+        } else if (randSettings.tokenToPortrait) {
+          await updateActorImage(token.actor, img[0]);
         }
-      } else if (randSettings.tokenToPortrait) {
-        await updateActorImage(token.actor, img[0]);
+        return;
       }
+      if (popupFlag == null && !randSettings.popupOnDisable) {
+        return;
+      }
+    } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste) {
       return;
     }
-    if (!randSettings.popupOnDisable) {
-      return;
-    }
-  } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste) {
-    return;
   }
 
   // Check if pop-up is enabled and if so open it
@@ -547,7 +556,9 @@ async function createToken(token, options, userId) {
   if (!dirKeyDown || (dirKeyDown && vDown)) {
     if (TVA_CONFIG.popup.disableAutoPopupOnTokenCreate && !vDown) {
       return;
-    } else if (disablePopupForType(token.actor)) {
+    } else if (popupFlag == null && disablePopupForType(token.actor)) {
+      return;
+    } else if (!popupFlag) {
       return;
     }
   }

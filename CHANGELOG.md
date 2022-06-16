@@ -1,3 +1,9 @@
+# 2.7.0
+
+- Token can now be flagged to override pop-ups and randomization settings
+  - Useful if you want to disable/enable randomization just for a couple of tokens
+  - Like pop-ups but would rather not see them for specific actors
+
 # 2.6.1
 
 - Fixing parsing of old format s3 paths

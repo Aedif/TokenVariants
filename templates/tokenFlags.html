@@ -1,0 +1,35 @@
+<form>
+  <div class="tab token-variants-permissions">
+    <p class="notes">Override module features for this token/actor</p>
+
+    <header class="table-header flexrow">
+      <label class="index">Flag</label>
+      <label>Enable</label>
+      <label>Set Flag</label>
+    </header>
+  
+    <ul class="permissions-list">
+      <li class="permission form-group">
+        <label class="index">Randomize</label>
+        <div class="form-fields">
+          <input class="flag" type="checkbox" name="randomize" {{#if randomize}}checked{{/if}} {{#unless randomizeSetFlag}}disabled{{/unless}}/>
+          <input class="controlFlag" type="checkbox" {{#if randomizeSetFlag}}checked{{/if}} />
+        </div>
+        <p class="hint">Enable or disable randomization for this actor/token.</p>
+      </li>
+  
+      <li class="permission form-group">
+        <label class="index">Pop-ups</label>
+        <div class="form-fields">
+          <input class="flag" type="checkbox" name="popups" {{#if popups}}checked{{/if}} {{#unless popupsSetFlag}}disabled{{/unless}}/>
+          <input class="controlFlag" type="checkbox" {{#if popupsSetFlag}}checked{{/if}}/>
+        </div>
+        <p class="hint">Enable or disable pop-ups for this actor/token.</p>
+      </li>
+    </ul>
+  </div>
+
+  <div class="button-container">
+    <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
+  </div>
+</form>
