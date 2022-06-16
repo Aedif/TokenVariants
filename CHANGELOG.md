@@ -1,3 +1,22 @@
+# 2.6.1
+
+- Fixing parsing of old format s3 paths
+
+# 2.6.0
+
+Search Paths
+
+- **Search Paths** setting should now be configurable for any source
+- Source is now to be entered into a separate input box
+  - Currently set paths will be automatically converted to use the new format
+- Clicking on the folder icon will now open up a FilePicker or a dialog depending on the source type, allowing you to select the folder/rolltable you want to be scanned
+- Optimizations for '**forge-bazaar**' source paths
+- The new default for ForgeVTT worlds will be to read '**Caeora's Maps, Tokens, and Assets**' from the bazaar
+
+Misc.
+
+- Unrestricted '**Config**' and '**Override**' keybindings as regular players depending on permissions may require these
+
 # 2.5.0
 
 - **Enable Status Config** setting replaced by the new **Status Config** permission

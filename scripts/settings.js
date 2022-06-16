@@ -380,12 +380,11 @@ export async function registerSettings() {
         const parts = p.text.split(':');
         if (parts.length > 2) {
           p.text = parts[2];
-          p.bucket = parts[1];
+          p.source = 's3:' + parts[1];
         } else {
-          p.text = parts[1];
-          p.bucket = '';
+          p.source = 's3:';
+          p.text = p.text.replace('s3:');
         }
-        p.source = 's3';
       } else if (p.text.startsWith('rolltable:')) {
         p.text = p.text.split(':')[1];
         p.source = 'rolltable';
@@ -467,12 +466,11 @@ export async function importSettingsFromJSON(json) {
           const parts = p.text.split(':');
           if (parts.length > 2) {
             p.text = parts[2];
-            p.bucket = parts[1];
+            p.source = 's3:' + parts[1];
           } else {
-            p.text = parts[1];
-            p.bucket = '';
+            p.source = 's3:';
+            p.text = p.text.replace('s3:');
           }
-          p.source = 's3';
         } else if (p.text.startsWith('rolltable:')) {
           p.text = p.text.split(':')[1];
           p.source = 'rolltable';
