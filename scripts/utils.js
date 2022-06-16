@@ -189,14 +189,16 @@ export async function updateActorImage(actor, imgSrc, directUpdate = true, pack 
 }
 
 async function showTileArtSelect() {
-  for (const tile of canvas.background.controlled) {
-    const tileName = tile.document.getFlag('token-variants', 'tileName') || tile.id;
-    showArtSelect(tileName, {
-      callback: async function (imgSrc, name) {
-        tile.document.update({ img: imgSrc });
-      },
-      searchType: SEARCH_TYPE.TILE,
-    });
+  for (const tileLayer of [canvas.background.controlled, canvas.foreground.controlled]) {
+    for (const tile of tileLayer) {
+      const tileName = tile.document.getFlag('token-variants', 'tileName') || tile.id;
+      showArtSelect(tileName, {
+        callback: async function (imgSrc, name) {
+          tile.document.update({ img: imgSrc });
+        },
+        searchType: SEARCH_TYPE.TILE,
+      });
+    }
   }
 }
 

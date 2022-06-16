@@ -1,3 +1,7 @@
+# 2.8.1
+
+- Fixed '**Art Select**' not showing for **foreground** tiles when using '**Show Art Select: #**' key bindings
+
 # 2.8.0
 
 Tile HUD

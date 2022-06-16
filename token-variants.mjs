@@ -700,7 +700,6 @@ function modTokenConfig(tokenConfig, html, _) {
  * to open an ArtSelect using the tile's name.
  */
 function modTileConfig(tileConfig, html, _) {
-  console.log(tileConfig, html);
   if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
     let fields = html[0].getElementsByClassName('image');
     for (let field of fields) {
