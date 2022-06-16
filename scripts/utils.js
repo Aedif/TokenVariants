@@ -188,6 +188,18 @@ export async function updateActorImage(actor, imgSrc, directUpdate = true, pack 
   }
 }
 
+async function showTileArtSelect() {
+  for (const tile of canvas.background.controlled) {
+    const tileName = tile.document.getFlag('token-variants', 'tileName') || tile.id;
+    showArtSelect(tileName, {
+      callback: async function (imgSrc, name) {
+        tile.document.update({ img: imgSrc });
+      },
+      searchType: SEARCH_TYPE.TILE,
+    });
+  }
+}
+
 /**
  * Checks if a key is pressed taking into account current game version.
  * @param {string} key v/Ctrl/Shift/Alt
@@ -262,6 +274,7 @@ export function registerKeybinds() {
           object: actor,
         });
       }
+      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
@@ -289,6 +302,7 @@ export function registerKeybinds() {
           object: token,
         });
       }
+      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
@@ -318,6 +332,7 @@ export function registerKeybinds() {
           object: token,
         });
       }
+      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,

@@ -20,7 +20,6 @@ import {
   updateActorImage,
   updateTokenImage,
   startBatchUpdater,
-  queueTokenUpdate,
   userRequiresImageCache,
   checkAndDisplayUserSpecificImage,
   flattenSearchResults,
@@ -467,6 +466,7 @@ async function initialize() {
   Hooks.on('createToken', createToken);
 
   Hooks.on('renderTokenConfig', modTokenConfig);
+  Hooks.on('renderTileConfig', modTileConfig);
   Hooks.on('renderActorSheet', modActorSheet);
 
   Hooks.on('renderTokenHUD', renderHud);
@@ -686,6 +686,43 @@ function modTokenConfig(tokenConfig, html, _) {
             },
             searchType: SEARCH_TYPE.TOKEN,
             object: tokenConfig.object,
+          });
+        };
+        field.parentNode.append(el);
+        return;
+      }
+    }
+  }
+}
+
+/**
+ * Adds a button to 'Tile Configuration' window's 'Tile Image or Video' form-group
+ * to open an ArtSelect using the tile's name.
+ */
+function modTileConfig(tileConfig, html, _) {
+  console.log(tileConfig, html);
+  if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
+    let fields = html[0].getElementsByClassName('image');
+    for (let field of fields) {
+      if (field.getAttribute('name') == 'img') {
+        let el = document.createElement('button');
+        el.type = 'button';
+        el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
+        el.className = 'token-variants-image-select-button';
+        el.innerHTML = '<i class="fas fa-images"></i>';
+        el.tabIndex = -1;
+        el.setAttribute('data-type', 'imagevideo');
+        el.setAttribute('data-target', 'img');
+        el.onclick = async () => {
+          const tileName =
+            tileConfig.object.getFlag('token-variants', 'tileName') ||
+            tileConfig.object.id ||
+            'new tile';
+          showArtSelect(tileName, {
+            callback: (imgSrc, name) => {
+              field.value = imgSrc;
+            },
+            searchType: SEARCH_TYPE.TILE,
           });
         };
         field.parentNode.append(el);

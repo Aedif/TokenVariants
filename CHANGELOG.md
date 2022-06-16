@@ -1,3 +1,10 @@
+# 2.8.0
+
+Tile HUD
+
+- Added '**Art Select**' button to the Tile configuration window
+- Use of any of the '**Show Art Select: #**' key bindings with tiles selected will result in '**Art Select**' being shown for the tiles
+
 # 2.7.1
 
 - Fixing pop-ups not showing up properly since the last update when no flags have been set on the token
