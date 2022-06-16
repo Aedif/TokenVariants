@@ -73,7 +73,7 @@ export class ForgeSearchPaths extends FormApplication {
         if (fp.activeSource !== 'forgevtt') {
           ui.notifications.warn("Token Variant Art: Only 'Assets Library' paths are supported");
         } else {
-          pathInput.val(path);
+          pathInput.val(fp.result.target);
         }
       },
     }).render(true);

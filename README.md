@@ -64,13 +64,15 @@ The root of these paths is assumed to be Foundry VTT's local Data folder. The sa
 
 By default 'Token Variants' will attempt to search [Caeora's Maps, Tokens, and Assets](https://foundryvtt.com/packages/caeora-maps-tokens-assets) asset folder if installed.
 
-In addition to local paths you can also add s3 buckets, ForgeVTT asset folders, and Rolltables as image sources:
+Clicking on the folder icon will open up a File browser which will let you to select the folder you want to be scanned. Entering 'rolltable' as a source and selecting the dice icon will open up a dialog instead with all of the available rollable tables.
 
-- To specify a path for a [configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket use the following format: **s3:{bucket-name}:{path}**
-- Rolltables can be added using: **rolltable:{rolltable name}**
-- Imgur galleries can be linked with: **imgur:galleryID**
-  - e.g. https://imgur.com/gallery/ **JweWCpf** -> imgur:**JweWCpf**
-  - Imgur paths can be automatically converted to RollTables
+Formats:
+
+- [Configured](https://foundryvtt.com/article/aws-s3/) AWS S3 bucket: **s3:bucketName | path/in/the/bucket/**
+- Rolltables: **rolltable | rolltable name**
+- Imgur galleries: **imgur | galleryID**
+  - e.g. https://imgur.com/gallery/ **JweWCpf** -> imgur | **JweWCpf**
+  - Imgur paths can be automatically converted to RollTables by pressing the "**<<**" button
   - **!!!** Imgur galleries cannot be accessed when running Foundry on 'localhost'
 - For your ForgeVTT asset library see **Forge Asset Library Paths** setting
 

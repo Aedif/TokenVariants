@@ -291,7 +291,7 @@ export default class ConfigureSettings extends FormApplication {
       activeSource: activeSource,
       current: current,
       callback: (path, fp) => {
-        pathInput.val(path);
+        pathInput.val(fp.result.target);
         if (fp.activeSource === 's3') {
           sourceInput.val(`s3:${fp.result.bucket}`);
         } else {
