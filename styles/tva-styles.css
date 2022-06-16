@@ -293,6 +293,9 @@ ol.token-variant-table .table-row .path-image img {
   object-fit: cover;
   object-position: 50% 0;
 }
+ol.token-variant-table .table-row .path-source {
+  flex: 0.2;
+}
 ol.token-variant-table .table-row .path-text {
   flex: 1;
 }

@@ -22,6 +22,7 @@
                   <div class="path-image">
                     <a class="create-path" title="Add new path"><i class="fas fa-plus"></i></a>
                   </div>
+                  <div class="path-source"><label>Source</label></div>
                   <div class="path-text"><label>Path</label></div>
                   <div class="path-cache"><label>Cache</label></div>
                   {{#if tilesEnabled}}
@@ -35,11 +36,13 @@
                   <div class="path-image source-icon">
                     <a><i class="{{path.icon}}"></i></a>
                   </div>
-                  <div class="path-text">
-                    <input class="searchPath" type="text" name="searchPaths.{{index}}.text" value="{{path.text}}" placeholder="Path to image source"
-                    />
+                  <div class="path-source">
+                    <input class="searchSource" type="text" name="searchPaths.{{index}}.source" value="{{path.source}}" placeholder="data"/>
                   </div>
-                  <div class="imgur-control {{#if (eq path.type 'imgur')}}active{{/if}}">
+                  <div class="path-text">
+                    <input class="searchPath" type="text" name="searchPaths.{{index}}.text" value="{{path.text}}" placeholder="Path to folder"/>
+                  </div>
+                  <div class="imgur-control {{#if (eq path.source 'imgur')}}active{{/if}}">
                     <a class="convert-imgur" title="Convert to Rolltable">
                         <i class="fas fa-angle-double-left"></i>
                     </a>

@@ -58,9 +58,10 @@ export default class ConfigureSettings extends FormApplication {
     const paths = settings.searchPaths.map((path) => {
       const r = {};
       r.text = path.text;
-      r.icon = this._pathIcon(path.text);
+      r.icon = this._pathIcon(path.source);
       r.cache = path.cache;
       r.tiles = path.tiles;
+      r.source = path.source;
       return r;
     });
     data.searchPaths = paths;
@@ -148,7 +149,7 @@ export default class ConfigureSettings extends FormApplication {
     // Search Paths
     super.activateListeners(html);
     html.find('a.create-path').click(this._onCreatePath.bind(this));
-    html.on('input', '.searchPath', this._onSearchPathTextChange.bind(this));
+    html.on('input', '.searchSource', this._onSearchSourceTextChange.bind(this));
     $(html).on('click', 'a.delete-path', this._onDeletePath.bind(this));
     $(html).on('click', 'a.convert-imgur', this._onConvertImgurPath.bind(this));
     $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
@@ -247,12 +248,55 @@ export default class ConfigureSettings extends FormApplication {
    */
   async _onBrowseFolder(event) {
     const pathInput = $(event.target).closest('.table-row').find('.path-text input');
+    const sourceInput = $(event.target).closest('.table-row').find('.path-source input');
+
+    let activeSource = sourceInput.val() || 'data';
+    let current = pathInput.val();
+
+    if (activeSource.startsWith('s3:')) {
+      const bucketName = activeSource.replace('s3:');
+      current = `${game.data.files.s3?.endpoint.protocol}//${bucketName}.${game.data.files.s3?.endpoint.host}/${current}`;
+    } else if (activeSource.startsWith('rolltable')) {
+      let content = `<select name="table-name" id="output-tableKey">`;
+
+      game.tables.entities
+        .map((t) => t.name)
+        .forEach((tableName) => {
+          content += `<option value='${tableName}'>${tableName}</option>`;
+        });
+
+      content += `</select>`;
+
+      new Dialog({
+        title: `Select a Rolltable`,
+        content: content,
+        buttons: {
+          yes: {
+            icon: "<i class='fas fa-check'></i>",
+            label: 'Select',
+            callback: (html) => {
+              pathInput.val();
+              const tableName = html.find("select[name='table-name']").val();
+              pathInput.val(tableName);
+            },
+          },
+        },
+        default: 'yes',
+      }).render(true);
+      return;
+    }
+
     new FilePicker({
       type: 'folder',
-      activeSource: 'data',
-      current: pathInput.val(),
-      callback: (path) => {
+      activeSource: activeSource,
+      current: current,
+      callback: (path, fp) => {
         pathInput.val(path);
+        if (fp.activeSource === 's3') {
+          sourceInput.val(`s3:${fp.result.bucket}`);
+        } else {
+          sourceInput.val(fp.activeSource);
+        }
       },
     }).render(true);
   }
@@ -263,9 +307,10 @@ export default class ConfigureSettings extends FormApplication {
   async _onConvertImgurPath(event) {
     event.preventDefault();
 
-    const searchPathInput = $(event.target).closest('.table-row').find('input.searchPath');
+    const pathInput = $(event.target).closest('.table-row').find('.path-text input');
+    const sourceInput = $(event.target).closest('.table-row').find('.path-source input');
 
-    const albumHash = searchPathInput.val().split(':')[1];
+    const albumHash = pathInput.val();
     const imgurClientId =
       TVA_CONFIG.imgurClientId === '' ? 'df9d991443bb222' : TVA_CONFIG.imgurClientId;
 
@@ -310,7 +355,8 @@ export default class ConfigureSettings extends FormApplication {
             img: 'modules/token-variants/img/token-images.svg',
           });
 
-          searchPathInput.val('rolltable:' + data.title).trigger('input');
+          pathInput.val(data.title);
+          sourceInput.val('rolltable').trigger('input');
         }.bind(this)
       )
       .catch((error) => console.log('Token Variant Art | ', error));
@@ -327,8 +373,11 @@ export default class ConfigureSettings extends FormApplication {
         <div class="path-image source-icon">
             <a><i class="${this._pathIcon('')}"></i></a>
         </div>
+        <div class="path-source">
+          <input class="searchSource" type="text" name="searchPaths.source" value="" placeholder="data"/>
+        </div>
         <div class="path-text">
-            <input class="searchPath" type="text" name="searchPaths.text" value="" placeholder="Path to image source"/>
+            <input class="searchPath" type="text" name="searchPaths.text" value="" placeholder="Path to folder"/>
         </div>
         <div class="imgur-control">
             <a class="convert-imgur" title="Convert to Rolltable"><i class="fas fa-angle-double-left"></i></a>
@@ -359,6 +408,13 @@ export default class ConfigureSettings extends FormApplication {
   }
 
   async _reIndexPaths(table) {
+    table
+      .find('.path-source')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.source`);
+      });
+
     table
       .find('.path-text')
       .find('input')
@@ -393,7 +449,7 @@ export default class ConfigureSettings extends FormApplication {
     this.setPosition(); // Auto-resize window
   }
 
-  async _onSearchPathTextChange(event) {
+  async _onSearchSourceTextChange(event) {
     const image = this._pathIcon(event.target.value);
     const imgur = image === 'fas fa-info';
 
@@ -405,14 +461,14 @@ export default class ConfigureSettings extends FormApplication {
   }
 
   // Return icon appropriate for the path provided
-  _pathIcon(path) {
-    if (path.startsWith('s3:')) {
+  _pathIcon(source) {
+    if (source.startsWith('s3')) {
       return 'fas fa-database';
-    } else if (path.startsWith('rolltable:')) {
+    } else if (source.startsWith('rolltable')) {
       return 'fas fa-dice';
-    } else if (path.startsWith('forgevtt:') || path.startsWith('forge-bazaar:')) {
+    } else if (source.startsWith('forgevtt') || source.startsWith('forge-bazaar')) {
       return 'fas fa-hammer';
-    } else if (path.startsWith('imgur:')) {
+    } else if (source.startsWith('imgur')) {
       return 'fas fa-info';
     }
 
@@ -431,6 +487,9 @@ export default class ConfigureSettings extends FormApplication {
     settings.searchPaths = formData.hasOwnProperty('searchPaths')
       ? Object.values(formData.searchPaths)
       : [];
+    settings.searchPaths.forEach((path) => {
+      if (!path.source) path.source = 'data';
+    });
 
     // Search Filters
     if (!this._validRegex(formData.searchFilters.portraitFilterRegex)) {

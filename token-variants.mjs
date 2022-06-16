@@ -1050,69 +1050,52 @@ async function findTokensExact(name, searchType, searchOptions = {}) {
 }
 
 async function walkAllPaths(tokens = true) {
-  for (let path of TVA_CONFIG.parsedSearchPaths.get('data')) {
+  for (const path of TVA_CONFIG.searchPaths) {
     if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-      if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path.text, {});
+      if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
     }
   }
-  for (let [bucket, paths] of TVA_CONFIG.parsedSearchPaths.get('s3')) {
-    for (let path of paths) {
-      if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-        if ((path.cache && caching) || (!path.cache && !caching))
-          await walkFindImages(path.text, {
-            bucket: bucket,
-          });
+
+  // ForgeVTT specific path handling
+  const userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : '';
+  for (const uid in TVA_CONFIG.forgeSearchPaths) {
+    let apiKey = TVA_CONFIG.forgeSearchPaths[uid].apiKey;
+    if (uid === userId) {
+      for (const path of TVA_CONFIG.forgeSearchPaths[uid].paths) {
+        if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
+          if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
+        }
       }
-    }
-  }
-  for (let path of TVA_CONFIG.parsedSearchPaths.get('rolltable')) {
-    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-      if ((path.cache && caching) || (!path.cache && !caching))
-        await walkFindImages(path.text, {
-          rollTableName: path.text,
-        });
-    }
-  }
-  for (let path of TVA_CONFIG.parsedSearchPaths.get('forgevtt')) {
-    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-      if ((path.cache && caching) || (!path.cache && !caching))
-        await walkFindImages(path.text, {
-          forgevtt: true,
-          apiKey: path.apiKey,
-        });
-    }
-  }
-  for (let path of TVA_CONFIG.parsedSearchPaths.get('imgur')) {
-    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-      if ((path.cache && caching) || (!path.cache && !caching))
-        await walkFindImages(path.text, {
-          imgur: true,
-        });
+    } else if (apiKey) {
+      for (const path of TVA_CONFIG.forgeSearchPaths[uid].paths) {
+        if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
+          if ((path.cache && caching) || (!path.cache && !caching)) {
+            if (path.share) await walkFindImages(path, { apiKey: apiKey });
+          }
+        }
+      }
     }
   }
 }
 
-async function walkFindImages(
-  dir,
-  { bucket = '', rollTableName = '', forgevtt = false, apiKey = '', imgur = false } = {}
-) {
+async function walkFindImages(path, { apiKey = '' } = {}) {
   let files = {};
   try {
-    if (bucket) {
-      files = await FilePicker.browse('s3', dir, {
-        bucket: bucket,
+    if (path.source.startsWith('s3:')) {
+      files = await FilePicker.browse('s3', path.text, {
+        bucket: path.source.replace('s3:'),
       });
-    } else if (forgevtt) {
+    } else if (path.source.startsWith('forgevtt')) {
       if (apiKey) {
-        const response = await callForgeVTT(dir, apiKey);
+        const response = await callForgeVTT(path.text, apiKey);
         files.files = response.files.map((f) => f.url);
       } else {
-        files = await FilePicker.browse('forgevtt', dir, {
-          recursive: true,
-        });
+        files = await FilePicker.browse('forgevtt', path.text, { recursive: true });
       }
-    } else if (imgur && location.hostname !== 'localhost') {
-      await fetch('https://api.imgur.com/3/gallery/album/' + dir, {
+    } else if (path.source.startsWith('forge-bazaar')) {
+      files = await FilePicker.browse('forge-bazaar', path.text, { recursive: true });
+    } else if (path.source.startsWith('imgur')) {
+      await fetch('https://api.imgur.com/3/gallery/album/' + path.text, {
         headers: {
           Authorization:
             'Client-ID ' +
@@ -1133,8 +1116,8 @@ async function walkFindImages(
         })
         .catch((error) => console.log('Token Variant Art: ', error));
       return;
-    } else if (rollTableName) {
-      const table = game.tables.contents.find((t) => t.name === rollTableName);
+    } else if (path.source.startsWith('rolltable')) {
+      const table = game.tables.contents.find((t) => t.name === path.text);
       if (!table) {
         ui.notifications.warn(
           game.i18n.format('token-variants.notifications.warn.invalid-table', {
@@ -1144,19 +1127,19 @@ async function walkFindImages(
       } else {
         for (let baseTableData of table.data.results) {
           const path = baseTableData.data.img;
-          const rtName = baseTableData.data.text;
+          const rtName = baseTableData.data.text || getFileName(path);
           foundImages.push({ path: path, name: rtName });
         }
       }
       return;
     } else {
-      files = await FilePicker.browse('data', dir);
+      files = await FilePicker.browse(path.source, path.text);
     }
   } catch (err) {
     console.log(
       `Token Variant Art | ${game.i18n.localize(
         'token-variants.notifications.warn.path-not-found'
-      )} ${dir}`
+      )} ${path.source}:${path.text}`
     );
     return;
   }
@@ -1169,10 +1152,10 @@ async function walkFindImages(
     });
   }
 
-  if (forgevtt) return;
+  if (path.source.startsWith('forgevtt') || path.source.startsWith('forge-bazaar')) return;
 
   for (let f_dir of files.dirs) {
-    await walkFindImages(f_dir, { bucket, rollTableName, forgevtt, apiKey, imgur });
+    await walkFindImages({ text: f_dir, source: path.source }, { apiKey: apiKey });
   }
 }
 

@@ -14,7 +14,7 @@ export class ForgeSearchPaths extends FormApplication {
       minimizable: false,
       closeOnSubmit: false,
       title: game.i18n.localize('token-variants.settings.search-paths.Name'),
-      width: 500,
+      width: 540,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
       dragDrop: [{ dragSelector: null, dropSelector: null }],
@@ -64,12 +64,17 @@ export class ForgeSearchPaths extends FormApplication {
    */
   async _onBrowseFolder(event) {
     const pathInput = $(event.target).closest('.table-row').find('.path-text input');
+
     new FilePicker({
       type: 'folder',
-      activeSource: 'data',
+      activeSource: 'forgevtt',
       current: pathInput.val(),
-      callback: (path) => {
-        pathInput.val(path);
+      callback: (path, fp) => {
+        if (fp.activeSource !== 'forgevtt') {
+          ui.notifications.warn("Token Variant Art: Only 'Assets Library' paths are supported");
+        } else {
+          pathInput.val(path);
+        }
       },
     }).render(true);
   }
@@ -112,6 +117,7 @@ export class ForgeSearchPaths extends FormApplication {
         cache: path.cache,
         share: path.share,
         tiles: path.tiles,
+        source: path.source,
       };
     });
     this.apiKey = expanded.apiKey;

@@ -1,5 +1,5 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
-import { parseSearchPaths, parseKeywords, userRequiresImageCache } from './utils.js';
+import { userRequiresImageCache } from './utils.js';
 import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
@@ -11,13 +11,12 @@ export const TVA_CONFIG = {
   disableNotifs: false,
   searchPaths: [
     {
-      text: 'modules/caeora-maps-tokens-assets/assets/tokens/',
+      text: 'modules/caeora-maps-tokens-assets/assets/tokens',
       cache: true,
       source: typeof ForgeAPI === 'undefined' ? 'data' : 'forge-bazaar',
     },
   ],
   forgeSearchPaths: {},
-  parsedSearchPaths: [],
   worldHud: {
     displayOnlySharedImages: false,
     disableIfTHWEnabled: false,
@@ -161,7 +160,6 @@ export async function registerSettings() {
 
       // Check if any setting need to be parsed post-update
       if ('searchPaths' in diff || 'forgeSearchPaths' in diff) {
-        TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
         if (userRequiresImageCache(TVA_CONFIG.permissions)) requiresImageCache = true;
       }
 
@@ -368,13 +366,49 @@ export async function registerSettings() {
   if (Object.keys(settings).length === 0) {
     await fetchAllSettings();
     const initSettings = deepClone(TVA_CONFIG);
-    delete initSettings.parsedSearchPaths;
     delete initSettings.parsedExcludedKeywords;
     game.settings.set('token-variants', 'settings', initSettings);
   } else {
     mergeObject(TVA_CONFIG, settings);
-    // Some settings need to be parsed
-    TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
+  }
+
+  // 16/06/2022
+  // Perform searchPaths and forgeSearchPaths conversions to new format if needed
+  TVA_CONFIG.searchPaths = TVA_CONFIG.searchPaths.map((p) => {
+    if (!p.source) {
+      if (p.text.startsWith('s3:')) {
+        const parts = p.text.split(':');
+        if (parts.length > 2) {
+          p.text = parts[2];
+          p.bucket = parts[1];
+        } else {
+          p.text = parts[1];
+          p.bucket = '';
+        }
+        p.source = 's3';
+      } else if (p.text.startsWith('rolltable:')) {
+        p.text = p.text.split(':')[1];
+        p.source = 'rolltable';
+      } else if (p.text.startsWith('forgevtt:')) {
+        p.text = p.text.split(':')[1];
+        p.source = 'forgevtt';
+      } else if (p.text.startsWith('imgur:')) {
+        p.text = p.text.split(':')[1];
+        p.source = 'imgur';
+      } else {
+        p.source = 'data';
+      }
+    }
+    return p;
+  });
+
+  for (let uid in TVA_CONFIG.forgeSearchPaths) {
+    TVA_CONFIG.forgeSearchPaths[uid].paths = TVA_CONFIG.forgeSearchPaths[uid].paths.map((p) => {
+      if (!p.source) {
+        p.source = 'forgevtt';
+      }
+      return p;
+    });
   }
 
   // Read client settings
@@ -411,14 +445,10 @@ export async function fetchAllSettings() {
   TVA_CONFIG.compendiumMapper = game.settings.get('token-variants', 'compendiumMapper');
   TVA_CONFIG.disableNotifs = game.settings.get('token-variants', 'disableNotifs');
   TVA_CONFIG.permissions = game.settings.get('token-variants', 'permissions');
-
-  // Some settings need to be parsed
-  TVA_CONFIG.parsedSearchPaths = await parseSearchPaths(TVA_CONFIG);
 }
 
 export function exportSettingsToJSON() {
   const settings = deepClone(TVA_CONFIG);
-  delete settings.parsedSearchPaths;
   delete settings.parsedExcludedKeywords;
 
   const filename = `token-variants-settings.json`;
@@ -427,12 +457,53 @@ export function exportSettingsToJSON() {
 
 export async function importSettingsFromJSON(json) {
   if (typeof json === 'string') json = JSON.parse(json);
+
+  // 16/06/2022
+  // Perform searchPaths and forgeSearchPaths conversions to new format if needed
+  if (json.searchPaths)
+    json.searchPaths = json.searchPaths.map((p) => {
+      if (!p.source) {
+        if (p.text.startsWith('s3:')) {
+          const parts = p.text.split(':');
+          if (parts.length > 2) {
+            p.text = parts[2];
+            p.bucket = parts[1];
+          } else {
+            p.text = parts[1];
+            p.bucket = '';
+          }
+          p.source = 's3';
+        } else if (p.text.startsWith('rolltable:')) {
+          p.text = p.text.split(':')[1];
+          p.source = 'rolltable';
+        } else if (p.text.startsWith('forgevtt:')) {
+          p.text = p.text.split(':')[1];
+          p.source = 'forgevtt';
+        } else if (p.text.startsWith('imgur:')) {
+          p.text = p.text.split(':')[1];
+          p.source = 'imgur';
+        } else {
+          p.source = 'data';
+        }
+      }
+      return p;
+    });
+
+  if (json.forgeSearchPaths)
+    for (let uid in json.forgeSearchPaths) {
+      json.forgeSearchPaths[uid].paths = json.forgeSearchPaths[uid].paths.map((p) => {
+        if (!p.source) {
+          p.source = 'forgevtt';
+        }
+        return p;
+      });
+    }
+
   updateSettings(json);
 }
 
 export async function updateSettings(newSettings) {
   const settings = mergeObject(deepClone(TVA_CONFIG), newSettings);
-  delete settings.parsedSearchPaths;
   delete settings.parsedExcludedKeywords;
   game.settings.set('token-variants', 'settings', settings);
 }

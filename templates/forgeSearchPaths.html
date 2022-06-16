@@ -14,6 +14,7 @@
         <div class="path-image">
           <a class="create-path" title="Add new path"><i class="fas fa-plus"></i></a>
         </div>
+        <div class="path-source"><label>Source</label></div>
         <div class="path-text"><label>Path</label></div>
         <div class="path-cache"><label>Cache</label></div>
         <div class="path-share"><label>Share</label></div>
@@ -28,8 +29,12 @@
         <div class="path-image source-icon">
           <a><i class="fas fa-hammer"></i></a>
         </div>
+        <div class="path-source">
+          <input class="searchSource" type="text" value="forgevtt" placeholder="forgevtt" disabled/>
+          <input type="text"  name="paths.{{index}}.source" value="forgevtt" hidden/>
+        </div>
         <div class="path-text">
-          <input type="text" name="paths.{{index}}.text" value="{{path.text}}" placeholder="Path to image source"/>
+          <input type="text" name="paths.{{index}}.text" value="{{path.text}}" placeholder="Path to folder"/>
         </div>
         <div class="path-cache">
           <input type="checkbox" name="paths.{{index}}.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>
