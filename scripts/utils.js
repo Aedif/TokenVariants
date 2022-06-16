@@ -221,7 +221,7 @@ export function registerKeybinds() {
     onUp: () => {
       PRESSED_KEYS.popupOverride = false;
     },
-    restricted: true,
+    restricted: false,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
   });
   game.keybindings.register('token-variants', 'config', {
@@ -238,7 +238,7 @@ export function registerKeybinds() {
     onUp: () => {
       PRESSED_KEYS.config = false;
     },
-    restricted: true,
+    restricted: false,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
   });
   game.keybindings.register('token-variants', 'showArtSelectPortrait', {
