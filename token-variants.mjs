@@ -558,7 +558,7 @@ async function createToken(token, options, userId) {
       return;
     } else if (popupFlag == null && disablePopupForType(token.actor)) {
       return;
-    } else if (!popupFlag) {
+    } else if (popupFlag != null && !popupFlag) {
       return;
     }
   }

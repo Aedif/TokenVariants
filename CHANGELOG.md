@@ -1,8 +1,16 @@
+# 2.7.1
+
+- Fixing pop-ups not showing up properly since the last update when no flags have been set on the token
+
 # 2.7.0
 
-- Token can now be flagged to override pop-ups and randomization settings
+- Tokens can now be flagged to override pop-ups and randomization settings
+  - Menu accessed by **Shift+Left-clicking** the '**Token HUD button**'
   - Useful if you want to disable/enable randomization just for a couple of tokens
   - Like pop-ups but would rather not see them for specific actors
+- Flags:
+  - `actor.setFlag('token-variants', 'randomize', true);`
+  - `actor.setFlag('token-variants', 'popups', true);`
 
 # 2.6.1
 
