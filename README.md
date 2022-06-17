@@ -240,7 +240,7 @@ To install, import this [manifest](https://raw.githubusercontent.com/Aedif/Token
 
 ## API
 
-### **showArtSelect(search, \{callback = null, searchType='both', tokenConfig=\{\}\}=\{\})**
+### **showArtSelect(search, options)**
 
 Displays the art select window.
 
@@ -250,17 +250,17 @@ Parameters:
 - **\{object\}** Options which customize the search
 
   - \{Function[]\} [callback] Function to be called with the user selected image path
-  - \{SEARCH_TYPE|string\} [searchType] (token|portrait|both) Controls filters applied to the search results
-  - \{Token|object\} [tokenConfig] Used to source default token image config from such as (width, height, scale, etc.)
+  - \{SEARCH_TYPE|string\} [searchType] (token|portrait|both|tile) Controls filters applied to the search results
+  - \{object\} [options.searchOptions] Override for the [Search Algorithm Settings](#search-algorithm-settings). See [searchOptions](#object-searchoptions)
+  - \{Token|Actor\} [object] Token/Actor used when displaying Custom Token Config prompt
   - \{boolean\} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
-  - \{boolean\} [options.ignoreKeywords] Override for the 'Search by Keyword' setting
-  - \{object\} [options.searchOptions] Override for the 'Search Algorithm Settings' setting
-    e.g.
+
+e.g.
 
 - game.modules.get('token-variants').api.showArtSelect("")
 - game.modules.get('token-variants').api.showArtSelect("dragon", \{callback: (selectedImg) => console.log(selectedImg)\})
 
-### **doImageSearch(search, \{searchType = 'both', ignoreKeywords = false, simpleResults = false, callback = null\}=\{\})**
+### **doImageSearch(search, options)**
 
 Performs an image search and returns the results.
 
@@ -268,19 +268,18 @@ Parameters:
 
 - **\{string\}** **search**: Text to be used as the search criteria
 - **\{object\}** Options which customize the search
-  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both) Controls filters applied to the search results
-  - \{Boolean\} [options.ignoreKeywords] Ignores keywords search setting
+  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
   - \{Boolean\} [options.simpleResults] Results will be returned as an array of all image paths found
   - \{Boolean\} [options.callback] Function to be called with the found images
-  - \{object\} [options.searchOptions] See showArtSelect(...)
-- **returns**: \{Promise<Map<string, Array<object>|Array<string>>\} Images found
+  - \{object\} [options.searchOptions] See [searchOptions](#object-searchoptions)
+- **returns**: \{Promise\<Map\<string, Array\<object\>|Array\<string\>\>\} Images found
 
 e.g.
 
 - game.modules.get('token-variants').api.doImageSearch("Dragon")
 - game.modules.get('token-variants').api.doImageSearch("Dragon", {simpleResults: true})
 
-### **doRandomSearch(search, \{ searchType='both', actor=null, callback=null \} = \{\})**
+### **doRandomSearch(search, options)**
 
 Performs a random image search and returns the results.
 
@@ -288,9 +287,14 @@ Parameters:
 
 - **\{string\}** **search**: Text to be used as the search criteria
 - **\{object\}** Options which customize the search
-  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both) Controls filters applied to the search results
+  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
   - \{Actor\} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
   - \{Function[]\} [options.callback] Function to be called with the random image
+  - \{object\} [options.searchOptions] See [searchOptions](#object-searchoptions)
+  - \{object\} [options.randomizerOptions] Override randomizer settings (these take precedence over **searchOptions**). See [Randomizer Settings](#randomizer-settings)
+  - \{Boolean\} [options.randomizerOptions.tokenName] Should a full name search be performed
+  - \{Boolean\} [options.randomizerOptions.keywords] Should a keyword search be performed
+  - \{Boolean\} [options.randomizerOptions.shared] Should shared images be included in the search
 - **returns**: \{Array<string>|null\} Image path and name
 
 e.g.
@@ -298,7 +302,7 @@ e.g.
 - game.modules.get('token-variants').api.doRandomSearch("Goblin")
 - game.modules.get('token-variants').api.doRandomSearch("Goblin", \{callback: (result) => console.log(result)\})
 
-### **updateTokenImage(imgSrc, \{token = null, actor = null, imgName = null\} = \{\})**
+### **updateTokenImage(imgSrc, options)**
 
 Updates token image applying custom configuration if one exists.
 
@@ -306,11 +310,44 @@ Updates token image applying custom configuration if one exists.
 - **\{object\}** Update options
   - \{Token\} [token] Token to be updated with the new image
   - \{Actor\} [actor] Actor with Proto Token to be updated with the new image
-  - \{string\} [imgName] Image name if it differs from the file name. Relevant for rolltable sourced images.
+  - \{String\} [imgName] Image name if it differs from the file name. Relevant for URLs or Rolltable sourced images.
+  - \{object\} [config] Token Configuration to be applied to the token (e.g. scale, dimSight). This configuration will be removed upon next **updateTokenImage** call if config is not provided and no attached config exists for the imgSrc
 
 e.g.
 
 - game.modules.get('token-variants').api.updateTokenImage("tokenImages/dragon/RedDragon.jpg", {token: canvas.tokens.controlled[0]});
+
+### \{object\} searchOptions
+
+- \{Boolean\}[searchOptions.keywordSearch] See [Search by Keyword](#search-by-keyword)
+- \{Array\<string\>\}[searchOptions.excludedKeywords] See [Excluded Keywords](#excluded-keywords)
+- \{Boolean\}[searchOptions.runSearchOnPath] See [Match name to folder](#match-name-to-folder)
+- \{object\}[searchOptions.algorithm] See [algorithm](#object-algorithm)
+- \{object\}[searchOptions.searchFilters] See [searchFilters](#object-searchfilters)
+
+### \{object\} algorithm
+
+See [Search Algorithm Settings](#search-algorithm-settings)
+
+- \{Boolean\}[algorithm.exact] Exact type search
+- \{Boolean\}[algorithm.fuzzy] Fuzzy type search
+- \{Integer\}[algorithm.fuzzyLimit] \>1 Limits numbers of results
+- \{Float\}[algorithm.fuzzyThreshold] 0.0-1.0 Match strength, 0.0 for exact match, 1.0 for loose match
+- \{Boolean\}[algorithm.fuzzyArtSelectPercentSlider] Should the Art Select include a percent slider
+
+### \{object\} searchFilters
+
+See [Search Filter Settings](#search-filter-settings)
+
+- \{String\} [searchFilters.portraitFilterInclude]
+- \{String\} [searchFilters.portraitFilterExclude]
+- \{String\} [searchFilters.portraitFilterRegex]
+- \{String\} [searchFilters.tokenFilterInclude]
+- \{String\} [searchFilters.tokenFilterExclude]
+- \{String\} [searchFilters.tokenFilterRegex]
+- \{String\} [searchFilters.generalFilterInclude]
+- \{String\} [searchFilters.generalFilterExclude]
+- \{String\} [searchFilters.generalFilterRegex]
 
 ## **cacheImages()**
 

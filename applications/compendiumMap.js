@@ -59,7 +59,7 @@ async function autoApply(actor, image1, image2, formData) {
   }
 
   if (!(tokenFound && portraitFound) && formData.autoDisplayArtSelect) {
-    addToArtSelectQueue(actor, image1, image2, ignoreKeywords, formData);
+    addToArtSelectQueue(actor, image1, image2, formData);
   }
 }
 

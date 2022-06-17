@@ -1,3 +1,18 @@
+# 2.9.0
+
+API
+
+- Updated API documentation
+- showArtSelect, doImageSearch, doRandomSearch
+  - Now all support a **Search Algorithm** and **Search Filters** setting override via **searchOptions**
+- doRandomSearch
+  - Randomizer settings override using **randomizerOptions**
+- updateTokenImage
+  - Now supports 'no image' updates and token **config**
+  - If token **config** is passed to the function it will be applied and override any other configuration applied by the module
+    e.g. `game.modules.get('token-variants').api.updateTokenImage("", {token: canvas.tokens.controlled[0], config: {tint: "#dc1818"}});`
+  - Next **updateTokenImage** call without a **config** passed to it and no config attached to the image itself will revert the change e.g. `game.modules.get('token-variants').api.updateTokenImage("", {token: canvas.tokens.controlled[0]});`
+
 # 2.8.1
 
 - Fixed '**Art Select**' not showing for **foreground** tiles when using '**Show Art Select: #**' key bindings

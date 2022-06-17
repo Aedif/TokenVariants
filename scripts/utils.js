@@ -67,6 +67,7 @@ export function queueActorUpdate(id, update, context = null) {
  * @param {object} [options.actorUpdate] Actor update to be merged and performed at the same time as image update
  * @param {string} [options.pack] Compendium pack of the Actor being updated
  * @param {func} [options.callback] Callback to be executed when a batch update has been performed
+ * @param {object} [options.config] Token Configuration settings to be applied to the token
  */
 export async function updateTokenImage(
   imgSrc,
@@ -111,8 +112,10 @@ export async function updateTokenImage(
   };
 
   let tokenUpdateObj = tokenUpdate;
-  tokenUpdateObj.img = imgSrc;
-  tokenUpdateObj['flags.token-variants.name'] = imgName;
+  if (imgSrc) {
+    tokenUpdateObj.img = imgSrc;
+    tokenUpdateObj['flags.token-variants.name'] = imgName;
+  }
 
   const tokenCustomConfig = config || getTokenConfigForUpdate(imgSrc, imgName);
   const usingCustomConfig =
@@ -399,6 +402,7 @@ export function setTokenConfig(imgSrc, imgName, tokenConfig) {
  * Extracts the file name from the given path.
  */
 export function getFileName(path) {
+  if (!path) return '';
   return decodeURI(path).split('\\').pop().split('/').pop().split('.')[0];
 }
 
@@ -406,6 +410,7 @@ export function getFileName(path) {
  * Extracts the file name including the extension from the given path.
  */
 export function getFileNameWithExt(path) {
+  if (!path) return '';
   return decodeURI(path).split('\\').pop().split('/').pop();
 }
 

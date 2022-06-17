@@ -21,7 +21,7 @@ export async function renderTileHUD(hud, html, tileData, searchText = '') {
     ? null
     : await doImageSearch(search, {
         searchType: SEARCH_TYPE.TILE,
-        ignoreKeywords: !worldHudSettings.includeKeywords,
+        searchOptions: { keywordSearch: worldHudSettings.includeKeywords },
       });
 
   // Merge full search, and keywords into a single array

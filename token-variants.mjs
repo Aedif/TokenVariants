@@ -1211,11 +1211,10 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
  * @param {string} search The text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
  * @param {Function[]} [options.callback] Function to be called with the user selected image path
- * @param {SEARCH_TYPE|string} [options.searchType] (token|portrait|both) Controls filters applied to the search results
+ * @param {SEARCH_TYPE|string} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
  * @param {Token|Actor} [options.object] Token/Actor used when displaying Custom Token Config prompt
  * @param {boolean} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
- * @param {boolean} [options.ignoreKeywords] Override for the 'Search by Keyword' setting
- * @param {object} [options.searchOptions] Override search settings
+ * @param {object} [options.searchOptions] Override search and filter settings
  */
 export async function showArtSelect(
   search,
@@ -1227,7 +1226,6 @@ export async function showArtSelect(
     preventClose = false,
     image1 = '',
     image2 = '',
-    ignoreKeywords = false,
     searchOptions = {},
   } = {}
 ) {
@@ -1249,7 +1247,6 @@ export async function showArtSelect(
 
   const allImages = await doImageSearch(search, {
     searchType: searchType,
-    ignoreKeywords: ignoreKeywords,
     searchOptions: searchOptions,
   });
 
@@ -1265,16 +1262,22 @@ export async function showArtSelect(
   }).render(true);
 }
 
-async function _randSearchUtil(search, { searchType = SEARCH_TYPE.BOTH, actor = null } = {}) {
-  const randSettings = TVA_CONFIG.randomizer;
+async function _randSearchUtil(
+  search,
+  { searchType = SEARCH_TYPE.BOTH, actor = null, randomizerOptions = {}, searchOptions = {} } = {}
+) {
+  const randSettings = mergeObject(randomizerOptions, TVA_CONFIG.randomizer, { overwrite: false });
   if (!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return null;
+
+  // Randomizer settings take precedence
+  searchOptions.keywordSearch = randSettings.keywords;
 
   // Gather all images
   let results =
     randSettings.tokenName || randSettings.keywords
       ? await doImageSearch(search, {
           searchType: searchType,
-          ignoreKeywords: !randSettings.keywords,
+          searchOptions: searchOptions,
         })
       : new Map();
 
@@ -1324,18 +1327,31 @@ async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, ac
 /**
  * @param {*} search Text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
- * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
+ * @param {SEARCH_TYPE|string} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
  * @param {Actor} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
  * @param {Function[]} [options.callback] Function to be called with the random image
+ * @param {object} [options.searchOptions] Override search settings
+ * @param {object} [options.randomizerOptions] Override randomizer settings. These take precedence over searchOptions
  * @returns Array<string>|null} Image path and name
  */
 async function doRandomSearch(
   search,
-  { searchType = SEARCH_TYPE.BOTH, actor = null, callback = null } = {}
+  {
+    searchType = SEARCH_TYPE.BOTH,
+    actor = null,
+    callback = null,
+    randomizerOptions = {},
+    searchOptions = {},
+  } = {}
 ) {
   if (caching) return null;
 
-  const results = await _randSearchUtil(search, { searchType: searchType, actor: actor });
+  const results = await _randSearchUtil(search, {
+    searchType: searchType,
+    actor: actor,
+    randomizerOptions: randomizerOptions,
+    searchOptions: searchOptions,
+  });
   if (!results) return results;
 
   // Pick random image
@@ -1357,21 +1373,14 @@ async function doRandomSearch(
  * @param {string} search Text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
  * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
- * @param {Boolean} [options.ignoreKeywords] Ignores keywords search setting
  * @param {Boolean} [options.simpleResults] Results will be returned as an array of all image paths found
  * @param {Function[]} [options.callback] Function to be called with the found images
- * @param {object} [options.searchOptions] See showArtSelect(...)
+ * @param {object} [options.searchOptions] Override search settings
  * @returns {Promise<Map<string, Array<object>|Array<string>>} All images found split by original criteria and keywords
  */
 export async function doImageSearch(
   search,
-  {
-    searchType = SEARCH_TYPE.BOTH,
-    ignoreKeywords = false,
-    simpleResults = false,
-    callback = null,
-    searchOptions = {},
-  } = {}
+  { searchType = SEARCH_TYPE.BOTH, simpleResults = false, callback = null, searchOptions = {} } = {}
 ) {
   if (caching) return;
 
@@ -1379,13 +1388,13 @@ export async function doImageSearch(
 
   search = search.trim();
 
-  if (TVA_CONFIG.debug) console.log('STARTING: Art Search', search, searchType);
+  if (TVA_CONFIG.debug) console.log('STARTING: Art Search', search, searchType, searchOptions);
 
   let searches = [search];
   let allImages = new Map();
   const keywords = parseKeywords(searchOptions.excludedKeywords);
 
-  if (searchOptions.keywordSearch && !ignoreKeywords) {
+  if (searchOptions.keywordSearch) {
     searches = searches.concat(
       search
         .split(/\W/)
