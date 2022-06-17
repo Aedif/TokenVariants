@@ -578,7 +578,7 @@ async function createToken(token, options, userId) {
     },
     searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
     object: token,
-    preventClose: TVA_CONFIG.popup.twoPopups,
+    preventClose: TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog,
   });
 }
 
@@ -652,7 +652,7 @@ async function createActor(actor, options, userId) {
     },
     searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
     object: actor,
-    preventClose: TVA_CONFIG.popup.twoPopups,
+    preventClose: TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog,
   });
 }
 

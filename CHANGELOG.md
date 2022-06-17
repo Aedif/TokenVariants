@@ -1,3 +1,9 @@
+# 2.9.1
+
+- Fixed '**Art Select**' closing before the user can select the Token image when the bellow two settings are enabled and a search is performed before selecting the portrait.
+  - **Display separate pop-ups for Portrait and Token art**
+  - **Disable prompt between Portrait and token art select**
+
 # 2.9.0
 
 API

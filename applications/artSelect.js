@@ -265,6 +265,7 @@ export class ArtSelect extends FormApplication {
       image1: this.image1,
       image2: this.image2,
       searchOptions: this.searchOptions,
+      preventClose: this.preventClose,
     });
   }
 
