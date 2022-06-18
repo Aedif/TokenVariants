@@ -13,9 +13,10 @@
 
     <div class="form-group">
         <label style="flex:3;">Config</label>
-        <button class="effect-config {{#if hasConfig}}active{{/if}}" type="button"><i class="fas fa-cog fa-lg"></i></button>
+        <button class="effect-config {{#if hasTokenConfig}}active{{/if}}" type="button"><i class="fas fa-cog fa-lg"></i></button>
         <input type="hidden" name="config" value="{{config}}">
         <button class="effect-config-edit {{#if hasConfig}}active{{/if}}" type="button"><i class="fas fa-edit"></i></button>
+        <button class="effect-config-script {{#if hasScript}}active{{/if}}" type="button"><i class="fas fa-play"></i></button>
     </div>
 
     <footer class="sheet-footer flexrow">

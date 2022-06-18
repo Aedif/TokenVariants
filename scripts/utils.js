@@ -716,3 +716,23 @@ function _modMergeUpdate(
     original[k] = v;
   }
 }
+
+export function tv_executeScript(script, { actor, token } = {}) {
+  // Add variables to the evaluation scope
+  const speaker = ChatMessage.getSpeaker();
+  const character = game.user.character;
+  actor = actor || game.actors.get(speaker.actor);
+  token = token || (canvas.ready ? canvas.tokens.get(speaker.token) : null);
+
+  // Attempt script execution
+  const body = `(async () => {${script}})()`;
+  const fn = Function('speaker', 'actor', 'token', 'character', body);
+  try {
+    fn.call(null, speaker, actor, token, character);
+  } catch (err) {
+    ui.notifications.error(
+      `There was an error in your script syntax. See the console (F12) for details`
+    );
+    console.error(err);
+  }
+}

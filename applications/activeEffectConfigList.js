@@ -3,6 +3,7 @@ import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
+import EditScriptConfig from './configScriptEdit.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token) {
@@ -23,7 +24,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
       title: 'Config',
-      width: 350,
+      width: 400,
     });
   }
 
@@ -36,12 +37,18 @@ export default class ActiveEffectConfigList extends FormApplication {
     } else {
       const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
       for (const [effectName, attrs] of Object.entries(effectMappings)) {
+        let hasTokenConfig = Object.keys(attrs.config).length;
+        if (attrs.config.flags) hasTokenConfig--;
+        if (attrs.config.tv_script) hasTokenConfig--;
+
         mappings.push({
           effectName: effectName,
           imgName: attrs.imgName,
           imgSrc: attrs.imgSrc,
           priority: attrs.priority,
-          hasConfig: attrs.config ? Object.keys(attrs.config).length !== 0 : false,
+          hasConfig: attrs.config ? !isObjectEmpty(attrs.config) : false,
+          hasScript: attrs.config && attrs.config.tv_script,
+          hasTokenConfig: hasTokenConfig > 0,
           config: attrs.config,
         });
       }
@@ -65,40 +72,62 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
     html.find('.effect-config i.config').click(this._onConfigClick.bind(this));
     html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
+    html.find('.effect-config i.config-script').click(this._onConfigScriptClick.bind(this));
+  }
+
+  async _toggleActiveControls(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+    const tokenConfig = $(event.target).closest('.effect-config').find('.config');
+    const configEdit = $(event.target).closest('.effect-config').find('.config-edit');
+    const scriptEdit = $(event.target).closest('.effect-config').find('.config-script');
+
+    let hasTokenConfig = Object.keys(mapping.config).length;
+    if (mapping.config.flags) hasTokenConfig--;
+    if (mapping.config.tv_script) hasTokenConfig--;
+
+    if (hasTokenConfig) tokenConfig.addClass('active');
+    else tokenConfig.removeClass('active');
+
+    if (!isObjectEmpty(mapping.config)) configEdit.addClass('active');
+    else configEdit.removeClass('active');
+
+    if (mapping.config.tv_script) scriptEdit.addClass('active');
+    else scriptEdit.removeClass('active');
+  }
+
+  async _onConfigScriptClick(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+
+    new EditScriptConfig(mapping.config.tv_script, (script) => {
+      if (script) mapping.config.tv_script = script;
+      else delete mapping.config.tv_script;
+      this._toggleActiveControls(event);
+    }).render(true);
   }
 
   async _onConfigEditClick(event) {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
-    const controls = $(event.target).closest('.effect-config');
 
     new EditJsonConfig(mapping.config, (config) => {
-      if (config && !isObjectEmpty(config)) {
-        controls.addClass('active');
-      } else {
-        controls.removeClass('active');
-      }
       mapping.config = config;
+      this._toggleActiveControls(event);
     }).render(true);
   }
 
   async _onConfigClick(event) {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
-    const controls = $(event.target).closest('.effect-config');
-
     new TokenCustomConfig(
       this.token,
       {},
       null,
       null,
       (config) => {
-        if (config && Object.keys(config).length !== 0) {
-          controls.addClass('active');
-        } else {
-          controls.removeClass('active');
-        }
         mapping.config = config;
+        this._toggleActiveControls(event);
       },
       mapping.config ? mapping.config : {}
     ).render(true);
@@ -153,9 +182,13 @@ export default class ActiveEffectConfigList extends FormApplication {
     if (this.objectToFlag) {
       // First filter out empty mappings
       let mappings = this.object.mappings;
-      mappings = mappings.filter(
-        (mapping) => ((mapping.imgSrc && mapping.imgName) || mapping.config) && mapping.effectName
-      );
+      mappings = mappings.filter(function (mapping) {
+        if (!mapping.effectName) return false;
+        if (mapping.config && !isObjectEmpty(mapping.config)) return true;
+        if (mapping.imgSrc && mapping.imgName) return true;
+        return false;
+      });
+
       // Make sure a priority is assigned
       for (const mapping of mappings) {
         mapping.priority = mapping.priority ? mapping.priority : 50;

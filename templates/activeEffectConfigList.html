@@ -8,7 +8,7 @@
         <div class="effect-name"><label>Effect Name</label></div>
         <div class="effect-priority"><label>Priority</label></div>
         <div class="effect-image"><label>Image</label></div>
-        <div class="effect-image"><label>Config</label></div>
+        <div class="effect-config"><label>Config</label></div>
       </li>
 
       {{#each mappings as |mapping index|}}
@@ -47,9 +47,10 @@
             value="{{mapping.imgName}}"
           />
         </div>
-        <div class="effect-config {{#if mapping.hasConfig}}active{{/if}}">
-          <a><i class="fas fa-cog fa-lg config"></i></a>
-          <a><i class="fas fa-edit config-edit"></i></a>
+        <div class="effect-config">
+          <a><i class="fas fa-cog fa-lg config {{#if mapping.hasTokenConfig}}active{{/if}}"></i></a>
+          <a><i class="fas fa-edit config-edit {{#if mapping.hasConfig}}active{{/if}}"></i></a>
+          <a><i class="fas fa-play config-script {{#if mapping.hasScript}}active{{/if}}"></i></a>
           <input class="config" type="hidden" name="mappings.{{index}}.config" value="{{mapping.config}}">
         </div>
       </li>

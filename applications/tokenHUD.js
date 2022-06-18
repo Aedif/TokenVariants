@@ -390,9 +390,6 @@ async function _onImageClick(event, tokenId) {
 }
 
 function _onImageRightClick(event, tokenId) {
-  event.preventDefault();
-  event.stopPropagation();
-
   let token = canvas.tokens.controlled.find((t) => t.data._id === tokenId);
   if (!token) return;
 
@@ -415,6 +412,7 @@ function _onImageRightClick(event, tokenId) {
         .prop('title', title);
     };
     new UserList(token, imgSrc, regenStyle).render(true);
+    return;
   } else if (token.actor) {
     let tokenActor = game.actors.get(token.actor.id);
     let variants = tokenActor.getFlag('token-variants', 'variants') || [];

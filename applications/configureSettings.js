@@ -254,7 +254,7 @@ export default class ConfigureSettings extends FormApplication {
     let current = pathInput.val();
 
     if (activeSource.startsWith('s3:')) {
-      const bucketName = activeSource.replace('s3:');
+      const bucketName = activeSource.replace('s3:', '');
       current = `${game.data.files.s3?.endpoint.protocol}//${bucketName}.${game.data.files.s3?.endpoint.host}/${current}`;
     } else if (activeSource.startsWith('rolltable')) {
       let content = `<select name="table-name" id="output-tableKey">`;

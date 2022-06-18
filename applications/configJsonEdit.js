@@ -13,8 +13,8 @@ export default class EditJsonConfig extends FormApplication {
       resizable: true,
       minimizable: false,
       title: 'Edit Token Configuration',
-      width: 380,
-      height: 365,
+      width: 400,
+      height: 380,
     });
   }
 
@@ -33,6 +33,18 @@ export default class EditJsonConfig extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.on('input', '.command textarea', this._validateJSON.bind(this));
+    // Override 'Tab' key to insert spaces
+    html.on('keydown', '.command textarea', function (e) {
+      if (e.key === 'Tab' && !e.shiftKey) {
+        e.preventDefault();
+        var start = this.selectionStart;
+        var end = this.selectionEnd;
+        this.value = this.value.substring(0, start) + '  ' + this.value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 2;
+        return false;
+      }
+    });
+
     html.find('.remove').click(this._onRemove.bind(this));
     html.find('.format').click(this._onFormat.bind(this));
   }

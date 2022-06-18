@@ -3,6 +3,7 @@ import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
+import EditScriptConfig from './configScriptEdit.js';
 
 export default class ActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -42,6 +43,11 @@ export default class ActiveEffectConfig extends FormApplication {
 
     const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
     const mapping = effectMappings[this.effectName] || {};
+    if (!mapping.config) mapping.config = {};
+
+    let hasTokenConfig = Object.keys(mapping.config).length;
+    if (mapping.flags) hasTokenConfig--;
+    if (mapping.config.tv_script) hasTokenConfig--;
 
     return mergeObject(data, {
       effectImg: this.effectImg,
@@ -50,7 +56,9 @@ export default class ActiveEffectConfig extends FormApplication {
       imgName: mapping.imgName,
       priority: mapping.priority || 50,
       config: this.config,
-      hasConfig: this.config ? Object.keys(this.config).length !== 0 : false,
+      hasConfig: this.config ? !isObjectEmpty(this.config) : false,
+      hasTokenConfig: hasTokenConfig > 0,
+      hasScript: this.config && this.config.tv_script,
     });
   }
 
@@ -65,41 +73,54 @@ export default class ActiveEffectConfig extends FormApplication {
     html.find('img.image').contextmenu(this._onImageRightClick.bind(this));
     html.find('button.effect-config').click(this._onConfigClick.bind(this));
     html.find('button.effect-config-edit').click(this._onConfigEditClick.bind(this));
+    html.find('button.effect-config-script').click(this._onConfigScriptClick.bind(this));
+  }
+
+  async _toggleActiveControls(event) {
+    const tokenConfig = $(event.target).closest('.form-group').find('.effect-config');
+    const configEdit = $(event.target).closest('.form-group').find('.effect-config-edit');
+    const scriptEdit = $(event.target).closest('.form-group').find('.effect-config-script');
+
+    let hasTokenConfig = Object.keys(this.config).length;
+    if (this.config.flags) hasTokenConfig--;
+    if (this.config.tv_script) hasTokenConfig--;
+
+    if (hasTokenConfig) tokenConfig.addClass('active');
+    else tokenConfig.removeClass('active');
+
+    if (!isObjectEmpty(this.config)) configEdit.addClass('active');
+    else configEdit.removeClass('active');
+
+    if (this.config.tv_script) scriptEdit.addClass('active');
+    else scriptEdit.removeClass('active');
+  }
+
+  async _onConfigScriptClick(event) {
+    new EditScriptConfig(this.config.tv_script, (script) => {
+      if (script) this.config.tv_script = script;
+      else delete this.config.tv_script;
+      this._toggleActiveControls(event);
+    }).render(true);
   }
 
   async _onConfigEditClick(event) {
-    const controls = $(event.target)
-      .closest('.form-group')
-      .find('.effect-config-edit, .effect-config');
     new EditJsonConfig(this.config, (config) => {
-      if (config && Object.keys(config).length !== 0) {
-        controls.addClass('active');
-      } else {
-        controls.removeClass('active');
-      }
       this.config = config;
+      this._toggleActiveControls(event);
     }).render(true);
   }
 
   async _onConfigClick(event) {
-    const controls = $(event.target)
-      .closest('.form-group')
-      .find('.effect-config-edit, .effect-config');
-
     new TokenCustomConfig(
       this.token,
       {},
       null,
       null,
       (config) => {
-        if (config && Object.keys(config).length !== 0) {
-          controls.addClass('active');
-        } else {
-          controls.removeClass('active');
-        }
         this.config = config;
+        this._toggleActiveControls(event);
       },
-      this.config ? this.config : {}
+      this.config
     ).render(true);
   }
 

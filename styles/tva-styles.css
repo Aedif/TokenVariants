@@ -346,8 +346,12 @@ ol.token-variant-table .table-row .effect-image {
 }
 
 ol.token-variant-table .table-row .effect-config {
-  flex: 0 0 50px;
+  flex: 0 0 70px;
   text-align: center;
+}
+
+ol.token-variant-table .table-row .effect-config i.active {
+  color: orange;
 }
 
 ol.token-variant-table .table-row .effect-config.active {
@@ -355,6 +359,10 @@ ol.token-variant-table .table-row .effect-config.active {
 }
 
 ol.token-variant-table .table-row .effect-config-edit.active {
+  color: orange;
+}
+
+ol.token-variant-table .table-row .effect-config-script.active {
   color: orange;
 }
 
@@ -367,6 +375,10 @@ ol.token-variant-table .table-row .effect-config-edit.active {
 }
 
 #token-variants-active-effect-config .effect-config-edit.active {
+  color: orange;
+}
+
+#token-variants-active-effect-config .effect-config-script.active {
   color: orange;
 }
 

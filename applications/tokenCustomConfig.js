@@ -19,6 +19,7 @@ export default class TokenCustomConfig extends TokenConfig {
     this.config = config;
     if (this.config) {
       this.flags = this.config.flags;
+      this.tv_script = this.config.tv_script;
     }
   }
 
@@ -41,7 +42,8 @@ export default class TokenCustomConfig extends TokenConfig {
 
     if (this.config) {
       filtered.flags = this.flags;
-      if (this.callback) this.callback(filtered);
+      filtered.tv_script = this.tv_script;
+      if (this.callback) this.callback(expandObject(filtered));
     } else {
       const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);
       if (this.callback) this.callback(saved);
@@ -150,7 +152,7 @@ export default class TokenCustomConfig extends TokenConfig {
 
   async _onRemoveConfig(event) {
     if (this.config) {
-      if (this.callback) this.callback(null);
+      if (this.callback) this.callback({});
     } else {
       const saved = setTokenConfig(this.imgSrc, this.imgName, null);
       if (this.callback) this.callback(saved);
