@@ -24,6 +24,7 @@ export const TVA_CONFIG = {
     updateActorImage: false,
     useNameSimilarity: false,
     includeWildcard: true,
+    showFullPath: false,
   },
   hud: {
     enableSideMenu: true,

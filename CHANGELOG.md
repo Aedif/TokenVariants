@@ -1,3 +1,18 @@
+# 2.10.0
+
+Status Effect Configuration
+
+- Configurations can now be manually edited via a new control
+  - Allows for flags to be entered along with the other token data fields
+- Scripts can be attached to Status Effects
+  - Two scripts; one applied when the effect is added/enabled and the other when it is removed/disabled
+
+Misc.
+
+- Fixing a bug with S3 path scanning
+- Added a new setting: **Token HUD** > **Show full path on hover**
+  - When enabled will show the full file path when hovering over images
+
 # 2.9.1
 
 - Fixed '**Art Select**' closing before the user can select the Token image when the bellow two settings are enabled and a search is performed before selecting the portrait.

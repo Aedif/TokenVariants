@@ -468,7 +468,7 @@ function _onImageSearchKeyUp(event, hud, html, tokenData) {
 }
 
 function genTitleAndStyle(mappings, imgSrc, name) {
-  let title = name;
+  let title = TVA_CONFIG.worldHud.showFullPath ? imgSrc : name;
   let style = '';
   let offset = 2;
   for (const [userId, img] of Object.entries(mappings)) {
