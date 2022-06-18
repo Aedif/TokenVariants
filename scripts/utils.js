@@ -108,7 +108,22 @@ export async function updateTokenImage(
   };
 
   const constructDefaultConfig = (origData, customConfig) => {
-    return Object.entries(flattenObject(filterObject(origData, customConfig)));
+    const flatOrigData = flattenObject(origData);
+    const flatCustomConfig = flattenObject(customConfig);
+    let filtered = filterObject(flatOrigData, flatCustomConfig);
+
+    // Flags need special treatment as once set they are not removed via absence of them in the update
+    for (let [k, v] of Object.entries(flatCustomConfig)) {
+      if (k.startsWith('flags.')) {
+        if (!(k in flatOrigData)) {
+          let splitK = k.split('.');
+          splitK[splitK.length - 1] = '-=' + splitK[splitK.length - 1];
+          filtered[splitK.join('.')] = null;
+        }
+      }
+    }
+
+    return Object.entries(filtered);
   };
 
   let tokenUpdateObj = tokenUpdate;
@@ -122,15 +137,14 @@ export async function updateTokenImage(
     token &&
     (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
   const defaultConfig = getDefaultConfig(token);
-
   if (tokenCustomConfig || usingCustomConfig) {
-    tokenUpdateObj = mergeObject(tokenUpdateObj, defaultConfig);
+    tokenUpdateObj = modMergeObject(tokenUpdateObj, defaultConfig);
   }
 
   if (tokenCustomConfig) {
     if (token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
-      const tokenData = token.data instanceof Object ? token.data : token.data.toObject();
+      const tokenData = token.data.toObject ? token.data.toObject() : deepClone(token.data);
       const defConf = constructDefaultConfig(
         mergeObject(tokenData, defaultConfig),
         tokenCustomConfig
@@ -144,17 +158,11 @@ export async function updateTokenImage(
       tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
     }
 
-    tokenUpdateObj = mergeObject(tokenUpdateObj, tokenCustomConfig);
+    tokenUpdateObj = modMergeObject(tokenUpdateObj, tokenCustomConfig);
   } else if (usingCustomConfig) {
-    if (token) {
-      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = false;
-      delete tokenUpdateObj['flags.token-variants.defaultConfig'];
-      tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
-    } else if (actor && !token) {
-      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = false;
-      delete tokenUpdateObj['flags.token-variants.defaultConfig'];
-      tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
-    }
+    tokenUpdateObj['flags.token-variants.usingCustomConfig'] = false;
+    delete tokenUpdateObj['flags.token-variants.defaultConfig'];
+    tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
   }
 
   if (actor && !token) {
@@ -595,4 +603,116 @@ export function flattenSearchResults(results) {
     flattened = flattened.concat(images);
   });
   return flattened;
+}
+
+// Slightly modified version of mergeObject; added an option to ignore -= keys
+export function modMergeObject(
+  original,
+  other = {},
+  {
+    insertKeys = true,
+    insertValues = true,
+    overwrite = true,
+    recursive = true,
+    inplace = true,
+    enforceTypes = false,
+  } = {},
+  _d = 0
+) {
+  other = other || {};
+  if (!(original instanceof Object) || !(other instanceof Object)) {
+    throw new Error('One of original or other are not Objects!');
+  }
+  const options = {
+    insertKeys,
+    insertValues,
+    overwrite,
+    recursive,
+    inplace,
+    enforceTypes,
+  };
+
+  // Special handling at depth 0
+  if (_d === 0) {
+    if (!inplace) original = deepClone(original);
+    if (Object.keys(original).some((k) => /\./.test(k))) original = expandObject(original);
+    if (Object.keys(other).some((k) => /\./.test(k))) other = expandObject(other);
+  }
+
+  // Iterate over the other object
+  for (let k of Object.keys(other)) {
+    const v = other[k];
+    if (original.hasOwnProperty('-=' + k)) {
+      original[k] = original['-=' + k];
+      delete original['-=' + k];
+    }
+    if (original.hasOwnProperty(k)) _modMergeUpdate(original, k, v, options, _d + 1);
+    else _modMergeInsert(original, k, v, options, _d + 1);
+  }
+  return original;
+}
+
+/**
+ * A helper function for merging objects when the target key does not exist in the original
+ * @private
+ */
+function _modMergeInsert(original, k, v, { insertKeys, insertValues } = {}, _d) {
+  // Recursively create simple objects
+  if (v?.constructor === Object) {
+    original[k] = modMergeObject({}, v, {
+      insertKeys: true,
+      inplace: true,
+    });
+    return;
+  }
+
+  // Delete a key
+  // if (k.startsWith('-=')) {
+  //   delete original[k.slice(2)];
+  //   return;
+  // }
+
+  // Insert a key
+  const canInsert = (_d <= 1 && insertKeys) || (_d > 1 && insertValues);
+  if (canInsert) original[k] = v;
+}
+
+/**
+ * A helper function for merging objects when the target key exists in the original
+ * @private
+ */
+function _modMergeUpdate(
+  original,
+  k,
+  v,
+  { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {},
+  _d
+) {
+  const x = original[k];
+  const tv = getType(v);
+  const tx = getType(x);
+
+  // Recursively merge an inner object
+  if (tv === 'Object' && tx === 'Object' && recursive) {
+    return modMergeObject(
+      x,
+      v,
+      {
+        insertKeys: insertKeys,
+        insertValues: insertValues,
+        overwrite: overwrite,
+        inplace: true,
+        enforceTypes: enforceTypes,
+      },
+      _d
+    );
+  }
+
+  // Overwrite an existing value
+  if (overwrite) {
+    if (tx !== 'undefined' && tv !== tx && enforceTypes) {
+      throw new Error(`Mismatched data types encountered during object merge.`);
+    }
+    original[k] = v;
+  }
 }

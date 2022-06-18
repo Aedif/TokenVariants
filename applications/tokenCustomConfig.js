@@ -17,6 +17,9 @@ export default class TokenCustomConfig extends TokenConfig {
     this.imgName = imgName;
     this.callback = callback;
     this.config = config;
+    if (this.config) {
+      this.flags = this.config.flags;
+    }
   }
 
   async _updateObject(event, formData) {
@@ -37,6 +40,7 @@ export default class TokenCustomConfig extends TokenConfig {
     });
 
     if (this.config) {
+      filtered.flags = this.flags;
       if (this.callback) this.callback(filtered);
     } else {
       const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);

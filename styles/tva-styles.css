@@ -354,11 +354,19 @@ ol.token-variant-table .table-row .effect-config.active {
   color: orange;
 }
 
+ol.token-variant-table .table-row .effect-config-edit.active {
+  color: orange;
+}
+
 /* ---------------------------------------- */
 /* Active Effect Config                     */
 /* ---------------------------------------- */
 
 #token-variants-active-effect-config .effect-config.active {
+  color: orange;
+}
+
+#token-variants-active-effect-config .effect-config-edit.active {
   color: orange;
 }
 
@@ -510,3 +518,26 @@ ol.token-variant-table .table-row .effect-config.active {
 .tva-config-checkbox {
   flex: 0 !important;
 }
+
+/* --------------------------------------- */
+/*  JSON Edit                              */
+/* --------------------------------------- */
+/* .token-variants-json-edit {
+  min-width: 360px;
+  min-height: 320px;
+}
+.token-variants-json-edit form > * {
+  flex: 0;
+}
+.token-variants-json-edit .form-group {
+  flex: 1;
+}
+.token-variants-json-edit .form-group label {
+  height: 24px;
+}
+.token-variants-json-edit textarea {
+  height: calc(100% - 24px);
+  height: -moz-calc(100%-100px);
+  height: -webkit-calc(100%-100px);
+  resize: none;
+} */

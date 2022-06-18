@@ -2,6 +2,7 @@ import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
+import EditJsonConfig from './configJsonEdit.js';
 
 export default class ActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -63,10 +64,27 @@ export default class ActiveEffectConfig extends FormApplication {
       html.find('img.image').click(this._onImageClick.bind(this));
     html.find('img.image').contextmenu(this._onImageRightClick.bind(this));
     html.find('button.effect-config').click(this._onConfigClick.bind(this));
+    html.find('button.effect-config-edit').click(this._onConfigEditClick.bind(this));
+  }
+
+  async _onConfigEditClick(event) {
+    const controls = $(event.target)
+      .closest('.form-group')
+      .find('.effect-config-edit, .effect-config');
+    new EditJsonConfig(this.config, (config) => {
+      if (config && Object.keys(config).length !== 0) {
+        controls.addClass('active');
+      } else {
+        controls.removeClass('active');
+      }
+      this.config = config;
+    }).render(true);
   }
 
   async _onConfigClick(event) {
-    const cog = $(event.target).closest('.effect-config');
+    const controls = $(event.target)
+      .closest('.form-group')
+      .find('.effect-config-edit, .effect-config');
 
     new TokenCustomConfig(
       this.token,
@@ -75,9 +93,9 @@ export default class ActiveEffectConfig extends FormApplication {
       null,
       (config) => {
         if (config && Object.keys(config).length !== 0) {
-          cog.addClass('active');
+          controls.addClass('active');
         } else {
-          cog.removeClass('active');
+          controls.removeClass('active');
         }
         this.config = config;
       },
@@ -133,6 +151,7 @@ export default class ActiveEffectConfig extends FormApplication {
         formData.config = this.config;
         const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
         effectMappings[this.effectName] = formData;
+        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
         this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
       }
     }

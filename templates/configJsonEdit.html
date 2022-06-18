@@ -1,0 +1,14 @@
+<form class="macro-sheet editable flexcol">
+    <div class="form-group stacked command">
+        <label>Token Configuration</label>
+        <textarea name="config">{{config}}</textarea>
+    </div>
+
+    <footer class="sheet-footer flexrow">
+        <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
+        <button type="button" class="format"><i class="fas fa-sparkles"></i> Format JSON</button>
+    {{#if hasConfig}}
+        <button type="button" class="remove"><i class="fas fa-trash"></i> {{localize "token-variants.common.remove"}}</button>
+    {{/if}}
+    </footer>
+</form>

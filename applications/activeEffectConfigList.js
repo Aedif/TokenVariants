@@ -2,6 +2,7 @@ import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
+import EditJsonConfig from './configJsonEdit.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token) {
@@ -62,13 +63,29 @@ export default class ActiveEffectConfigList extends FormApplication {
     if (TVA_CONFIG.permissions.image_path_button[game.user.role])
       html.find('.effect-image img').click(this._onImageClick.bind(this));
     html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
-    html.find('.effect-config i').click(this._onConfigClick.bind(this));
+    html.find('.effect-config i.config').click(this._onConfigClick.bind(this));
+    html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
+  }
+
+  async _onConfigEditClick(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+    const controls = $(event.target).closest('.effect-config');
+
+    new EditJsonConfig(mapping.config, (config) => {
+      if (config && !isObjectEmpty(config)) {
+        controls.addClass('active');
+      } else {
+        controls.removeClass('active');
+      }
+      mapping.config = config;
+    }).render(true);
   }
 
   async _onConfigClick(event) {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
-    const cog = $(event.target).closest('.effect-config');
+    const controls = $(event.target).closest('.effect-config');
 
     new TokenCustomConfig(
       this.token,
@@ -77,9 +94,9 @@ export default class ActiveEffectConfigList extends FormApplication {
       null,
       (config) => {
         if (config && Object.keys(config).length !== 0) {
-          cog.addClass('active');
+          controls.addClass('active');
         } else {
-          cog.removeClass('active');
+          controls.removeClass('active');
         }
         mapping.config = config;
       },
