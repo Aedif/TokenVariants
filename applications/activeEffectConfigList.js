@@ -37,6 +37,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     } else {
       const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
       for (const [effectName, attrs] of Object.entries(effectMappings)) {
+        if (!attrs.config) attrs.config = {};
         let hasTokenConfig = Object.keys(attrs.config).length;
         if (attrs.config.flags) hasTokenConfig--;
         if (attrs.config.tv_script) hasTokenConfig--;

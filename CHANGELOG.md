@@ -1,3 +1,7 @@
+# 2.10.1
+
+- Fixed '**Active Effect Config List**' not opening if a mapping existed on a token prior to **2.10.0**
+
 # 2.10.0
 
 Status Effect Configuration
