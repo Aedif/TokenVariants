@@ -25,6 +25,7 @@ import {
   flattenSearchResults,
   parseKeywords,
   tv_executeScript,
+  reDrawEffectOverlays,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -100,15 +101,17 @@ async function initialize() {
   const updateWithEffectMapping = async function (
     token,
     effects,
-    toggleStatus,
     { added = [], removed = [] } = {}
   ) {
+    token = token._object ? token._object : token;
     const tokenImgSrc = token.data.img;
     const tokenImgName =
       (token.document ?? token).getFlag('token-variants', 'name') || getFileName(tokenImgSrc);
     const tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
     const tokenUpdateObj = {};
-    const hadActiveHUD = (token._object || token).hasActiveHUD;
+    const hadActiveHUD = token.hasActiveHUD;
+    const toggleStatus =
+      canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
 
@@ -116,18 +119,12 @@ async function initialize() {
     const executeOnCallback = [];
     for (const ef of added) {
       const onApply = mappings[ef]?.config?.tv_script?.onApply;
-      if (onApply)
-        executeOnCallback.push(() =>
-          tv_executeScript(onApply, { token: token._object ? token._object : token })
-        );
+      if (onApply) executeOnCallback.push(() => tv_executeScript(onApply, { token: token }));
     }
 
     for (const ef of removed) {
       const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
-      if (onRemove)
-        executeOnCallback.push(() =>
-          tv_executeScript(onRemove, { token: token._object ? token._object : token })
-        );
+      if (onRemove) executeOnCallback.push(() => tv_executeScript(onRemove, { token: token }));
     }
 
     // Next we're going to determine what configs need to be applied and in what order
@@ -137,16 +134,41 @@ async function initialize() {
       .map((ef) => mappings[ef])
       .sort((ef1, ef2) => ef1.priority - ef2.priority);
 
+    console.log('effect ', effects);
+
     if (effects.length > 0) {
       // Some effect mappings may not have images, find a mapping with one if it exists
       const newImg = { imgSrc: '', imgName: '' };
       for (let i = effects.length - 1; i >= 0; i--) {
-        if (effects[i].imgSrc) {
+        if (effects[i].imgSrc && !effects[i].overlay) {
           newImg.imgSrc = effects[i].imgSrc;
           newImg.imgName = effects[i].imgName;
           break;
         }
       }
+
+      // Find overlays to be applied
+      const overlayImages = [];
+      if (TVA_CONFIG.stackStatusConfig) {
+        for (const effect of effects) {
+          if (effect.imgSrc && effect.overlay) {
+            overlayImages.push(effect.imgSrc);
+          }
+        }
+      } else {
+        for (let i = effects.length - 1; i >= 0; i--) {
+          if (effects[i].imgSrc && effects[i].overlay) {
+            overlayImages.push(effects[i].imgSrc);
+            break;
+          }
+        }
+      }
+      if (overlayImages.length) {
+        await (token.document ?? token).setFlag('token-variants', 'overlays', overlayImages);
+      } else {
+        await (token.document ?? token).unsetFlag('token-variants', 'overlays');
+      }
+      reDrawEffectOverlays(token);
 
       // Collect custom configs to be applied to the token
       let config;
@@ -229,6 +251,10 @@ async function initialize() {
         },
       });
     }
+    if (effects.length === 0) {
+      await (token.document ?? token).unsetFlag('token-variants', 'overlays');
+      reDrawEffectOverlays(token);
+    }
   };
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
@@ -242,7 +268,7 @@ async function initialize() {
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     effects.push('token-variants-combat');
-    updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects, {
+    updateWithEffectMapping(token, effects, {
       added: ['token-variants-combat'],
     });
   });
@@ -256,7 +282,7 @@ async function initialize() {
 
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
-    await updateWithEffectMapping(token, effects, canvas.tokens.hud._statusEffects, {
+    await updateWithEffectMapping(token, effects, {
       removed: ['token-variants-combat'],
     });
   };
@@ -280,40 +306,44 @@ async function initialize() {
   let updateImageOnEffectChange = async function (activeEffect, added = true) {
     const label = game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
     const actor = activeEffect.parent;
-    const tokens = actor.getActiveTokens();
-    if (tokens.length === 0) return;
 
     const mappings = actor.getFlag('token-variants', 'effectMappings') || {};
     if (label in mappings) {
-      let effects = getEffectsFromActor(actor);
+      const tokens = actor.token
+        ? [actor.token]
+        : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
+      console.log(tokens);
       for (const token of tokens) {
-        if (token.data.actorLink) {
-          let tokenEffects = [...effects];
-          if (token.inCombat) tokenEffects.unshift('token-variants-combat');
-          if (token.data.hidden) tokenEffects.unshift('token-variants-visibility');
-          await updateWithEffectMapping(token, tokenEffects, canvas.tokens.hud._statusEffects, {
-            added: added ? [label] : [],
-            removed: !added ? [label] : [],
-          });
-        }
+        const effects = getEffects(token);
+        if (token.inCombat) effects.unshift('token-variants-combat');
+        if (token.data.hidden) effects.unshift('token-variants-visibility');
+        await updateWithEffectMapping(token, effects, {
+          added: added ? [label] : [],
+          removed: !added ? [label] : [],
+        });
       }
     }
   };
 
   Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
+    console.log('createActiveEffect');
     if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
     updateImageOnEffectChange(activeEffect, true);
   });
 
   Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
+    console.log('deleteActiveEffect', activeEffect, options, userId);
     if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
     updateImageOnEffectChange(activeEffect, false);
   });
 
   Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
+    console.log('updateActiveEffect', activeEffect, change, options);
     if (!activeEffect.parent || game.userId !== userId) return;
-    if (!('disabled' in change) && !('label' in change)) return;
-    updateImageOnEffectChange(activeEffect, !change.disabled);
+
+    if ('disabled' in change || 'label' in change) {
+      updateImageOnEffectChange(activeEffect, !activeEffect.data.disabled);
+    }
   });
 
   //
@@ -358,7 +388,9 @@ async function initialize() {
       if (token.data.actorLink && token.actor) {
         return getEffectsFromActor(token.actor);
       } else {
-        return (token.data.actorData?.effects || []).map((ef) => ef.label);
+        return (token.data.actorData?.effects || [])
+          .filter((ef) => !ef.disabled)
+          .map((ef) => ef.label);
       }
     }
   };
@@ -367,6 +399,9 @@ async function initialize() {
     if (game.userId !== userId) return;
     if (token.data.actorLink && game.system.id !== 'pf2e') return;
     if (!token.actor) return;
+    if (game.system.id === 'dnd5e') return;
+
+    console.log('preUpdateToken', token, change, options, userId);
 
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
@@ -380,32 +415,40 @@ async function initialize() {
         : getEffects(token);
       oldEffects = getEffects(token);
     } else {
+      // debugging
+      console.log(':: NEW EFFECTS ::');
+      (change.actorData?.effects || []).forEach((ef) => {
+        console.log(`${ef.label} ${!ef.disabled}`);
+      });
+      console.log(':: OLD EFFECTS ::');
+      (token.data.actorData?.effects || []).forEach((ef) => {
+        console.log(`${ef.label} ${!ef.disabled}`);
+      });
+      // end of debugging
+
+      console.log(change.actorData?.effects);
       newEffects = change.actorData?.effects
-        ? change.actorData.effects.map((ef) => ef.label)
+        ? change.actorData.effects.filter((ef) => !ef.disabled).map((ef) => ef.label)
         : getEffects(token);
       oldEffects = getEffects(token);
     }
 
+    console.log('newEffect', newEffects, change);
+    console.log('oldEffect', oldEffects);
+
+    let performUpdate = false;
     const effectsAdded = [];
     for (const effect of newEffects) {
-      if (!oldEffects.includes(effect)) effectsAdded.push(effect);
+      if (!oldEffects.includes(effect)) {
+        effectsAdded.push(effect);
+        if (effect in mappings) performUpdate = true;
+      }
     }
     const effectsRemoved = [];
     for (const effect of oldEffects) {
-      if (!newEffects.includes(effect)) effectsRemoved.push(effect);
-    }
-
-    let performUpdate = false;
-    if (effectsAdded.length) {
-      performUpdate = newEffects[newEffects.length - 1] in mappings;
-    }
-    if (effectsRemoved.length) {
-      // The removed effect could have been anywhere in the array
-      for (const oldEf of oldEffects) {
-        if (!newEffects.includes(oldEf)) {
-          performUpdate = oldEf in mappings;
-          if (performUpdate) break;
-        }
+      if (!newEffects.includes(effect)) {
+        effectsRemoved.push(effect);
+        if (effect in mappings) performUpdate = true;
       }
     }
 
@@ -432,8 +475,8 @@ async function initialize() {
     }
   });
 
-  // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
   if (typeof libWrapper === 'function') {
+    // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
     libWrapper.register(
       'token-variants',
       'PlaceableObject.prototype._onDragLeftStart',
@@ -464,9 +507,32 @@ async function initialize() {
       },
       'WRAPPER'
     );
+
+    //
+    // Overlay related wrappers
+    //
+    libWrapper.register(
+      'token-variants',
+      'Token.prototype.draw',
+      async function (wrapped, ...args) {
+        let result = await wrapped(...args);
+        reDrawEffectOverlays(this);
+        return result;
+      },
+      'WRAPPER'
+    );
   }
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
+    const keys = Object.keys(change);
+    const changed = new Set(keys);
+    const fullRedraw = ['img', 'name', 'width', 'height', 'tint', 'actorId', 'actorLink'].some(
+      (r) => changed.has(r)
+    );
+    if (fullRedraw) {
+      reDrawEffectOverlays(token._object ?? token);
+    }
+
     if (change.img) {
       checkAndDisplayUserSpecificImage(token);
     }
@@ -476,7 +542,7 @@ async function initialize() {
       updateWithEffectMapping(
         token,
         options['token-variants'].effects,
-        options['token-variants'].toggleStatus,
+        // options['token-variants'].toggleStatus,
         { added: options['token-variants'].added, removed: options['token-variants'].removed }
       );
     }
@@ -521,6 +587,7 @@ async function initialize() {
 }
 
 async function createToken(token, options, userId) {
+  reDrawEffectOverlays(token._object ?? token);
   if (userId && game.user.id != userId) return;
 
   // Check if random search is enabled and if so perform it
@@ -1552,4 +1619,7 @@ Hooks.on('init', function () {
 
 Hooks.on('canvasReady', async function () {
   canvas.tokens.placeables.forEach((tkn) => checkAndDisplayUserSpecificImage(tkn));
+  for (const tkn of canvas.tokens.placeables) {
+    reDrawEffectOverlays(tkn);
+  }
 });

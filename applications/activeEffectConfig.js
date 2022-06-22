@@ -55,6 +55,7 @@ export default class ActiveEffectConfig extends FormApplication {
       imgSrc: mapping.imgSrc,
       imgName: mapping.imgName,
       priority: mapping.priority || 50,
+      overlay: mapping.overlay,
       config: this.config,
       hasConfig: this.config ? !isObjectEmpty(this.config) : false,
       hasTokenConfig: hasTokenConfig > 0,

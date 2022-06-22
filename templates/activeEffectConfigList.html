@@ -9,6 +9,7 @@
         <div class="effect-priority"><label>Priority</label></div>
         <div class="effect-image"><label>Image</label></div>
         <div class="effect-config"><label>Config</label></div>
+        <div class="effect-overlay"><label>Overlay</label></div>
       </li>
 
       {{#each mappings as |mapping index|}}
@@ -52,6 +53,9 @@
           <a><i class="fas fa-edit config-edit {{#if mapping.hasConfig}}active{{/if}}"></i></a>
           <a><i class="fas fa-play config-script {{#if mapping.hasScript}}active{{/if}}"></i></a>
           <input class="config" type="hidden" name="mappings.{{index}}.config" value="{{mapping.config}}">
+        </div>
+        <div class="effect-overlay">
+          <input type="checkbox" name="mappings.{{index}}.overlay" {{#if mapping.overlay}}checked{{/if}}/>
         </div>
       </li>
       {{/each}}

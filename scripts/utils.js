@@ -736,3 +736,122 @@ export function tv_executeScript(script, { actor, token } = {}) {
     console.error(err);
   }
 }
+
+/**
+ * Slightly modified version of canvas.sight.testVisibility
+ * Vision is limited to just the bright sources
+ * @returns Point is in bright light
+ */
+export function tva_testInBrightVision(point, { tolerance = 2, object = null } = {}) {
+  const visionSources = canvas.sight.sources;
+  const lightSources = canvas.lighting.sources;
+  if (!visionSources.size) return game.user.isGM;
+
+  // Determine the array of offset points to test
+  const t = tolerance;
+  const offsets =
+    t > 0
+      ? [
+          [0, 0],
+          [-t, 0],
+          [t, 0],
+          [0, -t],
+          [0, t],
+          [-t, -t],
+          [-t, t],
+          [t, t],
+          [t, -t],
+        ]
+      : [[0, 0]];
+  const points = offsets.map((o) => new PIXI.Point(point.x + o[0], point.y + o[1]));
+
+  // Test that a point falls inside a line-of-sight polygon
+  let inLOS = false;
+  for (let source of visionSources.values()) {
+    if (points.some((p) => source.los.contains(p.x, p.y))) {
+      inLOS = true;
+      break;
+    }
+  }
+  if (!inLOS) return false;
+
+  // If global illumination is active, nothing more is required
+  if (canvas.lighting.globalLight) return true;
+
+  // Test that a point is also within some field-of-vision polygon
+  for (let source of visionSources.values()) {
+    if (
+      points.some((p) => {
+        // TVA specific change
+        // Limit the radius to bright radius and perform the check. Revert back to original radius
+        // after the check.
+        const origRadius = source.fov.radius;
+        source.fov.radius = source.bright;
+        const contains = source.fov.contains(p.x, p.y);
+        source.fov.radius = origRadius;
+        return contains;
+      })
+    )
+      return true;
+  }
+  for (let source of lightSources.values()) {
+    if (
+      points.some((p) => {
+        // TVA specific change
+        // Limit the radius to bright radius and perform the check. Revert back to original radius
+        // after the check.
+        const origRadius = source.fov.radius;
+        source.fov.radius = source.bright;
+        const contains = source.fov.contains(p.x, p.y);
+        source.fov.radius = origRadius;
+        return contains;
+      })
+    )
+      return true;
+  }
+  return false;
+}
+
+export async function drawEffectOverlay(token, img) {
+  const texture = await loadTexture(img, {
+    fallback: 'modules/token-variants/img/token-images.svg',
+  });
+
+  // Create Sprite using the loaded texture
+  let icon = new PIXI.Sprite(texture);
+  icon.anchor.set(0.5, 0.5);
+
+  // Adjust the scale to be relative to the token image so that when it gets attached
+  // as a child of the token image and inherits its scale, their sizes match up
+  icon.scale.x = token.texture.width / texture.width;
+  icon.scale.y = token.texture.height / texture.height;
+
+  // Ensure playback state for video tokens
+  const source = foundry.utils.getProperty(texture, 'baseTexture.resource.source');
+  if (source && source.tagName === 'VIDEO') {
+    source.loop = true;
+    source.muted = true;
+    source.currentTime = 0;
+    game.video.play(source);
+  }
+
+  // Apply color tinting
+  icon.tint = token.data.tint ? foundry.utils.colorStringToHex(token.data.tint) : 0xffffff;
+  return icon;
+}
+
+export async function reDrawEffectOverlays(token) {
+  if (token.tva_overlays) {
+    for (const ol of token.tva_overlays) token.icon.removeChild(ol);
+    delete token.tva_overlays;
+  }
+  const overlayImages = (token.document ?? token).getFlag('token-variants', 'overlays');
+  if (overlayImages) {
+    const overlays = [];
+    for (const img of overlayImages) {
+      overlays.push(token.icon.addChild(await drawEffectOverlay(token, img)));
+    }
+    if (overlays.length) token.tva_overlays = overlays;
+    else delete token.tva_overlays;
+  }
+}

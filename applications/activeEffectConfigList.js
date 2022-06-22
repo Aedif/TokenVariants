@@ -24,7 +24,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
       title: 'Config',
-      width: 400,
+      width: 470,
     });
   }
 
@@ -51,6 +51,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           hasScript: attrs.config && attrs.config.tv_script,
           hasTokenConfig: hasTokenConfig > 0,
           config: attrs.config,
+          overlay: attrs.overlay,
         });
       }
     }
@@ -206,6 +207,7 @@ export default class ActiveEffectConfigList extends FormApplication {
             imgSrc: mapping.imgSrc,
             priority: mapping.priority,
             config: mapping.config,
+            overlay: mapping.overlay,
           };
         }
         this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
@@ -228,6 +230,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       m2.imgName = m1.imgName;
       m2.priority = m1.priority;
       m2.effectName = m1.effectName;
+      m2.overlay = m1.overlay;
     }
   }
 }

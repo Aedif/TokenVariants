@@ -350,6 +350,11 @@ ol.token-variant-table .table-row .effect-config {
   text-align: center;
 }
 
+ol.token-variant-table .table-row .effect-overlay {
+  flex: 0 0 50px;
+  text-align: center;
+}
+
 ol.token-variant-table .table-row .effect-config i.active {
   color: orange;
 }

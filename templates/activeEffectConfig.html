@@ -19,6 +19,11 @@
         <button class="effect-config-script {{#if hasScript}}active{{/if}}" type="button"><i class="fas fa-play"></i></button>
     </div>
 
+    <div class="form-group">
+        <label style="flex:3;">Overlay</label>
+        <input type="checkbox" name="overlay" {{#if overlay}}checked{{/if}}/>
+    </div>
+
     <footer class="sheet-footer flexrow">
         <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
     {{#if imgSrc}}
