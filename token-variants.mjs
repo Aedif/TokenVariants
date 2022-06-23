@@ -134,7 +134,7 @@ async function initialize() {
       .map((ef) => mappings[ef])
       .sort((ef1, ef2) => ef1.priority - ef2.priority);
 
-    console.log('effect ', effects);
+    // console.log('effect ', effects);
 
     if (effects.length > 0) {
       // Some effect mappings may not have images, find a mapping with one if it exists
@@ -312,7 +312,6 @@ async function initialize() {
       const tokens = actor.token
         ? [actor.token]
         : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
-      console.log(tokens);
       for (const token of tokens) {
         const effects = getEffects(token);
         if (token.inCombat) effects.unshift('token-variants-combat');
@@ -326,19 +325,16 @@ async function initialize() {
   };
 
   Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
-    console.log('createActiveEffect');
     if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
     updateImageOnEffectChange(activeEffect, true);
   });
 
   Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
-    console.log('deleteActiveEffect', activeEffect, options, userId);
     if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
     updateImageOnEffectChange(activeEffect, false);
   });
 
   Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
-    console.log('updateActiveEffect', activeEffect, change, options);
     if (!activeEffect.parent || game.userId !== userId) return;
 
     if ('disabled' in change || 'label' in change) {
@@ -347,8 +343,20 @@ async function initialize() {
   });
 
   //
-  // Hooks required for PF2e linked actor token updates
+  // PF2e hooks
   //
+
+  Hooks.on('createItem', (condition, options, userId) => {
+    if (
+      game.system.id !== 'pf2e' ||
+      condition.data.type !== 'condition' ||
+      !condition.parent ||
+      game.userId !== userId
+    )
+      return;
+    updateImageOnEffectChange(condition, true);
+  });
+
   Hooks.on('deleteItem', (condition, options, userId) => {
     if (
       game.system.id !== 'pf2e' ||
@@ -359,18 +367,6 @@ async function initialize() {
     )
       return;
     updateImageOnEffectChange(condition, false);
-  });
-
-  Hooks.on('createItem', (condition, options, userId) => {
-    if (
-      game.system.id !== 'pf2e' ||
-      condition.type !== 'condition' ||
-      !condition.parent ||
-      condition.data.disabled ||
-      game.userId !== userId
-    )
-      return;
-    updateImageOnEffectChange(condition, true);
   });
 
   //
@@ -394,86 +390,6 @@ async function initialize() {
       }
     }
   };
-
-  Hooks.on('preUpdateToken', (token, change, options, userId) => {
-    if (game.userId !== userId) return;
-    if (token.data.actorLink && game.system.id !== 'pf2e') return;
-    if (!token.actor) return;
-    if (game.system.id === 'dnd5e') return;
-
-    console.log('preUpdateToken', token, change, options, userId);
-
-    const mappings =
-      (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
-
-    let oldEffects = [];
-    let newEffects = [];
-
-    if (game.system.id === 'pf2e') {
-      newEffects = change.actorData?.items
-        ? change.actorData.items.map((ef) => ef.name)
-        : getEffects(token);
-      oldEffects = getEffects(token);
-    } else {
-      // debugging
-      console.log(':: NEW EFFECTS ::');
-      (change.actorData?.effects || []).forEach((ef) => {
-        console.log(`${ef.label} ${!ef.disabled}`);
-      });
-      console.log(':: OLD EFFECTS ::');
-      (token.data.actorData?.effects || []).forEach((ef) => {
-        console.log(`${ef.label} ${!ef.disabled}`);
-      });
-      // end of debugging
-
-      console.log(change.actorData?.effects);
-      newEffects = change.actorData?.effects
-        ? change.actorData.effects.filter((ef) => !ef.disabled).map((ef) => ef.label)
-        : getEffects(token);
-      oldEffects = getEffects(token);
-    }
-
-    console.log('newEffect', newEffects, change);
-    console.log('oldEffect', oldEffects);
-
-    let performUpdate = false;
-    const effectsAdded = [];
-    for (const effect of newEffects) {
-      if (!oldEffects.includes(effect)) {
-        effectsAdded.push(effect);
-        if (effect in mappings) performUpdate = true;
-      }
-    }
-    const effectsRemoved = [];
-    for (const effect of oldEffects) {
-      if (!newEffects.includes(effect)) {
-        effectsRemoved.push(effect);
-        if (effect in mappings) performUpdate = true;
-      }
-    }
-
-    if (token.inCombat) newEffects.unshift('token-variants-combat');
-    if (change.hidden) newEffects.push('token-variants-visibility');
-    else if (change.hidden == null && token.data.hidden)
-      newEffects.unshift('token-variants-visibility');
-
-    if (
-      change.hidden != null &&
-      change.hidden !== token.data.hidden &&
-      'token-variants-visibility' in mappings
-    ) {
-      performUpdate = true;
-    }
-
-    if (performUpdate) {
-      options['token-variants'] = {
-        effects: newEffects,
-        toggleStatus: canvas.tokens.hud._statusEffects,
-        added: effectsAdded,
-        removed: effectsRemoved,
-      };
-    }
-  });
 
   if (typeof libWrapper === 'function') {
     // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
@@ -526,6 +442,9 @@ async function initialize() {
   Hooks.on('updateToken', async function (token, change, options, userId) {
     const keys = Object.keys(change);
     const changed = new Set(keys);
+
+    // Redraw overlay if needed. Token.draw() is called any time any of these fields changes
+    // which clears the TVA overlays
     const fullRedraw = ['img', 'name', 'width', 'height', 'tint', 'actorId', 'actorLink'].some(
       (r) => changed.has(r)
     );
@@ -533,18 +452,21 @@ async function initialize() {
       reDrawEffectOverlays(token._object ?? token);
     }
 
-    if (change.img) {
+    // If there was an image update the user specific image will need to re-applied
+    if (changed.has('img')) {
       checkAndDisplayUserSpecificImage(token);
     }
 
     if (game.userId !== userId) return;
-    if (options['token-variants'] && token.actor) {
-      updateWithEffectMapping(
-        token,
-        options['token-variants'].effects,
-        // options['token-variants'].toggleStatus,
-        { added: options['token-variants'].added, removed: options['token-variants'].removed }
-      );
+
+    if (changed.has('hidden')) {
+      const effects = getEffects(token);
+      if (token.inCombat) effects.unshift('token-variants-combat');
+      if (change.hidden) effects.push('token-variants-visibility');
+      updateWithEffectMapping(token, effects, {
+        added: change.hidden ? ['token-variants-visibility'] : [],
+        removed: !change.hidden ? ['token-variants-visibility'] : [],
+      });
     }
   });
 
