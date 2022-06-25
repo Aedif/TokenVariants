@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -46,6 +46,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           effectName: effectName,
           imgName: attrs.imgName,
           imgSrc: attrs.imgSrc,
+          isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
           priority: attrs.priority,
           hasConfig: attrs.config ? !isObjectEmpty(attrs.config) : false,
           hasScript: attrs.config && attrs.config.tv_script,
@@ -69,9 +70,12 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.delete-mapping').click(this._onRemove.bind(this));
     html.find('.create-mapping').click(this._onCreate.bind(this));
     html.find('.save-mappings').click(this._onSaveMappings.bind(this));
-    if (TVA_CONFIG.permissions.image_path_button[game.user.role])
+    if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
       html.find('.effect-image img').click(this._onImageClick.bind(this));
+      html.find('.effect-image video').click(this._onImageClick.bind(this));
+    }
     html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
+    html.find('.effect-image video').contextmenu(this._onImageRightClick.bind(this));
     html.find('.effect-config i.config').click(this._onConfigClick.bind(this));
     html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
     html.find('.effect-config i.config-script').click(this._onConfigScriptClick.bind(this));
@@ -140,8 +144,16 @@ export default class ActiveEffectConfigList extends FormApplication {
     showArtSelect(this.token.name, {
       searchType: SEARCH_TYPE.TOKEN,
       callback: (imgSrc, imgName) => {
-        event.target.src = imgSrc;
-        event.target.title = imgName;
+        const vid = $(event.target).closest('.effect-image').find('video');
+        const img = $(event.target).closest('.effect-image').find('img');
+        vid.add(img).attr('src', imgSrc).attr('title', imgName);
+        if (isVideo(imgSrc)) {
+          vid.show();
+          img.hide();
+        } else {
+          vid.hide();
+          img.show();
+        }
         $(event.target).siblings('.imgSrc').val(imgSrc);
         $(event.target).siblings('.imgName').val(imgName);
       },
@@ -152,8 +164,16 @@ export default class ActiveEffectConfigList extends FormApplication {
     new FilePicker({
       type: 'image',
       callback: (path) => {
-        event.target.src = path;
-        event.target.title = getFileName(path);
+        const vid = $(event.target).closest('.effect-image').find('video');
+        const img = $(event.target).closest('.effect-image').find('img');
+        vid.add(img).attr('src', path).attr('title', getFileName(path));
+        if (isVideo(path)) {
+          vid.show();
+          img.hide();
+        } else {
+          vid.hide();
+          img.show();
+        }
         $(event.target).siblings('.imgSrc').val(path);
         $(event.target).siblings('.imgName').val(getFileName(path));
       },

@@ -34,7 +34,17 @@
           />
         </div>
         <div class="effect-image">
-          <img height="32" width="32" src="{{mapping.imgSrc}}" title="{{mapping.imgName}}" />
+          <video
+            height="32" width="32"
+            src="{{mapping.imgSrc}}"
+            title="{{mapping.imgName}}"
+            autoplay
+            loop
+            muted
+            {{#unless isVideo}}hidden{{/unless}}
+            >
+          </video>
+          <img height="32" width="32" src="{{mapping.imgSrc}}" title="{{mapping.imgName}}" {{#if isVideo}}hidden{{/if}}/>
           <input
             class="imgSrc"
             type="hidden"

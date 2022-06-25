@@ -549,6 +549,36 @@ export function userRequiresImageCache(perm) {
   );
 }
 
+async function _drawIcon(token) {
+  let icon = new PIXI.Sprite(token.texture);
+  icon.anchor.set(0.5, 0.5);
+  if (!token.texture) return icon;
+  icon.tint = token.data.tint ? foundry.utils.colorStringToHex(token.data.tint) : 0xffffff;
+  icon.visible = false;
+  return icon;
+}
+
+async function _overrideIcon(token, img) {
+  token.texture = await loadTexture(img, { fallback: CONST.DEFAULT_TOKEN });
+  token.removeChild(token.icon);
+  token.icon = token.addChild(await _drawIcon(token));
+  token.tva_iconOverride = img;
+  token._refreshIcon();
+  reDrawEffectOverlays(token);
+}
+
+export async function waitForTexture(token, callback, checks = 40) {
+  if (!token.icon || !token.icon.texture) {
+    checks--;
+    if (checks > 1)
+      new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
+        waitForTexture(token, callback, checks)
+      );
+    return;
+  }
+  callback();
+}
+
 /**
  * Overwrite Token image on the client side if 'userMappings' flag has been set.
  * @param {*} token Token to overwrite the image for
@@ -567,7 +597,7 @@ export async function checkAndDisplayUserSpecificImage(token, forceDraw = false,
     // Attempting to perform a draw() call then would result in multiple overlapped images.
     // We should wait for the texture to be loaded and change the image after. As a failsafe
     // give up after a certain number of checks.
-    if (!token.icon.texture) {
+    if (!token.icon || !token.icon.texture) {
       checks--;
       if (checks > 1)
         new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
@@ -577,22 +607,11 @@ export async function checkAndDisplayUserSpecificImage(token, forceDraw = false,
     }
 
     // Change the image on the client side, without actually updating the token
-    token.data.img = img;
-    token.document.data.img = img;
-
-    const visible = token.visible;
-    const hadActiveHud = token.hasActiveHUD;
-
-    await token.draw();
-    token.visible = visible;
-    if (hadActiveHud) canvas.tokens.hud.bind(token);
-  } else if (forceDraw && token.icon.texture) {
-    const visible = token.visible;
-    const hadActiveHud = token.hasActiveHUD;
-
-    await token.draw();
-    token.visible = visible;
-    if (hadActiveHud) canvas.tokens.hud.bind(token);
+    _overrideIcon(token, img);
+  } else if (img) {
+  } else if (token.tva_iconOverride) {
+    await _overrideIcon(token, token.data.img);
+    delete token.tva_iconOverride;
   }
 }
 
@@ -737,14 +756,10 @@ export function tv_executeScript(script, { actor, token } = {}) {
   }
 }
 
-/**
- * Slightly modified version of canvas.sight.testVisibility
- * Vision is limited to just the bright sources
- * @returns Point is in bright light
- */
-export function tva_testInBrightVision(point, { tolerance = 2, object = null } = {}) {
+export function tva_testInBrightVision(point, { tolerance = 2, object = null }) {
   const visionSources = canvas.sight.sources;
   const lightSources = canvas.lighting.sources;
+  const d = canvas.dimensions;
   if (!visionSources.size) return game.user.isGM;
 
   // Determine the array of offset points to test
@@ -753,63 +768,74 @@ export function tva_testInBrightVision(point, { tolerance = 2, object = null } =
     t > 0
       ? [
           [0, 0],
-          [-t, 0],
-          [t, 0],
-          [0, -t],
-          [0, t],
           [-t, -t],
           [-t, t],
           [t, t],
           [t, -t],
+          [-t, 0],
+          [t, 0],
+          [0, -t],
+          [0, t],
         ]
       : [[0, 0]];
   const points = offsets.map((o) => new PIXI.Point(point.x + o[0], point.y + o[1]));
 
-  // Test that a point falls inside a line-of-sight polygon
-  let inLOS = false;
-  for (let source of visionSources.values()) {
-    if (points.some((p) => source.los.contains(p.x, p.y))) {
-      inLOS = true;
-      break;
+  // If the point is entirely inside the buffer region, it may be hidden from view
+  if (!canvas.sight._inBuffer && !points.some((p) => d.sceneRect.contains(p.x, p.y))) return false;
+
+  // Check each point for one which provides both LOS and FOV membership
+  return points.some((p) => {
+    let hasLOS = false;
+    let hasFOV = false;
+    let requireFOV = !canvas.lighting.globalLight;
+
+    // Check vision sources
+    for (let source of visionSources.values()) {
+      if (!source.active) continue; // The source may be currently inactive
+      if (!hasLOS || (!hasFOV && requireFOV)) {
+        // console.log(source);
+        // Do we need to test for LOS?
+        if (source.los.contains(p.x, p.y)) {
+          hasLOS = true;
+          if (!hasFOV && requireFOV) {
+            // Do we need to test for FOV?
+            if (source.fov.contains(p.x, p.y)) {
+              // console.log(source);
+              // console.log('test IN normal FOV');
+            }
+            const origRadius = source.fov.radius;
+            source.fov.radius = source.data.bright;
+            if (source.fov.contains(p.x, p.y)) {
+              // console.log('test IN FOV');
+              hasFOV = true;
+            }
+
+            source.fov.radius = origRadius;
+          }
+        }
+      }
+      if (hasLOS && (!requireFOV || hasFOV)) {
+        // Did we satisfy all required conditions?
+        console.log('====== 1 =======');
+        return true;
+      }
     }
-  }
-  if (!inLOS) return false;
 
-  // If global illumination is active, nothing more is required
-  if (canvas.lighting.globalLight) return true;
-
-  // Test that a point is also within some field-of-vision polygon
-  for (let source of visionSources.values()) {
-    if (
-      points.some((p) => {
-        // TVA specific change
-        // Limit the radius to bright radius and perform the check. Revert back to original radius
-        // after the check.
-        const origRadius = source.fov.radius;
-        source.fov.radius = source.bright;
-        const contains = source.fov.contains(p.x, p.y);
-        source.fov.radius = origRadius;
-        return contains;
-      })
-    )
-      return true;
-  }
-  for (let source of lightSources.values()) {
-    if (
-      points.some((p) => {
-        // TVA specific change
-        // Limit the radius to bright radius and perform the check. Revert back to original radius
-        // after the check.
-        const origRadius = source.fov.radius;
-        source.fov.radius = source.bright;
-        const contains = source.fov.contains(p.x, p.y);
-        source.fov.radius = origRadius;
-        return contains;
-      })
-    )
-      return true;
-  }
-  return false;
+    // Check light sources
+    for (let source of lightSources.values()) {
+      if (!source.active) continue; // The source may be currently inactive
+      if (source.containsPoint(p)) {
+        if (source.data.vision) hasLOS = true;
+        hasFOV = true;
+      }
+      if (hasLOS && (!requireFOV || hasFOV)) {
+        console.log('====== 3 =======');
+        return true;
+      }
+    }
+    console.log('====== 4 =======');
+    return false;
+  });
 }
 
 export async function drawEffectOverlay(token, img) {
@@ -825,6 +851,10 @@ export async function drawEffectOverlay(token, img) {
   // as a child of the token image and inherits its scale, their sizes match up
   icon.scale.x = token.texture.width / texture.width;
   icon.scale.y = token.texture.height / texture.height;
+
+  // console.log('TOKEN TEXTURE ', token.texture.width, token.texture.height);
+  // console.log('OVERL TEXTURE ', texture.width, texture.height);
+  // console.log('SCALE         ', icon.scale.x, icon.scale.y);
 
   // Ensure playback state for video tokens
   const source = foundry.utils.getProperty(texture, 'baseTexture.resource.source');
@@ -845,13 +875,48 @@ export async function reDrawEffectOverlays(token) {
     for (const ol of token.tva_overlays) token.icon.removeChild(ol);
     delete token.tva_overlays;
   }
-  const overlayImages = (token.document ?? token).getFlag('token-variants', 'overlays');
-  if (overlayImages) {
-    const overlays = [];
-    for (const img of overlayImages) {
-      overlays.push(token.icon.addChild(await drawEffectOverlay(token, img)));
-    }
-    if (overlays.length) token.tva_overlays = overlays;
-    else delete token.tva_overlays;
+  let overlayImages;
+  if (token.data.actorLink && token.actor) {
+    overlayImages = token.actor.getFlag('token-variants', 'overlays');
+  } else {
+    overlayImages = (token.document ?? token).getFlag('token-variants', 'overlays');
   }
+
+  const overlays = [];
+  if (overlayImages) {
+    waitForTexture(token, async () => {
+      for (const img of overlayImages) {
+        overlays.push(token.icon.addChild(await drawEffectOverlay(token, img)));
+      }
+      if (overlays.length) token.tva_overlays = overlays;
+      else delete token.tva_overlays;
+    });
+  }
+  // Temporarily disabled
+  // if (token.tva_dim && token.actor) {
+  //   const dimMapping = ((token.actor.document ?? token.actor).getFlag(
+  //     'token-variants',
+  //     'effectMappings'
+  //   ) || {})['token-variants-dim'];
+  //   if (dimMapping && dimMapping.imgSrc) {
+  //     if (dimMapping.overlay)
+  //       overlays.push(token.icon.addChild(await drawEffectOverlay(token, dimMapping.imgSrc)));
+  //     else await _overrideIcon(token, dimMapping.imgSrc);
+  //   }
+  // }
+}
+
+//
+export function inDimLight(token) {
+  const gm = game.user.isGM;
+  if (token.data.hidden && gm) return false;
+  if (!canvas.sight.tokenVision) return false;
+  if (token._controlled) return false;
+  if (canvas.sight.sources.has(token.sourceId)) return false;
+
+  // This is where we want to do some work. The token is visible due to a visibility test
+  // We want to perform our own to determine if the token is in dim or bright light.
+
+  const tolerance = Math.min(token.w, token.h) / 4;
+  return !tva_testInBrightVision(token.center, { tolerance, object: token });
 }

@@ -58,10 +58,10 @@ export default class ConfigureSettings extends FormApplication {
     const paths = settings.searchPaths.map((path) => {
       const r = {};
       r.text = path.text;
-      r.icon = this._pathIcon(path.source);
+      r.icon = this._pathIcon(path.source || '');
       r.cache = path.cache;
       r.tiles = path.tiles;
-      r.source = path.source;
+      r.source = path.source || '';
       return r;
     });
     data.searchPaths = paths;

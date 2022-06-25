@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -60,6 +60,7 @@ export default class ActiveEffectConfig extends FormApplication {
       hasConfig: this.config ? !isObjectEmpty(this.config) : false,
       hasTokenConfig: hasTokenConfig > 0,
       hasScript: this.config && this.config.tv_script,
+      isVideo: mapping.imgSrc ? isVideo(mapping.imgSrc) : false,
     });
   }
 
@@ -70,8 +71,8 @@ export default class ActiveEffectConfig extends FormApplication {
     super.activateListeners(html);
     html.find('.remove').click(this._onRemove.bind(this));
     if (TVA_CONFIG.permissions.image_path_button[game.user.role])
-      html.find('img.image').click(this._onImageClick.bind(this));
-    html.find('img.image').contextmenu(this._onImageRightClick.bind(this));
+      html.find('.image').click(this._onImageClick.bind(this));
+    html.find('.image').contextmenu(this._onImageRightClick.bind(this));
     html.find('button.effect-config').click(this._onConfigClick.bind(this));
     html.find('button.effect-config-edit').click(this._onConfigEditClick.bind(this));
     html.find('button.effect-config-script').click(this._onConfigScriptClick.bind(this));
@@ -128,11 +129,19 @@ export default class ActiveEffectConfig extends FormApplication {
   async _onImageClick(event) {
     showArtSelect(this.token.name, {
       searchType: SEARCH_TYPE.TOKEN,
-      callback: (imgSrc, name) => {
-        event.target.src = imgSrc;
-        event.target.title = name;
+      callback: (imgSrc, imgName) => {
+        const vid = $(event.target).closest('.form-group').find('video.image');
+        const img = $(event.target).closest('.form-group').find('img.image');
+        vid.add(img).attr('src', imgSrc).attr('title', imgName);
+        if (isVideo(imgSrc)) {
+          vid.show();
+          img.hide();
+        } else {
+          vid.hide();
+          img.show();
+        }
         $(event.target).siblings('.imgSrc').val(imgSrc);
-        $(event.target).siblings('.imgName').val(name);
+        $(event.target).siblings('.imgName').val(imgName);
       },
     });
   }
@@ -141,8 +150,16 @@ export default class ActiveEffectConfig extends FormApplication {
     new FilePicker({
       type: 'image',
       callback: (path) => {
-        event.target.src = path;
-        event.target.title = getFileName(path);
+        const vid = $(event.target).closest('.form-group').find('video.image');
+        const img = $(event.target).closest('.form-group').find('img.image');
+        vid.add(img).attr('src', path).attr('title', getFileName(path));
+        if (isVideo(path)) {
+          vid.show();
+          img.hide();
+        } else {
+          vid.hide();
+          img.show();
+        }
         $(event.target).siblings('.imgSrc').val(path);
         $(event.target).siblings('.imgName').val(getFileName(path));
       },

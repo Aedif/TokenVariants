@@ -30,6 +30,7 @@ import {
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
+import { libWrapper } from './scripts/libWrapper/shim.js';
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -101,12 +102,11 @@ async function initialize() {
   const updateWithEffectMapping = async function (
     token,
     effects,
-    { added = [], removed = [] } = {}
+    { added = '', removed = '' } = {}
   ) {
     token = token._object ? token._object : token;
-    const tokenImgSrc = token.data.img;
     const tokenImgName =
-      (token.document ?? token).getFlag('token-variants', 'name') || getFileName(tokenImgSrc);
+      (token.document ?? token).getFlag('token-variants', 'name') || getFileName(token.data.img);
     const tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
     const tokenUpdateObj = {};
     const hadActiveHUD = token.hasActiveHUD;
@@ -115,15 +115,32 @@ async function initialize() {
     const mappings =
       (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
 
+    // // Special handling of token-variants-dim effect
+    // const dimMapping = mappings['token-variants-dim'];
+    // // if (dimMapping && (added === 'token-variants-dim' || removed === 'token-variants-dim')) {
+    // //   if (added && dimMapping.imgSrc) {
+    // //     token.document.setFlag('token-variants', 'override', {
+    // //       imgSrc: dimMapping.imgSrc,
+    // //       overlay: dimMapping.overlay,
+    // //     });
+    // //   } else if (token.document.getFlag('token-variants', 'override')) {
+    // //     token.document.unsetFlag('token-variants', 'override');
+    // //   }
+    // // }
+    // // We don't want token-variants-dim image to be applied to the token via an update
+    // if (dimMapping) {
+    //   dimMapping.imgSrc = '';
+    //   dimMapping.imgName = '';
+    // }
+
     // Accumulate all scripts that will need to be run after the update
     const executeOnCallback = [];
-    for (const ef of added) {
-      const onApply = mappings[ef]?.config?.tv_script?.onApply;
+    if (added) {
+      const onApply = mappings[added]?.config?.tv_script?.onApply;
       if (onApply) executeOnCallback.push(() => tv_executeScript(onApply, { token: token }));
     }
-
-    for (const ef of removed) {
-      const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
+    if (removed) {
+      const onRemove = mappings[removed]?.config?.tv_script?.onRemove;
       if (onRemove) executeOnCallback.push(() => tv_executeScript(onRemove, { token: token }));
     }
 
@@ -134,21 +151,10 @@ async function initialize() {
       .map((ef) => mappings[ef])
       .sort((ef1, ef2) => ef1.priority - ef2.priority);
 
-    // console.log('effect ', effects);
-
-    if (effects.length > 0) {
-      // Some effect mappings may not have images, find a mapping with one if it exists
-      const newImg = { imgSrc: '', imgName: '' };
-      for (let i = effects.length - 1; i >= 0; i--) {
-        if (effects[i].imgSrc && !effects[i].overlay) {
-          newImg.imgSrc = effects[i].imgSrc;
-          newImg.imgName = effects[i].imgName;
-          break;
-        }
-      }
-
+    // Process overlays
+    const overlayImages = [];
+    if (effects.length) {
       // Find overlays to be applied
-      const overlayImages = [];
       if (TVA_CONFIG.stackStatusConfig) {
         for (const effect of effects) {
           if (effect.imgSrc && effect.overlay) {
@@ -163,12 +169,25 @@ async function initialize() {
           }
         }
       }
-      if (overlayImages.length) {
-        await (token.document ?? token).setFlag('token-variants', 'overlays', overlayImages);
-      } else {
-        await (token.document ?? token).unsetFlag('token-variants', 'overlays');
+    }
+    // Set/un-set the overlay flag if need be
+    const objToFlag = token.data.actorLink && token.actor ? token.actor : token.document ?? token;
+    if (overlayImages.length) {
+      await objToFlag.setFlag('token-variants', 'overlays', overlayImages);
+    } else if (await objToFlag.getFlag('token-variants', 'overlays')) {
+      await objToFlag.unsetFlag('token-variants', 'overlays');
+    }
+
+    if (effects.length > 0) {
+      // Some effect mappings may not have images, find a mapping with one if it exists
+      const newImg = { imgSrc: '', imgName: '' };
+      for (let i = effects.length - 1; i >= 0; i--) {
+        if (effects[i].imgSrc && !effects[i].overlay) {
+          newImg.imgSrc = effects[i].imgSrc;
+          newImg.imgName = effects[i].imgName;
+          break;
+        }
       }
-      reDrawEffectOverlays(token);
 
       // Collect custom configs to be applied to the token
       let config;
@@ -194,12 +213,12 @@ async function initialize() {
         newImg.imgName = tokenDefaultImg.imgName;
       } else if (!tokenDefaultImg) {
         tokenUpdateObj['flags.token-variants.defaultImg'] = {
-          imgSrc: tokenImgSrc,
+          imgSrc: token.data.img,
           imgName: tokenImgName,
         };
       }
 
-      await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : tokenImgSrc, {
+      await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : token.data.img, {
         token: token,
         imgName: newImg.imgName ? newImg.imgName : tokenImgName,
         tokenUpdate: tokenUpdateObj,
@@ -238,7 +257,7 @@ async function initialize() {
       effects.length === 0 &&
       (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')
     ) {
-      await updateTokenImage(tokenImgSrc, {
+      await updateTokenImage(token.data.img, {
         token: token,
         imgName: tokenImgName,
         tokenUpdate: tokenUpdateObj,
@@ -250,10 +269,6 @@ async function initialize() {
           executeOnCallback.forEach((fn) => fn());
         },
       });
-    }
-    if (effects.length === 0) {
-      await (token.document ?? token).unsetFlag('token-variants', 'overlays');
-      reDrawEffectOverlays(token);
     }
   };
 
@@ -267,9 +282,10 @@ async function initialize() {
 
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
+    // if (token.tva_dim) effects.push('token-variants-dim');
     effects.push('token-variants-combat');
     updateWithEffectMapping(token, effects, {
-      added: ['token-variants-combat'],
+      added: 'token-variants-combat',
     });
   });
 
@@ -283,7 +299,7 @@ async function initialize() {
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     await updateWithEffectMapping(token, effects, {
-      removed: ['token-variants-combat'],
+      removed: 'token-variants-combat',
     });
   };
 
@@ -317,8 +333,8 @@ async function initialize() {
         if (token.inCombat) effects.unshift('token-variants-combat');
         if (token.data.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
-          added: added ? [label] : [],
-          removed: !added ? [label] : [],
+          added: added ? label : '',
+          removed: !added ? label : '',
         });
       }
     }
@@ -433,39 +449,79 @@ async function initialize() {
       async function (wrapped, ...args) {
         let result = await wrapped(...args);
         reDrawEffectOverlays(this);
+        checkAndDisplayUserSpecificImage(this);
         return result;
       },
       'WRAPPER'
     );
+
+    // TODO: Temporarily disabled
+    // libWrapper.register(
+    //   'token-variants',
+    //   'Token.prototype.isVisible',
+    //   function (wrapped, ...args) {
+    //     let result = wrapped(...args);
+    //     if (result) {
+    //       if (inDimLight(this)) {
+    //         console.log('in dim');
+    //         if (!this.tva_dim) {
+    //           this.tva_dim = true;
+    //           reDrawEffectOverlays(this);
+    //           // const effects = getEffects(this);
+    //           // if (this.inCombat) effects.unshift('token-variants-combat');
+    //           // if (this.hidden) effects.push('token-variants-visibility');
+    //           // effects.push('token-variants-dim');
+    //           // updateWithEffectMapping(this, effects, {
+    //           //   added: 'token-variants-dim',
+    //           // });
+    //         }
+    //       } else if (this.tva_dim) {
+    //         this.tva_dim = false;
+    //         reDrawEffectOverlays(this);
+    //         // const effects = getEffects(this);
+    //         // if (this.inCombat) effects.unshift('token-variants-combat');
+    //         // if (this.hidden) effects.push('token-variants-visibility');
+    //         // updateWithEffectMapping(this, effects, {
+    //         //   removed: 'token-variants-dim',
+    //         // });
+    //       }
+    //     }
+    //     return result;
+    //   },
+    //   'WRAPPER'
+    // );
   }
 
+  Hooks.on('updateActor', async function (actor, change, options, userId) {
+    if ('flags' in change && 'token-variants' in change.flags) {
+      const tokenVariantFlags = change.flags['token-variants'];
+      if ('overlays' in tokenVariantFlags || '-=overlays' in tokenVariantFlags) {
+        const activeTokens = actor.getActiveTokens();
+        for (const tkn of activeTokens) {
+          if (tkn.data.actorLink) {
+            reDrawEffectOverlays(tkn);
+          }
+        }
+      }
+    }
+  });
+
   Hooks.on('updateToken', async function (token, change, options, userId) {
-    const keys = Object.keys(change);
-    const changed = new Set(keys);
-
-    // Redraw overlay if needed. Token.draw() is called any time any of these fields changes
-    // which clears the TVA overlays
-    const fullRedraw = ['img', 'name', 'width', 'height', 'tint', 'actorId', 'actorLink'].some(
-      (r) => changed.has(r)
-    );
-    if (fullRedraw) {
-      reDrawEffectOverlays(token._object ?? token);
+    if ('flags' in change && 'token-variants' in change.flags) {
+      const tokenVariantFlags = change.flags['token-variants'];
+      if ('overlays' in tokenVariantFlags || '-=overlays' in tokenVariantFlags) {
+        reDrawEffectOverlays(token.object);
+      }
     }
 
-    // If there was an image update the user specific image will need to re-applied
-    if (changed.has('img')) {
-      checkAndDisplayUserSpecificImage(token);
-    }
-
-    if (game.userId !== userId) return;
-
-    if (changed.has('hidden')) {
+    if (game.userId === userId && 'hidden' in change) {
       const effects = getEffects(token);
       if (token.inCombat) effects.unshift('token-variants-combat');
+      // if (token.tva_dim) effects.unshift('token-variants-dim');
       if (change.hidden) effects.push('token-variants-visibility');
       updateWithEffectMapping(token, effects, {
-        added: change.hidden ? ['token-variants-visibility'] : [],
-        removed: !change.hidden ? ['token-variants-visibility'] : [],
+        added: change.hidden ? 'token-variants-visibility' : '',
+        removed: !change.hidden ? 'token-variants-visibility' : '',
       });
     }
   });
@@ -509,7 +565,6 @@ async function initialize() {
 }
 
 async function createToken(token, options, userId) {
-  reDrawEffectOverlays(token._object ?? token);
   if (userId && game.user.id != userId) return;
 
   // Check if random search is enabled and if so perform it
@@ -1161,6 +1216,9 @@ async function walkAllPaths(tokens = true) {
 
 async function walkFindImages(path, { apiKey = '' } = {}) {
   let files = {};
+  if (!path.source) {
+    path.source = 'data';
+  }
   try {
     if (path.source.startsWith('s3:')) {
       files = await FilePicker.browse('s3', path.text, {
