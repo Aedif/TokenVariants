@@ -1,5 +1,6 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { cacheImages } from '../token-variants.mjs';
+import ActiveEffectConfigList from './activeEffectConfigList.js';
 
 export default class ConfigureSettings extends FormApplication {
   constructor(
@@ -219,6 +220,15 @@ export default class ConfigureSettings extends FormApplication {
 
     // Static Cache
     html.find('button.token-variants-cache-images').click(() => cacheImages());
+
+    // Global Mappings
+    html.find('button.token-variants-global-mapping').click(() => {
+      console.log('clicked global mappings');
+      const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
+      const data = new foundry.data.TokenData(setting);
+      const token = new TokenDocument(data, { actor: null });
+      new ActiveEffectConfigList(token, true).render(true);
+    });
   }
 
   /**

@@ -125,6 +125,7 @@ export const TVA_CONFIG = {
       4: true,
     },
   },
+  globalMappings: {},
 };
 
 export async function registerSettings() {

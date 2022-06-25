@@ -1,16 +1,19 @@
 import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName, isVideo } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import { TVA_CONFIG } from '../scripts/settings.js';
+import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
-  constructor(token) {
+  constructor(token, globalMappings = false) {
     super({}, {});
 
     this.token = token;
-    this.objectToFlag = game.actors.get(token.actorId);
+    if (globalMappings) {
+      this.globalMappings = deepClone(TVA_CONFIG.globalMappings);
+    }
+    if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
   }
 
   static get defaultOptions() {
@@ -35,7 +38,9 @@ export default class ActiveEffectConfigList extends FormApplication {
     if (this.object.mappings) {
       mappings = this.object.mappings;
     } else {
-      const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
+      const effectMappings = this.globalMappings
+        ? this.globalMappings
+        : this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
       for (const [effectName, attrs] of Object.entries(effectMappings)) {
         if (!attrs.config) attrs.config = {};
         let hasTokenConfig = Object.keys(attrs.config).length;
@@ -202,7 +207,7 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   async _onSaveMappings(event) {
     await this._onSubmit(event);
-    if (this.objectToFlag) {
+    if (this.objectToFlag || this.globalMappings) {
       // First filter out empty mappings
       let mappings = this.object.mappings;
       mappings = mappings.filter(function (mapping) {
@@ -218,7 +223,11 @@ export default class ActiveEffectConfigList extends FormApplication {
       }
 
       // If any mapping are remaining set them as a flag
-      await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+      if (this.globalMappings) {
+        TVA_CONFIG.globalMappings = {};
+      } else {
+        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+      }
       if (mappings.length !== 0) {
         const effectMappings = {};
         for (const mapping of mappings) {
@@ -230,7 +239,11 @@ export default class ActiveEffectConfigList extends FormApplication {
             overlay: mapping.overlay,
           };
         }
-        this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
+        if (this.globalMappings) {
+          updateSettings({ globalMappings: effectMappings });
+        } else {
+          this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
+        }
       }
     }
     this.close();

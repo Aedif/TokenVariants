@@ -41,9 +41,10 @@ export default class TokenCustomConfig extends TokenConfig {
     });
 
     if (this.config) {
-      filtered.flags = this.flags;
-      filtered.tv_script = this.tv_script;
-      if (this.callback) this.callback(expandObject(filtered));
+      let config = expandObject(filtered);
+      config.flags = config.flags ? mergeObject(this.flags || {}, config.flags) : this.flags;
+      config.tv_script = this.tv_script;
+      if (this.callback) this.callback(config);
     } else {
       const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);
       if (this.callback) this.callback(saved);

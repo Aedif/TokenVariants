@@ -550,9 +550,9 @@
             </div>
             <p class="notes">{{localize "token-variants.settings.actor-directory-key.Hint"}}</p>
           </div>
-          {{/if}}
 
           <hr>
+          {{/if}}
 
           <div class="form-group">
             <label>Stack Configurations</label>
@@ -562,7 +562,17 @@
             <p class="notes">Status Effect custom configurations will stack on top of one another instead of overriding each other.</p>
           </div>
 
+          <div class="form-group">
+            <label>Global Effect Configurations</label>
+            <button class="token-variants-global-mapping" type="button">
+                <i class="fas fa-sync-alt"></i>
+                <label>Configs</label>
+            </button>
+            <p class="notes">Configurations to be applied on ALL tokens. Will be overridden by token specific configurations.</p>
+          </div>
+
           <hr>
+
           <div class="form-group">
             <label>Static Cache</label>
             <div class="form-fields">

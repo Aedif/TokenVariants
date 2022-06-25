@@ -112,8 +112,11 @@ async function initialize() {
     const hadActiveHUD = token.hasActiveHUD;
     const toggleStatus =
       canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
-    const mappings =
-      (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings') || {};
+    const mappings = mergeObject(
+      TVA_CONFIG.globalMappings,
+      (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings'),
+      { inplace: false }
+    );
 
     // // Special handling of token-variants-dim effect
     // const dimMapping = mappings['token-variants-dim'];
@@ -277,7 +280,11 @@ async function initialize() {
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
     if (!token || !token.actor) return;
 
-    const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
+    const mappings = mergeObject(
+      TVA_CONFIG.globalMappings,
+      token.actor.getFlag('token-variants', 'effectMappings'),
+      { inplace: false }
+    );
     if (!('token-variants-combat' in mappings)) return;
 
     const effects = getEffects(token);
@@ -293,7 +300,11 @@ async function initialize() {
     const token = combatant._token || canvas.tokens.get(combatant.data.tokenId);
     if (!token || !token.actor) return;
 
-    const mappings = token.actor.getFlag('token-variants', 'effectMappings') || {};
+    const mappings = mergeObject(
+      TVA_CONFIG.globalMappings,
+      token.actor.getFlag('token-variants', 'effectMappings'),
+      { inplace: false }
+    );
     if (!('token-variants-combat' in mappings)) return;
 
     const effects = getEffects(token);
@@ -323,7 +334,11 @@ async function initialize() {
     const label = game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
     const actor = activeEffect.parent;
 
-    const mappings = actor.getFlag('token-variants', 'effectMappings') || {};
+    const mappings = mergeObject(
+      TVA_CONFIG.globalMappings,
+      actor.getFlag('token-variants', 'effectMappings'),
+      { inplace: false }
+    );
     if (label in mappings) {
       const tokens = actor.token
         ? [actor.token]
