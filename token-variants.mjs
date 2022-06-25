@@ -502,6 +502,11 @@ async function initialize() {
             reDrawEffectOverlays(tkn);
           }
         }
+      } else if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
+        const activeTokens = actor.getActiveTokens();
+        for (const tkn of activeTokens) {
+          updateWithEffectMapping(tkn, getEffects(tkn));
+        }
       }
     }
   });

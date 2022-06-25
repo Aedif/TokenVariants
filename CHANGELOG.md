@@ -1,3 +1,16 @@
+# 2.11.0
+
+Misc
+
+- Resolving issues with search path sources not being processed properly
+
+Status Effect Configuration
+
+- Effect mapping changes should no longer require effect re-toggle
+- General fixes to improve how the module handles effect manipulation with linked and unlinked tokens
+- New option: **Overlay**
+  - When checked the selected image will be overlaid on top of the token image
+
 # 2.10.1
 
 - Fixed '**Active Effect Config List**' not opening if a mapping existed on a token prior to **2.10.0**
