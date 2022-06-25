@@ -1,3 +1,10 @@
+# 2.12.0
+
+- New setting: Misc > **Global Effect Configurations**
+  - Provides a means to define custom effect image mappings and configuration for an effect that get applied to ALL tokens.
+  - Token specific mappings will override the global ones
+- Token Configuration fields that apply flags from modules such as **Perfect Vision**'s **Monochrome Vision Color** should now properly save and revert when managing them through the custom effect configurations.
+
 # 2.11.0
 
 Misc

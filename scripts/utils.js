@@ -1,5 +1,6 @@
 import { TVA_CONFIG, updateSettings } from './settings.js';
 import { showArtSelect } from '../token-variants.mjs';
+import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -346,6 +347,24 @@ export function registerKeybinds() {
         });
       }
       if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'openGlobalMappings', {
+    name: 'Open Global Effect Configurations',
+    hint: 'Brings up the settings window for Global Effect Configurations',
+    editable: [
+      {
+        key: 'KeyC',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
+      const data = new foundry.data.TokenData(setting);
+      const token = new TokenDocument(data, { actor: null });
+      new ActiveEffectConfigList(token, true).render(true);
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
