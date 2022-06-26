@@ -1,3 +1,7 @@
+# 2.12.1
+
+- Fixing key bindings becoming unresponsive after Right-clicking images in the Token HUD
+
 # 2.12.0
 
 - New setting: Misc > **Global Effect Configurations**

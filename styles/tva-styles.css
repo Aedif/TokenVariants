@@ -426,6 +426,7 @@ ol.token-variant-table .table-row .effect-config-script.active {
   margin: 0 !important;
   line-height: 0 !important;
   position: relative;
+  display: inline-block;
 }
 
 #tile-hud .token-variants-button-select.hide,

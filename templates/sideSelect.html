@@ -9,8 +9,7 @@
   <div class="token-variants-wrap {{#unless imageDisplay}}list{{/unless}}">
     <input class="token-variants-side-search" type="text" />
     {{#each imagesParsed as |image|}}
-    <button
-      type="button"
+    <div
       class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}"
       data-name="{{image.route}}"
       data-filename="{{image.name}}"
@@ -47,7 +46,7 @@
       {{/if}}
       <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
       <i class="fas fa-cog {{#if image.hasConfig}}active{{/if}}"></i>
-    </button>
+      </div>
     {{/each}}
   </div>
 </div>

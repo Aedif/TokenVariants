@@ -389,7 +389,7 @@ async function _onImageClick(event, tokenId) {
   }
 }
 
-function _onImageRightClick(event, tokenId) {
+async function _onImageRightClick(event, tokenId) {
   let token = canvas.tokens.controlled.find((t) => t.data._id === tokenId);
   if (!token) return;
 
@@ -404,15 +404,13 @@ function _onImageRightClick(event, tokenId) {
       const mappings = token.document.getFlag('token-variants', 'userMappings') || {};
       const name = imgButton.attr('data-filename');
       const [title, style] = genTitleAndStyle(mappings, img, name);
-
       imgButton
         .closest('.token-variants-wrap')
-        .find(`button[data-name='${img}']`)
+        .find(`.token-variants-button-select[data-name='${img}']`)
         .css('box-shadow', style)
         .prop('title', title);
     };
     new UserList(token, imgSrc, regenStyle).render(true);
-    return;
   } else if (token.actor) {
     let tokenActor = game.actors.get(token.actor.id);
     let variants = tokenActor.getFlag('token-variants', 'variants') || [];
