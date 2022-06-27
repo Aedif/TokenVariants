@@ -26,6 +26,7 @@ import {
   parseKeywords,
   tv_executeScript,
   reDrawEffectOverlays,
+  getFilePath,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -883,7 +884,7 @@ function modActorSheet(actorSheet, html, options) {
   }
 }
 
-export async function saveCache() {
+export async function saveCache(cacheFile) {
   const data = { tokenImages: [], tileImages: [] };
 
   for (const img of cachedTokenImages) {
@@ -894,10 +895,10 @@ export async function saveCache() {
     data.tileImages.push([img.path, img.name]);
   }
 
-  let file = new File([JSON.stringify(data)], 'cache.json', {
+  let file = new File([JSON.stringify(data)], getFileNameWithExt(cacheFile), {
     type: 'text/plain',
   });
-  FilePicker.upload('data', 'modules/token-variants/', file);
+  FilePicker.upload('data', getFilePath(cacheFile), file);
 }
 
 async function _readCacheFromFile(fileName) {
@@ -905,21 +906,12 @@ async function _readCacheFromFile(fileName) {
   cachedTileImages = [];
 
   try {
-    await jQuery.getJSON('modules/token-variants/cache.json', (json) => {
-      // Old Cache implementation
-      if (Array.isArray(json)) {
-        if (json[0][0] === 'path' && json[0][1] == 'name') {
-          for (let i = 1; i < json.length; i++) {
-            cachedTokenImages.push({ path: json[i][0], name: json[i][1] });
-          }
-        }
-      } else {
-        for (const img of json.tokenImages) {
-          cachedTokenImages.push({ path: img[0], name: img[1] });
-        }
-        for (const img of json.tileImages) {
-          cachedTileImages.push({ path: img[0], name: img[1] });
-        }
+    await jQuery.getJSON(fileName, (json) => {
+      for (const img of json.tokenImages) {
+        cachedTokenImages.push({ path: img[0], name: img[1] });
+      }
+      for (const img of json.tileImages) {
+        cachedTileImages.push({ path: img[0], name: img[1] });
       }
       if (!TVA_CONFIG.disableNotifs)
         ui.notifications.info(
@@ -932,20 +924,26 @@ async function _readCacheFromFile(fileName) {
     ui.notifications.warn(`Token Variant Art: Static Cache not found`);
     cachedTokenImages = [];
     cachedTileImages = [];
+    return false;
   }
-  caching = false;
+  return true;
 }
 
 /**
  * Search for and cache all the found token art
  */
-export async function cacheImages() {
+export async function cacheImages({
+  staticCache = TVA_CONFIG.staticCache,
+  staticCacheFile = TVA_CONFIG.staticCacheFile,
+} = {}) {
   if (caching) return;
   caching = true;
 
-  if (!initialized && TVA_CONFIG.staticCache) {
-    await _readCacheFromFile();
-    return;
+  if (!initialized && staticCache) {
+    if (await _readCacheFromFile(staticCacheFile)) {
+      caching = false;
+      return;
+    }
   }
 
   if (!TVA_CONFIG.disableNotifs)
@@ -980,8 +978,8 @@ export async function cacheImages() {
       })
     );
 
-  if (initialized && TVA_CONFIG.staticCache && game.user.isGM) {
-    saveCache();
+  if (staticCache && game.user.isGM) {
+    saveCache(staticCacheFile);
   }
 }
 

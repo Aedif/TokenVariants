@@ -442,6 +442,13 @@ export function getFileNameWithExt(path) {
 }
 
 /**
+ * Extract the directory path excluding the file name.
+ */
+export function getFilePath(path) {
+  return decodeURI(path).match(/(.*)[\/\\]/)[1] || '';
+}
+
+/**
  * Simplify name.
  */
 export function simplifyName(name) {

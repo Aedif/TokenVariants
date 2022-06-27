@@ -78,6 +78,7 @@ export const TVA_CONFIG = {
   imgurClientId: '',
   stackStatusConfig: false,
   staticCache: false,
+  staticCacheFile: 'modules/token-variants/token-variants-cache.json',
   tilesEnabled: false,
   compendiumMapper: {
     missingOnly: false,
@@ -148,6 +149,7 @@ export async function registerSettings() {
       // Generate a diff, it will be required when doing post-processing of the modified settings
       const diff = _arrayAwareDiffObject(TVA_CONFIG, val);
 
+      // Check image re-cache required due to permission changes
       let requiresImageCache = false;
       if ('permissions' in diff) {
         if (
@@ -160,7 +162,7 @@ export async function registerSettings() {
       // Update live settings
       mergeObject(TVA_CONFIG, val);
 
-      // Check if any setting need to be parsed post-update
+      // Check image re-cache required due to search path changes
       if ('searchPaths' in diff || 'forgeSearchPaths' in diff) {
         if (userRequiresImageCache(TVA_CONFIG.permissions)) requiresImageCache = true;
       }
@@ -171,7 +173,8 @@ export async function registerSettings() {
       }
 
       if (diff.staticCache) {
-        saveCache();
+        const cacheFile = diff.staticCacheFile ? diff.staticCacheFile : TVA_CONFIG.staticCacheFile;
+        saveCache(cacheFile);
       }
     },
   });
@@ -368,7 +371,6 @@ export async function registerSettings() {
   if (Object.keys(settings).length === 0) {
     await fetchAllSettings();
     const initSettings = deepClone(TVA_CONFIG);
-    delete initSettings.parsedExcludedKeywords;
     game.settings.set('token-variants', 'settings', initSettings);
   } else {
     mergeObject(TVA_CONFIG, settings);
@@ -450,8 +452,6 @@ export async function fetchAllSettings() {
 
 export function exportSettingsToJSON() {
   const settings = deepClone(TVA_CONFIG);
-  delete settings.parsedExcludedKeywords;
-
   const filename = `token-variants-settings.json`;
   saveDataToFile(JSON.stringify(settings, null, 2), 'text/json', filename);
 }
@@ -504,7 +504,6 @@ export async function importSettingsFromJSON(json) {
 
 export async function updateSettings(newSettings) {
   const settings = mergeObject(deepClone(TVA_CONFIG), newSettings);
-  delete settings.parsedExcludedKeywords;
   game.settings.set('token-variants', 'settings', settings);
 }
 

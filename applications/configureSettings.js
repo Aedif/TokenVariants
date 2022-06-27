@@ -135,6 +135,7 @@ export default class ConfigureSettings extends FormApplication {
     data.enableStatusConfig = settings.enableStatusConfig;
     data.disableNotifs = settings.disableNotifs;
     data.staticCache = settings.staticCache;
+    data.staticCacheFile = settings.staticCacheFile;
     data.tilesEnabled = settings.tilesEnabled;
     data.stackStatusConfig = settings.stackStatusConfig;
 
@@ -219,7 +220,12 @@ export default class ConfigureSettings extends FormApplication {
     });
 
     // Static Cache
-    html.find('button.token-variants-cache-images').click(() => cacheImages());
+    html.find('button.token-variants-cache-images').click((event) => {
+      const tab = $(event.target).closest('.tab');
+      const staticOn = tab.find('input[name="staticCache"]');
+      const staticFile = tab.find('input[name="staticCacheFile"]');
+      cacheImages({ staticCache: staticOn.is(':checked'), staticCacheFile: staticFile.val() });
+    });
 
     // Global Mappings
     html.find('button.token-variants-global-mapping').click(() => {
@@ -541,6 +547,7 @@ export default class ConfigureSettings extends FormApplication {
       enableStatusConfig: formData.enableStatusConfig,
       disableNotifs: formData.disableNotifs,
       staticCache: formData.staticCache,
+      staticCacheFile: formData.staticCacheFile,
       tilesEnabled: formData.tilesEnabled,
       stackStatusConfig: formData.stackStatusConfig,
     });

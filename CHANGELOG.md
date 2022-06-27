@@ -1,3 +1,13 @@
+# 2.13.0
+
+Static Cache
+
+- New setting: Misc > **Cache File**
+  - Allows you to specify the path and name of the image cache file
+  - Can be placed outside of the **token-variants** module folder meaning it wont be overwritten upon module update
+- If cache file is not found during world load the module will no longer fail the caching operation and instead re-cache and create a new file
+- **Cache Images** button will now use the static settings as they are currently entered, not how they are saved
+
 # 2.12.1
 
 - Fixing key bindings becoming unresponsive after Right-clicking images in the Token HUD
