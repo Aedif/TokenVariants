@@ -1,4 +1,4 @@
-import { TVA_CONFIG, updateSettings } from './settings.js';
+import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js';
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 
@@ -19,19 +19,19 @@ export const PRESSED_KEYS = {
 
 const BATCH_UPDATES = {
   TOKEN: [],
-  TOKEN_CALLBACK: null,
+  TOKEN_CALLBACKS: [],
   ACTOR: [],
   ACTOR_CONTEXT: null,
 };
 
 export function startBatchUpdater() {
   canvas.app.ticker.add(() => {
-    if (BATCH_UPDATES.TOKEN.length !== 0) {
+    if (BATCH_UPDATES.TOKEN.length) {
       canvas.scene.updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN).then(() => {
-        if (BATCH_UPDATES.TOKEN_CALLBACK) {
-          BATCH_UPDATES.TOKEN_CALLBACK();
-          BATCH_UPDATES.TOKEN_CALLBACK = null;
+        for (const cb of BATCH_UPDATES.TOKEN_CALLBACKS) {
+          cb();
         }
+        BATCH_UPDATES.TOKEN_CALLBACKS = [];
       });
       BATCH_UPDATES.TOKEN = [];
     }
@@ -48,7 +48,7 @@ export function startBatchUpdater() {
 export function queueTokenUpdate(id, update, callback = null) {
   update._id = id;
   BATCH_UPDATES.TOKEN.push(update);
-  if (callback) BATCH_UPDATES.TOKEN_CALLBACK = callback;
+  if (callback) BATCH_UPDATES.TOKEN_CALLBACKS.push(callback);
 }
 
 export function queueActorUpdate(id, update, context = null) {
@@ -945,4 +945,19 @@ export function inDimLight(token) {
 
   const tolerance = Math.min(token.w, token.h) / 4;
   return !tva_testInBrightVision(token.center, { tolerance, object: token });
+}
+
+export async function setEffectMappingsFlag(actor, mappings) {
+  const currentMappings = actor.getFlag('token-variants', 'effectMappings');
+  if (!currentMappings) {
+    actor.setFlag('token-variants', 'effectMappings', mappings);
+  } else {
+    const keys = Object.keys(currentMappings);
+    for (const key of keys) {
+      if (!(key in mappings)) {
+        mappings['-=' + key] = null;
+      }
+    }
+    actor.update({ flags: { 'token-variants': { effectMappings: mappings } } });
+  }
 }

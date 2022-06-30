@@ -66,6 +66,14 @@ function disablePopupForType(actor) {
   return TVA_CONFIG.popup[`${actor.type}Disable`] ?? false;
 }
 
+function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {
+  if (hadActiveHUD) {
+    canvas.tokens.hud.bind(token);
+    if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
+  }
+  scripts.forEach((scr) => tv_executeScript(scr.script, { token: scr.token }));
+}
+
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -93,7 +101,8 @@ async function initialize() {
       });
     } else {
       (actor.data.effects || []).forEach((activeEffect, id) => {
-        if (!activeEffect.data.disabled) effects.push(activeEffect.data.label);
+        if (!activeEffect.data.disabled && !activeEffect.isSuppressed)
+          effects.push(activeEffect.data.label);
       });
     }
 
@@ -103,7 +112,7 @@ async function initialize() {
   const updateWithEffectMapping = async function (
     token,
     effects,
-    { added = '', removed = '' } = {}
+    { added = [], removed = [] } = {}
   ) {
     token = token._object ? token._object : token;
     const tokenImgName =
@@ -139,13 +148,13 @@ async function initialize() {
 
     // Accumulate all scripts that will need to be run after the update
     const executeOnCallback = [];
-    if (added) {
-      const onApply = mappings[added]?.config?.tv_script?.onApply;
-      if (onApply) executeOnCallback.push(() => tv_executeScript(onApply, { token: token }));
+    for (const ef of added) {
+      const onApply = mappings[ef]?.config?.tv_script?.onApply;
+      if (onApply) executeOnCallback.push({ script: onApply, token: token });
     }
-    if (removed) {
-      const onRemove = mappings[removed]?.config?.tv_script?.onRemove;
-      if (onRemove) executeOnCallback.push(() => tv_executeScript(onRemove, { token: token }));
+    for (const ef of removed) {
+      const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
+      if (onRemove) executeOnCallback.push({ script: onRemove, token: token });
     }
 
     // Next we're going to determine what configs need to be applied and in what order
@@ -221,18 +230,17 @@ async function initialize() {
           imgName: tokenImgName,
         };
       }
-
       await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : token.data.img, {
         token: token,
         imgName: newImg.imgName ? newImg.imgName : tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: () => {
-          if (hadActiveHUD) {
-            canvas.tokens.hud.bind(token._object || token);
-            if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-          }
-          executeOnCallback.forEach((fn) => fn());
-        },
+        callback: postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
         config: config,
       });
     }
@@ -247,13 +255,13 @@ async function initialize() {
         token: token,
         imgName: tokenDefaultImg.imgName,
         tokenUpdate: tokenUpdateObj,
-        callback: () => {
-          if (hadActiveHUD) {
-            canvas.tokens.hud.bind(token._object || token);
-            if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-          }
-          executeOnCallback.forEach((fn) => fn());
-        },
+        callback: postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
       });
       // If no default image exists but a custom effect is applied, we still want to perform an update to
       // clear it
@@ -265,13 +273,13 @@ async function initialize() {
         token: token,
         imgName: tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: () => {
-          if (hadActiveHUD) {
-            canvas.tokens.hud.bind(token._object || token);
-            if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-          }
-          executeOnCallback.forEach((fn) => fn());
-        },
+        callback: postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
       });
     }
   };
@@ -293,7 +301,7 @@ async function initialize() {
     // if (token.tva_dim) effects.push('token-variants-dim');
     effects.push('token-variants-combat');
     updateWithEffectMapping(token, effects, {
-      added: 'token-variants-combat',
+      added: ['token-variants-combat'],
     });
   });
 
@@ -311,7 +319,7 @@ async function initialize() {
     const effects = getEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     await updateWithEffectMapping(token, effects, {
-      removed: 'token-variants-combat',
+      removed: ['token-variants-combat'],
     });
   };
 
@@ -331,16 +339,13 @@ async function initialize() {
   // Handle image updates for Active Effects applied to Tokens WITH Linked Actors
   //
 
-  let updateImageOnEffectChange = async function (activeEffect, added = true) {
-    const label = game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
-    const actor = activeEffect.parent;
-
+  let updateImageOnEffectChange = async function (effectName, actor, added = true) {
     const mappings = mergeObject(
       TVA_CONFIG.globalMappings,
       actor.getFlag('token-variants', 'effectMappings'),
       { inplace: false }
     );
-    if (label in mappings) {
+    if (effectName in mappings) {
       const tokens = actor.token
         ? [actor.token]
         : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
@@ -349,8 +354,34 @@ async function initialize() {
         if (token.inCombat) effects.unshift('token-variants-combat');
         if (token.data.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
-          added: added ? label : '',
-          removed: !added ? label : '',
+          added: added ? [effectName] : [],
+          removed: !added ? [effectName] : [],
+        });
+      }
+    }
+  };
+
+  let updateImageOnMultiEffectChange = async function (actor, added = [], removed = []) {
+    if (!actor) return;
+    const mappings = mergeObject(
+      TVA_CONFIG.globalMappings,
+      actor.getFlag('token-variants', 'effectMappings'),
+      { inplace: false }
+    );
+    if (
+      added.filter((ef) => ef in mappings).length ||
+      removed.filter((ef) => ef in mappings).length
+    ) {
+      const tokens = actor.token
+        ? [actor.token]
+        : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
+      for (const token of tokens) {
+        const effects = getEffects(token);
+        if (token.inCombat) effects.unshift('token-variants-combat');
+        if (token.data.hidden) effects.unshift('token-variants-visibility');
+        await updateWithEffectMapping(token, effects, {
+          added: added,
+          removed: removed,
         });
       }
     }
@@ -358,19 +389,41 @@ async function initialize() {
 
   Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
     if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
-    updateImageOnEffectChange(activeEffect, true);
+    const effectName = game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
+    updateImageOnEffectChange(effectName, activeEffect.parent, true);
   });
 
   Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
     if (!activeEffect.parent || activeEffect.data.disabled || game.userId !== userId) return;
-    updateImageOnEffectChange(activeEffect, false);
+    const effectName = game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
+    updateImageOnEffectChange(effectName, activeEffect.parent, false);
   });
 
   Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
     if (!activeEffect.parent || game.userId !== userId) return;
 
     if ('disabled' in change || 'label' in change) {
-      updateImageOnEffectChange(activeEffect, !activeEffect.data.disabled);
+      const effectName =
+        game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
+      updateImageOnEffectChange(effectName, activeEffect.parent, !activeEffect.data.disabled);
+    }
+  });
+
+  // Status Effects can be applied "stealthily" on item equip/un-equip
+  Hooks.on('updateItem', (item, change, options) => {
+    if (item.parent && 'equipped' in change.data && item.effects && item.effects.size) {
+      const added = [];
+      const removed = [];
+      item.effects.forEach((effect) => {
+        if (!effect.data.disabled) {
+          if (change.data.equipped) added.push(effect.data.label);
+          else removed.push(effect.data.label);
+        }
+      });
+
+      if (added.length || removed.length) {
+        updateImageOnMultiEffectChange(item.parent, added, removed);
+      }
     }
   });
 
@@ -378,27 +431,22 @@ async function initialize() {
   // PF2e hooks
   //
 
-  Hooks.on('createItem', (condition, options, userId) => {
-    if (
-      game.system.id !== 'pf2e' ||
-      condition.data.type !== 'condition' ||
-      !condition.parent ||
-      game.userId !== userId
-    )
-      return;
-    updateImageOnEffectChange(condition, true);
+  Hooks.on('createItem', (item, options, userId) => {
+    if (game.userId !== userId) return;
+    if (game.system.id !== 'pf2e' || item.data.type !== 'condition' || !item.parent) return;
+    updateImageOnEffectChange(item.data.name, item.parent, true);
   });
 
-  Hooks.on('deleteItem', (condition, options, userId) => {
+  Hooks.on('deleteItem', (item, options, userId) => {
     if (
       game.system.id !== 'pf2e' ||
-      condition.type !== 'condition' ||
-      !condition.parent ||
-      condition.data.disabled ||
+      item.type !== 'condition' ||
+      !item.parent ||
+      item.data.disabled ||
       game.userId !== userId
     )
       return;
-    updateImageOnEffectChange(condition, false);
+    updateImageOnEffectChange(item.data.name, item.parent, false);
   });
 
   //
@@ -417,7 +465,7 @@ async function initialize() {
         return getEffectsFromActor(token.actor);
       } else {
         return (token.data.actorData?.effects || [])
-          .filter((ef) => !ef.disabled)
+          .filter((ef) => !ef.disabled || !ef.isSuppressed)
           .map((ef) => ef.label);
       }
     }
@@ -518,10 +566,14 @@ async function initialize() {
             reDrawEffectOverlays(tkn);
           }
         }
-      } else if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
-        const activeTokens = actor.getActiveTokens();
-        for (const tkn of activeTokens) {
-          updateWithEffectMapping(tkn, getEffects(tkn));
+      }
+      if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
+        const tokens = actor.token
+          ? [actor.token]
+          : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
+        const effects = getEffectsFromActor(actor);
+        for (const tkn of tokens) {
+          updateWithEffectMapping(tkn, effects);
         }
       }
     }
@@ -541,8 +593,8 @@ async function initialize() {
       // if (token.tva_dim) effects.unshift('token-variants-dim');
       if (change.hidden) effects.push('token-variants-visibility');
       updateWithEffectMapping(token, effects, {
-        added: change.hidden ? 'token-variants-visibility' : '',
-        removed: !change.hidden ? 'token-variants-visibility' : '',
+        added: change.hidden ? ['token-variants-visibility'] : [],
+        removed: !change.hidden ? ['token-variants-visibility'] : [],
       });
     }
   });

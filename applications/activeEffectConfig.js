@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo, setEffectMappingsFlag } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -169,10 +169,9 @@ export default class ActiveEffectConfig extends FormApplication {
   async _onRemove(event) {
     if (this.objectToFlag) {
       const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings');
-      if (effectMappings) {
+      if (effectMappings && this.effectName in effectMappings) {
         delete effectMappings[this.effectName];
-        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
-        this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
+        setEffectMappingsFlag(this.objectToFlag, effectMappings);
       }
     }
     this.close();
@@ -190,8 +189,7 @@ export default class ActiveEffectConfig extends FormApplication {
         formData.config = this.config;
         const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
         effectMappings[this.effectName] = formData;
-        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
-        this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
+        setEffectMappingsFlag(this.objectToFlag, effectMappings);
       }
     }
   }

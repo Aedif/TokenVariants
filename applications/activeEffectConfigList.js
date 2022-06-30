@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo, setEffectMappingsFlag } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -225,8 +225,6 @@ export default class ActiveEffectConfigList extends FormApplication {
       // If any mapping are remaining set them as a flag
       if (this.globalMappings) {
         TVA_CONFIG.globalMappings = {};
-      } else {
-        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
       }
       if (mappings.length !== 0) {
         const effectMappings = {};
@@ -242,8 +240,10 @@ export default class ActiveEffectConfigList extends FormApplication {
         if (this.globalMappings) {
           updateSettings({ globalMappings: effectMappings });
         } else {
-          this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
+          setEffectMappingsFlag(this.objectToFlag, effectMappings);
         }
+      } else if (!this.globalMappings) {
+        this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
       }
     }
     this.close();
