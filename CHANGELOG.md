@@ -1,3 +1,7 @@
+# 2.14.1
+
+- Fixed effects on unlinked actors being inappropriately read as enabled
+
 # 2.14.0
 
 - Equipping items with effects should now properly apply custom configurations setup via the module

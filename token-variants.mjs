@@ -465,7 +465,7 @@ async function initialize() {
         return getEffectsFromActor(token.actor);
       } else {
         return (token.data.actorData?.effects || [])
-          .filter((ef) => !ef.disabled || !ef.isSuppressed)
+          .filter((ef) => !ef.disabled && !ef.isSuppressed)
           .map((ef) => ef.label);
       }
     }
