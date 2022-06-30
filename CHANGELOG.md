@@ -1,3 +1,9 @@
+# 2.14.0
+
+- Equipping items with effects should now properly apply custom configurations setup via the module
+- Fixed scripts attached to effects not running in some cases when multiple tokens were updated at the same time
+- Fixed token image flickering when updating custom configurations that are already applied to tokens
+
 # 2.13.0
 
 Static Cache
