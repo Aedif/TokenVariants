@@ -462,14 +462,21 @@ ol.token-variant-table .table-row .effect-config-script.active {
   opacity: 1;
 }
 
-#tile-hud .token-variants-side-search,
-#token-hud .token-variants-side-search {
+#tile-hud .token-variants-context-menu,
+#token-hud .token-variants-context-menu {
   display: none;
 }
 
-#tile-hud .token-variants-side-search.active,
-#token-hud .token-variants-side-search.active {
+#tile-hud .token-variants-context-menu.active,
+#token-hud .token-variants-context-menu.active {
   display: block;
+}
+
+#token-hud .token-variants-context-menu > button {
+  width: 48%;
+  background-color: rgb(28, 28, 28, 0.7);
+  color: white;
+  border-color: black;
 }
 
 #tile-hud .token-variants-button-select:hover .token-variants-button-image,

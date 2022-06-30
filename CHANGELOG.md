@@ -1,6 +1,13 @@
+# 2.15.0
+
+- Right-click on the Token HUD button will now display additional controls bellow the search box
+  - **Flags**: Opens a window to set overrides for Randomization and Pop-ups.
+  - **FilePicker**: Opens Foundry's Directory Browser allowing you to select an image directory that will be displayed on the Token HUD
+    - These images can be **Shared** and interacted with as usual
+
 # 2.14.1
 
-- Fixed effects on unlinked actors being inappropriately read as enabled
+- Fixed effects on unlinked tokens being inappropriately read as enabled
 
 # 2.14.0
 

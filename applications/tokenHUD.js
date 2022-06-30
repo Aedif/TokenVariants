@@ -16,7 +16,7 @@ import UserList from './userList.js';
 import TokenFlags from './tokenFlags.js';
 
 // not call if still caching
-export async function renderHud(hud, html, token, searchText = '') {
+export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
   const hudSettings = TVA_CONFIG.hud;
   const worldHudSettings = TVA_CONFIG.worldHud;
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
@@ -89,96 +89,101 @@ export async function renderHud(hud, html, token, searchText = '') {
     if (tokenActor && tokenActor.data.token.randomImg) return;
   }
 
-  const search = searchText ? searchText : token.name;
-  if (!search || search.length < 3) return;
-
-  const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
-
-  let artSearch = noSearch
-    ? null
-    : await doImageSearch(search, {
-        searchType: SEARCH_TYPE.TOKEN,
-        searchOptions: { keywordSearch: worldHudSettings.includeKeywords },
-      });
-
-  // Merge full search, and keywords into a single array
   let images = [];
-  if (artSearch) {
-    artSearch.forEach((results) => {
-      images.push(...results);
-    });
-  }
-
   let actorVariants = [];
+  if (!fp_files) {
+    const search = searchText ? searchText : token.name;
+    if (!search || search.length < 3) return;
 
-  if (tokenActor) {
-    actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
+    const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
 
-    // To maintain compatibility with previous versions
-    if (!(actorVariants instanceof Array)) {
-      actorVariants = [];
-    } else if (actorVariants.length != 0 && !(actorVariants[0] instanceof Object)) {
-      actorVariants.forEach((src, i) => {
-        actorVariants[i] = { imgSrc: src, names: [getFileName(src)] };
+    let artSearch = noSearch
+      ? null
+      : await doImageSearch(search, {
+          searchType: SEARCH_TYPE.TOKEN,
+          searchOptions: { keywordSearch: worldHudSettings.includeKeywords },
+        });
+
+    // Merge full search, and keywords into a single array
+    if (artSearch) {
+      artSearch.forEach((results) => {
+        images.push(...results);
       });
     }
-    // end of compatibility code
 
-    if (!searchText) {
-      const mergeImages = function (imgArr) {
-        imgArr.forEach((variant) => {
-          for (const name of variant.names) {
-            if (!images.find((obj) => obj.path === variant.imgSrc && obj.name === name)) {
-              images.unshift({ path: variant.imgSrc, name: name });
-            }
-          }
+    if (tokenActor) {
+      actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
+
+      // To maintain compatibility with previous versions
+      if (!(actorVariants instanceof Array)) {
+        actorVariants = [];
+      } else if (actorVariants.length != 0 && !(actorVariants[0] instanceof Object)) {
+        actorVariants.forEach((src, i) => {
+          actorVariants[i] = { imgSrc: src, names: [getFileName(src)] };
         });
-      };
+      }
+      // end of compatibility code
 
-      // Merge images found through search, with variants shared through 'variant' flag
-      mergeImages(actorVariants);
-
-      // Merge wildcard images
-      if (worldHudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
-        const protoImg = tokenActor.data.token.img;
-        if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
-          // Modified version of Actor.getTokenImages()
-          const getTokenImages = async () => {
-            if (tokenActor._tokenImages) return tokenActor._tokenImages;
-
-            let source = 'data';
-            let pattern = tokenActor.data.token.img;
-            const browseOptions = { wildcard: true };
-
-            // Support non-user sources
-            if (/\.s3\./.test(pattern)) {
-              source = 's3';
-              const { bucket, keyPrefix } = FilePicker.parseS3URL(pattern);
-              if (bucket) {
-                browseOptions.bucket = bucket;
-                pattern = keyPrefix;
+      if (!searchText) {
+        const mergeImages = function (imgArr) {
+          imgArr.forEach((variant) => {
+            for (const name of variant.names) {
+              if (!images.find((obj) => obj.path === variant.imgSrc && obj.name === name)) {
+                images.unshift({ path: variant.imgSrc, name: name });
               }
-            } else if (pattern.startsWith('icons/')) source = 'public';
-
-            // Retrieve wildcard content
-            try {
-              const content = await FilePicker.browse(source, pattern, browseOptions);
-              tokenActor._tokenImages = content.files;
-            } catch (err) {
-              tokenActor._tokenImages = [];
             }
-            return tokenActor._tokenImages;
-          };
+          });
+        };
 
-          const wildcardImages = (await getTokenImages())
-            .filter((img) => !img.includes('*'))
-            .map((variant) => {
-              return { imgSrc: variant, names: [getFileName(variant)] };
-            });
-          mergeImages(wildcardImages);
+        // Merge images found through search, with variants shared through 'variant' flag
+        mergeImages(actorVariants);
+
+        // Merge wildcard images
+        if (worldHudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
+          const protoImg = tokenActor.data.token.img;
+          if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
+            // Modified version of Actor.getTokenImages()
+            const getTokenImages = async () => {
+              if (tokenActor._tokenImages) return tokenActor._tokenImages;
+
+              let source = 'data';
+              let pattern = tokenActor.data.token.img;
+              const browseOptions = { wildcard: true };
+
+              // Support non-user sources
+              if (/\.s3\./.test(pattern)) {
+                source = 's3';
+                const { bucket, keyPrefix } = FilePicker.parseS3URL(pattern);
+                if (bucket) {
+                  browseOptions.bucket = bucket;
+                  pattern = keyPrefix;
+                }
+              } else if (pattern.startsWith('icons/')) source = 'public';
+
+              // Retrieve wildcard content
+              try {
+                const content = await FilePicker.browse(source, pattern, browseOptions);
+                tokenActor._tokenImages = content.files;
+              } catch (err) {
+                tokenActor._tokenImages = [];
+              }
+              return tokenActor._tokenImages;
+            };
+
+            const wildcardImages = (await getTokenImages())
+              .filter((img) => !img.includes('*'))
+              .map((variant) => {
+                return { imgSrc: variant, names: [getFileName(variant)] };
+              });
+            mergeImages(wildcardImages);
+          }
         }
       }
     }
+  } else {
+    images = fp_files.map((f) => {
+      return { path: f, name: getFileName(f) };
+    });
   }
 
   // If no images have been found check if the HUD button should be displayed regardless
@@ -243,6 +248,7 @@ export async function renderHud(hud, html, token, searchText = '') {
     imagesParsed,
     imageDisplay,
     imageOpacity,
+    tokenHud: true,
   });
 
   let divR = html.find('div.right').append(sideSelect);
@@ -251,9 +257,31 @@ export async function renderHud(hud, html, token, searchText = '') {
   divR.find('#token-variants-side-button').click((event) => _onSideButtonClick(event, token._id));
   divR.click(_deactiveTokenVariantsSideSelector);
   divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));
-  divR
+  const contextMenu = divR.find('.token-variants-context-menu');
+  contextMenu
     .find('.token-variants-side-search')
     .on('keyup', (event) => _onImageSearchKeyUp(event, hud, html, token));
+  contextMenu.find('.flags').click(() => {
+    const tkn = canvas.tokens.get(token._id);
+    if (tkn) {
+      new TokenFlags(tkn).render(true);
+    }
+  });
+  contextMenu.find('.file-picker').click((event) => {
+    new FilePicker({
+      type: 'folder',
+      callback: (path, fp) => {
+        let files = fp.result.files.filter((f) => isImage(f) || isVideo(f));
+        if (files.length) {
+          $(event.target)
+            .closest('.control-icon[data-action="token-variants-side-selector"]')
+            .remove();
+          html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
+          renderHud(hud, html, token, '', files);
+        }
+      },
+    }).render(true);
+  });
   if (FULL_ACCESS) {
     divR.find('#token-variants-side-button').on('contextmenu', _onSideButtonRightClick);
     divR
@@ -261,22 +289,14 @@ export async function renderHud(hud, html, token, searchText = '') {
       .on('contextmenu', (event) => _onImageRightClick(event, token._id));
   }
 
-  // If renderHud is being called from text box search the side menu should be enabled by default
-  if (searchText) {
+  // If renderHud is being called from text box or FilePicker search the side menu should be enabled by default
+  if (searchText || fp_files) {
     divR.find('#token-variants-side-button').parent().addClass('active');
     divR.find('.token-variants-wrap').addClass('active');
   }
 }
 
 function _onSideButtonClick(event, tokenId) {
-  if (game.user.isGM && keyPressed('config')) {
-    const token = canvas.tokens.get(tokenId);
-    if (token) {
-      new TokenFlags(token).render(true);
-    }
-    return;
-  }
-
   // De-activate 'Status Effects'
   const is080 = !isNewerVersion('0.8.0', game.version ?? game.data.version);
   const variantsControlIcon = $(event.target.parentElement);
@@ -304,15 +324,15 @@ function _onSideButtonRightClick(event) {
   }
 
   // Display/hide buttons and search input
-  const sideSearch = $(event.target)
+  const contextMenu = $(event.target)
     .closest('div.control-icon')
-    .find('.token-variants-side-search');
+    .find('.token-variants-context-menu');
   const buttons = $(event.target).closest('div.control-icon').find('.token-variants-button-select');
-  if (sideSearch.hasClass('active')) {
-    sideSearch.removeClass('active');
+  if (contextMenu.hasClass('active')) {
+    contextMenu.removeClass('active');
     buttons.removeClass('hide');
   } else {
-    sideSearch.addClass('active');
+    contextMenu.addClass('active');
     buttons.addClass('hide');
   }
 }

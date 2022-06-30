@@ -7,15 +7,26 @@
     title="{{localize token-variants.windows.art-select.select-variant}}"
   />
   <div class="token-variants-wrap {{#unless imageDisplay}}list{{/unless}}">
-    <input class="token-variants-side-search" type="text" />
+    <div class="token-variants-context-menu">
+      <input class="token-variants-side-search" type="text" />
+      {{#if tokenHud}}
+      <button class="flags" type="button">
+        <i class="fab fa-font-awesome-flag"></i>
+        <label>Flags</label>
+      </button>
+      <button class="file-picker" type="button">
+        <i class="fas fa-file-import fa-fw"></i>
+        <label>FilePicker</label>
+      </button>
+      {{/if}}
+    </div>
     {{#each imagesParsed as |image|}}
     <div
       class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}"
       data-name="{{image.route}}"
       data-filename="{{image.name}}"
       title="{{#if image.unknownType}}{{image.route}}{{else}}{{image.title}}{{/if}}"
-      style="{{image.style}}"
-    >
+      style="{{image.style}}">
       {{#if ../imageDisplay}}
         {{#if image.img}}
         <img

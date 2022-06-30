@@ -164,15 +164,15 @@ function _onSideButtonRightClick(event) {
   }
 
   // Display/hide buttons and search input
-  const sideSearch = $(event.target)
+  const contextMenu = $(event.target)
     .closest('div.control-icon')
-    .find('.token-variants-side-search');
+    .find('.token-variants-context-menu');
   const buttons = $(event.target).closest('div.control-icon').find('.token-variants-button-select');
-  if (sideSearch.hasClass('active')) {
-    sideSearch.removeClass('active');
+  if (contextMenu.hasClass('active')) {
+    contextMenu.removeClass('active');
     buttons.removeClass('hide');
   } else {
-    sideSearch.addClass('active');
+    contextMenu.addClass('active');
     buttons.addClass('hide');
   }
 }
