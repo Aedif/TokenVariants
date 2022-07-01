@@ -1,3 +1,10 @@
+# 2.15.1
+
+Status Effect Configuration
+
+- Active Effect renaming while applied to a token will be treated as removal of the original name of the effect and addition of the new name
+- PF2e: Toggling of both conditions and effects should now be picked up by the module
+
 # 2.15.0
 
 - Right-click on the Token HUD button will now display additional controls bellow the search box

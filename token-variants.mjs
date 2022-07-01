@@ -399,18 +399,62 @@ async function initialize() {
     updateImageOnEffectChange(effectName, activeEffect.parent, false);
   });
 
-  Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
+  Hooks.on('preUpdateActiveEffect', (activeEffect, change, options, userId) => {
     if (!activeEffect.parent || game.userId !== userId) return;
 
-    if ('disabled' in change || 'label' in change) {
-      const effectName =
-        game.system.id === 'pf2e' ? activeEffect.data.name : activeEffect.data.label;
-      updateImageOnEffectChange(effectName, activeEffect.parent, !activeEffect.data.disabled);
+    if ('label' in change) {
+      options['token-variants-old-name'] = activeEffect.data.label;
     }
   });
 
-  // Status Effects can be applied "stealthily" on item equip/un-equip
-  Hooks.on('updateItem', (item, change, options) => {
+  Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
+    if (!activeEffect.parent || game.userId !== userId) return;
+
+    const added = [];
+    const removed = [];
+
+    if ('disabled' in change) {
+      if (change.disabled) removed.push(activeEffect.data.label);
+      else added.push(activeEffect.data.label);
+    }
+    if ('label' in change) {
+      removed.push(options['token-variants-old-name']);
+      added.push(change.label);
+    }
+
+    if (added.length || removed.length) {
+      updateImageOnMultiEffectChange(activeEffect.parent, added, removed);
+    }
+  });
+
+  // Want to track condition/effect previous name so that the config can be reverted for it
+  Hooks.on('preUpdateItem', (item, change, options, userId) => {
+    if (
+      game.user.id === userId &&
+      game.system.id === 'pf2e' &&
+      ['condition', 'effect'].includes(item.type) &&
+      'name' in change
+    ) {
+      options['token-variants-old-name'] = item.data.name;
+    }
+  });
+
+  Hooks.on('updateItem', (item, change, options, userId) => {
+    // Handle condition/effect name change
+    if (
+      game.user.id === userId &&
+      game.system.id === 'pf2e' &&
+      ['condition', 'effect'].includes(item.type) &&
+      'name' in change
+    ) {
+      updateImageOnMultiEffectChange(
+        item.parent,
+        [change.name],
+        [options['token-variants-old-name']]
+      );
+    }
+
+    // Status Effects can be applied "stealthily" on item equip/un-equip
     if (item.parent && 'equipped' in change.data && item.effects && item.effects.size) {
       const added = [];
       const removed = [];
@@ -433,14 +477,19 @@ async function initialize() {
 
   Hooks.on('createItem', (item, options, userId) => {
     if (game.userId !== userId) return;
-    if (game.system.id !== 'pf2e' || item.data.type !== 'condition' || !item.parent) return;
+    if (
+      game.system.id !== 'pf2e' ||
+      !['condition', 'effect'].includes(item.data.type) ||
+      !item.parent
+    )
+      return;
     updateImageOnEffectChange(item.data.name, item.parent, true);
   });
 
   Hooks.on('deleteItem', (item, options, userId) => {
     if (
       game.system.id !== 'pf2e' ||
-      item.type !== 'condition' ||
+      !['condition', 'effect'].includes(item.data.type) ||
       !item.parent ||
       item.data.disabled ||
       game.userId !== userId
