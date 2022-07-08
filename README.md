@@ -250,7 +250,7 @@ Parameters:
 - **\{object\}** Options which customize the search
 
   - \{Function[]\} [callback] Function to be called with the user selected image path
-  - \{SEARCH_TYPE|string\} [searchType] (token|portrait|both|tile) Controls filters applied to the search results
+  - \{SEARCH_TYPE|string\} [searchType] Controls filters applied to the search results
   - \{object\} [options.searchOptions] Override for the [Search Algorithm Settings](#search-algorithm-settings). See [searchOptions](#object-searchoptions)
   - \{Token|Actor\} [object] Token/Actor used when displaying Custom Token Config prompt
   - \{boolean\} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
@@ -268,7 +268,7 @@ Parameters:
 
 - **\{string\}** **search**: Text to be used as the search criteria
 - **\{object\}** Options which customize the search
-  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
+  - \{SEARCH_TYPE|string\} [options.searchType] Controls filters applied to the search results
   - \{Boolean\} [options.simpleResults] Results will be returned as an array of all image paths found
   - \{Boolean\} [options.callback] Function to be called with the found images
   - \{object\} [options.searchOptions] See [searchOptions](#object-searchoptions)
@@ -287,7 +287,7 @@ Parameters:
 
 - **\{string\}** **search**: Text to be used as the search criteria
 - **\{object\}** Options which customize the search
-  - \{SEARCH_TYPE|string\} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
+  - \{SEARCH_TYPE|string\} [options.searchType] Controls filters applied to the search results
   - \{Actor\} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
   - \{Function[]\} [options.callback] Function to be called with the random image
   - \{object\} [options.searchOptions] See [searchOptions](#object-searchoptions)

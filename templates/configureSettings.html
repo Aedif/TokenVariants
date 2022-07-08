@@ -24,10 +24,8 @@
                   </div>
                   <div class="path-source"><label>Source</label></div>
                   <div class="path-text"><label>Path</label></div>
+                  <div class="path-types"><label>Category</label></div>
                   <div class="path-cache"><label>Cache</label></div>
-                  {{#if tilesEnabled}}
-                  <div class="path-tiles"><label>Tiles</label></div>
-                  {{/if}}
                   <div class="path-controls"></div>
                 </li>
           
@@ -47,14 +45,13 @@
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                   </div>
+                  <div class="path-types">
+                    <a class="select-types" title="Select image categories"><i class="fas fa-swatchbook"></i></a>
+                    <input type="hidden" name="searchPaths.{{index}}.types" value="{{path.types}}">
+                  </div>
                   <div class="path-cache">
                     <input type="checkbox" name="searchPaths.{{index}}.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>
                   </div>
-                  {{#if ../tilesEnabled}}
-                  <div class="path-tiles">
-                    <input type="checkbox" name="searchPaths.{{index}}.tiles" data-dtype="Boolean" {{#if path.tiles}}checked{{/if}}/>
-                  </div>
-                  {{/if}}
                   <div class="path-controls">
                     <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
                   </div>
@@ -74,66 +71,30 @@
         <!-- SEARCH FILTERS -->
         {{#if enabledTabs.searchFilters}}
         <div class="tab" data-tab="searchFilters" data-group="primary-tabs">
-          <label>{{localize "token-variants.settings.search-filters.window.portrait-filter.Name"}}</label>
+          <p class="notes">Define filters for each image category. Images will be limited to files that include/exclude these pieces of text or match a regular expression.</p>
+
+          <hr>
+
+          {{#each searchFilters}}
+          <label><b>{{this.label}}</b></label>
           <div class="form-group">
-              <label>{{localize "token-variants.common.include"}}</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.portraitFilterInclude" value="{{searchFilters.portraitFilterInclude}}" data-dtype="String">
-              </div>
-              &nbsp;&nbsp;
-              <label>{{localize "token-variants.common.exclude"}}</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.portraitFilterExclude" value="{{searchFilters.portraitFilterExclude}}" data-dtype="String">
-              </div>
-              &nbsp;&nbsp;
-              <label>RegEx</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.portraitFilterRegex" value="{{searchFilters.portraitFilterRegex}}" data-dtype="String">
-              </div>
-              <p class="notes">{{localize "token-variants.settings.search-filters.window.portrait-filter.Hint"}}</p>
+            <label>{{localize "token-variants.common.include"}}</label>
+            <div class="form-fields">
+                <input type="text" name="searchFilters.{{@key}}.include" value="{{this.include}}" data-dtype="String">
+            </div>
+            &nbsp;&nbsp;
+            <label>{{localize "token-variants.common.exclude"}}</label>
+            <div class="form-fields">
+                <input type="text" name="searchFilters.{{@key}}.exclude" value="{{this.exclude}}" data-dtype="String">
+            </div>
+            &nbsp;&nbsp;
+            <label>RegEx</label>
+            <div class="form-fields">
+                <input class="filterRegex" type="text" name="searchFilters.{{@key}}.regex" value="{{this.regex}}" data-dtype="String">
+            </div>
           </div>
-      
           <hr />
-      
-          <label>{{localize "token-variants.settings.search-filters.window.token-filter.Name"}}</label>
-          <div class="form-group">
-              <label>{{localize "token-variants.common.include"}}</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.tokenFilterInclude" value="{{searchFilters.tokenFilterInclude}}" data-dtype="String">
-              </div>
-              &nbsp;&nbsp;
-              <label>{{localize "token-variants.common.exclude"}}</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.tokenFilterExclude" value="{{searchFilters.tokenFilterExclude}}" data-dtype="String">
-              </div>
-              &nbsp;&nbsp;
-              <label>RegEx</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.tokenFilterRegex" value="{{searchFilters.tokenFilterRegex}}" data-dtype="String">
-              </div>
-              <p class="notes">{{localize "token-variants.settings.search-filters.window.token-filter.Hint"}}</p>
-          </div>
-      
-          <hr />
-      
-          <label>{{localize "token-variants.settings.search-filters.window.general-filter.Name"}}</label>
-          <div class="form-group">
-              <label>{{localize "token-variants.common.include"}}</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.generalFilterInclude" value="{{searchFilters.generalFilterInclude}}" data-dtype="String">
-              </div>
-              &nbsp;&nbsp;
-              <label>{{localize "token-variants.common.exclude"}}</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.generalFilterExclude" value="{{searchFilters.generalFilterExclude}}" data-dtype="String">
-              </div>
-              &nbsp;&nbsp;
-              <label>RegEx</label>
-              <div class="form-fields">
-                  <input type="text" name="searchFilters.generalFilterRegex" value="{{searchFilters.generalFilterRegex}}" data-dtype="String">
-              </div>
-              <p class="notes">{{localize "token-variants.settings.search-filters.window.general-filter.Hint"}}</p>
-          </div>
+          {{/each}}
         </div>
         {{/if}}
 
@@ -621,6 +582,16 @@
               <input type="text" name="imgurClientId" data-dtype="String" value="{{imgurClientId}}">
             </div>
             <p class="notes">{{localize "token-variants.settings.imgur-client-id.Hint"}}</p>
+          </div>
+
+          <hr>
+
+          <div class="form-group">
+            <label>Custom Image Categories</label>
+            <div class="form-fields">
+              <input type="text" name="customImageCategories" data-dtype="String" value="{{customImageCategories}}" placeholder="e.g. Dragons,Vampires">
+            </div>
+            <p class="notes">Additional types that will be used by the module to group images on.</p>
           </div>
         </div>
         {{/if}}

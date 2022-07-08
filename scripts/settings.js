@@ -14,6 +14,7 @@ export const TVA_CONFIG = {
       text: 'modules/caeora-maps-tokens-assets/assets/tokens',
       cache: true,
       source: typeof ForgeAPI === 'undefined' ? 'data' : 'forge-bazaar',
+      types: ['token'],
     },
   ],
   forgeSearchPaths: {},
@@ -36,17 +37,7 @@ export const TVA_CONFIG = {
   excludedKeywords: 'and,for',
   actorDirectoryKey: 'Control',
   runSearchOnPath: false,
-  searchFilters: {
-    portraitFilterInclude: '',
-    portraitFilterExclude: '',
-    portraitFilterRegex: '',
-    tokenFilterInclude: '',
-    tokenFilterExclude: '',
-    tokenFilterRegex: '',
-    generalFilterInclude: '',
-    generalFilterExclude: '',
-    generalFilterRegex: '',
-  },
+  searchFilters: {},
   algorithm: {
     exact: true,
     fuzzy: false,
@@ -127,6 +118,7 @@ export const TVA_CONFIG = {
     },
   },
   globalMappings: {},
+  customImageCategories: [],
 };
 
 export async function registerSettings() {
@@ -148,6 +140,7 @@ export async function registerSettings() {
     onChange: async (val) => {
       // Generate a diff, it will be required when doing post-processing of the modified settings
       const diff = _arrayAwareDiffObject(TVA_CONFIG, val);
+      console.log(diff);
 
       // Check image re-cache required due to permission changes
       let requiresImageCache = false;
@@ -402,13 +395,58 @@ export async function registerSettings() {
         p.source = 'data';
       }
     }
+    if (!p.types) {
+      if (p.tiles) p.types = ['tile'];
+      else p.types = ['token'];
+    }
     return p;
   });
+
+  // 07/07/2022 Convert filters to new format if old one is still in use
+  if (TVA_CONFIG.searchFilters.portraitFilterInclude != null) {
+    const filters = TVA_CONFIG.searchFilters;
+    TVA_CONFIG.searchFilters = {
+      portrait: {
+        include: filters.portraitFilterInclude,
+        exclude: filters.portraitFilterExclude,
+        regex: filters.portraitFilterRegex,
+      },
+      token: {
+        include: filters.tokenFilterInclude,
+        exclude: filters.tokenFilterExclude,
+        regex: filters.tokenFilterRegex,
+      },
+      portraitAndToken: {
+        include: filters.generalFilterInclude,
+        exclude: filters.generalFilterExclude,
+        regex: filters.generalFilterRegex,
+      },
+      tile: {
+        include: '',
+        exclude: '',
+        regex: '',
+      },
+      item: {
+        include: '',
+        exclude: '',
+        regex: '',
+      },
+      journal: {
+        include: '',
+        exclude: '',
+        regex: '',
+      },
+    };
+  }
 
   for (let uid in TVA_CONFIG.forgeSearchPaths) {
     TVA_CONFIG.forgeSearchPaths[uid].paths = TVA_CONFIG.forgeSearchPaths[uid].paths.map((p) => {
       if (!p.source) {
         p.source = 'forgevtt';
+      }
+      if (!p.types) {
+        if (p.tiles) p.types = ['tile'];
+        else p.types = ['token'];
       }
       return p;
     });
@@ -485,6 +523,11 @@ export async function importSettingsFromJSON(json) {
         } else {
           p.source = 'data';
         }
+
+        if (!p.types) {
+          if (p.tiles) p.types = ['tile'];
+          else p.types = ['token'];
+        }
       }
       return p;
     });
@@ -499,11 +542,69 @@ export async function importSettingsFromJSON(json) {
       });
     }
 
+  // 07/07/2022 Convert filters to new format if old one is still in use
+  if (json.searchFilters && json.searchFilters.portraitFilterInclude != null) {
+    const filters = json.searchFilters;
+    json.searchFilters = {
+      portrait: {
+        include: filters.portraitFilterInclude ?? '',
+        exclude: filters.portraitFilterExclude ?? '',
+        regex: filters.portraitFilterRegex ?? '',
+      },
+      token: {
+        include: filters.tokenFilterInclude ?? '',
+        exclude: filters.tokenFilterExclude ?? '',
+        regex: filters.tokenFilterRegex ?? '',
+      },
+      portraitAndToken: {
+        include: filters.generalFilterInclude ?? '',
+        exclude: filters.generalFilterExclude ?? '',
+        regex: filters.generalFilterRegex ?? '',
+      },
+      tile: {
+        include: '',
+        exclude: '',
+        regex: '',
+      },
+      item: {
+        include: '',
+        exclude: '',
+        regex: '',
+      },
+      journal: {
+        include: '',
+        exclude: '',
+        regex: '',
+      },
+    };
+  }
+
   updateSettings(json);
 }
 
 export async function updateSettings(newSettings) {
   const settings = mergeObject(deepClone(TVA_CONFIG), newSettings);
+
+  // Custom image categories might have changed, meaning we may have filters that are no longer relevant
+  // or need to be added
+  const categories = ['token', 'portrait', 'portraitAndToken', 'item', 'journal', 'tile'].concat(
+    settings.customImageCategories
+  );
+  for (const filter in settings.searchFilters) {
+    if (!categories.includes(filter)) delete settings.searchFilters[filter];
+  }
+  settings.customImageCategories.forEach((type) => {
+    if (settings.searchFilters[type] == null) {
+      settings.searchFilters[type] = {
+        include: '',
+        exclude: '',
+        regex: '',
+      };
+    }
+  });
+
+  console.log(settings);
+
   game.settings.set('token-variants', 'settings', settings);
 }
 

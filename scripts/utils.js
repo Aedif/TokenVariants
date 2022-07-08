@@ -8,8 +8,10 @@ const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 export const SEARCH_TYPE = {
   PORTRAIT: 'portrait',
   TOKEN: 'token',
-  BOTH: 'both',
+  PORTRAIT_AND_TOKEN: 'portraitAndToken',
   TILE: 'tile',
+  ITEM: 'item',
+  JOURNAL: 'journal',
 };
 
 export const PRESSED_KEYS = {
@@ -342,7 +344,7 @@ export function registerKeybinds() {
               token: token,
             });
           },
-          searchType: SEARCH_TYPE.BOTH,
+          searchType: SEARCH_TYPE.PORTRAIT_AND_TOKEN,
           object: token,
         });
       }
@@ -531,35 +533,17 @@ export async function callForgeVTT(path, apiKey) {
 export function getFilters(searchType, filters) {
   // Select filters based on type of search
   filters = filters ? filters : TVA_CONFIG.searchFilters;
-  switch (searchType) {
-    case SEARCH_TYPE.BOTH:
-      filters = {
-        include: filters.generalFilterInclude,
-        exclude: filters.generalFilterExclude,
-        regex: filters.generalFilterRegex,
-      };
-      break;
-    case SEARCH_TYPE.PORTRAIT:
-      filters = {
-        include: filters.portraitFilterInclude,
-        exclude: filters.portraitFilterExclude,
-        regex: filters.portraitFilterRegex,
-      };
-      break;
-    case SEARCH_TYPE.TOKEN:
-      filters = {
-        include: filters.tokenFilterInclude,
-        exclude: filters.tokenFilterExclude,
-        regex: filters.tokenFilterRegex,
-      };
-      break;
-    default:
-      filters = {
-        include: '',
-        exclude: '',
-        regex: '',
-      };
+
+  if (filters[searchType]) {
+    filters = filters[searchType];
+  } else {
+    filters = {
+      include: '',
+      exclude: '',
+      regex: '',
+    };
   }
+
   if (filters.regex) filters.regex = new RegExp(filters.regex);
   return filters;
 }

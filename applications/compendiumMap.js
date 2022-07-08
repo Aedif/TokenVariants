@@ -43,7 +43,7 @@ async function autoApply(actor, image1, image2, formData) {
     }
   } else {
     let results = await doImageSearch(actor.data.name, {
-      searchType: SEARCH_TYPE.BOTH,
+      searchType: SEARCH_TYPE.PORTRAIT_AND_TOKEN,
       simpleResults: true,
       searchOptions: formData.searchOptions,
     });
@@ -117,7 +117,7 @@ function addToArtSelectQueue(actor, image1, image2, formData) {
     }
   } else {
     addToQueue(actor.data.name, {
-      searchType: SEARCH_TYPE.BOTH,
+      searchType: SEARCH_TYPE.PORTRAIT_AND_TOKEN,
       object: actor,
       image1: image1,
       image2: image2,
@@ -161,8 +161,8 @@ export default class CompendiumMapConfig extends FormApplication {
 
     const packs = [];
     game.packs.forEach((pack) => {
-      if (pack.documentName === 'Actor' && !pack.locked) {
-        packs.push({ title: pack.title, id: pack.collection });
+      if (!pack.locked) {
+        packs.push({ title: pack.title, id: pack.collection, type: pack.documentName });
       }
     });
     data.compendiums = packs;
@@ -218,34 +218,47 @@ export default class CompendiumMapConfig extends FormApplication {
 
     const compendium = game.packs.get(formData.compendium);
 
-    const processItem = async function (item) {
-      const actor = await compendium.getDocument(item._id);
+    console.log(compendium);
 
-      let hasPortrait = actor.img !== CONST.DEFAULT_TOKEN;
-      let hasToken = actor.data.token.img !== CONST.DEFAULT_TOKEN;
-      if (formData.syncImages && hasPortrait !== hasToken) {
-        if (hasPortrait) {
-          await updateTokenImage(actor.img, { actor: actor });
-        } else {
-          await updateActorImage(actor, actor.data.token.img);
+    let processItem;
+    if (compendium.documentName === 'Actor') {
+      processItem = async function (item) {
+        const actor = await compendium.getDocument(item._id);
+
+        let hasPortrait = actor.img !== CONST.DEFAULT_TOKEN;
+        let hasToken = actor.data.token.img !== CONST.DEFAULT_TOKEN;
+        if (formData.syncImages && hasPortrait !== hasToken) {
+          if (hasPortrait) {
+            await updateTokenImage(actor.img, { actor: actor });
+          } else {
+            await updateActorImage(actor, actor.data.token.img);
+          }
+          hasPortrait = hasToken = true;
         }
-        hasPortrait = hasToken = true;
-      }
 
-      let includeThisActor = !(formData.missingOnly && hasPortrait) && !formData.ignorePortrait;
-      let includeThisToken = !(formData.missingOnly && hasToken) && !formData.ignoreToken;
+        let includeThisActor = !(formData.missingOnly && hasPortrait) && !formData.ignorePortrait;
+        let includeThisToken = !(formData.missingOnly && hasToken) && !formData.ignoreToken;
 
-      const image1 = formData.showImages ? actor.img : '';
-      const image2 = formData.showImages ? actor.data.token.img : '';
+        const image1 = formData.showImages ? actor.img : '';
+        const image2 = formData.showImages ? actor.data.token.img : '';
 
-      if (includeThisActor || includeThisToken) {
-        if (formData.autoApply) {
-          await autoApply(actor, image1, image2, formData);
-        } else {
-          addToArtSelectQueue(actor, image1, image2, formData);
+        if (includeThisActor || includeThisToken) {
+          if (formData.autoApply) {
+            await autoApply(actor, image1, image2, formData);
+          } else {
+            addToArtSelectQueue(actor, image1, image2, formData);
+          }
         }
-      }
-    };
+      };
+    } else {
+      processItem = async function (item) {
+        const doc = await compendium.getDocument(item._id);
+
+        console.log('processing item', doc, doc.data.DEFAULT_ICON);
+
+        // const hasImage = doc.img !== CONST.DEF;
+      };
+    }
 
     const allItems = [];
     compendium.index.forEach((k) => {

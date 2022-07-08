@@ -39,12 +39,11 @@ let initialized = false;
 // True if in the middle of caching image paths
 let caching = false;
 
-// A cached map of all the found tokens/portraits
-let cachedTokenImages = [];
-let cachedTileImages = [];
+// Caches of all images found
+let CACHED_IMAGES = {};
 
 // To track images found during image search
-let foundImages = [];
+let FOUND_IMAGES = {};
 
 // showArtSelect(...) can take a while to fully execute and it is possible for it to be called
 // multiple times in very quick succession especially if copy pasting tokens or importing actors.
@@ -455,7 +454,13 @@ async function initialize() {
     }
 
     // Status Effects can be applied "stealthily" on item equip/un-equip
-    if (item.parent && 'equipped' in change.data && item.effects && item.effects.size) {
+    if (
+      item.parent &&
+      change.data &&
+      'equipped' in change.data &&
+      item.effects &&
+      item.effects.size
+    ) {
       const added = [];
       const removed = [];
       item.effects.forEach((effect) => {
@@ -679,6 +684,8 @@ async function initialize() {
   Hooks.on('renderTokenConfig', modTokenConfig);
   Hooks.on('renderTileConfig', modTileConfig);
   Hooks.on('renderActorSheet', modActorSheet);
+  Hooks.on('renderItemSheet', modItemSheet);
+  Hooks.on('renderJournalSheet', modJournalSheet);
 
   Hooks.on('renderTokenHUD', renderHud);
   Hooks.on('renderTileHUD', renderTileHUD);
@@ -787,7 +794,7 @@ async function createToken(token, options, userId) {
         });
       }
     },
-    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
+    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.PORTRAIT_AND_TOKEN,
     object: token,
     preventClose: TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog,
   });
@@ -861,7 +868,7 @@ async function createActor(actor, options, userId) {
         });
       }
     },
-    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.BOTH,
+    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.PORTRAIT_AND_TOKEN,
     object: actor,
     preventClose: TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog,
   });
@@ -985,15 +992,39 @@ function modActorSheet(actorSheet, html, options) {
   }
 }
 
+function modItemSheet(itemSheet, html, options) {
+  $(html)
+    .find('img.profile')
+    .on('contextmenu', () => {
+      const item = itemSheet.object;
+      if (!item) return;
+      showArtSelect(item.name, {
+        searchType: SEARCH_TYPE.ITEM,
+        callback: (imgSrc) => item.update({ img: imgSrc }),
+      });
+    });
+}
+
+function modJournalSheet(journalSheet, html, options) {
+  $(html)
+    .find('.header-button.entry-image')
+    .on('contextmenu', () => {
+      const journal = journalSheet.object;
+      if (!journal) return;
+      showArtSelect(journal.name, {
+        searchType: SEARCH_TYPE.JOURNAL,
+        callback: (imgSrc) => journal.update({ img: imgSrc }),
+      });
+    });
+}
+
 export async function saveCache(cacheFile) {
-  const data = { tokenImages: [], tileImages: [] };
+  const data = {};
 
-  for (const img of cachedTokenImages) {
-    data.tokenImages.push([img.path, img.name]);
-  }
-
-  for (const img of cachedTileImages) {
-    data.tileImages.push([img.path, img.name]);
+  const caches = Object.keys(CACHED_IMAGES);
+  for (const c of caches) {
+    if (!(c in data)) data[c] = [];
+    data[c].push([img.path, img.name]);
   }
 
   let file = new File([JSON.stringify(data)], getFileNameWithExt(cacheFile), {
@@ -1003,28 +1034,34 @@ export async function saveCache(cacheFile) {
 }
 
 async function _readCacheFromFile(fileName) {
-  cachedTokenImages = [];
-  cachedTileImages = [];
-
+  CACHED_IMAGES = {};
   try {
     await jQuery.getJSON(fileName, (json) => {
-      for (const img of json.tokenImages) {
-        cachedTokenImages.push({ path: img[0], name: img[1] });
-      }
-      for (const img of json.tileImages) {
-        cachedTileImages.push({ path: img[0], name: img[1] });
+      for (let category in json) {
+        // Old version cache support
+        if (category === 'tokenImages') {
+          category = 'token';
+          json[category] = json[tokenImages];
+        } else if (category === 'tileImages') {
+          category = 'tile';
+          json[category] = json.tileImages;
+        }
+
+        for (const img of json[category]) {
+          CACHED_IMAGES[category].push({ path: img[0], name: img[1] });
+        }
       }
       if (!TVA_CONFIG.disableNotifs)
         ui.notifications.info(
-          `Token Variant Art: Using Static Cache (${
-            cachedTokenImages.length + cachedTileImages.length
-          } images)`
+          `Token Variant Art: Using Static Cache (${Object.keys(CACHED_IMAGES).reduce(
+            (count, c) => count + CACHED_IMAGES[c].length,
+            0
+          )} images)`
         );
     });
   } catch (error) {
     ui.notifications.warn(`Token Variant Art: Static Cache not found`);
-    cachedTokenImages = [];
-    cachedTileImages = [];
+    CACHED_IMAGES = {};
     return false;
   }
   return true;
@@ -1051,31 +1088,19 @@ export async function cacheImages({
     ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
   if (TVA_CONFIG.debug) console.log('STARTING: Token Caching');
-  cachedTokenImages = [];
+  await walkAllPaths();
+  CACHED_IMAGES = FOUND_IMAGES;
 
-  const sOptions = getSearchOptions();
-  await findTokensExact('', '', sOptions);
-  cachedTokenImages = foundImages;
-
-  foundImages = [];
   if (TVA_CONFIG.debug) console.log('ENDING: Token Caching');
-
-  if (TVA_CONFIG.tilesEnabled) {
-    if (TVA_CONFIG.debug) console.log('STARTING: Tile Caching');
-    cachedTileImages = [];
-
-    await findTilesExact('', sOptions);
-    cachedTileImages = foundImages;
-
-    foundImages = [];
-    if (TVA_CONFIG.debug) console.log('ENDING: Tile Caching');
-  }
 
   caching = false;
   if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(
       game.i18n.format('token-variants.notifications.info.caching-finished', {
-        imageCount: cachedTileImages.length + cachedTokenImages.length,
+        imageCount: Object.keys(CACHED_IMAGES).reduce(
+          (count, types) => count + CACHED_IMAGES[types].length,
+          0
+        ),
       })
     );
 
@@ -1127,123 +1152,80 @@ function imagePassesFilter(imageName, imagePath, filters, runSearchOnPath) {
 
 async function findImages(name, searchType = '', searchOptions = {}) {
   const sOptions = mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
-  if (searchType === SEARCH_TYPE.TILE) {
-    if (sOptions.algorithm.exact) {
-      return findTilesExact(name, sOptions);
-    } else {
-      return findTilesFuzzy(name, sOptions);
-    }
+  if (sOptions.algorithm.exact) {
+    return findImagesExact(name, searchType, sOptions);
   } else {
-    if (sOptions.algorithm.exact) {
-      return findTokensExact(name, searchType, sOptions);
-    } else {
-      return findTokensFuzzy(name, searchType, sOptions);
-    }
+    return findImagesFuzzy(name, searchType, sOptions);
   }
 }
 
-async function findTilesExact(name, searchOptions) {
-  if (TVA_CONFIG.debug) console.log('STARTING: Exact Tile Search', name, caching);
+function imageTypeBasedOnSearchType(searchType) {
+  if (
+    !searchType ||
+    [SEARCH_TYPE.TOKEN, SEARCH_TYPE.PORTRAIT, SEARCH_TYPE.PORTRAIT_AND_TOKEN].includes(searchType)
+  )
+    return 'token';
+  return searchType;
+}
 
-  foundImages = [];
+async function findImagesExact(name, searchType, searchOptions) {
+  if (TVA_CONFIG.debug)
+    console.log('STARTING: Exact Image Search', name, searchType, searchOptions);
 
-  await walkAllPaths(false);
+  await walkAllPaths(searchType);
 
   const simpleName = simplifyName(name);
-  foundImages = foundImages.filter((pathObj) =>
-    exactSearchMatchesImage(
-      simpleName,
-      pathObj.path,
-      pathObj.name,
-      null,
-      searchOptions.runSearchOnPath
-    )
-  );
+  const imageType = imageTypeBasedOnSearchType(searchType);
+  const filters = getFilters(searchType, searchOptions.searchFilters);
 
-  cachedTileImages.forEach((pathObj) => {
-    if (
-      exactSearchMatchesImage(
-        simpleName,
-        pathObj.path,
-        pathObj.name,
-        null,
-        searchOptions.runSearchOnPath
-      )
-    )
-      foundImages.push(pathObj);
-  });
+  const matchedImages = [];
 
-  if (TVA_CONFIG.debug) console.log('ENDING: Exact Tile Search', foundImages);
-  return foundImages;
-}
-
-async function findTilesFuzzy(name, searchOptions) {
-  if (TVA_CONFIG.debug) console.log('STARTING: Fuzzy Tile Search', name, caching, searchOptions);
-
-  let allPaths;
-  if (multiSearch) {
-    allPaths = cachedTileImages.filter((imgObj) => !usedImages.has(imgObj));
-  } else {
-    allPaths = [...cachedTileImages];
-  }
-
-  foundImages = [];
-  await walkAllPaths(false);
-
-  allPaths = allPaths.concat(foundImages);
-
-  const fuse = new Fuse(allPaths, {
-    keys: [searchOptions.runSearchOnPath ? 'path' : 'name'],
-    includeScore: true,
-    includeMatches: true,
-    minMatchCharLength: 1,
-    ignoreLocation: true,
-    threshold: searchOptions.algorithm.fuzzyThreshold,
-  });
-
-  const results = fuse.search(name).slice(0, searchOptions.algorithm.fuzzyLimit);
-
-  foundImages = results.map((r) => {
-    r.item.indices = r.matches[0].indices;
-    r.item.score = r.score;
-    return r.item;
-  });
-
-  if (TVA_CONFIG.debug) console.log('ENDING: Fuzzy Tile Search', foundImages);
-
-  return foundImages;
-}
-
-export async function findTokensFuzzy(name, searchType, searchOptions, forceSearchName = false) {
-  if (TVA_CONFIG.debug)
-    console.log('STARTING: Fuzzy Token Search', name, searchType, caching, searchOptions);
-
-  // Select filters based on type of search
-  let filters = getFilters(searchType, searchOptions.searchFilters);
-
-  let allPaths;
-  if (multiSearch) {
-    allPaths = cachedTokenImages.filter(
-      (imgObj) =>
-        !usedImages.has(imgObj) &&
-        imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
-    );
-  } else {
-    allPaths = cachedTokenImages.filter((imgObj) =>
-      imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
-    );
-  }
-
-  foundImages = [];
-  await walkAllPaths();
-
-  foundImages.forEach((imgObj) => {
-    if (imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)) {
-      allPaths.push(imgObj);
+  for (const container of [FOUND_IMAGES, CACHED_IMAGES]) {
+    for (const typeKey in container) {
+      const types = typeKey.split(',');
+      if (types.contains(imageType)) {
+        for (const imgOBj of FOUND_IMAGES[typeKey]) {
+          if (
+            exactSearchMatchesImage(
+              simpleName,
+              imgOBj.path,
+              imgOBj.name,
+              filters,
+              searchOptions.runSearchOnPath
+            )
+          ) {
+            matchedImages.push(imgOBj);
+          }
+        }
+      }
     }
-  });
+  }
 
-  const fuse = new Fuse(allPaths, {
+  if (TVA_CONFIG.debug) console.log('ENDING: Exact Tile Search', matchedImages);
+  return matchedImages;
+}
+
+export async function findImagesFuzzy(name, searchType, searchOptions, forceSearchName = false) {
+  if (TVA_CONFIG.debug)
+    console.log('STARTING: Fuzzy Image Search', name, searchType, searchOptions, forceSearchName);
+
+  const filters = getFilters(searchType, searchOptions.searchFilters);
+  const imageType = imageTypeBasedOnSearchType(searchType);
+
+  // let allPaths;
+  // if (multiSearch) {
+  //   allPaths = CACHED_IMAGES[imageType].filter(
+  //     (imgObj) =>
+  //       !usedImages.has(imgObj) &&
+  //       imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
+  //   );
+  // } else {
+  //   allPaths = CACHED_IMAGES[imageType].filter((imgObj) =>
+  //     imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
+  //   );
+  // }
+
+  const fuse = new Fuse([], {
     keys: [!forceSearchName && searchOptions.runSearchOnPath ? 'path' : 'name'],
     includeScore: true,
     includeMatches: true,
@@ -1252,84 +1234,79 @@ export async function findTokensFuzzy(name, searchType, searchOptions, forceSear
     threshold: searchOptions.algorithm.fuzzyThreshold,
   });
 
-  const results = fuse.search(name).slice(0, searchOptions.algorithm.fuzzyLimit);
+  await walkAllPaths(searchType);
 
-  foundImages = results.map((r) => {
+  for (const container of [CACHED_IMAGES, FOUND_IMAGES]) {
+    for (const typeKey in container) {
+      const types = typeKey.split(',');
+      if (types.includes(imageType)) {
+        for (const imgObj of CACHED_IMAGES[typeKey]) {
+          if (imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)) {
+            fuse.add(imgObj);
+          }
+        }
+      }
+    }
+  }
+
+  let results = fuse.search(name).slice(0, searchOptions.algorithm.fuzzyLimit);
+
+  results = results.map((r) => {
     r.item.indices = r.matches[0].indices;
     r.item.score = r.score;
     return r.item;
   });
 
-  if (TVA_CONFIG.debug) console.log('ENDING: Fuzzy Token Search', foundImages);
+  if (TVA_CONFIG.debug) console.log('ENDING: Fuzzy Image Search', results);
 
-  return foundImages;
+  return results;
 }
 
-/**
- * Search for tokens matching the supplied name
- */
-async function findTokensExact(name, searchType, searchOptions = {}) {
-  if (TVA_CONFIG.debug) console.log('STARTING: Exact Token Search', name, searchType, caching);
-
-  foundImages = [];
-
-  await walkAllPaths();
-
-  const simpleName = simplifyName(name);
-  const filters = getFilters(searchType, searchOptions.searchFilters);
-  foundImages = foundImages.filter((pathObj) =>
-    exactSearchMatchesImage(
-      simpleName,
-      pathObj.path,
-      pathObj.name,
-      filters,
-      searchOptions.runSearchOnPath
-    )
-  );
-
-  cachedTokenImages.forEach((pathObj) => {
+function filterPathsByType(paths, searchType) {
+  if (!searchType) return paths;
+  return paths.filter((p) => {
     if (
-      exactSearchMatchesImage(
-        simpleName,
-        pathObj.path,
-        pathObj.name,
-        filters,
-        searchOptions.runSearchOnPath
-      )
-    )
-      foundImages.push(pathObj);
+      [SEARCH_TYPE.TOKEN, SEARCH_TYPE.PORTRAIT, SEARCH_TYPE.PORTRAIT_AND_TOKEN].includes(searchType)
+    ) {
+      return p.types.includes('token');
+    } else {
+      return p.types.includes(searchType);
+    }
   });
-
-  if (TVA_CONFIG.debug) console.log('ENDING: Exact Token Search', foundImages);
-  return foundImages;
 }
 
-async function walkAllPaths(tokens = true) {
-  for (const path of TVA_CONFIG.searchPaths) {
-    if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-      if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
-    }
+async function walkAllPaths(searchType) {
+  FOUND_IMAGES = {};
+  const paths = filterPathsByType(TVA_CONFIG.searchPaths, searchType);
+
+  for (const path of paths) {
+    if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
   }
 
   // ForgeVTT specific path handling
   const userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : '';
   for (const uid in TVA_CONFIG.forgeSearchPaths) {
-    let apiKey = TVA_CONFIG.forgeSearchPaths[uid].apiKey;
+    const apiKey = TVA_CONFIG.forgeSearchPaths[uid].apiKey;
+    const paths = filterPathsByType(TVA_CONFIG.forgeSearchPaths[uid].paths, searchType);
     if (uid === userId) {
-      for (const path of TVA_CONFIG.forgeSearchPaths[uid].paths) {
-        if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-          if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
-        }
+      for (const path of paths) {
+        if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
       }
     } else if (apiKey) {
-      for (const path of TVA_CONFIG.forgeSearchPaths[uid].paths) {
-        if ((tokens && !path.tiles) || (!tokens && path.tiles)) {
-          if ((path.cache && caching) || (!path.cache && !caching)) {
-            if (path.share) await walkFindImages(path, { apiKey: apiKey });
-          }
+      for (const path of paths) {
+        if ((path.cache && caching) || (!path.cache && !caching)) {
+          if (path.share) await walkFindImages(path, { apiKey: apiKey });
         }
       }
     }
+  }
+}
+
+function addToFound(img, typeKey) {
+  if (FOUND_IMAGES[typeKey] == null) {
+    FOUND_IMAGES[typeKey] = [img];
+  } else {
+    FOUND_IMAGES[typeKey].push(img);
   }
 }
 
@@ -1338,6 +1315,7 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
   if (!path.source) {
     path.source = 'data';
   }
+  const typeKey = path.types.sort().join(',');
   try {
     if (path.source.startsWith('s3:')) {
       files = await FilePicker.browse('s3', path.text, {
@@ -1367,9 +1345,8 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
             return;
           }
           result.data.images.forEach((img) => {
-            const path = img.link;
             const rtName = img.title ?? img.description ?? getFileName(img.link);
-            foundImages.push({ path: path, name: rtName });
+            addToFound({ path: img.link, name: rtName }, typeKey);
           });
         })
         .catch((error) => console.log('Token Variant Art: ', error));
@@ -1384,9 +1361,9 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
         );
       } else {
         for (let baseTableData of table.data.results) {
-          const path = baseTableData.data.img;
-          const rtName = baseTableData.data.text || getFileName(path);
-          foundImages.push({ path: path, name: rtName });
+          const rtPath = baseTableData.data.img;
+          const rtName = baseTableData.data.text || getFileName(rtPath);
+          addToFound({ path: rtPath, name: rtName }, typeKey);
         }
       }
       return;
@@ -1406,14 +1383,17 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
 
   if (files.files) {
     files.files.forEach((tokenSrc) => {
-      foundImages.push({ path: tokenSrc, name: getFileName(tokenSrc) });
+      addToFound({ path: tokenSrc, name: getFileName(tokenSrc) }, typeKey);
     });
   }
 
   if (path.source.startsWith('forgevtt') || path.source.startsWith('forge-bazaar')) return;
 
   for (let f_dir of files.dirs) {
-    await walkFindImages({ text: f_dir, source: path.source }, { apiKey: apiKey });
+    await walkFindImages(
+      { text: f_dir, source: path.source, types: path.types },
+      { apiKey: apiKey }
+    );
   }
 }
 
@@ -1422,7 +1402,7 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
  * @param {string} search The text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
  * @param {Function[]} [options.callback] Function to be called with the user selected image path
- * @param {SEARCH_TYPE|string} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
+ * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
  * @param {Token|Actor} [options.object] Token/Actor used when displaying Custom Token Config prompt
  * @param {boolean} [options.force] If true will always override the current Art Select window if one exists instead of adding it to the queue
  * @param {object} [options.searchOptions] Override search and filter settings
@@ -1431,7 +1411,7 @@ export async function showArtSelect(
   search,
   {
     callback = null,
-    searchType = SEARCH_TYPE.BOTH,
+    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
     object = null,
     force = false,
     preventClose = false,
@@ -1475,7 +1455,12 @@ export async function showArtSelect(
 
 async function _randSearchUtil(
   search,
-  { searchType = SEARCH_TYPE.BOTH, actor = null, randomizerOptions = {}, searchOptions = {} } = {}
+  {
+    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+    actor = null,
+    randomizerOptions = {},
+    searchOptions = {},
+  } = {}
 ) {
   const randSettings = mergeObject(randomizerOptions, TVA_CONFIG.randomizer, { overwrite: false });
   if (!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return null;
@@ -1538,7 +1523,7 @@ async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, ac
 /**
  * @param {*} search Text to be used as the search criteria
  * @param {object} [options={}] Options which customize the search
- * @param {SEARCH_TYPE|string} [options.searchType] (token|portrait|both|tile) Controls filters applied to the search results
+ * @param {SEARCH_TYPE|string} [options.searchType] Controls filters applied to the search results
  * @param {Actor} [options.actor] Used to retrieve 'shared' images from if enabled in the Randomizer Settings
  * @param {Function[]} [options.callback] Function to be called with the random image
  * @param {object} [options.searchOptions] Override search settings
@@ -1548,7 +1533,7 @@ async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, ac
 async function doRandomSearch(
   search,
   {
-    searchType = SEARCH_TYPE.BOTH,
+    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
     actor = null,
     callback = null,
     randomizerOptions = {},
@@ -1591,7 +1576,12 @@ async function doRandomSearch(
  */
 export async function doImageSearch(
   search,
-  { searchType = SEARCH_TYPE.BOTH, simpleResults = false, callback = null, searchOptions = {} } = {}
+  {
+    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+    simpleResults = false,
+    callback = null,
+    searchOptions = {},
+  } = {}
 ) {
   if (caching) return;
 
@@ -1608,7 +1598,7 @@ export async function doImageSearch(
   if (searchOptions.keywordSearch) {
     searches = searches.concat(
       search
-        .split(/\W/)
+        .split(/[_\- :,\|\(\)\[\]]/)
         .filter((word) => word.length > 2 && !keywords.includes(word.toLowerCase()))
         .reverse()
     );
@@ -1701,18 +1691,19 @@ Hooks.once('ready', initialize);
 Hooks.on('init', function () {
   registerKeybinds();
 
-  // Kepping the old caching function name for the API
-  const cacheTokens = () => cacheImages();
+  const getCache = () => {
+    return CACHED_IMAGES;
+  };
 
   game.modules.get('token-variants').api = {
     cacheImages,
-    cacheTokens,
     doImageSearch,
     doRandomSearch,
     showArtSelect,
     updateTokenImage,
     exportSettingsToJSON,
     TVA_CONFIG,
+    getCache,
   };
 });
 

@@ -12,6 +12,7 @@
 }
 
 .token-variants-popup-settings li.setting .form-fields {
+  display: flex;
   justify-content: space-around;
 }
 
@@ -300,7 +301,7 @@ ol.token-variant-table .table-row .path-text {
   flex: 1;
 }
 ol.token-variant-table .table-row .path-cache,
-ol.token-variant-table .table-row .path-tiles {
+ol.token-variant-table .table-row .path-types {
   flex: 0 0 50px;
   text-align: center;
 }

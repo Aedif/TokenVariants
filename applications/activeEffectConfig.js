@@ -5,7 +5,7 @@ import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 
-export default class ActiveEffectConfig extends FormApplication {
+export default class TVAActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
     super({}, {});
 
@@ -170,8 +170,9 @@ export default class ActiveEffectConfig extends FormApplication {
     if (this.objectToFlag) {
       const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings');
       if (effectMappings && this.effectName in effectMappings) {
-        delete effectMappings[this.effectName];
-        setEffectMappingsFlag(this.objectToFlag, effectMappings);
+        const tempMappings = deepClone(effectMappings);
+        delete tempMappings[this.effectName];
+        setEffectMappingsFlag(this.objectToFlag, tempMappings);
       }
     }
     this.close();

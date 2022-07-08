@@ -51,6 +51,8 @@ function delay(fn, ms) {
 }
 
 export class ArtSelect extends FormApplication {
+  static instance = null;
+
   constructor(
     search,
     {
@@ -92,6 +94,7 @@ export class ArtSelect extends FormApplication {
     this.searchOptions = mergeObject(searchOptions, getSearchOptions(), {
       overwrite: false,
     });
+    ArtSelect.instance = this;
   }
 
   static get defaultOptions() {
@@ -102,6 +105,48 @@ export class ArtSelect extends FormApplication {
       resizable: true,
       minimizable: false,
     });
+  }
+
+  _getHeaderButtons() {
+    const buttons = super._getHeaderButtons();
+    buttons.unshift({
+      label: 'Image Category',
+      class: 'type',
+      icon: 'fas fa-swatchbook',
+      onclick: () => {
+        if (ArtSelect.instance) ArtSelect.instance._typeSelect();
+      },
+    });
+    return buttons;
+  }
+
+  _typeSelect() {
+    const categories = ['portrait', 'token', 'portraitAndToken', 'tile', 'item', 'journal'].concat(
+      TVA_CONFIG.customImageCategories
+    );
+
+    const buttons = {};
+    for (const c of categories) {
+      let label = c.charAt(0).toUpperCase() + c.slice(1);
+      if (c === this.searchType) {
+        label = '>>> ' + label + ' <<<';
+      }
+      buttons[c] = {
+        label: label,
+        callback: () => {
+          if (this.searchType !== c) {
+            this.searchType = c;
+            this._performSearch(this.search, true);
+          }
+        },
+      };
+    }
+
+    new Dialog({
+      title: `Select Image Category and Filter`,
+      content: `<style>.dialog .dialog-button {flex: 0 0 auto;}</style>`,
+      buttons: buttons,
+    }).render(true);
   }
 
   async getData(options) {
@@ -161,7 +206,8 @@ export class ArtSelect extends FormApplication {
               : imageObj.name,
           title: genTitle(imageObj),
           hasConfig:
-            this.searchType === SEARCH_TYPE.TOKEN || this.searchType === SEARCH_TYPE.BOTH
+            this.searchType === SEARCH_TYPE.TOKEN ||
+            this.searchType === SEARCH_TYPE.PORTRAIT_AND_TOKEN
               ? Boolean(
                   tokenConfigs.find(
                     (config) =>
@@ -181,9 +227,10 @@ export class ArtSelect extends FormApplication {
     data.image1 = this.image1;
     data.image2 = this.image2;
     data.image1_active =
-      this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.PORTRAIT;
+      this.searchType === SEARCH_TYPE.PORTRAIT_AND_TOKEN ||
+      this.searchType === SEARCH_TYPE.PORTRAIT;
     data.image2_active =
-      this.searchType === SEARCH_TYPE.BOTH || this.searchType === SEARCH_TYPE.TOKEN;
+      this.searchType === SEARCH_TYPE.PORTRAIT_AND_TOKEN || this.searchType === SEARCH_TYPE.TOKEN;
     data.displaySlider = algorithm.fuzzy && algorithm.fuzzyArtSelectPercentSlider;
     data.fuzzyThreshold = algorithm.fuzzyThreshold;
     if (data.displaySlider) {

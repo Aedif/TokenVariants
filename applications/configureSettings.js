@@ -61,14 +61,17 @@ export default class ConfigureSettings extends FormApplication {
       r.text = path.text;
       r.icon = this._pathIcon(path.source || '');
       r.cache = path.cache;
-      r.tiles = path.tiles;
       r.source = path.source || '';
+      r.types = path.types.join(',');
       return r;
     });
     data.searchPaths = paths;
 
     // === Search Filters ===
     data.searchFilters = settings.searchFilters;
+    for (const filter in data.searchFilters) {
+      data.searchFilters[filter].label = filter.charAt(0).toUpperCase() + filter.slice(1);
+    }
 
     // === Algorithm ===
     data.algorithm = deepClone(settings.algorithm);
@@ -136,8 +139,8 @@ export default class ConfigureSettings extends FormApplication {
     data.disableNotifs = settings.disableNotifs;
     data.staticCache = settings.staticCache;
     data.staticCacheFile = settings.staticCacheFile;
-    data.tilesEnabled = settings.tilesEnabled;
     data.stackStatusConfig = settings.stackStatusConfig;
+    data.customImageCategories = settings.customImageCategories.join(',');
 
     return data;
   }
@@ -155,23 +158,10 @@ export default class ConfigureSettings extends FormApplication {
     $(html).on('click', 'a.delete-path', this._onDeletePath.bind(this));
     $(html).on('click', 'a.convert-imgur', this._onConvertImgurPath.bind(this));
     $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
+    $(html).on('click', 'a.select-types', this._onSelectTypes.bind(this));
 
     // Search Filters
-    html.on(
-      'input',
-      'input[name="searchFilters.portraitFilterRegex"]',
-      this._validateRegex.bind(this)
-    );
-    html.on(
-      'input',
-      'input[name="searchFilters.tokenFilterRegex"]',
-      this._validateRegex.bind(this)
-    );
-    html.on(
-      'input',
-      'input[name="searchFilters.generalFilterRegex"]',
-      this._validateRegex.bind(this)
-    );
+    html.on('input', 'input.filterRegex', this._validateRegex.bind(this));
 
     // Algorithm
     const algorithmTab = $(html).find('div[data-tab="searchAlgorithm"]');
@@ -397,19 +387,13 @@ export default class ConfigureSettings extends FormApplication {
         <div class="imgur-control">
             <a class="convert-imgur" title="Convert to Rolltable"><i class="fas fa-angle-double-left"></i></a>
         </div>
+        <div class="path-types">
+            <a class="select-types" title="Select image categories"><i class="fas fa-swatchbook"></i></a>
+            <input type="hidden" name="searchPaths.types" value="token">
+        </div>
         <div class="path-cache">
             <input type="checkbox" name="searchPaths.cache" data-dtype="Boolean" checked/>
-        </div>`;
-
-    if (this.settings.tilesEnabled) {
-      row += `
-        <div class="path-tiles">
-          <input type="checkbox" name="searchPaths.tiles" data-dtype="Boolean"/>
         </div>
-      `;
-    }
-
-    row += `
         <div class="path-controls">
             <a class="delete-path" title="Delete path"><i class="fas fa-trash"></i></a>
         </div>
@@ -443,13 +427,81 @@ export default class ConfigureSettings extends FormApplication {
       .each(function (index) {
         $(this).attr('name', `searchPaths.${index}.cache`);
       });
-
     table
-      .find('.path-tiles')
+      .find('.path-types')
       .find('input')
       .each(function (index) {
-        $(this).attr('name', `searchPaths.${index}.tiles`);
+        $(this).attr('name', `searchPaths.${index}.types`);
       });
+  }
+
+  async _onSelectTypes(event) {
+    event.preventDefault();
+    const typesInput = $(event.target).closest('.path-types').find('input');
+    const selectedTypes = typesInput.val().split(',');
+    const categories = [
+      { id: 'token', label: 'Token' },
+      { id: 'tile', label: 'Tile' },
+      { id: 'item', label: 'Item' },
+      { id: 'journal', label: 'Journal' },
+    ];
+
+    for (const c of TVA_CONFIG.customImageCategories) {
+      categories.push({ id: c, label: c });
+    }
+
+    let content = '<div class="token-variants-popup-settings">';
+
+    // Split into rows of 4
+    const splits = [];
+    let currSplit = [];
+    for (let i = 0; i < categories.length; i++) {
+      if (i > 0 && i + 4 != categories.length && i % 4 == 0) {
+        splits.push(currSplit);
+        currSplit = [];
+      }
+      currSplit.push(categories[i]);
+    }
+    if (currSplit.length) splits.push(currSplit);
+
+    for (const split of splits) {
+      content += '<header class="table-header flexrow">';
+      for (const type of split) {
+        content += `<label>${type.label}</label>`;
+      }
+      content +=
+        '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
+      for (const type of split) {
+        content += `<input class="category" type="checkbox" name="${
+          type.id
+        }" data-dtype="Boolean" ${selectedTypes.includes(type.id) ? 'checked' : ''}>`;
+      }
+      content += '</div></li></ul>';
+    }
+    content += '</div>';
+
+    new Dialog({
+      title: `Image Categories`,
+      content: content,
+      buttons: {
+        yes: {
+          icon: "<i class='fas fa-check'></i>",
+          label: 'Select',
+          callback: (html) => {
+            const types = [];
+            $(html)
+              .find('.category')
+              .each(function () {
+                if ($(this).is(':checked')) {
+                  types.push($(this).attr('name'));
+                }
+              });
+            typesInput.val(types.join(','));
+          },
+        },
+      },
+      default: 'yes',
+    }).render(true);
   }
 
   async _onDeletePath(event) {
@@ -498,23 +550,22 @@ export default class ConfigureSettings extends FormApplication {
     const settings = this.settings;
     formData = expandObject(formData);
 
+    console.log(formData);
+
     // Search Paths
     settings.searchPaths = formData.hasOwnProperty('searchPaths')
       ? Object.values(formData.searchPaths)
       : [];
     settings.searchPaths.forEach((path) => {
       if (!path.source) path.source = 'data';
+      if (path.types) path.types = path.types.split(',');
+      else path.types = [];
     });
 
     // Search Filters
-    if (!this._validRegex(formData.searchFilters.portraitFilterRegex)) {
-      formData.searchFilters.portraitFilterRegex = '';
-    }
-    if (!this._validRegex(formData.searchFilters.tokenFilterRegex)) {
-      formData.searchFilters.tokenFilterRegex = '';
-    }
-    if (!this._validRegex(formData.searchFilters.generalFilterRegex)) {
-      formData.searchFilters.generalFilterRegex = '';
+    for (const filter in formData.searchFilters) {
+      if (!this._validRegex(formData.searchFilters[filter].regex))
+        formData.searchFilters[filter].regex = '';
     }
     mergeObject(settings.searchFilters, formData.searchFilters);
 
@@ -550,12 +601,16 @@ export default class ConfigureSettings extends FormApplication {
       staticCacheFile: formData.staticCacheFile,
       tilesEnabled: formData.tilesEnabled,
       stackStatusConfig: formData.stackStatusConfig,
+      customImageCategories: formData.customImageCategories
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t),
     });
 
+    // Save Settings
     if (this.dummySettings) {
       mergeObjectFix(this.dummySettings, settings, { insertKeys: false });
     } else {
-      // Save settings
       updateSettings(settings);
     }
   }

@@ -8,9 +8,9 @@ import {
   updateTokenImage,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import ActiveEffectConfig from './activeEffectConfig.js';
+import TVAActiveEffectConfig from './activeEffectConfig.js';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
-import { doImageSearch, findTokensFuzzy } from '../token-variants.mjs';
+import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import TokenFlags from './tokenFlags.js';
@@ -43,7 +43,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new ActiveEffectConfig(
+          new TVAActiveEffectConfig(
             token,
             event.target.getAttribute('src'),
             'token-variants-visibility'
@@ -57,7 +57,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new ActiveEffectConfig(
+          new TVAActiveEffectConfig(
             token,
             event.target.getAttribute('src'),
             'token-variants-combat'
@@ -73,7 +73,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
           event.stopPropagation();
           let effectNameAttr = 'title';
           if (game.system.id === 'pf2e') effectNameAttr = 'data-condition';
-          new ActiveEffectConfig(
+          new TVAActiveEffectConfig(
             token,
             event.target.getAttribute('src'),
             event.target.getAttribute(effectNameAttr)
@@ -506,7 +506,7 @@ function genTitleAndStyle(mappings, imgSrc, name) {
 }
 
 async function updateActorWithSimilarName(imgSrc, imgName, actor) {
-  const results = await findTokensFuzzy(
+  const results = await findImagesFuzzy(
     imgName,
     SEARCH_TYPE.PORTRAIT,
     {
