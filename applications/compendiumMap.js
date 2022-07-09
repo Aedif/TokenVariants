@@ -1,5 +1,6 @@
 import { showArtSelect, doImageSearch, cacheImages } from '../token-variants.mjs';
 import {
+  BASE_IMAGE_CATEGORIES,
   SEARCH_TYPE,
   updateActorImage,
   updateTokenImage,
@@ -175,18 +176,7 @@ export default class CompendiumMapConfig extends FormApplication {
     data.compendiums = packs;
     data.compendium = TVA_CONFIG.compendiumMapper.compendium;
 
-    data.categories = [
-      'portrait',
-      'token',
-      'portraitAndToken',
-      'Tile',
-      'Item',
-      'JournalEntry',
-      'Macro',
-      'Playlist',
-      'RollTable',
-      'Scene',
-    ].concat(TVA_CONFIG.customImageCategories);
+    data.categories = BASE_IMAGE_CATEGORIES.concat(TVA_CONFIG.customImageCategories);
     data.category = TVA_CONFIG.compendiumMapper.category;
 
     return data;

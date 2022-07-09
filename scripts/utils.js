@@ -6,13 +6,24 @@ const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
 // Types of searches
 export const SEARCH_TYPE = {
-  PORTRAIT: 'portrait',
-  TOKEN: 'token',
-  PORTRAIT_AND_TOKEN: 'portraitAndToken',
+  PORTRAIT: 'Portrait',
+  TOKEN: 'Token',
+  PORTRAIT_AND_TOKEN: 'PortraitAndToken',
   TILE: 'Tile',
   ITEM: 'Item',
   JOURNAL: 'JournalEntry',
 };
+
+export const BASE_IMAGE_CATEGORIES = [
+  'Portrait',
+  'Token',
+  'PortraitAndToken',
+  'Tile',
+  'Item',
+  'JournalEntry',
+  'Macro',
+  'RollTable',
+];
 
 export const PRESSED_KEYS = {
   popupOverride: false,
@@ -222,15 +233,8 @@ async function showTileArtSelect() {
  * @returns
  */
 export function keyPressed(key) {
-  if (isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
-    if (key === 'v') return game.keyboard.downKeys.has('KeyV');
-    return PRESSED_KEYS[key];
-  }
-
-  if (key === 'popupOverride') key = TVA_CONFIG.actorDirectoryKey;
-  else if (key === 'v') key = 'v';
-  else if (key === 'config') key = 'Shift';
-  return keyboard.isDown(key);
+  if (key === 'v') return game.keyboard.downKeys.has('KeyV');
+  return PRESSED_KEYS[key];
 }
 
 export function registerKeybinds() {

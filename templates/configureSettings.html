@@ -499,22 +499,6 @@
         <!-- Misc -->
         {{#if enabledTabs.misc}}
         <div class="tab" data-tab="misc" data-group="primary-tabs">
-          {{#if v8}}
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.actor-directory-key.Name"}}</label>
-            <div class="form-fields">
-                <select name="actorDirectoryKey">
-                    <option value="Control" {{#if (eq actorDirectoryKey 'Control')}}selected=""{{/if}}>Ctrl</option>
-                    <option value="Shift" {{#if (eq actorDirectoryKey 'Shift')}}selected=""{{/if}}>Shift</option>
-                    <option value="Alt" {{#if (eq actorDirectoryKey 'Alt')}}selected=""{{/if}}>Alt</option>
-                </select>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.actor-directory-key.Hint"}}</p>
-          </div>
-
-          <hr>
-          {{/if}}
-
           <div class="form-group">
             <label>Stack Configurations</label>
             <div class="form-fields">

@@ -111,10 +111,6 @@
         "Name": "Excluded Keywords",
         "Hint": "This is a list of keywords that will not be included in the search when 'Search by Keyword' is on."
       },
-      "actor-directory-key": {
-        "Name": "Pop-up Override Key",
-        "Hint": "Keyboard key that when held will trigger an art select popup when dragging in a token from the Actor Directory even when pop-ups are disabled."
-      },
       "run-search-on-path": {
         "Name": "Match name to folder",
         "Hint": "Whe enabled art searches will check both file names as well as folder names along their path for a match."

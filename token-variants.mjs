@@ -1040,10 +1040,10 @@ async function _readCacheFromFile(fileName) {
       for (let category in json) {
         // Old version cache support
         if (category === 'tokenImages') {
-          category = 'token';
+          category = 'Portrait,Token,PortraitAndToken';
           json[category] = json[tokenImages];
         } else if (category === 'tileImages') {
-          category = 'tile';
+          category = 'Tile';
           json[category] = json.tileImages;
         }
 
@@ -1159,15 +1159,6 @@ async function findImages(name, searchType = '', searchOptions = {}) {
   }
 }
 
-function imageTypeBasedOnSearchType(searchType) {
-  if (
-    !searchType ||
-    [SEARCH_TYPE.TOKEN, SEARCH_TYPE.PORTRAIT, SEARCH_TYPE.PORTRAIT_AND_TOKEN].includes(searchType)
-  )
-    return 'token';
-  return searchType;
-}
-
 async function findImagesExact(name, searchType, searchOptions) {
   if (TVA_CONFIG.debug)
     console.log('STARTING: Exact Image Search', name, searchType, searchOptions);
@@ -1175,7 +1166,6 @@ async function findImagesExact(name, searchType, searchOptions) {
   await walkAllPaths(searchType);
 
   const simpleName = simplifyName(name);
-  const imageType = imageTypeBasedOnSearchType(searchType);
   const filters = getFilters(searchType, searchOptions.searchFilters);
 
   const matchedImages = [];
@@ -1183,7 +1173,7 @@ async function findImagesExact(name, searchType, searchOptions) {
   for (const container of [FOUND_IMAGES, CACHED_IMAGES]) {
     for (const typeKey in container) {
       const types = typeKey.split(',');
-      if (types.includes(imageType)) {
+      if (types.includes(searchType)) {
         for (const imgOBj of container[typeKey]) {
           if (
             exactSearchMatchesImage(
@@ -1210,20 +1200,6 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
     console.log('STARTING: Fuzzy Image Search', name, searchType, searchOptions, forceSearchName);
 
   const filters = getFilters(searchType, searchOptions.searchFilters);
-  const imageType = imageTypeBasedOnSearchType(searchType);
-
-  // let allPaths;
-  // if (multiSearch) {
-  //   allPaths = CACHED_IMAGES[imageType].filter(
-  //     (imgObj) =>
-  //       !usedImages.has(imgObj) &&
-  //       imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
-  //   );
-  // } else {
-  //   allPaths = CACHED_IMAGES[imageType].filter((imgObj) =>
-  //     imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
-  //   );
-  // }
 
   const fuse = new Fuse([], {
     keys: [!forceSearchName && searchOptions.runSearchOnPath ? 'path' : 'name'],
@@ -1239,7 +1215,7 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
   for (const container of [CACHED_IMAGES, FOUND_IMAGES]) {
     for (const typeKey in container) {
       const types = typeKey.split(',');
-      if (types.includes(imageType)) {
+      if (types.includes(searchType)) {
         for (const imgObj of CACHED_IMAGES[typeKey]) {
           if (imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)) {
             fuse.add(imgObj);
@@ -1265,13 +1241,7 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
 function filterPathsByType(paths, searchType) {
   if (!searchType) return paths;
   return paths.filter((p) => {
-    if (
-      [SEARCH_TYPE.TOKEN, SEARCH_TYPE.PORTRAIT, SEARCH_TYPE.PORTRAIT_AND_TOKEN].includes(searchType)
-    ) {
-      return p.types.includes('token');
-    } else {
-      return p.types.includes(searchType);
-    }
+    p.types.includes(searchType);
   });
 }
 

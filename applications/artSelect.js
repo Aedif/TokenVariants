@@ -1,5 +1,11 @@
 import TokenCustomConfig from './tokenCustomConfig.js';
-import { isVideo, isImage, keyPressed, SEARCH_TYPE } from '../scripts/utils.js';
+import {
+  isVideo,
+  isImage,
+  keyPressed,
+  SEARCH_TYPE,
+  BASE_IMAGE_CATEGORIES,
+} from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { TVA_CONFIG, getSearchOptions } from '../scripts/settings.js';
 
@@ -131,22 +137,11 @@ export class ArtSelect extends FormApplication {
   }
 
   _typeSelect() {
-    const categories = [
-      'portrait',
-      'token',
-      'portraitAndToken',
-      'Tile',
-      'Item',
-      'JournalEntry',
-      'Macro',
-      'Playlist',
-      'RollTable',
-      'Scene',
-    ].concat(TVA_CONFIG.customImageCategories);
+    const categories = BASE_IMAGE_CATEGORIES.concat(TVA_CONFIG.customImageCategories);
 
     const buttons = {};
     for (const c of categories) {
-      let label = c.charAt(0).toUpperCase() + c.slice(1);
+      let label = c;
       if (c === this.searchType) {
         label = '>>> ' + label + ' <<<';
       }

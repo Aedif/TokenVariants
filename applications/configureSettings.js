@@ -1,4 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { BASE_IMAGE_CATEGORIES } from '../scripts/utils.js';
 import { cacheImages } from '../token-variants.mjs';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 
@@ -52,7 +53,6 @@ export default class ConfigureSettings extends FormApplication {
     const data = super.getData(options);
     const settings = this.settings;
 
-    data.v8 = (game.version ?? game.data.version).startsWith('0.8');
     data.enabledTabs = this.enabledTabs;
 
     // === Search Paths ===
@@ -70,7 +70,7 @@ export default class ConfigureSettings extends FormApplication {
     // === Search Filters ===
     data.searchFilters = settings.searchFilters;
     for (const filter in data.searchFilters) {
-      data.searchFilters[filter].label = filter.charAt(0).toUpperCase() + filter.slice(1);
+      data.searchFilters[filter].label = filter;
     }
 
     // === Algorithm ===
@@ -132,7 +132,6 @@ export default class ConfigureSettings extends FormApplication {
     // === Misc ===
     data.keywordSearch = settings.keywordSearch;
     data.excludedKeywords = settings.excludedKeywords;
-    data.actorDirectoryKey = settings.actorDirectoryKey;
     data.runSearchOnPath = settings.runSearchOnPath;
     data.imgurClientId = settings.imgurClientId;
     data.enableStatusConfig = settings.enableStatusConfig;
@@ -440,16 +439,7 @@ export default class ConfigureSettings extends FormApplication {
     const typesInput = $(event.target).closest('.path-types').find('input');
     const selectedTypes = typesInput.val().split(',');
 
-    const categories = [
-      'token',
-      'Tile',
-      'Item',
-      'JournalEntry',
-      'Macro',
-      'Playlist',
-      'RollTable',
-      'Scene',
-    ].concat(TVA_CONFIG.customImageCategories);
+    const categories = BASE_IMAGE_CATEGORIES.concat(TVA_CONFIG.customImageCategories);
 
     let content = '<div class="token-variants-popup-settings">';
 
@@ -593,7 +583,6 @@ export default class ConfigureSettings extends FormApplication {
     mergeObject(settings, {
       keywordSearch: formData.keywordSearch,
       excludedKeywords: formData.excludedKeywords,
-      actorDirectoryKey: formData.actorDirectoryKey,
       runSearchOnPath: formData.runSearchOnPath,
       imgurClientId: formData.imgurClientId,
       enableStatusConfig: formData.enableStatusConfig,

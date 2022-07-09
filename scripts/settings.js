@@ -1,5 +1,5 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
-import { userRequiresImageCache } from './utils.js';
+import { BASE_IMAGE_CATEGORIES, userRequiresImageCache } from './utils.js';
 import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
@@ -14,7 +14,7 @@ export const TVA_CONFIG = {
       text: 'modules/caeora-maps-tokens-assets/assets/tokens',
       cache: true,
       source: typeof ForgeAPI === 'undefined' ? 'data' : 'forge-bazaar',
-      types: ['token'],
+      types: ['Portrait', 'Token', 'PortraitAndToken'],
     },
   ],
   forgeSearchPaths: {},
@@ -35,7 +35,6 @@ export const TVA_CONFIG = {
   },
   keywordSearch: true,
   excludedKeywords: 'and,for',
-  actorDirectoryKey: 'Control',
   runSearchOnPath: false,
   searchFilters: {},
   algorithm: {
@@ -79,7 +78,7 @@ export const TVA_CONFIG = {
     autoDisplayArtSelect: true,
     syncImages: false,
     overrideCategory: false,
-    category: 'token',
+    category: 'Token',
   },
   permissions: {
     popups: {
@@ -142,7 +141,6 @@ export async function registerSettings() {
     onChange: async (val) => {
       // Generate a diff, it will be required when doing post-processing of the modified settings
       const diff = _arrayAwareDiffObject(TVA_CONFIG, val);
-      console.log(diff);
 
       // Check image re-cache required due to permission changes
       let requiresImageCache = false;
@@ -193,118 +191,12 @@ export async function registerSettings() {
     });
   }
 
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'searchPaths', {
-    scope: 'world',
-    config: false,
-    type: Array,
-    default: TVA_CONFIG.searchPaths,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'forgeSearchPaths', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: TVA_CONFIG.forgeSearchPaths,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'worldHudSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: TVA_CONFIG.worldHud,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'keywordSearch', {
-    scope: 'world',
-    config: false,
-    type: Boolean,
-    default: TVA_CONFIG.keywordSearch,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'excludedKeywords', {
-    scope: 'world',
-    config: false,
-    type: String,
-    default: 'and,for',
-  });
-
-  // Deprecated 01/06/2022
-  if (!isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
-    game.settings.register('token-variants', 'actorDirectoryKey', {
-      scope: 'world',
-      config: false,
-      type: String,
-      default: TVA_CONFIG.actorDirectoryKey,
-    });
-  }
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'runSearchOnPath', {
-    scope: 'world',
-    config: false,
-    type: Boolean,
-    default: TVA_CONFIG.runSearchOnPath,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'searchFilterSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: TVA_CONFIG.searchFilters,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'algorithmSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: TVA_CONFIG.algorithm,
-  });
-
   game.settings.register('token-variants', 'tokenConfigs', {
     scope: 'world',
     config: false,
     type: Array,
     default: TVA_CONFIG.tokenConfigs,
     onChange: (val) => (TVA_CONFIG.tokenConfigs = val),
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'randomizerSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: TVA_CONFIG.randomizer,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'popupSettings', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: TVA_CONFIG.popup,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'imgurClientId', {
-    scope: 'world',
-    config: false,
-    type: String,
-    default: TVA_CONFIG.imgurClientId,
-  });
-
-  // Deprecated 01/06/2022
-  game.settings.register('token-variants', 'disableNotifs', {
-    scope: 'world',
-    config: false,
-    default: TVA_CONFIG.disableNotifs,
-    type: Boolean,
   });
 
   game.settings.registerMenu('token-variants', 'tokenHUDSettings', {
@@ -341,13 +233,6 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.hud = val),
   });
 
-  game.settings.register('token-variants', 'permissions', {
-    scope: 'world',
-    config: false,
-    type: Object,
-    default: TVA_CONFIG.permissions,
-  });
-
   game.settings.registerMenu('token-variants', 'importExport', {
     name: `${game.i18n.localize('token-variants.common.import')}/${game.i18n.localize(
       'token-variants.common.export'
@@ -362,6 +247,39 @@ export async function registerSettings() {
   // Read settings
   const settings = game.settings.get('token-variants', 'settings');
   mergeObject(TVA_CONFIG, settings);
+
+  if (isObjectEmpty(TVA_CONFIG.searchFilters)) {
+    BASE_IMAGE_CATEGORIES.forEach((cat) => {
+      TVA_CONFIG.searchFilters[cat] = {
+        include: '',
+        exclude: '',
+        regex: '',
+      };
+    });
+  }
+
+  // 07/07/2022 Convert filters to new format if old one is still in use
+  if (settings.searchFilters.portraitFilterInclude != null) {
+    const filters = settings.searchFilters;
+    TVA_CONFIG.searchFilters = {
+      Portrait: {
+        include: filters.portraitFilterInclude,
+        exclude: filters.portraitFilterExclude,
+        regex: filters.portraitFilterRegex,
+      },
+      Token: {
+        include: filters.tokenFilterInclude,
+        exclude: filters.tokenFilterExclude,
+        regex: filters.tokenFilterRegex,
+      },
+      PortraitAndToken: {
+        include: filters.generalFilterInclude,
+        exclude: filters.generalFilterExclude,
+        regex: filters.generalFilterRegex,
+      },
+    };
+    delete TVA_CONFIG.compendiumMapper.searchFilters;
+  }
 
   // 16/06/2022
   // Perform searchPaths and forgeSearchPaths conversions to new format if needed
@@ -390,34 +308,11 @@ export async function registerSettings() {
       }
     }
     if (!p.types) {
-      if (p.tiles) p.types = ['tile'];
-      else p.types = ['token'];
+      if (p.tiles) p.types = ['Tile'];
+      else p.types = ['Portrait', 'Token', 'PortraitAndToken'];
     }
     return p;
   });
-
-  // 07/07/2022 Convert filters to new format if old one is still in use
-  if (TVA_CONFIG.searchFilters.portraitFilterInclude != null) {
-    const filters = TVA_CONFIG.searchFilters;
-    TVA_CONFIG.searchFilters = {
-      portrait: {
-        include: filters.portraitFilterInclude,
-        exclude: filters.portraitFilterExclude,
-        regex: filters.portraitFilterRegex,
-      },
-      token: {
-        include: filters.tokenFilterInclude,
-        exclude: filters.tokenFilterExclude,
-        regex: filters.tokenFilterRegex,
-      },
-      portraitAndToken: {
-        include: filters.generalFilterInclude,
-        exclude: filters.generalFilterExclude,
-        regex: filters.generalFilterRegex,
-      },
-    };
-    TVA_CONFIG.compendiumMapper.searchFilters = {};
-  }
 
   for (let uid in TVA_CONFIG.forgeSearchPaths) {
     TVA_CONFIG.forgeSearchPaths[uid].paths = TVA_CONFIG.forgeSearchPaths[uid].paths.map((p) => {
@@ -425,8 +320,8 @@ export async function registerSettings() {
         p.source = 'forgevtt';
       }
       if (!p.types) {
-        if (p.tiles) p.types = ['tile'];
-        else p.types = ['token'];
+        if (p.tiles) p.types = ['Tile'];
+        else p.types = ['Portrait', 'Token', 'PortraitAndToken'];
       }
       return p;
     });
@@ -473,8 +368,8 @@ export async function importSettingsFromJSON(json) {
         }
 
         if (!p.types) {
-          if (p.tiles) p.types = ['tile'];
-          else p.types = ['token'];
+          if (p.tiles) p.types = ['Tile'];
+          else p.types = ['Portrait', 'Token', 'PortraitAndToken'];
         }
       }
       return p;
@@ -487,34 +382,34 @@ export async function importSettingsFromJSON(json) {
           p.source = 'forgevtt';
         }
         if (!p.types) {
-          if (p.tiles) p.types = ['tile'];
-          else p.types = ['token'];
+          if (p.tiles) p.types = ['Tile'];
+          else p.types = ['Portrait', 'Token', 'PortraitAndToken'];
         }
         return p;
       });
     }
 
-  // 07/07/2022 Convert filters to new format if old one is still in use
+  // 09/07/2022 Convert filters to new format if old one is still in use
   if (json.searchFilters && json.searchFilters.portraitFilterInclude != null) {
     const filters = json.searchFilters;
     json.searchFilters = {
-      portrait: {
+      Portrait: {
         include: filters.portraitFilterInclude ?? '',
         exclude: filters.portraitFilterExclude ?? '',
         regex: filters.portraitFilterRegex ?? '',
       },
-      token: {
+      Token: {
         include: filters.tokenFilterInclude ?? '',
         exclude: filters.tokenFilterExclude ?? '',
         regex: filters.tokenFilterRegex ?? '',
       },
-      portraitAndToken: {
+      PortraitAndToken: {
         include: filters.generalFilterInclude ?? '',
         exclude: filters.generalFilterExclude ?? '',
         regex: filters.generalFilterRegex ?? '',
       },
     };
-    json.compendiumMapper = {};
+    if (json.compendiumMapper) delete json.compendiumMapper.searchFilters;
   }
 
   updateSettings(json);
@@ -525,24 +420,24 @@ export async function updateSettings(newSettings) {
 
   // Custom image categories might have changed, meaning we may have filters that are no longer relevant
   // or need to be added
-  const categories = ['token', 'portrait', 'portraitAndToken', 'item', 'journal', 'tile'].concat(
-    settings.customImageCategories
-  );
-  for (const filter in settings.searchFilters) {
-    if (!categories.includes(filter)) delete settings.searchFilters[filter];
-  }
-  settings.customImageCategories.forEach((type) => {
-    if (settings.searchFilters[type] == null) {
-      settings.searchFilters[type] = {
-        include: '',
-        exclude: '',
-        regex: '',
-      };
+  console.log(settings, newSettings);
+  if ('customImageCategories' in newSettings) {
+    const categories = BASE_IMAGE_CATEGORIES.concat(newSettings.customImageCategories);
+    for (const filter in settings.searchFilters) {
+      if (!categories.includes(filter)) {
+        delete settings.searchFilters[filter];
+        delete TVA_CONFIG.searchFilters[filter];
+      }
     }
-  });
-
-  if (newSettings.compendiumMapper?.searchFilters) {
-    settings.compendiumMapper.searchFilters = newSettings.compendiumMapper.searchFilters;
+    for (const category of settings.customImageCategories) {
+      if (settings.searchFilters[category] == null) {
+        settings.searchFilters[category] = {
+          include: '',
+          exclude: '',
+          regex: '',
+        };
+      }
+    }
   }
 
   game.settings.set('token-variants', 'settings', settings);

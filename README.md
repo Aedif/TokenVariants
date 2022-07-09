@@ -43,7 +43,6 @@ e.g.
   - [Token HUD Settings](#token-hud-settings)
   - [Search by Keyword](#search-by-keyword)
   - [Excluded Keywords](#excluded-keywords)
-  - [Actor Directory Popup key](#actor-directory-popup-key)
   - [Match name to folder](#match-name-to-folder)
 - [Image configuration](#image-configuration)
 - [Image to User mappings](#image-to-user-mappings)
@@ -173,10 +172,6 @@ When enabled the art search will be done using both the Actor/Token full name as
 ### Excluded Keywords
 
 Words within this list will be excluded from the keywords search. By default "and,for" are ignored in token/actor names.
-
-### Actor Directory Popup key
-
-Controls the key used to trigger a pop-up when dragging in an actor from the 'Actor Directory'.
 
 ### Match name to folder
 
