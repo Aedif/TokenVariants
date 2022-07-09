@@ -439,16 +439,17 @@ export default class ConfigureSettings extends FormApplication {
     event.preventDefault();
     const typesInput = $(event.target).closest('.path-types').find('input');
     const selectedTypes = typesInput.val().split(',');
-    const categories = [
-      { id: 'token', label: 'Token' },
-      { id: 'tile', label: 'Tile' },
-      { id: 'item', label: 'Item' },
-      { id: 'journal', label: 'Journal' },
-    ];
 
-    for (const c of TVA_CONFIG.customImageCategories) {
-      categories.push({ id: c, label: c });
-    }
+    const categories = [
+      'token',
+      'Tile',
+      'Item',
+      'JournalEntry',
+      'Macro',
+      'Playlist',
+      'RollTable',
+      'Scene',
+    ].concat(TVA_CONFIG.customImageCategories);
 
     let content = '<div class="token-variants-popup-settings">';
 
@@ -456,7 +457,7 @@ export default class ConfigureSettings extends FormApplication {
     const splits = [];
     let currSplit = [];
     for (let i = 0; i < categories.length; i++) {
-      if (i > 0 && i + 4 != categories.length && i % 4 == 0) {
+      if (i > 0 && i + 1 != categories.length && i % 4 == 0) {
         splits.push(currSplit);
         currSplit = [];
       }
@@ -467,14 +468,14 @@ export default class ConfigureSettings extends FormApplication {
     for (const split of splits) {
       content += '<header class="table-header flexrow">';
       for (const type of split) {
-        content += `<label>${type.label}</label>`;
+        content += `<label>${type}</label>`;
       }
       content +=
         '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
       for (const type of split) {
         content += `<input class="category" type="checkbox" name="${
           type.id
-        }" data-dtype="Boolean" ${selectedTypes.includes(type.id) ? 'checked' : ''}>`;
+        }" data-dtype="Boolean" ${selectedTypes.includes(type) ? 'checked' : ''}>`;
       }
       content += '</div></li></ul>';
     }
@@ -601,7 +602,7 @@ export default class ConfigureSettings extends FormApplication {
       staticCacheFile: formData.staticCacheFile,
       tilesEnabled: formData.tilesEnabled,
       stackStatusConfig: formData.stackStatusConfig,
-      customImageCategories: formData.customImageCategories
+      customImageCategories: (formData.customImageCategories || '')
         .split(',')
         .map((t) => t.trim())
         .filter((t) => t),

@@ -1,10 +1,16 @@
 <form>
   <div class="token-variants-banner">
-    {{#if image1}}
-    <div class="token-variants-portrait-token form-group">
-      <div>Portrait<img class="image {{#if image1_active}}active{{/if}}" src="{{image1}}" title="{{image1}}" alt="" width="80" height="80"></img></div>
-      <div>Token<img class="image {{#if image2_active}}active{{/if}}" src="{{image2}}" title="{{image2}}" alt="" width="80" height="80"></img></div>
-    </div>
+    {{#if displayMode}}
+      {{#if image1}}
+      <div class="token-variants-portrait-token form-group">
+        {{#if (eq displayMode 4)}}
+        <div>Current<img class="image active" src="{{image1}}" title="{{image1}}" alt="" width="80" height="80"></img></div>
+        {{else}}
+        <div>Portrait<img class="image {{#if (eq displayMode 1)}}active{{else if (eq displayMode 3)}}active{{/if}}" src="{{image1}}" title="{{image1}}" alt="" width="80" height="80"></img></div>
+        <div>Token<img class="image {{#if (eq displayMode 2)}}active{{else if (eq displayMode 3)}}active{{/if}}" src="{{image2}}" title="{{image2}}" alt="" width="80" height="80"></img></div>
+        {{/if}}
+      </div>
+      {{/if}}
     {{/if}}
     <div class="form-group">
       <input type="text" id="custom-art-search" name="search" value="{{search}}" />

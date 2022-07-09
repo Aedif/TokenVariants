@@ -53,6 +53,14 @@ function delay(fn, ms) {
 export class ArtSelect extends FormApplication {
   static instance = null;
 
+  static IMAGE_DISPLAY = {
+    NONE: 0,
+    PORTRAIT: 1,
+    TOKEN: 2,
+    PORTRAIT_TOKEN: 3,
+    IMAGE: 4,
+  };
+
   constructor(
     search,
     {
@@ -63,6 +71,7 @@ export class ArtSelect extends FormApplication {
       allImages = null,
       image1 = '',
       image2 = '',
+      displayMode = ArtSelect.IMAGE_DISPLAY.NONE,
       searchOptions = {},
     } = {}
   ) {
@@ -90,6 +99,7 @@ export class ArtSelect extends FormApplication {
     this.preventClose = preventClose;
     this.image1 = image1;
     this.image2 = image2;
+    this.displayMode = displayMode;
     this.searchType = searchType;
     this.searchOptions = mergeObject(searchOptions, getSearchOptions(), {
       overwrite: false,
@@ -121,9 +131,18 @@ export class ArtSelect extends FormApplication {
   }
 
   _typeSelect() {
-    const categories = ['portrait', 'token', 'portraitAndToken', 'tile', 'item', 'journal'].concat(
-      TVA_CONFIG.customImageCategories
-    );
+    const categories = [
+      'portrait',
+      'token',
+      'portraitAndToken',
+      'Tile',
+      'Item',
+      'JournalEntry',
+      'Macro',
+      'Playlist',
+      'RollTable',
+      'Scene',
+    ].concat(TVA_CONFIG.customImageCategories);
 
     const buttons = {};
     for (const c of categories) {
@@ -226,11 +245,7 @@ export class ArtSelect extends FormApplication {
     data.queue = ART_SELECT_QUEUE.queue.length;
     data.image1 = this.image1;
     data.image2 = this.image2;
-    data.image1_active =
-      this.searchType === SEARCH_TYPE.PORTRAIT_AND_TOKEN ||
-      this.searchType === SEARCH_TYPE.PORTRAIT;
-    data.image2_active =
-      this.searchType === SEARCH_TYPE.PORTRAIT_AND_TOKEN || this.searchType === SEARCH_TYPE.TOKEN;
+    data.displayMode = this.displayMode;
     data.displaySlider = algorithm.fuzzy && algorithm.fuzzyArtSelectPercentSlider;
     data.fuzzyThreshold = algorithm.fuzzyThreshold;
     if (data.displaySlider) {
@@ -311,6 +326,7 @@ export class ArtSelect extends FormApplication {
       force: true,
       image1: this.image1,
       image2: this.image2,
+      displayMode: this.displayMode,
       searchOptions: this.searchOptions,
       preventClose: this.preventClose,
     });

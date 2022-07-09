@@ -78,6 +78,8 @@ export const TVA_CONFIG = {
     cache: false,
     autoDisplayArtSelect: true,
     syncImages: false,
+    overrideCategory: false,
+    category: 'token',
   },
   permissions: {
     popups: {
@@ -357,17 +359,9 @@ export async function registerSettings() {
     restricted: true,
   });
 
-  // Implemented on 30/05/2022
-  // This code should be kept here for long enough to make sure vast majority of users
-  // have ran the module and generated the new setting.
+  // Read settings
   const settings = game.settings.get('token-variants', 'settings');
-  if (Object.keys(settings).length === 0) {
-    await fetchAllSettings();
-    const initSettings = deepClone(TVA_CONFIG);
-    game.settings.set('token-variants', 'settings', initSettings);
-  } else {
-    mergeObject(TVA_CONFIG, settings);
-  }
+  mergeObject(TVA_CONFIG, settings);
 
   // 16/06/2022
   // Perform searchPaths and forgeSearchPaths conversions to new format if needed
@@ -421,22 +415,8 @@ export async function registerSettings() {
         exclude: filters.generalFilterExclude,
         regex: filters.generalFilterRegex,
       },
-      tile: {
-        include: '',
-        exclude: '',
-        regex: '',
-      },
-      item: {
-        include: '',
-        exclude: '',
-        regex: '',
-      },
-      journal: {
-        include: '',
-        exclude: '',
-        regex: '',
-      },
     };
+    TVA_CONFIG.compendiumMapper.searchFilters = {};
   }
 
   for (let uid in TVA_CONFIG.forgeSearchPaths) {
@@ -454,38 +434,6 @@ export async function registerSettings() {
 
   // Read client settings
   TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
-}
-
-export async function fetchAllSettings() {
-  TVA_CONFIG.debug = game.settings.get('token-variants', 'debug');
-  TVA_CONFIG.searchPaths = game.settings.get('token-variants', 'searchPaths');
-  TVA_CONFIG.forgeSearchPaths = game.settings.get('token-variants', 'forgeSearchPaths');
-  // Fix for search paths being accidentally stored as an array instead of an object
-  if (Array.isArray(TVA_CONFIG.forgeSearchPaths)) {
-    if (TVA_CONFIG.forgeSearchPaths.length !== 0) {
-      TVA_CONFIG.forgeSearchPaths = TVA_CONFIG.forgeSearchPaths[0];
-    } else {
-      TVA_CONFIG.forgeSearchPaths = {};
-    }
-  }
-
-  TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
-  TVA_CONFIG.worldHud = game.settings.get('token-variants', 'worldHudSettings');
-  TVA_CONFIG.keywordSearch = game.settings.get('token-variants', 'keywordSearch');
-  TVA_CONFIG.excludedKeywords = game.settings.get('token-variants', 'excludedKeywords');
-  if (!isNewerVersion(game.version ?? game.data.version, '0.8.9')) {
-    TVA_CONFIG.actorDirectoryKey = game.settings.get('token-variants', 'actorDirectoryKey');
-  }
-  TVA_CONFIG.runSearchOnPath = game.settings.get('token-variants', 'runSearchOnPath');
-  TVA_CONFIG.searchFilters = game.settings.get('token-variants', 'searchFilterSettings');
-  TVA_CONFIG.algorithm = game.settings.get('token-variants', 'algorithmSettings');
-  TVA_CONFIG.tokenConfigs = game.settings.get('token-variants', 'tokenConfigs');
-  TVA_CONFIG.randomizer = game.settings.get('token-variants', 'randomizerSettings');
-  TVA_CONFIG.popup = game.settings.get('token-variants', 'popupSettings');
-  TVA_CONFIG.imgurClientId = game.settings.get('token-variants', 'imgurClientId');
-  TVA_CONFIG.compendiumMapper = game.settings.get('token-variants', 'compendiumMapper');
-  TVA_CONFIG.disableNotifs = game.settings.get('token-variants', 'disableNotifs');
-  TVA_CONFIG.permissions = game.settings.get('token-variants', 'permissions');
 }
 
 export function exportSettingsToJSON() {
@@ -538,6 +486,10 @@ export async function importSettingsFromJSON(json) {
         if (!p.source) {
           p.source = 'forgevtt';
         }
+        if (!p.types) {
+          if (p.tiles) p.types = ['tile'];
+          else p.types = ['token'];
+        }
         return p;
       });
     }
@@ -561,22 +513,8 @@ export async function importSettingsFromJSON(json) {
         exclude: filters.generalFilterExclude ?? '',
         regex: filters.generalFilterRegex ?? '',
       },
-      tile: {
-        include: '',
-        exclude: '',
-        regex: '',
-      },
-      item: {
-        include: '',
-        exclude: '',
-        regex: '',
-      },
-      journal: {
-        include: '',
-        exclude: '',
-        regex: '',
-      },
     };
+    json.compendiumMapper = {};
   }
 
   updateSettings(json);
@@ -603,7 +541,9 @@ export async function updateSettings(newSettings) {
     }
   });
 
-  console.log(settings);
+  if (newSettings.compendiumMapper?.searchFilters) {
+    settings.compendiumMapper.searchFilters = newSettings.compendiumMapper.searchFilters;
+  }
 
   game.settings.set('token-variants', 'settings', settings);
 }

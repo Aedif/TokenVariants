@@ -9,9 +9,9 @@ export const SEARCH_TYPE = {
   PORTRAIT: 'portrait',
   TOKEN: 'token',
   PORTRAIT_AND_TOKEN: 'portraitAndToken',
-  TILE: 'tile',
-  ITEM: 'item',
-  JOURNAL: 'journal',
+  TILE: 'Tile',
+  ITEM: 'Item',
+  JOURNAL: 'JournalEntry',
 };
 
 export const PRESSED_KEYS = {

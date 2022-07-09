@@ -3,8 +3,8 @@
     <label>Compendium</label>
     <div class="form-fields">
       <select name="compendium">
-        {{#each compendiums as |compendium|}}
-        <option value="{{compendium.id}}" selected="">{{compendium.title}}</option>
+        {{#each compendiums as |comp|}}
+        <option value="{{comp.id}}" {{#if (eq ../compendium comp.id)}}selected="selected"{{/if}}>{{comp.title}}</option>
         {{/each}}
       </select>
     </div>
@@ -13,15 +13,34 @@
     </p>
   </div>
 
-  <hr />
+  <hr/>
 
   <div class="form-group">
+    <label>Override Image Category</label>
+    <input class="token-variants-override-category" type="checkbox" name="overrideCategory" data-dtype="Boolean" {{#if overrideCategory}}checked{{/if}} />
+    <p class="notes">Change the default image category used by the module for this compendium type.</p>
+  </div>
+
+  <div class="form-group">
+    <label>Category</label>
+    <div class="form-fields">
+      <select class="token-variants-category" name="category">
+        {{#each categories as |cat|}}
+        <option value="{{cat}}" {{#if (eq ../category cat)}}selected="selected"{{/if}}>{{cat}}</option>
+        {{/each}}
+      </select>
+    </div>
+  </div>
+
+  <hr/>
+
+  <div class="form-group token-specific">
     <label>{{localize "token-variants.settings.compendium-mapper.window.diff-images"}}</label>
     <input class="token-variants-diff-images" type="checkbox" name="diffImages" data-dtype="Boolean"
     {{#if diffImages}}checked{{/if}} />
   </div>
 
-  <div class="form-group">
+  <div class="form-group token-specific">
     <label
       >&nbsp;&nbsp;&nbsp;&nbsp; {{localize
       "token-variants.settings.compendium-mapper.window.ignore-token"}}</label
@@ -30,7 +49,7 @@
     {{#if ignoreToken}}checked{{/if}} {{#unless diffImages}}disabled{{/unless}}/>
   </div>
 
-  <div class="form-group">
+  <div class="form-group token-specific">
     <label
       >&nbsp;&nbsp;&nbsp;&nbsp; {{localize
       "token-variants.settings.compendium-mapper.window.ignore-portrait"}}</label
@@ -44,14 +63,12 @@
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.missing-only"}}</label>
-    <input type="checkbox" name="missingOnly" data-dtype="Boolean" {{#if missingOnly}}checked{{/if}}
-    />
+    <input type="checkbox" name="missingOnly" data-dtype="Boolean" {{#if missingOnly}}checked{{/if}} />
   </div>
 
   <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.show-images"}}</label>
-    <input type="checkbox" name="showImages" data-dtype="Boolean" {{#if showImages}}checked{{/if}}
-    />
+    <input type="checkbox" name="showImages" data-dtype="Boolean" {{#if showImages}}checked{{/if}} />
   </div>
 
   <div class="form-group">
@@ -90,7 +107,7 @@
     data-dtype="Boolean" disabled {{#if autoDisplayArtSelect}}checked{{/if}}/>
   </div>
 
-  <div class="form-group">
+  <div class="form-group token-specific">
     <label>{{localize "token-variants.settings.compendium-mapper.window.sync-images"}}</label>
     <input type="checkbox" name="syncImages" data-dtype="Boolean" />
   </div>

@@ -1183,8 +1183,8 @@ async function findImagesExact(name, searchType, searchOptions) {
   for (const container of [FOUND_IMAGES, CACHED_IMAGES]) {
     for (const typeKey in container) {
       const types = typeKey.split(',');
-      if (types.contains(imageType)) {
-        for (const imgOBj of FOUND_IMAGES[typeKey]) {
+      if (types.includes(imageType)) {
+        for (const imgOBj of container[typeKey]) {
           if (
             exactSearchMatchesImage(
               simpleName,
@@ -1417,6 +1417,7 @@ export async function showArtSelect(
     preventClose = false,
     image1 = '',
     image2 = '',
+    displayMode = ArtSelect.IMAGE_DISPLAY.NONE,
     searchOptions = {},
   } = {}
 ) {
@@ -1449,6 +1450,7 @@ export async function showArtSelect(
     preventClose: preventClose,
     image1: image1,
     image2: image2,
+    displayMode: displayMode,
     searchOptions: searchOptions,
   }).render(true);
 }
@@ -1695,6 +1697,10 @@ Hooks.on('init', function () {
     return CACHED_IMAGES;
   };
 
+  const getFound = () => {
+    return FOUND_IMAGES;
+  };
+
   game.modules.get('token-variants').api = {
     cacheImages,
     doImageSearch,
@@ -1704,6 +1710,7 @@ Hooks.on('init', function () {
     exportSettingsToJSON,
     TVA_CONFIG,
     getCache,
+    getFound,
   };
 });
 

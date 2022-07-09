@@ -5,11 +5,11 @@ import {
   updateTokenImage,
   userRequiresImageCache,
 } from '../scripts/utils.js';
-import { addToQueue, renderFromQueue } from './artSelect.js';
+import { addToQueue, ArtSelect, renderFromQueue } from './artSelect.js';
 import { getSearchOptions, TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import ConfigureSettings from './configureSettings.js';
 
-async function autoApply(actor, image1, image2, formData) {
+async function autoApply(actor, image1, image2, formData, typeOverride) {
   let portraitFound = formData.ignorePortrait;
   let tokenFound = formData.ignoreToken;
 
@@ -18,7 +18,7 @@ async function autoApply(actor, image1, image2, formData) {
 
     if (!formData.ignorePortrait) {
       results = await doImageSearch(actor.data.name, {
-        searchType: SEARCH_TYPE.PORTRAIT,
+        searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT,
         simpleResults: true,
         searchOptions: formData.searchOptions,
       });
@@ -43,7 +43,7 @@ async function autoApply(actor, image1, image2, formData) {
     }
   } else {
     let results = await doImageSearch(actor.data.name, {
-      searchType: SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+      searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT_AND_TOKEN,
       simpleResults: true,
       searchOptions: formData.searchOptions,
     });
@@ -59,28 +59,31 @@ async function autoApply(actor, image1, image2, formData) {
   }
 
   if (!(tokenFound && portraitFound) && formData.autoDisplayArtSelect) {
-    addToArtSelectQueue(actor, image1, image2, formData);
+    addToArtSelectQueue(actor, image1, image2, formData, typeOverride);
   }
 }
 
-function addToArtSelectQueue(actor, image1, image2, formData) {
+function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
   if (formData.diffImages) {
     if (!formData.ignorePortrait && !formData.ignoreToken) {
       addToQueue(actor.data.name, {
-        searchType: SEARCH_TYPE.PORTRAIT,
+        searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT,
         object: actor,
         preventClose: true,
         image1: image1,
         image2: image2,
+        displayMode: ArtSelect.IMAGE_DISPLAY.PORTRAIT,
         searchOptions: formData.searchOptions,
         callback: async function (imgSrc, _) {
           await updateActorImage(actor, imgSrc);
           showArtSelect(actor.data.token.name, {
-            searchType: SEARCH_TYPE.TOKEN,
+            searchType: typeOverride ?? SEARCH_TYPE.TOKEN,
             object: actor,
             force: true,
             image1: imgSrc,
             image2: image2,
+            displayMode: ArtSelect.IMAGE_DISPLAY.TOKEN,
+            searchOptions: formData.searchOptions,
             callback: (imgSrc, name) =>
               updateTokenImage(imgSrc, {
                 actor: actor,
@@ -91,10 +94,11 @@ function addToArtSelectQueue(actor, image1, image2, formData) {
       });
     } else if (formData.ignorePortrait) {
       addToQueue(actor.data.name, {
-        searchType: SEARCH_TYPE.TOKEN,
+        searchType: typeOverride ?? SEARCH_TYPE.TOKEN,
         object: actor,
         image1: image1,
         image2: image2,
+        displayMode: ArtSelect.IMAGE_DISPLAY.TOKEN,
         searchOptions: formData.searchOptions,
         callback: async function (imgSrc, name) {
           updateTokenImage(imgSrc, {
@@ -105,10 +109,11 @@ function addToArtSelectQueue(actor, image1, image2, formData) {
       });
     } else if (formData.ignoreToken) {
       addToQueue(actor.data.name, {
-        searchType: SEARCH_TYPE.PORTRAIT,
+        searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT,
         object: actor,
         image1: image1,
         image2: image2,
+        displayMode: ArtSelect.IMAGE_DISPLAY.PORTRAIT,
         searchOptions: formData.searchOptions,
         callback: async function (imgSrc, name) {
           await updateActorImage(actor, imgSrc);
@@ -117,10 +122,11 @@ function addToArtSelectQueue(actor, image1, image2, formData) {
     }
   } else {
     addToQueue(actor.data.name, {
-      searchType: SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+      searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT_AND_TOKEN,
       object: actor,
       image1: image1,
       image2: image2,
+      displayMode: ArtSelect.IMAGE_DISPLAY.PORTRAIT_TOKEN,
       searchOptions: formData.searchOptions,
       callback: async function (imgSrc, name) {
         await updateActorImage(actor, imgSrc);
@@ -159,13 +165,29 @@ export default class CompendiumMapConfig extends FormApplication {
     let data = super.getData(options);
     data = mergeObject(data, TVA_CONFIG.compendiumMapper);
 
+    const supportedPacks = ['Actor', 'Cards', 'Item', 'JournalEntry', 'Macro', 'RollTable'];
     const packs = [];
     game.packs.forEach((pack) => {
-      if (!pack.locked) {
+      if (!pack.locked && supportedPacks.includes(pack.documentName)) {
         packs.push({ title: pack.title, id: pack.collection, type: pack.documentName });
       }
     });
     data.compendiums = packs;
+    data.compendium = TVA_CONFIG.compendiumMapper.compendium;
+
+    data.categories = [
+      'portrait',
+      'token',
+      'portraitAndToken',
+      'Tile',
+      'Item',
+      'JournalEntry',
+      'Macro',
+      'Playlist',
+      'RollTable',
+      'Scene',
+    ].concat(TVA_CONFIG.customImageCategories);
+    data.category = TVA_CONFIG.compendiumMapper.category;
 
     return data;
   }
@@ -175,15 +197,30 @@ export default class CompendiumMapConfig extends FormApplication {
    */
   activateListeners(html) {
     super.activateListeners(html);
+    html
+      .find('.token-variants-override-category')
+      .change(this._onCategoryOverride)
+      .trigger('change');
     html.find('.token-variants-auto-apply').change(this._onAutoApply);
     html.find('.token-variants-diff-images').change(this._onDiffImages);
     html.find(`.token-variants-search-options`).on('click', this._onSearchOptions.bind(this));
+    $(html)
+      .find('[name="compendium"]')
+      .change(this._onCompendiumSelect.bind(this))
+      .trigger('change');
   }
 
   async _onAutoApply(event) {
     $(event.target)
       .closest('form')
       .find('.token-variants-auto-art-select')
+      .prop('disabled', !event.target.checked);
+  }
+
+  async _onCategoryOverride(event) {
+    $(event.target)
+      .closest('form')
+      .find('.token-variants-category')
       .prop('disabled', !event.target.checked);
   }
 
@@ -194,7 +231,16 @@ export default class CompendiumMapConfig extends FormApplication {
       .prop('disabled', !event.target.checked);
   }
 
+  async _onCompendiumSelect(event) {
+    const compendium = game.packs.get($(event.target).val());
+    $(event.target)
+      .closest('form')
+      .find('.token-specific')
+      .css('visibility', compendium.documentName === 'Actor' ? 'visible' : 'hidden');
+  }
+
   async _onSearchOptions(event) {
+    console.log(this.searchOptions);
     new ConfigureSettings(this.searchOptions, {
       searchPaths: false,
       searchFilters: true,
@@ -217,8 +263,7 @@ export default class CompendiumMapConfig extends FormApplication {
     }
 
     const compendium = game.packs.get(formData.compendium);
-
-    console.log(compendium);
+    const typeOverride = formData.overrideCategory ? formData.category : null;
 
     let processItem;
     if (compendium.documentName === 'Actor') {
@@ -244,17 +289,44 @@ export default class CompendiumMapConfig extends FormApplication {
 
         if (includeThisActor || includeThisToken) {
           if (formData.autoApply) {
-            await autoApply(actor, image1, image2, formData);
+            await autoApply(actor, image1, image2, formData, typeOverride);
           } else {
-            addToArtSelectQueue(actor, image1, image2, formData);
+            addToArtSelectQueue(actor, image1, image2, formData, typeOverride);
           }
         }
       };
     } else {
+      console.log(formData);
       processItem = async function (item) {
         const doc = await compendium.getDocument(item._id);
+        const hasImage = doc.data.img !== doc.data.schema.img.default();
+        let imageFound = false;
+        if (formData.missingOnly && hasImage) return;
+        if (formData.autoApply) {
+          let results = await doImageSearch(doc.name, {
+            searchType: typeOverride ?? compendium.documentName,
+            simpleResults: true,
+            searchOptions: formData.searchOptions,
+          });
 
-        console.log('processing item', doc, doc.data.DEFAULT_ICON);
+          if ((results ?? []).length != 0) {
+            imageFound = true;
+            await updateActorImage(doc, results[0], false, formData.compendium);
+          }
+        }
+
+        if (!formData.autoApply || (formData.autoDisplayArtSelect && !imageFound)) {
+          addToQueue(doc.name, {
+            searchType: typeOverride ?? compendium.documentName,
+            object: doc,
+            image1: formData.showImages ? doc.data.img : '',
+            displayMode: ArtSelect.IMAGE_DISPLAY.IMAGE,
+            searchOptions: formData.searchOptions,
+            callback: async function (imgSrc, name) {
+              await updateActorImage(doc, imgSrc);
+            },
+          });
+        }
 
         // const hasImage = doc.img !== CONST.DEF;
       };
