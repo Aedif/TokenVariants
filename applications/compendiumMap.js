@@ -167,6 +167,8 @@ export default class CompendiumMapConfig extends FormApplication {
     data = mergeObject(data, TVA_CONFIG.compendiumMapper);
 
     const supportedPacks = ['Actor', 'Cards', 'Item', 'JournalEntry', 'Macro', 'RollTable'];
+    data.supportedPacks = supportedPacks.join(', ');
+
     const packs = [];
     game.packs.forEach((pack) => {
       if (!pack.locked && supportedPacks.includes(pack.documentName)) {
@@ -230,7 +232,6 @@ export default class CompendiumMapConfig extends FormApplication {
   }
 
   async _onSearchOptions(event) {
-    console.log(this.searchOptions);
     new ConfigureSettings(this.searchOptions, {
       searchPaths: false,
       searchFilters: true,
@@ -286,10 +287,19 @@ export default class CompendiumMapConfig extends FormApplication {
         }
       };
     } else {
-      console.log(formData);
       processItem = async function (item) {
         const doc = await compendium.getDocument(item._id);
-        const hasImage = doc.data.img !== doc.data.schema.img.default();
+
+        let defaultImg = '';
+        if (doc.data.schema.img.default) {
+          if (typeof doc.data.schema.img.default == 'function') {
+            defaultImg = doc.data.schema.img.default();
+          } else {
+            defaultImg = doc.data.schema.img.default;
+          }
+        }
+        const hasImage = doc.data.img != null && doc.data.img !== defaultImg;
+
         let imageFound = false;
         if (formData.missingOnly && hasImage) return;
         if (formData.autoApply) {

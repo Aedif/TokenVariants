@@ -1,5 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
-import { BASE_IMAGE_CATEGORIES } from '../scripts/utils.js';
+import { onPathSelectCategory } from '../scripts/utils.js';
 import { cacheImages } from '../token-variants.mjs';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 
@@ -157,7 +157,7 @@ export default class ConfigureSettings extends FormApplication {
     $(html).on('click', 'a.delete-path', this._onDeletePath.bind(this));
     $(html).on('click', 'a.convert-imgur', this._onConvertImgurPath.bind(this));
     $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
-    $(html).on('click', 'a.select-types', this._onSelectTypes.bind(this));
+    $(html).on('click', 'a.select-category', onPathSelectCategory.bind(this));
 
     // Search Filters
     html.on('input', 'input.filterRegex', this._validateRegex.bind(this));
@@ -386,8 +386,8 @@ export default class ConfigureSettings extends FormApplication {
         <div class="imgur-control">
             <a class="convert-imgur" title="Convert to Rolltable"><i class="fas fa-angle-double-left"></i></a>
         </div>
-        <div class="path-types">
-            <a class="select-types" title="Select image categories"><i class="fas fa-swatchbook"></i></a>
+        <div class="path-category">
+            <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
             <input type="hidden" name="searchPaths.types" value="token">
         </div>
         <div class="path-cache">
@@ -427,72 +427,11 @@ export default class ConfigureSettings extends FormApplication {
         $(this).attr('name', `searchPaths.${index}.cache`);
       });
     table
-      .find('.path-types')
+      .find('.path-category')
       .find('input')
       .each(function (index) {
         $(this).attr('name', `searchPaths.${index}.types`);
       });
-  }
-
-  async _onSelectTypes(event) {
-    event.preventDefault();
-    const typesInput = $(event.target).closest('.path-types').find('input');
-    const selectedTypes = typesInput.val().split(',');
-
-    const categories = BASE_IMAGE_CATEGORIES.concat(TVA_CONFIG.customImageCategories);
-
-    let content = '<div class="token-variants-popup-settings">';
-
-    // Split into rows of 4
-    const splits = [];
-    let currSplit = [];
-    for (let i = 0; i < categories.length; i++) {
-      if (i > 0 && i + 1 != categories.length && i % 4 == 0) {
-        splits.push(currSplit);
-        currSplit = [];
-      }
-      currSplit.push(categories[i]);
-    }
-    if (currSplit.length) splits.push(currSplit);
-
-    for (const split of splits) {
-      content += '<header class="table-header flexrow">';
-      for (const type of split) {
-        content += `<label>${type}</label>`;
-      }
-      content +=
-        '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
-      for (const type of split) {
-        content += `<input class="category" type="checkbox" name="${
-          type.id
-        }" data-dtype="Boolean" ${selectedTypes.includes(type) ? 'checked' : ''}>`;
-      }
-      content += '</div></li></ul>';
-    }
-    content += '</div>';
-
-    new Dialog({
-      title: `Image Categories`,
-      content: content,
-      buttons: {
-        yes: {
-          icon: "<i class='fas fa-check'></i>",
-          label: 'Select',
-          callback: (html) => {
-            const types = [];
-            $(html)
-              .find('.category')
-              .each(function () {
-                if ($(this).is(':checked')) {
-                  types.push($(this).attr('name'));
-                }
-              });
-            typesInput.val(types.join(','));
-          },
-        },
-      },
-      default: 'yes',
-    }).render(true);
   }
 
   async _onDeletePath(event) {
@@ -540,8 +479,6 @@ export default class ConfigureSettings extends FormApplication {
   async _updateObject(event, formData) {
     const settings = this.settings;
     formData = expandObject(formData);
-
-    console.log(formData);
 
     // Search Paths
     settings.searchPaths = formData.hasOwnProperty('searchPaths')

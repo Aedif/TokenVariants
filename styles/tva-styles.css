@@ -301,7 +301,7 @@ ol.token-variant-table .table-row .path-text {
   flex: 1;
 }
 ol.token-variant-table .table-row .path-cache,
-ol.token-variant-table .table-row .path-types {
+ol.token-variant-table .table-row .path-category {
   flex: 0 0 50px;
   text-align: center;
 }

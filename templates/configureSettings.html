@@ -24,7 +24,7 @@
                   </div>
                   <div class="path-source"><label>Source</label></div>
                   <div class="path-text"><label>Path</label></div>
-                  <div class="path-types"><label>Category</label></div>
+                  <div class="path-category"><label>Category</label></div>
                   <div class="path-cache"><label>Cache</label></div>
                   <div class="path-controls"></div>
                 </li>
@@ -45,8 +45,8 @@
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                   </div>
-                  <div class="path-types">
-                    <a class="select-types" title="Select image categories"><i class="fas fa-swatchbook"></i></a>
+                  <div class="path-category">
+                    <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
                     <input type="hidden" name="searchPaths.{{index}}.types" value="{{path.types}}">
                   </div>
                   <div class="path-cache">
@@ -519,6 +519,14 @@
           <hr>
 
           <div class="form-group">
+            <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
+            <div class="form-fields">
+              <input type="checkbox" name="disableNotifs" data-dtype="Boolean" {{#if disableNotifs}}checked{{/if}}>
+            </div>
+            <p class="notes">{{localize "token-variants.settings.disable-notifs.Hint"}}</p>
+          </div>
+
+          <div class="form-group">
             <label>Static Cache</label>
             <div class="form-fields">
               <input type="checkbox" name="staticCache" data-dtype="Boolean" {{#if staticCache}}checked{{/if}}>
@@ -549,15 +557,7 @@
             <div class="form-fields">
               <input type="checkbox" name="tilesEnabled" data-dtype="Boolean" {{#if tilesEnabled}}checked{{/if}}>
             </div>
-            <p class="notes">Enables Tile specific search paths and a Tile HUD button.</p>
-          </div>
-
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
-            <div class="form-fields">
-              <input type="checkbox" name="disableNotifs" data-dtype="Boolean" {{#if disableNotifs}}checked{{/if}}>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.disable-notifs.Hint"}}</p>
+            <p class="notes">Enables the Tile HUD button</p>
           </div>
 
           <div class="form-group">

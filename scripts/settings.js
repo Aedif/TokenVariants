@@ -137,7 +137,7 @@ export async function registerSettings() {
     scope: 'world',
     config: false,
     type: Object,
-    default: {},
+    default: TVA_CONFIG,
     onChange: async (val) => {
       // Generate a diff, it will be required when doing post-processing of the modified settings
       const diff = _arrayAwareDiffObject(TVA_CONFIG, val);
@@ -258,29 +258,6 @@ export async function registerSettings() {
     });
   }
 
-  // 07/07/2022 Convert filters to new format if old one is still in use
-  if (settings.searchFilters.portraitFilterInclude != null) {
-    const filters = settings.searchFilters;
-    TVA_CONFIG.searchFilters = {
-      Portrait: {
-        include: filters.portraitFilterInclude,
-        exclude: filters.portraitFilterExclude,
-        regex: filters.portraitFilterRegex,
-      },
-      Token: {
-        include: filters.tokenFilterInclude,
-        exclude: filters.tokenFilterExclude,
-        regex: filters.tokenFilterRegex,
-      },
-      PortraitAndToken: {
-        include: filters.generalFilterInclude,
-        exclude: filters.generalFilterExclude,
-        regex: filters.generalFilterRegex,
-      },
-    };
-    delete TVA_CONFIG.compendiumMapper.searchFilters;
-  }
-
   // 16/06/2022
   // Perform searchPaths and forgeSearchPaths conversions to new format if needed
   TVA_CONFIG.searchPaths = TVA_CONFIG.searchPaths.map((p) => {
@@ -325,6 +302,39 @@ export async function registerSettings() {
       }
       return p;
     });
+  }
+
+  // 07/07/2022 Convert filters to new format if old one is still in use
+  if (settings.searchFilters.portraitFilterInclude != null) {
+    const filters = settings.searchFilters;
+    TVA_CONFIG.searchFilters = {
+      Portrait: {
+        include: filters.portraitFilterInclude,
+        exclude: filters.portraitFilterExclude,
+        regex: filters.portraitFilterRegex,
+      },
+      Token: {
+        include: filters.tokenFilterInclude,
+        exclude: filters.tokenFilterExclude,
+        regex: filters.tokenFilterRegex,
+      },
+      PortraitAndToken: {
+        include: filters.generalFilterInclude,
+        exclude: filters.generalFilterExclude,
+        regex: filters.generalFilterRegex,
+      },
+    };
+    BASE_IMAGE_CATEGORIES.forEach((category) => {
+      if (!(category in TVA_CONFIG.searchFilters)) {
+        TVA_CONFIG.searchFilters[category] = {
+          include: '',
+          exclude: '',
+          regex: '',
+        };
+      }
+    });
+    delete TVA_CONFIG.compendiumMapper.searchFilters;
+    updateSettings(TVA_CONFIG);
   }
 
   // Read client settings
@@ -415,28 +425,40 @@ export async function importSettingsFromJSON(json) {
   updateSettings(json);
 }
 
+function _refreshFilters(filters, customCategories, updateTVAConfig = false) {
+  const categories = BASE_IMAGE_CATEGORIES.concat(
+    customCategories ?? TVA_CONFIG.customImageCategories
+  );
+  for (const filter in filters) {
+    if (!categories.includes(filter)) {
+      delete filters[filter];
+      if (updateTVAConfig) delete TVA_CONFIG.searchFilters[filter];
+    }
+  }
+  for (const category of customCategories) {
+    if (filters[category] == null) {
+      filters[category] = {
+        include: '',
+        exclude: '',
+        regex: '',
+      };
+    }
+  }
+}
+
 export async function updateSettings(newSettings) {
   const settings = mergeObject(deepClone(TVA_CONFIG), newSettings);
-
   // Custom image categories might have changed, meaning we may have filters that are no longer relevant
   // or need to be added
-  console.log(settings, newSettings);
   if ('customImageCategories' in newSettings) {
-    const categories = BASE_IMAGE_CATEGORIES.concat(newSettings.customImageCategories);
-    for (const filter in settings.searchFilters) {
-      if (!categories.includes(filter)) {
-        delete settings.searchFilters[filter];
-        delete TVA_CONFIG.searchFilters[filter];
-      }
-    }
-    for (const category of settings.customImageCategories) {
-      if (settings.searchFilters[category] == null) {
-        settings.searchFilters[category] = {
-          include: '',
-          exclude: '',
-          regex: '',
-        };
-      }
+    _refreshFilters(settings.searchFilters, newSettings.customImageCategories, true);
+    if (settings.compendiumMapper?.searchOptions?.searchFilters != null) {
+      _refreshFilters(
+        settings.compendiumMapper.searchOptions.searchFilters,
+        newSettings.customImageCategories
+      );
+      TVA_CONFIG.compendiumMapper.searchOptions.searchFilters =
+        settings.compendiumMapper.searchOptions.searchFilters;
     }
   }
 

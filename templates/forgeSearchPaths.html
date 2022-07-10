@@ -16,7 +16,7 @@
         </div>
         <div class="path-source"><label>Source</label></div>
         <div class="path-text"><label>Path</label></div>
-        <div class="path-types"><label>Types</label></div>
+        <div class="path-category"><label>Category</label></div>
         <div class="path-cache"><label>Cache</label></div>
         <div class="path-share"><label>Share</label></div>
         <div class="path-controls"></div>
@@ -34,8 +34,8 @@
         <div class="path-text">
           <input type="text" name="paths.{{index}}.text" value="{{path.text}}" placeholder="Path to folder"/>
         </div>
-        <div class="path-types">
-          <a class="select-types" title="Select image categories"><i class="fas fa-swatchbook"></i></a>
+        <div class="path-category">
+          <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
           <input type="hidden" name="paths.{{index}}.types" value="{{path.types}}">
         </div>
         <div class="path-cache">

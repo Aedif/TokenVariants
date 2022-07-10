@@ -1024,7 +1024,13 @@ export async function saveCache(cacheFile) {
   const caches = Object.keys(CACHED_IMAGES);
   for (const c of caches) {
     if (!(c in data)) data[c] = [];
-    data[c].push([img.path, img.name]);
+    for (const img of CACHED_IMAGES[c]) {
+      if (getFileName(img.path) === img.name) {
+        data[c].push(img.path);
+      } else {
+        data[c].push([img.path, img.name]);
+      }
+    }
   }
 
   let file = new File([JSON.stringify(data)], getFileNameWithExt(cacheFile), {
@@ -1041,14 +1047,20 @@ async function _readCacheFromFile(fileName) {
         // Old version cache support
         if (category === 'tokenImages') {
           category = 'Portrait,Token,PortraitAndToken';
-          json[category] = json[tokenImages];
+          json[category] = json.tokenImages;
         } else if (category === 'tileImages') {
           category = 'Tile';
           json[category] = json.tileImages;
         }
 
+        CACHED_IMAGES[category] = [];
+
         for (const img of json[category]) {
-          CACHED_IMAGES[category].push({ path: img[0], name: img[1] });
+          if (Array.isArray(img)) {
+            CACHED_IMAGES[category].push({ path: img[0], name: img[1] });
+          } else {
+            CACHED_IMAGES[category].push({ path: img, name: getFileName(img) });
+          }
         }
       }
       if (!TVA_CONFIG.disableNotifs)
@@ -1225,13 +1237,17 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
     }
   }
 
-  let results = fuse.search(name).slice(0, searchOptions.algorithm.fuzzyLimit);
-
-  results = results.map((r) => {
-    r.item.indices = r.matches[0].indices;
-    r.item.score = r.score;
-    return r.item;
-  });
+  let results;
+  if (name === '') {
+    results = fuse.getIndex().docs.slice(0, searchOptions.algorithm.fuzzyLimit);
+  } else {
+    results = fuse.search(name).slice(0, searchOptions.algorithm.fuzzyLimit);
+    results = results.map((r) => {
+      r.item.indices = r.matches[0].indices;
+      r.item.score = r.score;
+      return r.item;
+    });
+  }
 
   if (TVA_CONFIG.debug) console.log('ENDING: Fuzzy Image Search', results);
 

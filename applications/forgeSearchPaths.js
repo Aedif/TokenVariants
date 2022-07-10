@@ -1,4 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { onPathSelectCategory } from '../scripts/utils.js';
 
 export class ForgeSearchPaths extends FormApplication {
   constructor() {
@@ -14,7 +15,7 @@ export class ForgeSearchPaths extends FormApplication {
       minimizable: false,
       closeOnSubmit: false,
       title: game.i18n.localize('token-variants.settings.search-paths.Name'),
-      width: 540,
+      width: 592,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
       dragDrop: [{ dragSelector: null, dropSelector: null }],
@@ -29,14 +30,13 @@ export class ForgeSearchPaths extends FormApplication {
       r.text = path.text;
       r.cache = path.cache;
       r.share = path.share;
-      r.tiles = path.tiles;
+      r.types = path.types.join(',');
       return r;
     });
 
     const data = super.getData(options);
     data.paths = paths;
     data.apiKey = this.apiKey;
-    data.tilesEnabled = TVA_CONFIG.tilesEnabled && game.user.isGM;
     return data;
   }
 
@@ -53,6 +53,7 @@ export class ForgeSearchPaths extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.find('a.create-path').click(this._onCreatePath.bind(this));
+    $(html).on('click', 'a.select-category', onPathSelectCategory.bind(this));
     html.find('a.delete-path').click(this._onDeletePath.bind(this));
     html.find('button.reset').click(this._onReset.bind(this));
     html.find('button.update').click(this._onUpdate.bind(this));
@@ -83,7 +84,12 @@ export class ForgeSearchPaths extends FormApplication {
     event.preventDefault();
     await this._onSubmit(event);
 
-    this.object.paths.push({ text: '', cache: true, share: true, tiles: false });
+    this.object.paths.push({
+      text: '',
+      cache: true,
+      share: true,
+      types: ['Portrait', 'Token', 'PortraitAndToken'],
+    });
     this.render();
   }
 
@@ -116,8 +122,8 @@ export class ForgeSearchPaths extends FormApplication {
         text: path.text,
         cache: path.cache,
         share: path.share,
-        tiles: path.tiles,
         source: path.source,
+        types: path.types.split(','),
       };
     });
     this.apiKey = expanded.apiKey;

@@ -143,7 +143,7 @@ export class ArtSelect extends FormApplication {
     for (const c of categories) {
       let label = c;
       if (c === this.searchType) {
-        label = '>>> ' + label + ' <<<';
+        label = '<b>>>> ' + label + ' <<<</b>';
       }
       buttons[c] = {
         label: label,
