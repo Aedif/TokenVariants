@@ -225,10 +225,12 @@ export default class CompendiumMapConfig extends FormApplication {
 
   async _onCompendiumSelect(event) {
     const compendium = game.packs.get($(event.target).val());
-    $(event.target)
-      .closest('form')
-      .find('.token-specific')
-      .css('visibility', compendium.documentName === 'Actor' ? 'visible' : 'hidden');
+    if (compendium) {
+      $(event.target)
+        .closest('form')
+        .find('.token-specific')
+        .css('visibility', compendium.documentName === 'Actor' ? 'visible' : 'hidden');
+    }
   }
 
   async _onSearchOptions(event) {

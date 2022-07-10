@@ -388,7 +388,7 @@ export default class ConfigureSettings extends FormApplication {
         </div>
         <div class="path-category">
             <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
-            <input type="hidden" name="searchPaths.types" value="token">
+            <input type="hidden" name="searchPaths.types" value="Portrait,Token,PortraitAndToken">
         </div>
         <div class="path-cache">
             <input type="checkbox" name="searchPaths.cache" data-dtype="Boolean" checked/>

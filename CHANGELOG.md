@@ -1,3 +1,28 @@
+# 3.0.0
+
+Image Categories
+
+- **Search Paths** can now be assigned categories that will group images under specific tags
+- Each category can have a separate filter applied to it
+- Additional categories can be created via **Misc** > **Custom Image Categories**
+- Enabling of **Misc** > **Tile HUD** setting will no longer add a new checkbox in the **Search Paths** and will instead only toggle the display of the Tile HUD button
+  - Tile paths can be defined as such using the **Tile** category
+- **Search Filters** will now contain rows for each base (Token,Portrait,PortraitAndToken,Tile,Item,JournalEntry,Macro) and custom image categories
+- **Art Select** now has an **Image Category** header button that allows you to switch which image category/filter is being searched with
+
+Compendium Mapper
+
+- Now also accepts Cards, Item, JournalEntry, Macro, and RollTable compendiums
+  - At the moment will only update the main display image of each document
+- New **Override Image Category** setting
+  - Allows to change which category/filters are to be used during the mapping operation
+
+Misc.
+
+- During token create **Art Select** will now appropriately default to **Token** search
+- Reduced the size of the static image cache file
+- Fixed custom configuration not being removed when opening up a menu to individually change a configuration for an effect
+
 # 2.15.1
 
 Status Effect Configuration

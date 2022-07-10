@@ -794,7 +794,7 @@ async function createToken(token, options, userId) {
         });
       }
     },
-    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.TOKEN,
     object: token,
     preventClose: TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog,
   });

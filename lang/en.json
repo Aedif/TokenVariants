@@ -125,7 +125,7 @@
       },
       "compendium-mapper": {
         "Name": "Compendium Mapper",
-        "Hint": "Apply images to Actor compendiums",
+        "Hint": "Apply images to compendiums",
         "window": {
           "compendium-select": "Select an unlocked compendium to perform mappings on",
           "missing-only": "Only include entries with missing images",
