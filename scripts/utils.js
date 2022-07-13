@@ -850,18 +850,31 @@ export function tva_testInBrightVision(point, { tolerance = 2, object = null }) 
 }
 
 export async function drawEffectOverlay(token, img) {
-  const texture = await loadTexture(img, {
+  if (typeof img !== 'object') {
+    img = { img: img };
+  }
+
+  const conf = { alpha: 1, scaleX: 0, scaleY: 0, offsetX: 0, offSetY: 0, filter: 'NONE' };
+  mergeObject(conf, img);
+
+  const texture = await loadTexture(conf.img, {
     fallback: 'modules/token-variants/img/token-images.svg',
   });
 
   // Create Sprite using the loaded texture
   let icon = new PIXI.Sprite(texture);
-  icon.anchor.set(0.5, 0.5);
+  icon.anchor.set(0.5 + conf.offsetX, 0.5 + conf.offSetY);
+  icon.alpha = conf.alpha;
+  let filter = PIXI.filters[conf.filter];
+  if (filter) {
+    icon.filters = [new filter()];
+  }
+  console.log(icon);
 
   // Adjust the scale to be relative to the token image so that when it gets attached
   // as a child of the token image and inherits its scale, their sizes match up
-  icon.scale.x = token.texture.width / texture.width;
-  icon.scale.y = token.texture.height / texture.height;
+  icon.scale.x = token.texture.width / texture.width + conf.scaleX;
+  icon.scale.y = token.texture.height / texture.height + conf.scaleY;
 
   // console.log('TOKEN TEXTURE ', token.texture.width, token.texture.height);
   // console.log('OVERL TEXTURE ', texture.width, texture.height);
@@ -886,20 +899,20 @@ export async function reDrawEffectOverlays(token) {
     for (const ol of token.tva_overlays) token.icon.removeChild(ol);
     delete token.tva_overlays;
   }
-  let overlayImages;
+  let overlays;
   if (token.data.actorLink && token.actor) {
-    overlayImages = token.actor.getFlag('token-variants', 'overlays');
+    overlays = token.actor.getFlag('token-variants', 'overlays');
   } else {
-    overlayImages = (token.document ?? token).getFlag('token-variants', 'overlays');
+    overlays = (token.document ?? token).getFlag('token-variants', 'overlays');
   }
 
-  const overlays = [];
-  if (overlayImages) {
+  const overlayIcons = [];
+  if (overlays) {
     waitForTexture(token, async () => {
-      for (const img of overlayImages) {
-        overlays.push(token.icon.addChild(await drawEffectOverlay(token, img)));
+      for (const img of overlays) {
+        overlayIcons.push(token.icon.addChild(await drawEffectOverlay(token, img)));
       }
-      if (overlays.length) token.tva_overlays = overlays;
+      if (overlayIcons.length) token.tva_overlays = overlayIcons;
       else delete token.tva_overlays;
     });
   }

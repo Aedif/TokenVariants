@@ -214,7 +214,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
       )
     );
     let shared = false;
-    if (game.user.isGM) {
+    if (TVA_CONFIG.permissions.hudFullAccess[game.user.role]) {
       actorVariants.forEach((variant) => {
         if (variant.imgSrc === imageObj.path && variant.names.includes(imageObj.name)) {
           shared = true;

@@ -4,6 +4,7 @@ import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
+import OverlayConfig from './overlayConfig.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token, globalMappings = false) {
@@ -58,6 +59,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           hasTokenConfig: hasTokenConfig > 0,
           config: attrs.config,
           overlay: attrs.overlay,
+          overlayConfig: attrs.overlayConfig,
         });
       }
     }
@@ -84,6 +86,27 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.effect-config i.config').click(this._onConfigClick.bind(this));
     html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
     html.find('.effect-config i.config-script').click(this._onConfigScriptClick.bind(this));
+    html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
+    html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
+  }
+
+  async _onOverlayChange(event) {
+    if (event.target.checked) {
+      $(event.target).siblings('a').show();
+    } else {
+      $(event.target).siblings('a').hide();
+    }
+  }
+
+  async _onOverlayConfigClick(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+
+    new OverlayConfig(mapping.overlayConfig, (config) => {
+      console.log('callback called', config);
+      mapping.overlayConfig = config;
+      console.log(this.object);
+    }).render(true);
   }
 
   async _toggleActiveControls(event) {
@@ -201,6 +224,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       imgName: '',
       imgSrc: '',
       priority: 50,
+      overlay: false,
     });
     this.render();
   }
@@ -235,9 +259,11 @@ export default class ActiveEffectConfigList extends FormApplication {
             priority: mapping.priority,
             config: mapping.config,
             overlay: mapping.overlay,
+            overlayConfig: mapping.overlayConfig,
           };
         }
         if (this.globalMappings) {
+          TVA_CONFIG.globalMappings = effectMappings;
           updateSettings({ globalMappings: effectMappings });
         } else {
           setEffectMappingsFlag(this.objectToFlag, effectMappings);

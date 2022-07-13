@@ -4,6 +4,7 @@ import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
+import OverlayConfig from './overlayConfig.js';
 
 export default class TVAActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -24,6 +25,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
     const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
     const mapping = effectMappings[this.effectName] || {};
     this.config = mapping.config || {};
+    this.overlayConfig = mapping.overlayConfig;
   }
 
   static get defaultOptions() {
@@ -76,6 +78,13 @@ export default class TVAActiveEffectConfig extends FormApplication {
     html.find('button.effect-config').click(this._onConfigClick.bind(this));
     html.find('button.effect-config-edit').click(this._onConfigEditClick.bind(this));
     html.find('button.effect-config-script').click(this._onConfigScriptClick.bind(this));
+    html.find('.overlay-config').click(this._onOverlayConfigClick.bind(this));
+  }
+
+  async _onOverlayConfigClick(event) {
+    new OverlayConfig(this.overlayConfig, (config) => {
+      this.overlayConfig = config;
+    }).render(true);
   }
 
   async _toggleActiveControls(event) {
@@ -188,6 +197,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
       else {
         if (!formData.priority) formData.priority = 50;
         formData.config = this.config;
+        formData.overlayConfig = this.overlayConfig;
         const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
         effectMappings[this.effectName] = formData;
         setEffectMappingsFlag(this.objectToFlag, effectMappings);

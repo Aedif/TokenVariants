@@ -356,6 +356,15 @@ ol.token-variant-table .table-row .effect-overlay {
   text-align: center;
 }
 
+ol.token-variant-table .table-row .effect-overlay > input {
+  vertical-align: top;
+  width: 36%;
+}
+
+ol.token-variant-table .table-row .effect-overlay > a {
+  vertical-align: middle;
+}
+
 ol.token-variant-table .table-row .effect-config i.active {
   color: orange;
 }

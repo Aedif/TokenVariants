@@ -170,13 +170,17 @@ async function initialize() {
       if (TVA_CONFIG.stackStatusConfig) {
         for (const effect of effects) {
           if (effect.imgSrc && effect.overlay) {
-            overlayImages.push(effect.imgSrc);
+            const conf = effect.overlayConfig || {};
+            conf.img = effect.imgSrc;
+            overlayImages.push(conf);
           }
         }
       } else {
         for (let i = effects.length - 1; i >= 0; i--) {
           if (effects[i].imgSrc && effects[i].overlay) {
-            overlayImages.push(effects[i].imgSrc);
+            const conf = effects[i].overlayConfig || {};
+            conf.img = effects[i].imgSrc;
+            overlayImages.push(conf);
             break;
           }
         }
@@ -622,12 +626,10 @@ async function initialize() {
         }
       }
       if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
-        const tokens = actor.token
-          ? [actor.token]
-          : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
-        const effects = getEffectsFromActor(actor);
+        const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
+        const actorEffects = getEffectsFromActor(actor);
         for (const tkn of tokens) {
-          updateWithEffectMapping(tkn, effects);
+          updateWithEffectMapping(tkn, tkn.data.actorLink ? actorEffects : getEffects(tkn));
         }
       }
     }
@@ -1340,6 +1342,7 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
     } else if (path.source.startsWith('rolltable')) {
       const table = game.tables.contents.find((t) => t.name === path.text);
       if (!table) {
+        const rollTableName = path.text;
         ui.notifications.warn(
           game.i18n.format('token-variants.notifications.warn.invalid-table', {
             rollTableName,
