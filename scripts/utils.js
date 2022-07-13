@@ -854,7 +854,7 @@ export async function drawEffectOverlay(token, img) {
     img = { img: img };
   }
 
-  const conf = { alpha: 1, scaleX: 0, scaleY: 0, offsetX: 0, offSetY: 0, filter: 'NONE' };
+  const conf = { alpha: 1, scaleX: 0, scaleY: 0, offsetX: 0, offsetY: 0, filter: 'NONE' };
   mergeObject(conf, img);
 
   const texture = await loadTexture(conf.img, {
@@ -863,13 +863,12 @@ export async function drawEffectOverlay(token, img) {
 
   // Create Sprite using the loaded texture
   let icon = new PIXI.Sprite(texture);
-  icon.anchor.set(0.5 + conf.offsetX, 0.5 + conf.offSetY);
+  icon.anchor.set(0.5 + conf.offsetX, 0.5 + conf.offsetY);
   icon.alpha = conf.alpha;
   let filter = PIXI.filters[conf.filter];
   if (filter) {
     icon.filters = [new filter()];
   }
-  console.log(icon);
 
   // Adjust the scale to be relative to the token image so that when it gets attached
   // as a child of the token image and inherits its scale, their sizes match up

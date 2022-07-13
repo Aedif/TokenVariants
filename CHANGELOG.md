@@ -1,3 +1,12 @@
+# 3.1.0
+
+Overlays
+
+- Added a control to adjust how the overlay is displayed on top of the token:
+  - Opacity, Offset, Scale, and Filter
+- Fixed **Misc** > **Global Effect Configurations** setting sometimes displaying as empty when selecting _Apply_ with no changes being made
+- Fixed effect mapping changes via Token HUD not immediately reflecting on an active token
+
 # 3.0.0
 
 Image Categories

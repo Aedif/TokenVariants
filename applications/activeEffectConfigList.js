@@ -103,9 +103,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     const mapping = this.object.mappings[li.dataset.index];
 
     new OverlayConfig(mapping.overlayConfig, (config) => {
-      console.log('callback called', config);
       mapping.overlayConfig = config;
-      console.log(this.object);
     }).render(true);
   }
 
