@@ -854,7 +854,17 @@ export async function drawEffectOverlay(token, img) {
     img = { img: img };
   }
 
-  const conf = { alpha: 1, scaleX: 0, scaleY: 0, offsetX: 0, offsetY: 0, filter: 'NONE' };
+  const conf = {
+    alpha: 1,
+    scaleX: 0,
+    scaleY: 0,
+    offsetX: 0,
+    offsetY: 0,
+    filter: 'NONE',
+    inheritTint: false,
+    tint: null,
+    loop: true,
+  };
   mergeObject(conf, img);
 
   const texture = await loadTexture(conf.img, {
@@ -875,29 +885,30 @@ export async function drawEffectOverlay(token, img) {
   icon.scale.x = token.texture.width / texture.width + conf.scaleX;
   icon.scale.y = token.texture.height / texture.height + conf.scaleY;
 
-  // console.log('TOKEN TEXTURE ', token.texture.width, token.texture.height);
-  // console.log('OVERL TEXTURE ', texture.width, texture.height);
-  // console.log('SCALE         ', icon.scale.x, icon.scale.y);
-
   // Ensure playback state for video tokens
   const source = foundry.utils.getProperty(texture, 'baseTexture.resource.source');
   if (source && source.tagName === 'VIDEO') {
-    source.loop = true;
-    source.muted = true;
-    source.currentTime = 0;
-    game.video.play(source);
+    // const s = source;
+    const s = source.cloneNode();
+    s.loop = conf.loop;
+    s.muted = true;
+
+    s.onplay = () => (s.currentTime = 0);
+    await new Promise((resolve) => (s.oncanplay = resolve));
+    icon.texture = PIXI.Texture.from(s, { resourceOptions: { autoPlay: false } });
+
+    // s.currentTime = 0;
+
+    game.video.play(s);
   }
 
   // Apply color tinting
-  icon.tint = token.data.tint ? foundry.utils.colorStringToHex(token.data.tint) : 0xffffff;
+  const tint = conf.inheritTint ? token.data.tint : conf.tint;
+  icon.tint = tint ? foundry.utils.colorStringToHex(tint) : 0xffffff;
   return icon;
 }
 
 export async function reDrawEffectOverlays(token) {
-  if (token.tva_overlays) {
-    for (const ol of token.tva_overlays) token.icon.removeChild(ol);
-    delete token.tva_overlays;
-  }
   let overlays;
   if (token.data.actorLink && token.actor) {
     overlays = token.actor.getFlag('token-variants', 'overlays');
@@ -905,15 +916,51 @@ export async function reDrawEffectOverlays(token) {
     overlays = (token.document ?? token).getFlag('token-variants', 'overlays');
   }
 
-  const overlayIcons = [];
   if (overlays) {
     waitForTexture(token, async () => {
-      for (const img of overlays) {
-        overlayIcons.push(token.icon.addChild(await drawEffectOverlay(token, img)));
+      const overlayIcons = [];
+      if (!token.tva_overlays) token.tva_overlays = [];
+      const removedChildren = [];
+      for (const overlay of token.tva_overlays) {
+        const removed = token.icon.removeChild(overlay);
+        if (removed) removedChildren.push(overlay);
+      }
+      for (const ov of overlays) {
+        // Check if overlay is already drawn
+        if (ov.effect) {
+          let found;
+          for (const c of removedChildren) {
+            if (ov.effect === c.tva_overlay?.effect) {
+              let icon;
+              console.log('comparing', c.tva_overlay, ov);
+              if (isObjectEmpty(diffObject(c.tva_overlay, ov))) {
+                console.log('Found not redrawing', c, ov);
+                icon = token.icon.addChild(c);
+              } else {
+                icon = token.icon.addChild(await drawEffectOverlay(token, ov));
+              }
+              icon.tva_overlay = ov;
+              overlayIcons.push(icon);
+              found = true;
+              break;
+            }
+          }
+
+          if (!found) {
+            const icon = token.icon.addChild(await drawEffectOverlay(token, ov));
+            icon.tva_overlay = ov;
+            overlayIcons.push(icon);
+          }
+        } else {
+          overlayIcons.push(token.icon.addChild(await drawEffectOverlay(token, ov)));
+        }
       }
       if (overlayIcons.length) token.tva_overlays = overlayIcons;
       else delete token.tva_overlays;
     });
+  } else if (token.tva_overlays) {
+    for (const ol of token.tva_overlays) token.icon.removeChild(ol.icon);
+    delete token.tva_overlays;
   }
   // Temporarily disabled
   // if (token.tva_dim && token.actor) {

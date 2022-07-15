@@ -9,6 +9,7 @@
       {{#if enabledTabs.popup}}<a class="item" data-tab="popup"><i class="fas fa-book-open"></i> Pop-up</a>{{/if}}
       {{#if enabledTabs.permissions}}<a class="item" data-tab="permissions"><i class="fas fa-user-lock"></i> Permissions</a>{{/if}}
       {{#if enabledTabs.worldHud}}<a class="item" data-tab="worldHud"><i class="fas fa-images"></i> Token HUD</a>{{/if}}
+      {{#if enabledTabs.activeEffects}}<a class="item" data-tab="activeEffects"><i class="fas fa-bars"></i> Active Effects</a>{{/if}}
       {{#if enabledTabs.misc}}<a class="item" data-tab="misc"><i class="fas fa-bars"></i> Misc</a>{{/if}}
     </nav>
 
@@ -496,15 +497,15 @@
         </div>
         {{/if}}
 
-        <!-- Misc -->
-        {{#if enabledTabs.misc}}
-        <div class="tab" data-tab="misc" data-group="primary-tabs">
+        <!-- Active Effects -->
+        {{#if enabledTabs.activeEffects}}
+        <div class="tab" data-tab="activeEffects" data-group="primary-tabs">
           <div class="form-group">
             <label>Stack Configurations</label>
             <div class="form-fields">
               <input type="checkbox" name="stackStatusConfig" data-dtype="Boolean" {{#if stackStatusConfig}}checked{{/if}}>
             </div>
-            <p class="notes">Status Effect custom configurations will stack on top of one another instead of overriding each other.</p>
+            <p class="notes">Active Effect custom configurations will stack on top of one another instead of overriding each other.</p>
           </div>
 
           <div class="form-group">
@@ -518,6 +519,47 @@
 
           <hr>
 
+          <div class="form-group">
+            <label>Disable ALL Token Effect Icons</label>
+            <div class="form-fields">
+              <input type="checkbox" name="disableEffectIcons" data-dtype="Boolean" {{#if disableEffectIcons}}checked{{/if}}>
+            </div>
+            <p class="notes"><b>REQUIRES GAME RELOAD ON SETTING CHANGE</b> Prevents drawing of temporary effects on the token.</p>
+          </div>
+
+          <hr>
+
+          {{#unless pathfinder}}
+          <div class="form-group">
+            <label>Disable SOME Token Effect Icons</label>
+            <div class="form-fields">
+              <input type="checkbox" name="filterEffectIcons" data-dtype="Boolean" {{#if filterEffectIcons}}checked{{/if}}>
+            </div>
+            <p class="notes"><b>REQUIRES GAME RELOAD ON SETTING CHANGE</b> Disable drawing of the following effects on the token:</p>
+          </div>
+
+          <div class="form-group">
+            <label>Effects with custom configurations</label>
+            <div class="form-fields">
+              <input type="checkbox" name="filterCustomEffectIcons" data-dtype="Boolean" {{#if filterCustomEffectIcons}}checked{{/if}}>
+            </div>
+            <p class="notes">Prevents drawing of temporary effects on the token if a custom mapping exists for it.</p>
+          </div>
+
+          <div class="form-group">
+            <label>Additional Restricted Effects</label>
+            <div class="form-fields">
+              <input type="text" name="filterIconList" data-dtype="String" value="{{filterIconList}}" placeholder="e.g. Sharpshooter,Asleep">
+            </div>
+          </div>
+          {{/unless}}
+          <hr>
+        </div>
+        {{/if}}
+
+        <!-- Misc -->
+        {{#if enabledTabs.misc}}
+        <div class="tab" data-tab="misc" data-group="primary-tabs">
           <div class="form-group">
             <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
             <div class="form-fields">

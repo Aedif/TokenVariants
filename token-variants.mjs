@@ -27,6 +27,7 @@ import {
   tv_executeScript,
   reDrawEffectOverlays,
   getFilePath,
+  waitForTexture,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -127,24 +128,6 @@ async function initialize() {
       { inplace: false }
     );
 
-    // // Special handling of token-variants-dim effect
-    // const dimMapping = mappings['token-variants-dim'];
-    // // if (dimMapping && (added === 'token-variants-dim' || removed === 'token-variants-dim')) {
-    // //   if (added && dimMapping.imgSrc) {
-    // //     token.document.setFlag('token-variants', 'override', {
-    // //       imgSrc: dimMapping.imgSrc,
-    // //       overlay: dimMapping.overlay,
-    // //     });
-    // //   } else if (token.document.getFlag('token-variants', 'override')) {
-    // //     token.document.unsetFlag('token-variants', 'override');
-    // //   }
-    // // }
-    // // We don't want token-variants-dim image to be applied to the token via an update
-    // if (dimMapping) {
-    //   dimMapping.imgSrc = '';
-    //   dimMapping.imgName = '';
-    // }
-
     // Accumulate all scripts that will need to be run after the update
     const executeOnCallback = [];
     for (const ef of added) {
@@ -160,7 +143,15 @@ async function initialize() {
     // Filter effects that do not have a mapping and sort based on priority
     effects = effects
       .filter((ef) => ef in mappings)
-      .map((ef) => mappings[ef])
+      .map((ef) => {
+        const m = mappings[ef];
+        // There might be overlay configs using the old format without the effect name
+        // as a patch fix apply it here
+        if (m.overlayConfig) {
+          m.overlayConfig.effect = ef;
+        }
+        return m;
+      })
       .sort((ef1, ef2) => ef1.priority - ef2.priority);
 
     // Process overlays
@@ -577,41 +568,71 @@ async function initialize() {
       'WRAPPER'
     );
 
-    // TODO: Temporarily disabled
-    // libWrapper.register(
-    //   'token-variants',
-    //   'Token.prototype.isVisible',
-    //   function (wrapped, ...args) {
-    //     let result = wrapped(...args);
-    //     if (result) {
-    //       if (inDimLight(this)) {
-    //         console.log('in dim');
-    //         if (!this.tva_dim) {
-    //           this.tva_dim = true;
-    //           reDrawEffectOverlays(this);
-    //           // const effects = getEffects(this);
-    //           // if (this.inCombat) effects.unshift('token-variants-combat');
-    //           // if (this.hidden) effects.push('token-variants-visibility');
-    //           // effects.push('token-variants-dim');
-    //           // updateWithEffectMapping(this, effects, {
-    //           //   added: 'token-variants-dim',
-    //           // });
-    //         }
-    //       } else if (this.tva_dim) {
-    //         this.tva_dim = false;
-    //         reDrawEffectOverlays(this);
-    //         // const effects = getEffects(this);
-    //         // if (this.inCombat) effects.unshift('token-variants-combat');
-    //         // if (this.hidden) effects.push('token-variants-visibility');
-    //         // updateWithEffectMapping(this, effects, {
-    //         //   removed: 'token-variants-dim',
-    //         // });
-    //       }
-    //     }
-    //     return result;
-    //   },
-    //   'WRAPPER'
-    // );
+    if (TVA_CONFIG.disableEffectIcons) {
+      libWrapper.register(
+        'token-variants',
+        'Token.prototype.drawEffects',
+        function (...args) {
+          // Simply override and do nothing here. No effect icons will be drawn on top of the token
+        },
+        'OVERRIDE'
+      );
+    } else if (TVA_CONFIG.filterEffectIcons) {
+      libWrapper.register(
+        'token-variants',
+        'Token.prototype.drawEffects',
+        async function (wrapped, ...args) {
+          if (['pf1e', 'pf2e'].includes(game.system.id)) {
+            return await wrapped(...args);
+          }
+
+          // Temporarily removing token and actor effects based on module settings
+          // after the effect icons have been drawn, they will be reset to originals
+          const tokenEffects = this.data.effects;
+          const actorEffects = this.actor?.effects;
+
+          let restrictedEffects = TVA_CONFIG.filterIconList;
+          if (TVA_CONFIG.filterCustomEffectIcons) {
+            const mappings = mergeObject(
+              TVA_CONFIG.globalMappings,
+              (this.actor ? this.actor : this.document).getFlag('token-variants', 'effectMappings'),
+              { inplace: false }
+            );
+            if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
+          }
+
+          let removed = [];
+          if (restrictedEffects.length) {
+            if (tokenEffects.length) {
+              this.data.effects = tokenEffects.filter(
+                (ef) => !restrictedEffects.includes(ef.data.label)
+              );
+            }
+            if (this.actor && actorEffects.size) {
+              removed = actorEffects.filter((ef) => restrictedEffects.includes(ef.data.label));
+              for (const r of removed) {
+                actorEffects.delete(r.id);
+              }
+            }
+          }
+
+          const result = await wrapped(...args);
+
+          if (restrictedEffects.length) {
+            if (tokenEffects.length) {
+              this.data.effects = tokenEffects;
+            }
+            if (removed.length) {
+              for (const r of removed) {
+                actorEffects.set(r.id, r);
+              }
+            }
+          }
+          return result;
+        },
+        'WRAPPER'
+      );
+    }
   }
 
   Hooks.on('updateActor', async function (actor, change, options, userId) {
@@ -1707,5 +1728,14 @@ Hooks.on('canvasReady', async function () {
   canvas.tokens.placeables.forEach((tkn) => checkAndDisplayUserSpecificImage(tkn));
   for (const tkn of canvas.tokens.placeables) {
     reDrawEffectOverlays(tkn);
+    if (TVA_CONFIG.disableEffectIcons) {
+      waitForTexture(tkn, () => {
+        tkn.hud.effects.removeChildren().forEach((c) => c.destroy());
+      });
+    } else if (TVA_CONFIG.filterEffectIcons) {
+      waitForTexture(tkn, () => {
+        tkn.drawEffects();
+      });
+    }
   }
 });

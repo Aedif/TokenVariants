@@ -1,5 +1,5 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
-import { BASE_IMAGE_CATEGORIES, userRequiresImageCache } from './utils.js';
+import { BASE_IMAGE_CATEGORIES, userRequiresImageCache, waitForTexture } from './utils.js';
 import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
@@ -66,7 +66,7 @@ export const TVA_CONFIG = {
     twoPopupsNoDialog: false,
   },
   imgurClientId: '',
-  stackStatusConfig: false,
+  stackStatusConfig: true,
   staticCache: false,
   staticCacheFile: 'modules/token-variants/token-variants-cache.json',
   tilesEnabled: false,
@@ -120,6 +120,10 @@ export const TVA_CONFIG = {
   },
   globalMappings: {},
   customImageCategories: [],
+  disableEffectIcons: false,
+  filterEffectIcons: false,
+  filterCustomEffectIcons: true,
+  filterIconList: [],
 };
 
 export async function registerSettings() {
@@ -154,6 +158,17 @@ export async function registerSettings() {
 
       // Update live settings
       mergeObject(TVA_CONFIG, val);
+
+      if (
+        TVA_CONFIG.filterEffectIcons &&
+        ('filterCustomEffectIcons' in diff || 'filterIconList' in diff)
+      ) {
+        for (const tkn of canvas.tokens.placeables) {
+          waitForTexture(tkn, () => {
+            tkn.drawEffects();
+          });
+        }
+      }
 
       // Check image re-cache required due to search path changes
       if ('searchPaths' in diff || 'forgeSearchPaths' in diff) {

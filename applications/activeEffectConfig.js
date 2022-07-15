@@ -82,9 +82,13 @@ export default class TVAActiveEffectConfig extends FormApplication {
   }
 
   async _onOverlayConfigClick(event) {
-    new OverlayConfig(this.overlayConfig, (config) => {
-      this.overlayConfig = config;
-    }).render(true);
+    new OverlayConfig(
+      this.overlayConfig,
+      (config) => {
+        this.overlayConfig = config;
+      },
+      this.effectName
+    ).render(true);
   }
 
   async _toggleActiveControls(event) {

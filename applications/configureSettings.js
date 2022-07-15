@@ -15,6 +15,7 @@ export default class ConfigureSettings extends FormApplication {
       permissions = true,
       worldHud = true,
       misc = true,
+      activeEffects = true,
     } = {}
   ) {
     super({}, {});
@@ -27,6 +28,7 @@ export default class ConfigureSettings extends FormApplication {
       permissions,
       worldHud,
       misc,
+      activeEffects,
     };
     this.settings = foundry.utils.deepClone(TVA_CONFIG);
     if (dummySettings) {
@@ -140,6 +142,13 @@ export default class ConfigureSettings extends FormApplication {
     data.staticCacheFile = settings.staticCacheFile;
     data.stackStatusConfig = settings.stackStatusConfig;
     data.customImageCategories = settings.customImageCategories.join(',');
+    data.disableEffectIcons = settings.disableEffectIcons;
+    data.filterEffectIcons = settings.filterEffectIcons;
+    data.filterCustomEffectIcons = settings.filterCustomEffectIcons;
+    data.filterIconList = settings.filterIconList.join(',');
+
+    // Controls
+    data.pathfinder = ['pf1e', 'pf2e'].includes(game.system.id);
 
     return data;
   }
@@ -529,6 +538,13 @@ export default class ConfigureSettings extends FormApplication {
       tilesEnabled: formData.tilesEnabled,
       stackStatusConfig: formData.stackStatusConfig,
       customImageCategories: (formData.customImageCategories || '')
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t),
+      disableEffectIcons: formData.disableEffectIcons,
+      filterEffectIcons: formData.filterEffectIcons,
+      filterCustomEffectIcons: formData.filterCustomEffectIcons,
+      filterIconList: (formData.filterIconList || '')
         .split(',')
         .map((t) => t.trim())
         .filter((t) => t),

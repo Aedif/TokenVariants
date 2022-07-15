@@ -1,8 +1,10 @@
 export default class OverlayConfig extends FormApplication {
-  constructor(config, callback) {
+  constructor(config, callback, effectName) {
     super({}, {});
     this.config = config;
+    this.config.effect = effectName;
     this.callback = callback;
+    console.log('effectName', effectName);
   }
 
   static get defaultOptions() {
@@ -22,7 +24,18 @@ export default class OverlayConfig extends FormApplication {
     data.filters = Object.keys(PIXI.filters).sort();
     data.filters.unshift('NONE');
     const settings = mergeObject(
-      { alpha: 1, scaleX: 0, scaleY: 0, offsetX: 0, offsetY: 0, filter: 'NONE' },
+      {
+        alpha: 1,
+        scaleX: 0,
+        scaleY: 0,
+        offsetX: 0,
+        offsetY: 0,
+        filter: 'NONE',
+        inheritTint: false,
+        tint: '',
+        loop: true,
+        effect: null,
+      },
       this.config || {}
     );
     return mergeObject(data, settings);

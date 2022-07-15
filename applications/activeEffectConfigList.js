@@ -102,9 +102,13 @@ export default class ActiveEffectConfigList extends FormApplication {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
 
-    new OverlayConfig(mapping.overlayConfig, (config) => {
-      mapping.overlayConfig = config;
-    }).render(true);
+    new OverlayConfig(
+      mapping.overlayConfig,
+      (config) => {
+        mapping.overlayConfig = config;
+      },
+      mapping.effectName
+    ).render(true);
   }
 
   async _toggleActiveControls(event) {
