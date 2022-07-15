@@ -600,15 +600,11 @@ async function initialize() {
         },
         'OVERRIDE'
       );
-    } else if (TVA_CONFIG.filterEffectIcons) {
+    } else if (TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
       libWrapper.register(
         'token-variants',
         'Token.prototype.drawEffects',
         async function (wrapped, ...args) {
-          if (['pf1e', 'pf2e'].includes(game.system.id)) {
-            return await wrapped(...args);
-          }
-
           // Temporarily removing token and actor effects based on module settings
           // after the effect icons have been drawn, they will be reset to originals
           const tokenEffects = this.data.effects;

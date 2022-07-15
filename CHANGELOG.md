@@ -1,3 +1,22 @@
+# 3.2.0
+
+Overlays/Active Effects
+
+- New options added:
+  - **Loop Video**, **Inherit Token Tint Color**, and **Tint Color**
+- Overlays will now be unlinked from other overlays using the same video file
+- Settings related to Active Effects have been moved out of **Misc** into a new **Active Effects** tab
+- New settings:
+  - **Disable ALL Token Effect Icons**
+  - **Disable SOME Token Effect Icons**
+    - **Effects with custom configurations**
+    - **Additional Restricted Effect**
+
+Misc
+
+- New setting: **Misc** > **Transfer Token Updates to Prototype**
+  - Token updates will also get applied to the associated actors proto token
+
 # 3.1.0
 
 Overlays

@@ -261,8 +261,9 @@ export default class ActiveEffectConfigList extends FormApplication {
             priority: mapping.priority,
             config: mapping.config,
             overlay: mapping.overlay,
-            overlayConfig: mapping.overlayConfig,
+            overlayConfig: mapping.overlayConfig || {},
           };
+          effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
         }
         if (this.globalMappings) {
           TVA_CONFIG.globalMappings = effectMappings;

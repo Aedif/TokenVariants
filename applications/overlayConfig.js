@@ -1,7 +1,7 @@
 export default class OverlayConfig extends FormApplication {
   constructor(config, callback, effectName) {
     super({}, {});
-    this.config = config;
+    this.config = config ?? {};
     this.config.effect = effectName;
     this.callback = callback;
   }

@@ -72,7 +72,6 @@ export class TVA_Sprite extends PIXI.Sprite {
   destroy() {
     if (this.texture?.baseTexture.resource.source?.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();
-      console.log('destoryed video');
     }
     super.destroy();
   }
