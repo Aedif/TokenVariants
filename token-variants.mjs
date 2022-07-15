@@ -74,6 +74,29 @@ function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {
   scripts.forEach((scr) => tv_executeScript(scr.script, { token: scr.token }));
 }
 
+// Code to execute immediately after the settings have been processed
+function postSettingsRead() {
+  // Prevent drawing of effects icon
+  if (!TVA_CONFIG.disableEffectIcons && !TVA_CONFIG.filterEffectIcons) return;
+
+  // Need to wait for icons do be drawn first however I could not find a way
+  // to wait until that has occurred. Instead we'll just wait for some static
+  // amount of time.
+  new Promise((resolve) => setTimeout(resolve, 500)).then(() => {
+    for (const tkn of canvas.tokens.placeables) {
+      if (TVA_CONFIG.disableEffectIcons) {
+        waitForTexture(tkn, () => {
+          tkn.hud.effects.removeChildren().forEach((c) => c.destroy());
+        });
+      } else if (TVA_CONFIG.filterEffectIcons) {
+        waitForTexture(tkn, () => {
+          tkn.drawEffects();
+        });
+      }
+    }
+  });
+}
+
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -83,7 +106,7 @@ async function initialize() {
     return;
   }
 
-  await registerSettings();
+  await registerSettings(postSettingsRead);
 
   if (userRequiresImageCache()) {
     cacheImages();
@@ -1701,6 +1724,7 @@ Hooks.once('ready', initialize);
 
 // Register API and Keybinds
 Hooks.on('init', function () {
+  //CONFIG.debug.hooks = true;
   registerKeybinds();
 
   const getCache = () => {
@@ -1725,17 +1749,11 @@ Hooks.on('init', function () {
 });
 
 Hooks.on('canvasReady', async function () {
-  canvas.tokens.placeables.forEach((tkn) => checkAndDisplayUserSpecificImage(tkn));
   for (const tkn of canvas.tokens.placeables) {
+    // Once canvas is ready we need to overwrite token images if specific maps exist for the user
+    checkAndDisplayUserSpecificImage(tkn);
+
+    // Apply effect overlays if tokens have requisite flags
     reDrawEffectOverlays(tkn);
-    if (TVA_CONFIG.disableEffectIcons) {
-      waitForTexture(tkn, () => {
-        tkn.hud.effects.removeChildren().forEach((c) => c.destroy());
-      });
-    } else if (TVA_CONFIG.filterEffectIcons) {
-      waitForTexture(tkn, () => {
-        tkn.drawEffects();
-      });
-    }
   }
 });

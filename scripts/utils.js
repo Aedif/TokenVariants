@@ -1,6 +1,7 @@
 import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js';
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
+import { TVA_Sprite } from '../applications/TVA_Sprite.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -189,6 +190,9 @@ export async function updateTokenImage(
   }
 
   if (token) {
+    if (TVA_CONFIG.updateTokenProto && token.actor) {
+      await token.actor.update({ token: tokenUpdateObj });
+    }
     queueTokenUpdate(token.id, tokenUpdateObj, callback);
   }
 }
@@ -770,141 +774,11 @@ export function tv_executeScript(script, { actor, token } = {}) {
   }
 }
 
-export function tva_testInBrightVision(point, { tolerance = 2, object = null }) {
-  const visionSources = canvas.sight.sources;
-  const lightSources = canvas.lighting.sources;
-  const d = canvas.dimensions;
-  if (!visionSources.size) return game.user.isGM;
-
-  // Determine the array of offset points to test
-  const t = tolerance;
-  const offsets =
-    t > 0
-      ? [
-          [0, 0],
-          [-t, -t],
-          [-t, t],
-          [t, t],
-          [t, -t],
-          [-t, 0],
-          [t, 0],
-          [0, -t],
-          [0, t],
-        ]
-      : [[0, 0]];
-  const points = offsets.map((o) => new PIXI.Point(point.x + o[0], point.y + o[1]));
-
-  // If the point is entirely inside the buffer region, it may be hidden from view
-  if (!canvas.sight._inBuffer && !points.some((p) => d.sceneRect.contains(p.x, p.y))) return false;
-
-  // Check each point for one which provides both LOS and FOV membership
-  return points.some((p) => {
-    let hasLOS = false;
-    let hasFOV = false;
-    let requireFOV = !canvas.lighting.globalLight;
-
-    // Check vision sources
-    for (let source of visionSources.values()) {
-      if (!source.active) continue; // The source may be currently inactive
-      if (!hasLOS || (!hasFOV && requireFOV)) {
-        // console.log(source);
-        // Do we need to test for LOS?
-        if (source.los.contains(p.x, p.y)) {
-          hasLOS = true;
-          if (!hasFOV && requireFOV) {
-            // Do we need to test for FOV?
-            if (source.fov.contains(p.x, p.y)) {
-              // console.log(source);
-              // console.log('test IN normal FOV');
-            }
-            const origRadius = source.fov.radius;
-            source.fov.radius = source.data.bright;
-            if (source.fov.contains(p.x, p.y)) {
-              // console.log('test IN FOV');
-              hasFOV = true;
-            }
-
-            source.fov.radius = origRadius;
-          }
-        }
-      }
-      if (hasLOS && (!requireFOV || hasFOV)) {
-        // Did we satisfy all required conditions?
-        return true;
-      }
-    }
-
-    // Check light sources
-    for (let source of lightSources.values()) {
-      if (!source.active) continue; // The source may be currently inactive
-      if (source.containsPoint(p)) {
-        if (source.data.vision) hasLOS = true;
-        hasFOV = true;
-      }
-      if (hasLOS && (!requireFOV || hasFOV)) {
-        return true;
-      }
-    }
-    return false;
-  });
-}
-
-export async function drawEffectOverlay(token, img) {
-  if (typeof img !== 'object') {
-    img = { img: img };
-  }
-
-  const conf = {
-    alpha: 1,
-    scaleX: 0,
-    scaleY: 0,
-    offsetX: 0,
-    offsetY: 0,
-    filter: 'NONE',
-    inheritTint: false,
-    tint: null,
-    loop: true,
-  };
-  mergeObject(conf, img);
-
+async function _drawEffectOverlay(token, conf) {
   const texture = await loadTexture(conf.img, {
     fallback: 'modules/token-variants/img/token-images.svg',
   });
-
-  // Create Sprite using the loaded texture
-  let icon = new PIXI.Sprite(texture);
-  icon.anchor.set(0.5 + conf.offsetX, 0.5 + conf.offsetY);
-  icon.alpha = conf.alpha;
-  let filter = PIXI.filters[conf.filter];
-  if (filter) {
-    icon.filters = [new filter()];
-  }
-
-  // Adjust the scale to be relative to the token image so that when it gets attached
-  // as a child of the token image and inherits its scale, their sizes match up
-  icon.scale.x = token.texture.width / texture.width + conf.scaleX;
-  icon.scale.y = token.texture.height / texture.height + conf.scaleY;
-
-  // Ensure playback state for video tokens
-  const source = foundry.utils.getProperty(texture, 'baseTexture.resource.source');
-  if (source && source.tagName === 'VIDEO') {
-    // const s = source;
-    const s = source.cloneNode();
-    s.loop = conf.loop;
-    s.muted = true;
-
-    s.onplay = () => (s.currentTime = 0);
-    await new Promise((resolve) => (s.oncanplay = resolve));
-    icon.texture = PIXI.Texture.from(s, { resourceOptions: { autoPlay: false } });
-
-    // s.currentTime = 0;
-
-    game.video.play(s);
-  }
-
-  // Apply color tinting
-  const tint = conf.inheritTint ? token.data.tint : conf.tint;
-  icon.tint = tint ? foundry.utils.colorStringToHex(tint) : 0xffffff;
+  const icon = new TVA_Sprite(texture, token, conf);
   return icon;
 }
 
@@ -916,79 +790,83 @@ export async function reDrawEffectOverlays(token) {
     overlays = (token.document ?? token).getFlag('token-variants', 'overlays');
   }
 
+  // Need to check and convert flags to the most recent format if they're not
+  if (overlays) {
+    overlays = overlays.map((ov) => {
+      if (typeof ov !== 'object') {
+        ov = { img: ov };
+      }
+      return ov;
+    });
+  }
+
   if (overlays) {
     waitForTexture(token, async () => {
-      const overlayIcons = [];
       if (!token.tva_overlays) token.tva_overlays = [];
+
       const removedChildren = [];
+      const toKeepAlive = [];
       for (const overlay of token.tva_overlays) {
         const removed = token.icon.removeChild(overlay);
         if (removed) removedChildren.push(overlay);
       }
+
+      const overlayIcons = [];
       for (const ov of overlays) {
-        // Check if overlay is already drawn
+        // If the overlay has an effect name we can attempt to re-use the rendered overlay
         if (ov.effect) {
-          let found;
+          // Check if overlay is already drawn, and if so re-use it
+          let found = false;
           for (const c of removedChildren) {
             if (ov.effect === c.tva_overlay?.effect) {
               let icon;
-              console.log('comparing', c.tva_overlay, ov);
               if (isObjectEmpty(diffObject(c.tva_overlay, ov))) {
-                console.log('Found not redrawing', c, ov);
                 icon = token.icon.addChild(c);
-              } else {
-                icon = token.icon.addChild(await drawEffectOverlay(token, ov));
+                toKeepAlive.push(c);
+                overlayIcons.push(icon);
+                found = true;
+              } else if (c.tva_overlay.img === ov.img) {
+                c.refreshConfig(ov);
+                icon = token.icon.addChild(c);
+                toKeepAlive.push(c);
+                overlayIcons.push(icon);
+                found = true;
               }
-              icon.tva_overlay = ov;
-              overlayIcons.push(icon);
-              found = true;
               break;
             }
           }
 
+          // If none have been found draw a new one
           if (!found) {
-            const icon = token.icon.addChild(await drawEffectOverlay(token, ov));
+            const icon = token.icon.addChild(await _drawEffectOverlay(token, ov));
             icon.tva_overlay = ov;
             overlayIcons.push(icon);
           }
         } else {
-          overlayIcons.push(token.icon.addChild(await drawEffectOverlay(token, ov)));
+          overlayIcons.push(token.icon.addChild(await _drawEffectOverlay(token, ov)));
+        }
+      }
+      for (const c of removedChildren) {
+        if (!toKeepAlive.includes(c)) {
+          token.icon.removeChild(c)?.destroy();
         }
       }
       if (overlayIcons.length) token.tva_overlays = overlayIcons;
-      else delete token.tva_overlays;
+      else {
+        destroyOverlays(token.tva_overlays, token);
+        delete token.tva_overlays;
+      }
     });
   } else if (token.tva_overlays) {
-    for (const ol of token.tva_overlays) token.icon.removeChild(ol.icon);
+    destroyOverlays(token.tva_overlays, token);
     delete token.tva_overlays;
   }
-  // Temporarily disabled
-  // if (token.tva_dim && token.actor) {
-  //   const dimMapping = ((token.actor.document ?? token.actor).getFlag(
-  //     'token-variants',
-  //     'effectMappings'
-  //   ) || {})['token-variants-dim'];
-  //   if (dimMapping && dimMapping.imgSrc) {
-  //     if (dimMapping.overlay)
-  //       overlays.push(token.icon.addChild(await drawEffectOverlay(token, dimMapping.imgSrc)));
-  //     else await _overrideIcon(token, dimMapping.imgSrc);
-  //   }
-  // }
 }
 
-//
-export function inDimLight(token) {
-  const gm = game.user.isGM;
-  if (token.data.hidden && gm) return false;
-  if (!canvas.sight.tokenVision) return false;
-  if (token._controlled) return false;
-  if (canvas.sight.sources.has(token.sourceId)) return false;
-
-  // This is where we want to do some work. The token is visible due to a visibility test
-  // We want to perform our own to determine if the token is in dim or bright light.
-
-  const tolerance = Math.min(token.w, token.h) / 4;
-  return !tva_testInBrightVision(token.center, { tolerance, object: token });
+function destroyOverlays(overlays, token) {
+  for (const ol of overlays) {
+    token.icon.removeChild(ol)?.destroy();
+  }
 }
 
 export async function setEffectMappingsFlag(actor, mappings) {

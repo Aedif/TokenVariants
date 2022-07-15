@@ -124,9 +124,10 @@ export const TVA_CONFIG = {
   filterEffectIcons: false,
   filterCustomEffectIcons: true,
   filterIconList: [],
+  updateTokenProto: false,
 };
 
-export async function registerSettings() {
+export async function registerSettings(callback) {
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',
     hint: 'Configure Token Variant Art settings',
@@ -354,6 +355,9 @@ export async function registerSettings() {
 
   // Read client settings
   TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
+
+  // Post settings read
+  if (callback) callback();
 }
 
 export function exportSettingsToJSON() {

@@ -4,7 +4,6 @@ export default class OverlayConfig extends FormApplication {
     this.config = config;
     this.config.effect = effectName;
     this.callback = callback;
-    console.log('effectName', effectName);
   }
 
   static get defaultOptions() {

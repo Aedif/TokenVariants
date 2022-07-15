@@ -146,6 +146,8 @@ export default class ConfigureSettings extends FormApplication {
     data.filterEffectIcons = settings.filterEffectIcons;
     data.filterCustomEffectIcons = settings.filterCustomEffectIcons;
     data.filterIconList = settings.filterIconList.join(',');
+    data.tilesEnabled = settings.tilesEnabled;
+    data.updateTokenProto = settings.updateTokenProto;
 
     // Controls
     data.pathfinder = ['pf1e', 'pf2e'].includes(game.system.id);
@@ -548,6 +550,7 @@ export default class ConfigureSettings extends FormApplication {
         .split(',')
         .map((t) => t.trim())
         .filter((t) => t),
+      updateTokenProto: formData.updateTokenProto,
     });
 
     // Save Settings
