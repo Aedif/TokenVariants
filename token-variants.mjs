@@ -187,7 +187,7 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
     if (TVA_CONFIG.stackStatusConfig) {
       config = {};
       for (const ef of effects) {
-        if (ef.config) mergeObject(config, ef.config);
+        config = mergeObject(config, ef.config);
       }
     } else {
       for (let i = effects.length - 1; i >= 0; i--) {
