@@ -5,6 +5,7 @@ import {
   isVideo,
   setEffectMappingsFlag,
   getTokenEffects,
+  setGlobalEffectMappings,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -256,10 +257,6 @@ export default class ActiveEffectConfigList extends FormApplication {
         mapping.priority = mapping.priority ? mapping.priority : 50;
       }
 
-      // If any mapping are remaining set them as a flag
-      if (this.globalMappings) {
-        TVA_CONFIG.globalMappings = {};
-      }
       if (mappings.length !== 0) {
         const effectMappings = {};
         for (const mapping of mappings) {
@@ -274,12 +271,13 @@ export default class ActiveEffectConfigList extends FormApplication {
           effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
         }
         if (this.globalMappings) {
-          TVA_CONFIG.globalMappings = effectMappings;
+          setGlobalEffectMappings(effectMappings);
           updateSettings({ globalMappings: effectMappings });
         } else {
           setEffectMappingsFlag(this.objectToFlag, effectMappings);
         }
       } else if (this.globalMappings) {
+        setGlobalEffectMappings(null);
         updateSettings({ globalMappings: {} });
       } else {
         this.objectToFlag.unsetFlag('token-variants', 'effectMappings');

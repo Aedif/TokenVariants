@@ -1708,16 +1708,7 @@ Hooks.once('ready', initialize);
 
 // Register API and Keybinds
 Hooks.on('init', function () {
-  //CONFIG.debug.hooks = true;
   registerKeybinds();
-
-  const getCache = () => {
-    return CACHED_IMAGES;
-  };
-
-  const getFound = () => {
-    return FOUND_IMAGES;
-  };
 
   game.modules.get('token-variants').api = {
     cacheImages,
@@ -1727,8 +1718,6 @@ Hooks.on('init', function () {
     updateTokenImage,
     exportSettingsToJSON,
     TVA_CONFIG,
-    getCache,
-    getFound,
   };
 });
 

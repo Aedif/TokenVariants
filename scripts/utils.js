@@ -173,6 +173,12 @@ export async function updateTokenImage(
       tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
     }
 
+    // Fix, an empty flag may be passed which would overwrite any current flags in the updateObj
+    // Remove it before doing the merge
+    if (!tokenCustomConfig.flags) {
+      delete tokenCustomConfig.flags;
+    }
+
     tokenUpdateObj = modMergeObject(tokenUpdateObj, tokenCustomConfig);
   } else if (usingCustomConfig) {
     tokenUpdateObj['flags.token-variants.usingCustomConfig'] = false;
@@ -878,6 +884,23 @@ export async function setEffectMappingsFlag(actor, mappings) {
     }
     actor.update({ flags: { 'token-variants': { effectMappings: mappings } } });
   }
+}
+
+export async function setGlobalEffectMappings(mappings) {
+  if (!mappings) {
+    for (const k of Object.keys(TVA_CONFIG.globalMappings)) {
+      delete TVA_CONFIG.globalMappings[k];
+    }
+    return;
+  }
+
+  const keys = Object.keys(TVA_CONFIG.globalMappings);
+  for (const key of keys) {
+    if (!(key in mappings)) {
+      mappings['-=' + key] = null;
+    }
+  }
+  mergeObject(TVA_CONFIG.globalMappings, mappings);
 }
 
 // Helper function to display a pop-up and change the categories assigned to a path
