@@ -1,9 +1,11 @@
 export default class OverlayConfig extends FormApplication {
-  constructor(config, callback, effectName) {
+  constructor(config, callback, effectName, token) {
     super({}, {});
     this.config = config ?? {};
     this.config.effect = effectName;
     this.callback = callback;
+    this.token = canvas.tokens.get(token._id);
+    this.previewConfig = deepClone(this.config);
   }
 
   static get defaultOptions() {
@@ -16,6 +18,66 @@ export default class OverlayConfig extends FormApplication {
       title: 'Overlay Settings',
       width: 500,
     });
+  }
+
+  /**
+   * @param {JQuery} html
+   */
+  activateListeners(html) {
+    super.activateListeners(html);
+    html.find('input,select').on('change', this._onInputChange.bind(this));
+  }
+
+  async _onInputChange(event) {
+    if (event.target.type === 'range') {
+      this.previewConfig[event.target.name] = parseFloat($(event.target).val());
+    } else if (event.target.type === 'color') {
+      const color = $(event.target).siblings('.color');
+      this.previewConfig[color.attr('name')] = event.target.value;
+    } else if (event.target.type === 'checkbox') {
+      this.previewConfig[event.target.name] = event.target.checked;
+    } else {
+      this.previewConfig[event.target.name] = $(event.target).val();
+    }
+    this._applyPreviews();
+  }
+
+  getPreviewIcons() {
+    if (!this.config.effect) return [];
+    const tokens = this.token ? [this.token] : canvas.tokens.placeables;
+    const previewIcons = [];
+    for (const tkn of tokens) {
+      for (const c of tkn.icon.children) {
+        if (c.tvaOverlayConfig && c.tvaOverlayConfig.effect === this.config.effect) {
+          // Effect icon found, however if we're in global preview then we need to take into account
+          // a token/actor specific mapping which may be override the global one
+          if (this.token) {
+            previewIcons.push(c);
+          } else if (
+            !(tkn.actor ? tkn.actor.getFlag('token-variants', 'effectMappings') || {} : {})[
+              this.config.effect
+            ]
+          ) {
+            previewIcons.push(c);
+          }
+        }
+      }
+    }
+    return previewIcons;
+  }
+
+  async _applyPreviews() {
+    const icons = this.getPreviewIcons();
+    for (const icon of icons) {
+      icon.refreshConfig(this.previewConfig, true);
+    }
+  }
+
+  async _removePreviews() {
+    const icons = this.getPreviewIcons();
+    for (const icon of icons) {
+      icon.refreshConfig();
+    }
   }
 
   async getData(options) {
@@ -38,6 +100,11 @@ export default class OverlayConfig extends FormApplication {
       this.config || {}
     );
     return mergeObject(data, settings);
+  }
+
+  async close(options = {}) {
+    super.close(options);
+    this._removePreviews();
   }
 
   /**

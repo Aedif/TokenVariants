@@ -28,6 +28,7 @@ import {
   reDrawEffectOverlays,
   getFilePath,
   waitForTexture,
+  getTokenEffects,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -36,6 +37,7 @@ import { libWrapper } from './scripts/libWrapper/shim.js';
 
 // Tracks if module has been initialized
 let initialized = false;
+let onInit = [];
 
 // True if in the middle of caching image paths
 let caching = false;
@@ -85,16 +87,181 @@ function postSettingsRead() {
   new Promise((resolve) => setTimeout(resolve, 500)).then(() => {
     for (const tkn of canvas.tokens.placeables) {
       if (TVA_CONFIG.disableEffectIcons) {
-        waitForTexture(tkn, () => {
-          tkn.hud.effects.removeChildren().forEach((c) => c.destroy());
+        waitForTexture(tkn, (token) => {
+          token.hud.effects.removeChildren().forEach((c) => c.destroy());
         });
       } else if (TVA_CONFIG.filterEffectIcons) {
-        waitForTexture(tkn, () => {
-          tkn.drawEffects();
+        waitForTexture(tkn, (token) => {
+          token.drawEffects();
         });
       }
     }
   });
+}
+
+export async function updateWithEffectMapping(token, effects, { added = [], removed = [] } = {}) {
+  token = token._object ? token._object : token;
+  const tokenImgName =
+    (token.document ?? token).getFlag('token-variants', 'name') || getFileName(token.data.img);
+  const tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+  const tokenUpdateObj = {};
+  const hadActiveHUD = token.hasActiveHUD;
+  const toggleStatus =
+    canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
+  const mappings = mergeObject(
+    TVA_CONFIG.globalMappings,
+    token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
+    { inplace: false }
+  );
+
+  // Accumulate all scripts that will need to be run after the update
+  const executeOnCallback = [];
+  for (const ef of added) {
+    const onApply = mappings[ef]?.config?.tv_script?.onApply;
+    if (onApply) executeOnCallback.push({ script: onApply, token: token });
+  }
+  for (const ef of removed) {
+    const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
+    if (onRemove) executeOnCallback.push({ script: onRemove, token: token });
+  }
+
+  // Next we're going to determine what configs need to be applied and in what order
+  // Filter effects that do not have a mapping and sort based on priority
+  effects = effects
+    .filter((ef) => ef in mappings)
+    .map((ef) => {
+      const m = mappings[ef];
+      // There might be overlay configs using the old format without the effect name
+      // as a patch fix apply it here
+      if (m.overlayConfig) {
+        m.overlayConfig.effect = ef;
+      }
+      return m;
+    })
+    .sort((ef1, ef2) => ef1.priority - ef2.priority);
+
+  // Process overlays
+  const overlayImages = [];
+  if (effects.length) {
+    // Find overlays to be applied
+    if (TVA_CONFIG.stackStatusConfig) {
+      for (const effect of effects) {
+        if (effect.imgSrc && effect.overlay) {
+          const conf = effect.overlayConfig || {};
+          conf.img = effect.imgSrc;
+          overlayImages.push(conf);
+        }
+      }
+    } else {
+      for (let i = effects.length - 1; i >= 0; i--) {
+        if (effects[i].imgSrc && effects[i].overlay) {
+          const conf = effects[i].overlayConfig || {};
+          conf.img = effects[i].imgSrc;
+          overlayImages.push(conf);
+          break;
+        }
+      }
+    }
+  }
+  // Set/un-set the overlay flag if need be
+  const objToFlag = token.data.actorLink && token.actor ? token.actor : token.document ?? token;
+  if (overlayImages.length) {
+    await objToFlag.setFlag('token-variants', 'overlays', overlayImages);
+  } else if (await objToFlag.getFlag('token-variants', 'overlays')) {
+    await objToFlag.unsetFlag('token-variants', 'overlays');
+  }
+
+  if (effects.length > 0) {
+    // Some effect mappings may not have images, find a mapping with one if it exists
+    const newImg = { imgSrc: '', imgName: '' };
+    for (let i = effects.length - 1; i >= 0; i--) {
+      if (effects[i].imgSrc && !effects[i].overlay) {
+        newImg.imgSrc = effects[i].imgSrc;
+        newImg.imgName = effects[i].imgName;
+        break;
+      }
+    }
+
+    // Collect custom configs to be applied to the token
+    let config;
+    if (TVA_CONFIG.stackStatusConfig) {
+      config = {};
+      for (const ef of effects) {
+        if (ef.config) mergeObject(config, ef.config);
+      }
+    } else {
+      for (let i = effects.length - 1; i >= 0; i--) {
+        if (effects[i].config && Object.keys(effects[i].config).length !== 0) {
+          config = effects[i].config;
+          break;
+        }
+      }
+    }
+
+    // Use or update the default (original) token image
+    if (!newImg.imgSrc && tokenDefaultImg) {
+      delete tokenUpdateObj['flags.token-variants.defaultImg'];
+      tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
+      newImg.imgSrc = tokenDefaultImg.imgSrc;
+      newImg.imgName = tokenDefaultImg.imgName;
+    } else if (!tokenDefaultImg) {
+      tokenUpdateObj['flags.token-variants.defaultImg'] = {
+        imgSrc: token.data.img,
+        imgName: tokenImgName,
+      };
+    }
+    await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : token.data.img, {
+      token: token,
+      imgName: newImg.imgName ? newImg.imgName : tokenImgName,
+      tokenUpdate: tokenUpdateObj,
+      callback: postTokenUpdateProcessing.bind(
+        null,
+        token,
+        hadActiveHUD,
+        toggleStatus,
+        executeOnCallback
+      ),
+      config: config,
+    });
+  }
+
+  // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
+  // reset the token image back to default
+  if (effects.length === 0 && tokenDefaultImg) {
+    delete tokenUpdateObj['flags.token-variants.defaultImg'];
+    tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
+
+    await updateTokenImage(tokenDefaultImg.imgSrc, {
+      token: token,
+      imgName: tokenDefaultImg.imgName,
+      tokenUpdate: tokenUpdateObj,
+      callback: postTokenUpdateProcessing.bind(
+        null,
+        token,
+        hadActiveHUD,
+        toggleStatus,
+        executeOnCallback
+      ),
+    });
+    // If no default image exists but a custom effect is applied, we still want to perform an update to
+    // clear it
+  } else if (
+    effects.length === 0 &&
+    (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')
+  ) {
+    await updateTokenImage(token.data.img, {
+      token: token,
+      imgName: tokenImgName,
+      tokenUpdate: tokenUpdateObj,
+      callback: postTokenUpdateProcessing.bind(
+        null,
+        token,
+        hadActiveHUD,
+        toggleStatus,
+        executeOnCallback
+      ),
+    });
+  }
 }
 
 /**
@@ -106,7 +273,30 @@ async function initialize() {
     return;
   }
 
-  await registerSettings(postSettingsRead);
+  // Want this to be executed once the module has initialized
+  onInit.push(() => {
+    // Prevent drawing of effects icon
+    if (!TVA_CONFIG.disableEffectIcons && !TVA_CONFIG.filterEffectIcons) return;
+
+    // Need to wait for icons do be drawn first however I could not find a way
+    // to wait until that has occurred. Instead we'll just wait for some static
+    // amount of time.
+    new Promise((resolve) => setTimeout(resolve, 500)).then(() => {
+      for (const tkn of canvas.tokens.placeables) {
+        if (TVA_CONFIG.disableEffectIcons) {
+          waitForTexture(tkn, (token) => {
+            token.hud.effects.removeChildren().forEach((c) => c.destroy());
+          });
+        } else if (TVA_CONFIG.filterEffectIcons) {
+          waitForTexture(tkn, (token) => {
+            token.drawEffects();
+          });
+        }
+      }
+    });
+  });
+
+  await registerSettings();
 
   if (userRequiresImageCache()) {
     cacheImages();
@@ -114,192 +304,6 @@ async function initialize() {
 
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
   startBatchUpdater();
-
-  const getEffectsFromActor = (actor) => {
-    let effects = [];
-
-    if (game.system.id === 'pf2e') {
-      (actor.data.items || []).forEach((item, id) => {
-        if (item.type === 'condition' && item.isActive) effects.push(item.name);
-      });
-    } else {
-      (actor.data.effects || []).forEach((activeEffect, id) => {
-        if (!activeEffect.data.disabled && !activeEffect.isSuppressed)
-          effects.push(activeEffect.data.label);
-      });
-    }
-
-    return effects;
-  };
-
-  const updateWithEffectMapping = async function (
-    token,
-    effects,
-    { added = [], removed = [] } = {}
-  ) {
-    token = token._object ? token._object : token;
-    const tokenImgName =
-      (token.document ?? token).getFlag('token-variants', 'name') || getFileName(token.data.img);
-    const tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
-    const tokenUpdateObj = {};
-    const hadActiveHUD = token.hasActiveHUD;
-    const toggleStatus =
-      canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
-    const mappings = mergeObject(
-      TVA_CONFIG.globalMappings,
-      (token.actor.document ?? token.actor).getFlag('token-variants', 'effectMappings'),
-      { inplace: false }
-    );
-
-    // Accumulate all scripts that will need to be run after the update
-    const executeOnCallback = [];
-    for (const ef of added) {
-      const onApply = mappings[ef]?.config?.tv_script?.onApply;
-      if (onApply) executeOnCallback.push({ script: onApply, token: token });
-    }
-    for (const ef of removed) {
-      const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
-      if (onRemove) executeOnCallback.push({ script: onRemove, token: token });
-    }
-
-    // Next we're going to determine what configs need to be applied and in what order
-    // Filter effects that do not have a mapping and sort based on priority
-    effects = effects
-      .filter((ef) => ef in mappings)
-      .map((ef) => {
-        const m = mappings[ef];
-        // There might be overlay configs using the old format without the effect name
-        // as a patch fix apply it here
-        if (m.overlayConfig) {
-          m.overlayConfig.effect = ef;
-        }
-        return m;
-      })
-      .sort((ef1, ef2) => ef1.priority - ef2.priority);
-
-    // Process overlays
-    const overlayImages = [];
-    if (effects.length) {
-      // Find overlays to be applied
-      if (TVA_CONFIG.stackStatusConfig) {
-        for (const effect of effects) {
-          if (effect.imgSrc && effect.overlay) {
-            const conf = effect.overlayConfig || {};
-            conf.img = effect.imgSrc;
-            overlayImages.push(conf);
-          }
-        }
-      } else {
-        for (let i = effects.length - 1; i >= 0; i--) {
-          if (effects[i].imgSrc && effects[i].overlay) {
-            const conf = effects[i].overlayConfig || {};
-            conf.img = effects[i].imgSrc;
-            overlayImages.push(conf);
-            break;
-          }
-        }
-      }
-    }
-    // Set/un-set the overlay flag if need be
-    const objToFlag = token.data.actorLink && token.actor ? token.actor : token.document ?? token;
-    if (overlayImages.length) {
-      await objToFlag.setFlag('token-variants', 'overlays', overlayImages);
-    } else if (await objToFlag.getFlag('token-variants', 'overlays')) {
-      await objToFlag.unsetFlag('token-variants', 'overlays');
-    }
-
-    if (effects.length > 0) {
-      // Some effect mappings may not have images, find a mapping with one if it exists
-      const newImg = { imgSrc: '', imgName: '' };
-      for (let i = effects.length - 1; i >= 0; i--) {
-        if (effects[i].imgSrc && !effects[i].overlay) {
-          newImg.imgSrc = effects[i].imgSrc;
-          newImg.imgName = effects[i].imgName;
-          break;
-        }
-      }
-
-      // Collect custom configs to be applied to the token
-      let config;
-      if (TVA_CONFIG.stackStatusConfig) {
-        config = {};
-        for (const ef of effects) {
-          if (ef.config) mergeObject(config, ef.config);
-        }
-      } else {
-        for (let i = effects.length - 1; i >= 0; i--) {
-          if (effects[i].config && Object.keys(effects[i].config).length !== 0) {
-            config = effects[i].config;
-            break;
-          }
-        }
-      }
-
-      // Use or update the default (original) token image
-      if (!newImg.imgSrc && tokenDefaultImg) {
-        delete tokenUpdateObj['flags.token-variants.defaultImg'];
-        tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
-        newImg.imgSrc = tokenDefaultImg.imgSrc;
-        newImg.imgName = tokenDefaultImg.imgName;
-      } else if (!tokenDefaultImg) {
-        tokenUpdateObj['flags.token-variants.defaultImg'] = {
-          imgSrc: token.data.img,
-          imgName: tokenImgName,
-        };
-      }
-      await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : token.data.img, {
-        token: token,
-        imgName: newImg.imgName ? newImg.imgName : tokenImgName,
-        tokenUpdate: tokenUpdateObj,
-        callback: postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
-        config: config,
-      });
-    }
-
-    // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
-    // reset the token image back to default
-    if (effects.length === 0 && tokenDefaultImg) {
-      delete tokenUpdateObj['flags.token-variants.defaultImg'];
-      tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
-
-      await updateTokenImage(tokenDefaultImg.imgSrc, {
-        token: token,
-        imgName: tokenDefaultImg.imgName,
-        tokenUpdate: tokenUpdateObj,
-        callback: postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
-      });
-      // If no default image exists but a custom effect is applied, we still want to perform an update to
-      // clear it
-    } else if (
-      effects.length === 0 &&
-      (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')
-    ) {
-      await updateTokenImage(token.data.img, {
-        token: token,
-        imgName: tokenImgName,
-        tokenUpdate: tokenUpdateObj,
-        callback: postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
-      });
-    }
-  };
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
     if (game.userId !== userId) return;
@@ -313,7 +317,7 @@ async function initialize() {
     );
     if (!('token-variants-combat' in mappings)) return;
 
-    const effects = getEffects(token);
+    const effects = getTokenEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     // if (token.tva_dim) effects.push('token-variants-dim');
     effects.push('token-variants-combat');
@@ -333,7 +337,7 @@ async function initialize() {
     );
     if (!('token-variants-combat' in mappings)) return;
 
-    const effects = getEffects(token);
+    const effects = getTokenEffects(token);
     if (token.data.hidden) effects.push('token-variants-visibility');
     await updateWithEffectMapping(token, effects, {
       removed: ['token-variants-combat'],
@@ -367,7 +371,7 @@ async function initialize() {
         ? [actor.token]
         : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
       for (const token of tokens) {
-        const effects = getEffects(token);
+        const effects = getTokenEffects(token);
         if (token.inCombat) effects.unshift('token-variants-combat');
         if (token.data.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
@@ -393,7 +397,7 @@ async function initialize() {
         ? [actor.token]
         : actor.getActiveTokens().filter((tkn) => tkn.data.actorLink);
       for (const token of tokens) {
-        const effects = getEffects(token);
+        const effects = getTokenEffects(token);
         if (token.inCombat) effects.unshift('token-variants-combat');
         if (token.data.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
@@ -521,28 +525,6 @@ async function initialize() {
     updateImageOnEffectChange(item.data.name, item.parent, false);
   });
 
-  //
-  // Handle image updates for Active Effects applied to Tokens WITHOUT Linked Actors
-  // PF2e treats Active Effects differently. Both linked and unlinked tokens must be managed via update token hooks
-
-  const getEffects = (token) => {
-    if (game.system.id === 'pf2e') {
-      if (token.data.actorLink) {
-        return getEffectsFromActor(token.actor);
-      } else {
-        return (token.data.actorData?.items || []).map((ef) => ef.name);
-      }
-    } else {
-      if (token.data.actorLink && token.actor) {
-        return getEffectsFromActor(token.actor);
-      } else {
-        return (token.data.actorData?.effects || [])
-          .filter((ef) => !ef.disabled && !ef.isSuppressed)
-          .map((ef) => ef.label);
-      }
-    }
-  };
-
   if (typeof libWrapper === 'function') {
     // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
     libWrapper.register(
@@ -667,9 +649,11 @@ async function initialize() {
       }
       if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
         const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
-        const actorEffects = getEffectsFromActor(actor);
         for (const tkn of tokens) {
-          updateWithEffectMapping(tkn, tkn.data.actorLink ? actorEffects : getEffects(tkn));
+          if (TVA_CONFIG.filterEffectIcons) {
+            await tkn.drawEffects();
+          }
+          updateWithEffectMapping(tkn, getTokenEffects(tkn));
         }
       }
     }
@@ -684,7 +668,7 @@ async function initialize() {
     }
 
     if (game.userId === userId && 'hidden' in change) {
-      const effects = getEffects(token);
+      const effects = getTokenEffects(token);
       if (token.inCombat) effects.unshift('token-variants-combat');
       // if (token.tva_dim) effects.unshift('token-variants-dim');
       if (change.hidden) effects.push('token-variants-visibility');
@@ -733,6 +717,10 @@ async function initialize() {
   Hooks.on('renderTileHUD', renderTileHUD);
 
   initialized = true;
+  for (const cb of onInit) {
+    cb();
+  }
+  onInit = [];
 }
 
 async function createToken(token, options, userId) {
@@ -1748,8 +1736,17 @@ Hooks.on('canvasReady', async function () {
   for (const tkn of canvas.tokens.placeables) {
     // Once canvas is ready we need to overwrite token images if specific maps exist for the user
     checkAndDisplayUserSpecificImage(tkn);
+  }
 
-    // Apply effect overlays if tokens have requisite flags
-    reDrawEffectOverlays(tkn);
+  // Effect Mappings may have changed while on a different scene, re-apply them
+  const refreshMappings = () => {
+    for (const tkn of canvas.tokens.placeables) {
+      updateWithEffectMapping(tkn, getTokenEffects(tkn));
+    }
+  };
+  if (initialized) {
+    refreshMappings();
+  } else {
+    onInit.push(refreshMappings);
   }
 });

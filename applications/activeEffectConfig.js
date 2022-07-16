@@ -87,7 +87,8 @@ export default class TVAActiveEffectConfig extends FormApplication {
       (config) => {
         this.overlayConfig = config;
       },
-      this.effectName
+      this.effectName,
+      this.token
     ).render(true);
   }
 

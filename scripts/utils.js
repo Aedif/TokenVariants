@@ -594,7 +594,7 @@ export async function waitForTexture(token, callback, checks = 40) {
       );
     return;
   }
-  callback();
+  callback(token);
 }
 
 /**
@@ -783,6 +783,8 @@ async function _drawEffectOverlay(token, conf) {
 }
 
 export async function reDrawEffectOverlays(token) {
+  if (token.tva_drawing_overlays) return;
+  token.tva_drawing_overlays = true;
   let overlays;
   if (token.data.actorLink && token.actor) {
     overlays = token.actor.getFlag('token-variants', 'overlays');
@@ -801,11 +803,10 @@ export async function reDrawEffectOverlays(token) {
   }
 
   if (overlays) {
-    waitForTexture(token, async () => {
+    waitForTexture(token, async (token) => {
       if (!token.tva_overlays) token.tva_overlays = [];
 
       const removedChildren = [];
-      const toKeepAlive = [];
       for (const overlay of token.tva_overlays) {
         const removed = token.icon.removeChild(overlay);
         if (removed) removedChildren.push(overlay);
@@ -818,18 +819,13 @@ export async function reDrawEffectOverlays(token) {
           // Check if overlay is already drawn, and if so re-use it
           let found = false;
           for (const c of removedChildren) {
-            if (ov.effect === c.tva_overlay?.effect) {
-              let icon;
-              if (isObjectEmpty(diffObject(c.tva_overlay, ov))) {
-                icon = token.icon.addChild(c);
-                toKeepAlive.push(c);
-                overlayIcons.push(icon);
+            if (ov.effect === c.tvaOverlayConfig?.effect) {
+              if (isObjectEmpty(diffObject(c.tvaOverlayConfig, ov))) {
+                overlayIcons.push(token.icon.addChild(c));
                 found = true;
-              } else if (c.tva_overlay.img === ov.img) {
+              } else if (c.tvaOverlayConfig.img === ov.img) {
                 c.refreshConfig(ov);
-                icon = token.icon.addChild(c);
-                toKeepAlive.push(c);
-                overlayIcons.push(icon);
+                overlayIcons.push(token.icon.addChild(c));
                 found = true;
               }
               break;
@@ -839,7 +835,6 @@ export async function reDrawEffectOverlays(token) {
           // If none have been found draw a new one
           if (!found) {
             const icon = token.icon.addChild(await _drawEffectOverlay(token, ov));
-            icon.tva_overlay = ov;
             overlayIcons.push(icon);
           }
         } else {
@@ -847,8 +842,8 @@ export async function reDrawEffectOverlays(token) {
         }
       }
       for (const c of removedChildren) {
-        if (!toKeepAlive.includes(c)) {
-          token.icon.removeChild(c)?.destroy();
+        if (!overlayIcons.includes(c)) {
+          c.destroy();
         }
       }
       if (overlayIcons.length) token.tva_overlays = overlayIcons;
@@ -861,6 +856,7 @@ export async function reDrawEffectOverlays(token) {
     destroyOverlays(token.tva_overlays, token);
     delete token.tva_overlays;
   }
+  token.tva_drawing_overlays = false;
 }
 
 function destroyOverlays(overlays, token) {
@@ -944,4 +940,40 @@ export async function onPathSelectCategory(event) {
     },
     default: 'yes',
   }).render(true);
+}
+
+export function getEffectsFromActor(actor) {
+  let effects = [];
+  if (!actor) return effects;
+
+  if (game.system.id === 'pf2e') {
+    (actor.data.items || []).forEach((item, id) => {
+      if (item.type === 'condition' && item.isActive) effects.push(item.name);
+    });
+  } else {
+    (actor.data.effects || []).forEach((activeEffect, id) => {
+      if (!activeEffect.data.disabled && !activeEffect.isSuppressed)
+        effects.push(activeEffect.data.label);
+    });
+  }
+
+  return effects;
+}
+
+export function getTokenEffects(token) {
+  if (game.system.id === 'pf2e') {
+    if (token.data.actorLink) {
+      return getEffectsFromActor(token.actor);
+    } else {
+      return (token.data.actorData?.items || []).map((ef) => ef.name);
+    }
+  } else {
+    if (token.data.actorLink && token.actor) {
+      return getEffectsFromActor(token.actor);
+    } else {
+      return (token.data.actorData?.effects || [])
+        .filter((ef) => !ef.disabled && !ef.isSuppressed)
+        .map((ef) => ef.label);
+    }
+  }
 }

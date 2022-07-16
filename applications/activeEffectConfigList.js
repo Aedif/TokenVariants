@@ -1,5 +1,11 @@
-import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, setEffectMappingsFlag } from '../scripts/utils.js';
+import { showArtSelect, updateWithEffectMapping } from '../token-variants.mjs';
+import {
+  SEARCH_TYPE,
+  getFileName,
+  isVideo,
+  setEffectMappingsFlag,
+  getTokenEffects,
+} from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -107,7 +113,8 @@ export default class ActiveEffectConfigList extends FormApplication {
       (config) => {
         mapping.overlayConfig = config;
       },
-      mapping.effectName
+      mapping.effectName,
+      this.token
     ).render(true);
   }
 
@@ -231,6 +238,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     this.render();
   }
 
+  // TODO fix this spaghetti code related to globalMappings...
   async _onSaveMappings(event) {
     await this._onSubmit(event);
     if (this.objectToFlag || this.globalMappings) {
@@ -271,8 +279,19 @@ export default class ActiveEffectConfigList extends FormApplication {
         } else {
           setEffectMappingsFlag(this.objectToFlag, effectMappings);
         }
-      } else if (!this.globalMappings) {
+      } else if (this.globalMappings) {
+        updateSettings({ globalMappings: {} });
+      } else {
         this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+      }
+
+      if (this.globalMappings) {
+        for (const tkn of canvas.tokens.placeables) {
+          if (TVA_CONFIG.filterEffectIcons) {
+            await tkn.drawEffects();
+          }
+          updateWithEffectMapping(tkn, getTokenEffects(tkn));
+        }
       }
     }
     this.close();

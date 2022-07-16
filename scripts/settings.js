@@ -127,7 +127,7 @@ export const TVA_CONFIG = {
   updateTokenProto: false,
 };
 
-export async function registerSettings(callback) {
+export async function registerSettings() {
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',
     hint: 'Configure Token Variant Art settings',
@@ -165,8 +165,8 @@ export async function registerSettings(callback) {
         ('filterCustomEffectIcons' in diff || 'filterIconList' in diff)
       ) {
         for (const tkn of canvas.tokens.placeables) {
-          waitForTexture(tkn, () => {
-            tkn.drawEffects();
+          waitForTexture(tkn, (token) => {
+            token.drawEffects();
           });
         }
       }
@@ -355,9 +355,6 @@ export async function registerSettings(callback) {
 
   // Read client settings
   TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
-
-  // Post settings read
-  if (callback) callback();
 }
 
 export function exportSettingsToJSON() {

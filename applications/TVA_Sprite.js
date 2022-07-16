@@ -2,7 +2,7 @@ export class TVA_Sprite extends PIXI.Sprite {
   constructor(texture, token, config) {
     super(texture);
 
-    this.tva_config = mergeObject(
+    this.tvaOverlayConfig = mergeObject(
       {
         alpha: 1,
         scaleX: 0,
@@ -28,7 +28,7 @@ export class TVA_Sprite extends PIXI.Sprite {
       // Detach video from others
       const s = source.cloneNode();
 
-      s.loop = this.tva_config.loop;
+      s.loop = this.tvaOverlayConfig.loop;
       s.muted = true;
       s.onplay = () => (s.currentTime = 0);
 
@@ -38,8 +38,8 @@ export class TVA_Sprite extends PIXI.Sprite {
     }
   }
 
-  refreshConfig(configuration) {
-    const config = mergeObject(this.tva_config, configuration ?? {});
+  refreshConfig(configuration, preview = false) {
+    const config = mergeObject(this.tvaOverlayConfig, configuration, { inplace: !preview });
 
     this.anchor.set(0.5 + config.offsetX, 0.5 + config.offsetY);
     this.alpha = config.alpha;
@@ -47,6 +47,8 @@ export class TVA_Sprite extends PIXI.Sprite {
     let filter = PIXI.filters[config.filter];
     if (filter) {
       this.filters = [new filter()];
+    } else {
+      this.filters = [];
     }
 
     // Adjust the scale to be relative to the token image so that when it gets attached
