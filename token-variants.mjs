@@ -667,6 +667,10 @@ async function initialize() {
       }
     }
 
+    if ('actorLink' in change) {
+      updateWithEffectMapping(token, getTokenEffects(token));
+    }
+
     if (game.userId === userId && 'hidden' in change) {
       const effects = getTokenEffects(token);
       if (token.inCombat) effects.unshift('token-variants-combat');

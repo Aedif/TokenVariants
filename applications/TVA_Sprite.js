@@ -9,6 +9,7 @@ export class TVA_Sprite extends PIXI.Sprite {
         scaleY: 0,
         offsetX: 0,
         offsetY: 0,
+        angle: 0,
         filter: 'NONE',
         inheritTint: false,
         tint: null,
@@ -55,6 +56,9 @@ export class TVA_Sprite extends PIXI.Sprite {
     // as a child of the token image and inherits its scale, their sizes match up
     this.scale.x = this.token.texture.width / this.texture.width + config.scaleX;
     this.scale.y = this.token.texture.height / this.texture.height + config.scaleY;
+
+    // Angle in degrees
+    this.angle = config.angle;
 
     // Apply color tinting
     const tint = config.inheritTint ? this.token.data.tint : config.tint;
