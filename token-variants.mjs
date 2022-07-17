@@ -25,7 +25,7 @@ import {
   flattenSearchResults,
   parseKeywords,
   tv_executeScript,
-  reDrawEffectOverlays,
+  drawOverlays,
   getFilePath,
   waitForTexture,
   getTokenEffects,
@@ -125,51 +125,21 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
     if (onRemove) executeOnCallback.push({ script: onRemove, token: token });
   }
 
+  // Need to broadcast to other users to re-draw the overlay
+  drawOverlays(token);
+  const message = {
+    handlerName: 'drawOverlays',
+    args: { tokenId: token.id },
+    type: 'UPDATE',
+  };
+  game.socket?.emit('module.token-variants', message);
+
   // Next we're going to determine what configs need to be applied and in what order
   // Filter effects that do not have a mapping and sort based on priority
   effects = effects
     .filter((ef) => ef in mappings)
-    .map((ef) => {
-      const m = mappings[ef];
-      // There might be overlay configs using the old format without the effect name
-      // as a patch fix apply it here
-      if (m.overlayConfig) {
-        m.overlayConfig.effect = ef;
-      }
-      return m;
-    })
+    .map((ef) => mappings[ef])
     .sort((ef1, ef2) => ef1.priority - ef2.priority);
-
-  // Process overlays
-  const overlayImages = [];
-  if (effects.length) {
-    // Find overlays to be applied
-    if (TVA_CONFIG.stackStatusConfig) {
-      for (const effect of effects) {
-        if (effect.imgSrc && effect.overlay) {
-          const conf = effect.overlayConfig || {};
-          conf.img = effect.imgSrc;
-          overlayImages.push(conf);
-        }
-      }
-    } else {
-      for (let i = effects.length - 1; i >= 0; i--) {
-        if (effects[i].imgSrc && effects[i].overlay) {
-          const conf = effects[i].overlayConfig || {};
-          conf.img = effects[i].imgSrc;
-          overlayImages.push(conf);
-          break;
-        }
-      }
-    }
-  }
-  // Set/un-set the overlay flag if need be
-  const objToFlag = token.data.actorLink && token.actor ? token.actor : token.document ?? token;
-  if (overlayImages.length) {
-    await objToFlag.setFlag('token-variants', 'overlays', overlayImages);
-  } else if (await objToFlag.getFlag('token-variants', 'overlays')) {
-    await objToFlag.unsetFlag('token-variants', 'overlays');
-  }
 
   if (effects.length > 0) {
     // Some effect mappings may not have images, find a mapping with one if it exists
@@ -283,6 +253,9 @@ async function initialize() {
     // amount of time.
     new Promise((resolve) => setTimeout(resolve, 500)).then(() => {
       for (const tkn of canvas.tokens.placeables) {
+        drawOverlays(tkn); // Draw Overlays
+
+        // Disable effect icons
         if (TVA_CONFIG.disableEffectIcons) {
           waitForTexture(tkn, (token) => {
             token.hud.effects.removeChildren().forEach((c) => c.destroy());
@@ -566,7 +539,7 @@ async function initialize() {
       'Token.prototype.draw',
       async function (wrapped, ...args) {
         let result = await wrapped(...args);
-        reDrawEffectOverlays(this);
+        drawOverlays(this);
         checkAndDisplayUserSpecificImage(this);
         return result;
       },
@@ -637,36 +610,26 @@ async function initialize() {
   }
 
   Hooks.on('updateActor', async function (actor, change, options, userId) {
+    if (game.user.id !== userId) return;
+
     if ('flags' in change && 'token-variants' in change.flags) {
       const tokenVariantFlags = change.flags['token-variants'];
-      if ('overlays' in tokenVariantFlags || '-=overlays' in tokenVariantFlags) {
-        const activeTokens = actor.getActiveTokens();
-        for (const tkn of activeTokens) {
-          if (tkn.data.actorLink) {
-            reDrawEffectOverlays(tkn);
-          }
-        }
-      }
       if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
         const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
         for (const tkn of tokens) {
           if (TVA_CONFIG.filterEffectIcons) {
             await tkn.drawEffects();
           }
-          updateWithEffectMapping(tkn, getTokenEffects(tkn));
+
+          if (game.user.id === userId) updateWithEffectMapping(tkn, getTokenEffects(tkn));
+          else drawOverlays(tkn);
         }
       }
     }
   });
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
-    if ('flags' in change && 'token-variants' in change.flags) {
-      const tokenVariantFlags = change.flags['token-variants'];
-      if ('overlays' in tokenVariantFlags || '-=overlays' in tokenVariantFlags) {
-        reDrawEffectOverlays(token.object);
-      }
-    }
-
+    if (game.user.id !== userId) return;
     if ('actorLink' in change) {
       updateWithEffectMapping(token, getTokenEffects(token));
     }
@@ -705,6 +668,19 @@ async function initialize() {
         if (tkn) checkAndDisplayUserSpecificImage(tkn, true);
       }
     }
+
+    if (message.handlerName === 'drawOverlays' && message.type === 'UPDATE') {
+      if (message.args.all) {
+        if (canvas.scene.id !== message.args.sceneId) {
+          for (const tkn of canvas.tokens.placeables) {
+            drawOverlays(tkn);
+          }
+        }
+      } else if (message.args.tokenId) {
+        const tkn = canvas.tokens.get(message.args.tokenId);
+        if (tkn) drawOverlays(tkn);
+      }
+    }
   });
 
   // Handle actor/token art replacement
@@ -728,7 +704,9 @@ async function initialize() {
 }
 
 async function createToken(token, options, userId) {
+  drawOverlays(token._object);
   if (userId && game.user.id != userId) return;
+  updateWithEffectMapping(token, getTokenEffects(token));
 
   // Check if random search is enabled and if so perform it
 
@@ -1729,17 +1707,18 @@ Hooks.on('canvasReady', async function () {
   for (const tkn of canvas.tokens.placeables) {
     // Once canvas is ready we need to overwrite token images if specific maps exist for the user
     checkAndDisplayUserSpecificImage(tkn);
+    if (initialized) drawOverlays(tkn);
   }
 
-  // Effect Mappings may have changed while on a different scene, re-apply them
-  const refreshMappings = () => {
-    for (const tkn of canvas.tokens.placeables) {
-      updateWithEffectMapping(tkn, getTokenEffects(tkn));
-    }
-  };
-  if (initialized) {
-    refreshMappings();
-  } else {
-    onInit.push(refreshMappings);
-  }
+  // // Effect Mappings may have changed while on a different scene, re-apply them
+  // const refreshMappings = () => {
+  //   for (const tkn of canvas.tokens.placeables) {
+  //     updateWithEffectMapping(tkn, getTokenEffects(tkn));
+  //   }
+  // };
+  // if (initialized) {
+  //   refreshMappings();
+  // } else {
+  //   onInit.push(refreshMappings);
+  // }
 });

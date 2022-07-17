@@ -38,11 +38,11 @@ export const TVA_CONFIG = {
   runSearchOnPath: false,
   searchFilters: {},
   algorithm: {
-    exact: true,
-    fuzzy: false,
-    fuzzyLimit: 50,
+    exact: false,
+    fuzzy: true,
+    fuzzyLimit: 100,
     fuzzyThreshold: 0.3,
-    fuzzyArtSelectPercentSlider: false,
+    fuzzyArtSelectPercentSlider: true,
   },
   tokenConfigs: [],
   randomizer: {

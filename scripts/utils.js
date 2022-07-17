@@ -588,7 +588,7 @@ async function _overrideIcon(token, img) {
   token.icon = token.addChild(await _drawIcon(token));
   token.tva_iconOverride = img;
   token._refreshIcon();
-  reDrawEffectOverlays(token);
+  drawOverlays(token);
 }
 
 export async function waitForTexture(token, callback, checks = 40) {
@@ -788,27 +788,35 @@ async function _drawEffectOverlay(token, conf) {
   return icon;
 }
 
-export async function reDrawEffectOverlays(token) {
+export async function drawOverlays(token) {
   if (token.tva_drawing_overlays) return;
   token.tva_drawing_overlays = true;
-  let overlays;
-  if (token.data.actorLink && token.actor) {
-    overlays = token.actor.getFlag('token-variants', 'overlays');
-  } else {
-    overlays = (token.document ?? token).getFlag('token-variants', 'overlays');
-  }
 
-  // Need to check and convert flags to the most recent format if they're not
-  if (overlays) {
-    overlays = overlays.map((ov) => {
-      if (typeof ov !== 'object') {
-        ov = { img: ov };
-      }
-      return ov;
+  const mappings = mergeObject(
+    TVA_CONFIG.globalMappings,
+    token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
+    { inplace: false }
+  );
+
+  let filteredOverlays = getTokenEffects(token)
+    .filter((ef) => ef in mappings && mappings[ef].overlay)
+    .sort((ef1, ef2) => mappings[ef1].priority - mappings[ef2].priority)
+    .map((ef) => {
+      const overlayConfig = mappings[ef].overlayConfig ?? {};
+      overlayConfig.img = mappings[ef].imgSrc;
+      overlayConfig.effect = ef;
+      return overlayConfig;
     });
+
+  // Process overlays
+  let overlays = [];
+  if (filteredOverlays.length) {
+    overlays = TVA_CONFIG.stackStatusConfig
+      ? filteredOverlays
+      : [filteredOverlays[filteredOverlays.length - 1]];
   }
 
-  if (overlays) {
+  if (overlays.length) {
     waitForTexture(token, async (token) => {
       if (!token.tva_overlays) token.tva_overlays = [];
 
@@ -820,31 +828,26 @@ export async function reDrawEffectOverlays(token) {
 
       const overlayIcons = [];
       for (const ov of overlays) {
-        // If the overlay has an effect name we can attempt to re-use the rendered overlay
-        if (ov.effect) {
-          // Check if overlay is already drawn, and if so re-use it
-          let found = false;
-          for (const c of removedChildren) {
-            if (ov.effect === c.tvaOverlayConfig?.effect) {
-              if (isObjectEmpty(diffObject(c.tvaOverlayConfig, ov))) {
-                overlayIcons.push(token.icon.addChild(c));
-                found = true;
-              } else if (c.tvaOverlayConfig.img === ov.img) {
-                c.refreshConfig(ov);
-                overlayIcons.push(token.icon.addChild(c));
-                found = true;
-              }
-              break;
+        // Check if overlay is already drawn, and if so re-use it
+        let found = false;
+        for (const c of removedChildren) {
+          if (ov.effect === c.tvaOverlayConfig?.effect) {
+            if (isObjectEmpty(diffObject(c.tvaOverlayConfig, ov))) {
+              overlayIcons.push(token.icon.addChild(c));
+              found = true;
+            } else if (c.tvaOverlayConfig.img === ov.img) {
+              c.refreshConfig(ov);
+              overlayIcons.push(token.icon.addChild(c));
+              found = true;
             }
+            break;
           }
+        }
 
-          // If none have been found draw a new one
-          if (!found) {
-            const icon = token.icon.addChild(await _drawEffectOverlay(token, ov));
-            overlayIcons.push(icon);
-          }
-        } else {
-          overlayIcons.push(token.icon.addChild(await _drawEffectOverlay(token, ov)));
+        // If none have been found draw a new one
+        if (!found) {
+          const icon = token.icon.addChild(await _drawEffectOverlay(token, ov));
+          overlayIcons.push(icon);
         }
       }
       for (const c of removedChildren) {
@@ -857,12 +860,15 @@ export async function reDrawEffectOverlays(token) {
         destroyOverlays(token.tva_overlays, token);
         delete token.tva_overlays;
       }
+      token.tva_drawing_overlays = false;
     });
   } else if (token.tva_overlays) {
     destroyOverlays(token.tva_overlays, token);
     delete token.tva_overlays;
+    token.tva_drawing_overlays = false;
+  } else {
+    token.tva_drawing_overlays = false;
   }
-  token.tva_drawing_overlays = false;
 }
 
 function destroyOverlays(overlays, token) {
@@ -988,15 +994,19 @@ export function getTokenEffects(token) {
     if (token.data.actorLink) {
       return getEffectsFromActor(token.actor);
     } else {
-      return (token.data.actorData?.items || []).map((ef) => ef.name);
+      return (token.data.actorData?.items || [])
+        .filter((item) => item.type === 'condition')
+        .map((item) => item.name);
     }
   } else {
     if (token.data.actorLink && token.actor) {
       return getEffectsFromActor(token.actor);
     } else {
-      return (token.data.actorData?.effects || [])
+      const actorEffects = getEffectsFromActor(token.actor);
+      return (token.data.effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
-        .map((ef) => ef.label);
+        .map((ef) => ef.label)
+        .concat(actorEffects);
     }
   }
 }

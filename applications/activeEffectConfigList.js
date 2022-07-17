@@ -15,7 +15,7 @@ import OverlayConfig from './overlayConfig.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token, globalMappings = false) {
-    super({}, {});
+    super({}, { title: (globalMappings ? 'GLOBAL ' : '') + 'Effect Config' });
 
     this.token = token;
     if (globalMappings) {
@@ -34,7 +34,6 @@ export default class ActiveEffectConfigList extends FormApplication {
       closeOnSubmit: false,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      title: 'Config',
       width: 470,
     });
   }
@@ -289,6 +288,13 @@ export default class ActiveEffectConfigList extends FormApplication {
             await tkn.drawEffects();
           }
           updateWithEffectMapping(tkn, getTokenEffects(tkn));
+          // Instruct users on other scenes to refresh the overlays
+          const message = {
+            handlerName: 'drawOverlays',
+            args: { all: true, sceneId: canvas.scene.id },
+            type: 'UPDATE',
+          };
+          game.socket?.emit('module.token-variants', message);
         }
       }
     }
