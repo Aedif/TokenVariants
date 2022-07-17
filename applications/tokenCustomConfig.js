@@ -82,37 +82,40 @@ export default class TokenCustomConfig extends TokenConfig {
 
     $(html).on('change', '.tva-config-checkbox', this._onCheckboxChange);
 
+    const processFormGroup = function (formGroup) {
+      // Checkbox is not added for the Image Path group
+      if (!$(formGroup).find('[name="img"]').length) {
+        let savedField = false;
+        if (tokenConfig) {
+          const flatConfig = flattenObject(tokenConfig);
+          $(formGroup)
+            .find('[name]')
+            .each(function (_) {
+              const name = $(this).attr('name');
+              if (name in flatConfig) {
+                savedField = true;
+              }
+            });
+        }
+
+        const checkbox = $(
+          `<div class="tva-config-checkbox"><input type="checkbox" data-dtype="Boolean" ${
+            savedField ? 'checked=""' : ''
+          }></div>`
+        );
+        if ($(formGroup).find('p.hint').length) {
+          $(formGroup).find('p.hint').before(checkbox);
+        } else {
+          $(formGroup).append(checkbox);
+        }
+        checkbox.find('input').trigger('change');
+      }
+    };
     // Add checkboxes to each form-group to control highlighting and which fields will are to be saved
     $(html)
       .find('.form-group')
       .each(function (index) {
-        // Checkbox is not added for the Image Path group
-        if (!$(this).find('[name="img"]').length) {
-          let savedField = false;
-          if (tokenConfig) {
-            const flatConfig = flattenObject(tokenConfig);
-            $(this)
-              .find('[name]')
-              .each(function (_) {
-                const name = $(this).attr('name');
-                if (name in flatConfig) {
-                  savedField = true;
-                }
-              });
-          }
-
-          const checkbox = $(
-            `<div class="tva-config-checkbox"><input type="checkbox" data-dtype="Boolean" ${
-              savedField ? 'checked=""' : ''
-            }></div>`
-          );
-          if ($(this).find('p.hint').length) {
-            $(this).find('p.hint').before(checkbox);
-          } else {
-            $(this).append(checkbox);
-          }
-          checkbox.find('input').trigger('change');
-        }
+        processFormGroup(this);
       });
 
     // Add 'update' and 'remove' config buttons
@@ -134,6 +137,26 @@ export default class TokenCustomConfig extends TokenConfig {
     $(html).find('.tabs > .item[data-tab="appearance"] > i').trigger('click');
 
     document.activeElement.blur(); // Hack fix for key UP/DOWN effects not registering after config has been opened
+
+    // TokenConfig might be changed by some modules after activateListeners is processed
+    // Look out for these updates and add checkboxes for any newly added form-groups
+    const mutate = (mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeName === 'DIV' && node.className === 'form-group') {
+            processFormGroup(node);
+          }
+        });
+      });
+    };
+
+    const observer = new MutationObserver(mutate);
+    observer.observe(html[0], {
+      characterData: false,
+      attributes: false,
+      childList: true,
+      subtree: true,
+    });
   }
 
   async _onCheckboxChange(event) {
