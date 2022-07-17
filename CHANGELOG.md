@@ -1,3 +1,24 @@
+# 3.3.0
+
+Overlays
+
+- Changes in the overlay options can now be previewed on the tokens
+- New option: **Rotation**
+- 'overlays' flag is no longer used to display overlays on a token
+
+Global Effect Configuration
+
+- Configuration changes should now reflect immediately on tokens
+
+Fixes:
+
+- Fixed overlays not refreshing on 'actorLink' change
+- Fixed effects not being read properly after toggling of 'actorLink'
+- Fixed overlays not automatically refreshing on 'filter' changes
+- Fixed global overlay configurations not getting applied on game load
+- Fixed global configurations not reverting in some cases on effect end
+- Fixed all PF2e items being recognized as conditions in some cases
+
 # 3.2.0
 
 Overlays/Active Effects
