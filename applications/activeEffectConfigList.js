@@ -14,7 +14,7 @@ import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
-  constructor(token, globalMappings = false) {
+  constructor(token, globalMappings = false, callback = null) {
     super({}, { title: (globalMappings ? 'GLOBAL ' : '') + 'Effect Config' });
 
     this.token = token;
@@ -22,6 +22,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       this.globalMappings = deepClone(TVA_CONFIG.globalMappings);
     }
     if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
+    this.callback = callback;
   }
 
   static get defaultOptions() {
@@ -298,6 +299,7 @@ export default class ActiveEffectConfigList extends FormApplication {
         }
       }
     }
+    if (this.callback) this.callback();
     this.close();
   }
 

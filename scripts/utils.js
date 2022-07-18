@@ -903,7 +903,7 @@ export async function setGlobalEffectMappings(mappings) {
   const keys = Object.keys(TVA_CONFIG.globalMappings);
   for (const key of keys) {
     if (!(key in mappings)) {
-      mappings['-=' + key] = null;
+      delete TVA_CONFIG.globalMappings[key];
     }
   }
   mergeObject(TVA_CONFIG.globalMappings, mappings);

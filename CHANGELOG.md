@@ -1,3 +1,7 @@
+# 3.3.2
+
+- Fixed 'Global Effect Configurations' not deleting when doing so through 'Configure Settings' window.
+
 # 3.3.1
 
 - Modified Token Configuration window used in custom configuration creation should now detect form-groups added by external modules post rendering of the window.
