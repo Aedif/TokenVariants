@@ -34,6 +34,7 @@ import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
 import { libWrapper } from './scripts/libWrapper/shim.js';
+import { TVA_Sprite } from './applications/TVA_Sprite.js';
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -528,9 +529,9 @@ async function initialize() {
       'Token.prototype._refreshIcon',
       async function (wrapped, ...args) {
         let result = await wrapped(...args);
-        if (this.tva_overlays) {
-          for (const ov of this.tva_overlays) {
-            ov.refresh();
+        for (const child of this.children) {
+          if (child instanceof TVA_Sprite) {
+            child.refresh();
           }
         }
         return result;

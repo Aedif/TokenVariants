@@ -12,6 +12,7 @@ export class TVA_Sprite extends PIXI.Sprite {
         angle: 0,
         filter: 'NONE',
         inheritTint: false,
+        underlay: false,
         linkRotation: true,
         tint: null,
         loop: true,

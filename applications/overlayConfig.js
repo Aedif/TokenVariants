@@ -94,6 +94,7 @@ export default class OverlayConfig extends FormApplication {
         angle: 0,
         filter: 'NONE',
         inheritTint: false,
+        underlay: false,
         linkRotation: true,
         tint: '',
         loop: true,

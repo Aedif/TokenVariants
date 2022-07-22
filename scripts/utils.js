@@ -790,6 +790,7 @@ export async function _drawEffectOverlay(token, conf) {
 }
 
 export async function drawOverlays(token) {
+  console.log('In draw overlays');
   if (token.tva_drawing_overlays) return;
   token.tva_drawing_overlays = true;
 
@@ -819,65 +820,82 @@ export async function drawOverlays(token) {
 
   if (overlays.length) {
     waitForTexture(token, async (token) => {
+      markAllOverlaysForRemoval(token);
       // Make sure the token image has an above 0 zIndex
       // token.icon.zIndex = 1;
 
-      if (!token.tva_overlays) token.tva_overlays = [];
-
-      const removedChildren = [];
-      for (const overlay of token.tva_overlays) {
-        const removed = token.removeChild(overlay);
-        if (removed) removedChildren.push(overlay);
-      }
-
-      const overlayIcons = [];
+      let zIndex = 100;
       for (const ov of overlays) {
-        // Check if overlay is already drawn, and if so re-use it
-        let found = false;
-        for (const c of removedChildren) {
-          if (ov.effect === c.tvaOverlayConfig?.effect) {
-            if (isObjectEmpty(diffObject(c.tvaOverlayConfig, ov))) {
-              overlayIcons.push(token.addChild(c));
-              found = true;
-            } else if (c.tvaOverlayConfig.img === ov.img) {
-              c.refresh(ov);
-              overlayIcons.push(token.addChild(c));
-              found = true;
+        let sprite = findTVASprite(ov.effect, token);
+        if (sprite) {
+          console.log('FOUND', sprite);
+          if (!isObjectEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
+            if (sprite.tvaOverlayConfig.img !== ov.img) {
+              token.removeChild(sprite);
+              sprite = token.addChild(await _drawEffectOverlay(token, ov));
+            } else {
+              console.log('refreshing', sprite);
+              sprite.refresh(ov);
             }
-            break;
           }
+        } else {
+          sprite = token.addChild(await _drawEffectOverlay(token, ov));
         }
+        sprite.tvaRemove = false; // Sprite in use, do not remove
 
-        // If none have been found draw a new one
-        if (!found) {
-          const icon = token.addChild(await _drawEffectOverlay(token, ov));
-          overlayIcons.push(icon);
+        if (sprite.tvaOverlayConfig.underlay) {
+          sprite.zIndex = zIndex - 100;
+          token.icon.zIndex = sprite.zIndex + 1;
+        } else {
+          sprite.zIndex = zIndex;
         }
+        zIndex += 1;
       }
-      for (const c of removedChildren) {
-        if (!overlayIcons.includes(c)) {
-          c.destroy();
-        }
-      }
-      if (overlayIcons.length) token.tva_overlays = overlayIcons;
-      else {
-        destroyOverlays(token.tva_overlays, token);
-        delete token.tva_overlays;
-      }
+
+      removeMarkedOverlays(token);
+      token.sortChildren();
       token.tva_drawing_overlays = false;
     });
-  } else if (token.tva_overlays) {
-    destroyOverlays(token.tva_overlays, token);
-    delete token.tva_overlays;
-    token.tva_drawing_overlays = false;
   } else {
+    removeAllOverlays(token);
     token.tva_drawing_overlays = false;
   }
 }
 
-function destroyOverlays(overlays, token) {
-  for (const ol of overlays) {
-    token.removeChild(ol)?.destroy();
+function markAllOverlaysForRemoval(token) {
+  for (const child of token.children) {
+    if (child instanceof TVA_Sprite) {
+      child.tvaRemove = true;
+    }
+  }
+}
+
+function removeMarkedOverlays(token) {
+  for (const child of token.children) {
+    if (child.tvaRemove) {
+      token.removeChild(child)?.destroy();
+    }
+  }
+}
+
+function findTVASprite(effect, token) {
+  for (const child of token.children) {
+    if (child.tvaOverlayConfig?.effect === effect) {
+      return child;
+    }
+  }
+  return null;
+}
+
+function removeAllOverlays(token) {
+  const toRemove = [];
+  for (const child of token.children) {
+    if (child instanceof TVA_Sprite) {
+      toRemove.push(child);
+    }
+  }
+  for (const child of toRemove) {
+    token.removeChild(child)?.destroy();
   }
 }
 
@@ -911,68 +929,6 @@ export async function setGlobalEffectMappings(mappings) {
     }
   }
   mergeObject(TVA_CONFIG.globalMappings, mappings);
-}
-
-// Helper function to display a pop-up and change the categories assigned to a path
-export async function onPathSelectCategory(event) {
-  event.preventDefault();
-  const typesInput = $(event.target).closest('.path-category').find('input');
-  const selectedTypes = typesInput.val().split(',');
-
-  const categories = BASE_IMAGE_CATEGORIES.concat(TVA_CONFIG.customImageCategories);
-
-  let content = '<div class="token-variants-popup-settings">';
-
-  // Split into rows of 4
-  const splits = [];
-  let currSplit = [];
-  for (let i = 0; i < categories.length; i++) {
-    if (i > 0 && i + 1 != categories.length && i % 4 == 0) {
-      splits.push(currSplit);
-      currSplit = [];
-    }
-    currSplit.push(categories[i]);
-  }
-  if (currSplit.length) splits.push(currSplit);
-
-  for (const split of splits) {
-    content += '<header class="table-header flexrow">';
-    for (const type of split) {
-      content += `<label>${type}</label>`;
-    }
-    content +=
-      '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
-    for (const type of split) {
-      content += `<input class="category" type="checkbox" name="${type}" data-dtype="Boolean" ${
-        selectedTypes.includes(type) ? 'checked' : ''
-      }>`;
-    }
-    content += '</div></li></ul>';
-  }
-  content += '</div>';
-
-  new Dialog({
-    title: `Image Categories/Filters`,
-    content: content,
-    buttons: {
-      yes: {
-        icon: "<i class='fas fa-check'></i>",
-        label: 'Select',
-        callback: (html) => {
-          const types = [];
-          $(html)
-            .find('.category')
-            .each(function () {
-              if ($(this).is(':checked')) {
-                types.push($(this).attr('name'));
-              }
-            });
-          typesInput.val(types.join(','));
-        },
-      },
-    },
-    default: 'yes',
-  }).render(true);
 }
 
 export function getEffectsFromActor(actor) {

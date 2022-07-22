@@ -1,7 +1,7 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
-import { onPathSelectCategory } from '../scripts/utils.js';
 import { cacheImages } from '../token-variants.mjs';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
+import { showPathSelectCategoryDialog } from './dialogs.js';
 
 export default class ConfigureSettings extends FormApplication {
   constructor(
@@ -168,7 +168,7 @@ export default class ConfigureSettings extends FormApplication {
     $(html).on('click', 'a.delete-path', this._onDeletePath.bind(this));
     $(html).on('click', 'a.convert-imgur', this._onConvertImgurPath.bind(this));
     $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
-    $(html).on('click', 'a.select-category', onPathSelectCategory.bind(this));
+    $(html).on('click', 'a.select-category', showPathSelectCategoryDialog.bind(this));
 
     // Search Filters
     html.on('input', 'input.filterRegex', this._validateRegex.bind(this));
@@ -276,13 +276,11 @@ export default class ConfigureSettings extends FormApplication {
       const bucketName = activeSource.replace('s3:', '');
       current = `${game.data.files.s3?.endpoint.protocol}//${bucketName}.${game.data.files.s3?.endpoint.host}/${current}`;
     } else if (activeSource.startsWith('rolltable')) {
-      let content = `<select name="table-name" id="output-tableKey">`;
+      let content = `<select style="width: 100%;" name="table-name" id="output-tableKey">`;
 
-      game.tables.entities
-        .map((t) => t.name)
-        .forEach((tableName) => {
-          content += `<option value='${tableName}'>${tableName}</option>`;
-        });
+      game.tables.forEach((rollTable) => {
+        content += `<option value='${rollTable.name}'>${rollTable.name}</option>`;
+      });
 
       content += `</select>`;
 

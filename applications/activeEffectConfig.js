@@ -5,7 +5,7 @@ import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
-import { showOverlayJsonConfig } from './dialogs.js';
+import { showOverlayJsonConfigDialog } from './dialogs.js';
 
 export default class TVAActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -95,7 +95,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
   }
 
   async _onOverlayConfigRightClick() {
-    showOverlayJsonConfig(this.overlayConfig, (config) => (this.overlayConfig = config));
+    showOverlayJsonConfigDialog(this.overlayConfig, (config) => (this.overlayConfig = config));
   }
 
   async _toggleActiveControls(event) {

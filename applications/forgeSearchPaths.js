@@ -1,5 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
-import { onPathSelectCategory } from '../scripts/utils.js';
+import { showPathSelectCategoryDialog } from './dialogs.js';
 
 export class ForgeSearchPaths extends FormApplication {
   constructor() {
@@ -53,7 +53,7 @@ export class ForgeSearchPaths extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.find('a.create-path').click(this._onCreatePath.bind(this));
-    $(html).on('click', 'a.select-category', onPathSelectCategory.bind(this));
+    $(html).on('click', 'a.select-category', showPathSelectCategoryDialog.bind(this));
     html.find('a.delete-path').click(this._onDeletePath.bind(this));
     html.find('button.reset').click(this._onReset.bind(this));
     html.find('button.update').click(this._onUpdate.bind(this));
