@@ -12,6 +12,7 @@ import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
+import { showOverlayJsonConfig } from './dialogs.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token, globalMappings = false, callback = null) {
@@ -94,6 +95,11 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
     html.find('.effect-config i.config-script').click(this._onConfigScriptClick.bind(this));
     html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
+    html.on(
+      'contextmenu',
+      '.effect-overlay i.overlay-config',
+      this._onOverlayConfigRightClick.bind(this)
+    );
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
   }
 
@@ -117,6 +123,12 @@ export default class ActiveEffectConfigList extends FormApplication {
       mapping.effectName,
       this.token
     ).render(true);
+  }
+
+  async _onOverlayConfigRightClick(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+    showOverlayJsonConfig(mapping.overlayConfig, (config) => (mappings.overlayConfig = config));
   }
 
   async _toggleActiveControls(event) {

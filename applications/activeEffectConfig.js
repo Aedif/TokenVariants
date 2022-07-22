@@ -5,6 +5,7 @@ import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
+import { showOverlayJsonConfig } from './dialogs.js';
 
 export default class TVAActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -79,9 +80,10 @@ export default class TVAActiveEffectConfig extends FormApplication {
     html.find('button.effect-config-edit').click(this._onConfigEditClick.bind(this));
     html.find('button.effect-config-script').click(this._onConfigScriptClick.bind(this));
     html.find('.overlay-config').click(this._onOverlayConfigClick.bind(this));
+    html.on('contextmenu', '.overlay-config', this._onOverlayConfigRightClick.bind(this));
   }
 
-  async _onOverlayConfigClick(event) {
+  async _onOverlayConfigClick() {
     new OverlayConfig(
       this.overlayConfig,
       (config) => {
@@ -90,6 +92,10 @@ export default class TVAActiveEffectConfig extends FormApplication {
       this.effectName,
       this.token
     ).render(true);
+  }
+
+  async _onOverlayConfigRightClick() {
+    showOverlayJsonConfig(this.overlayConfig, (config) => (this.overlayConfig = config));
   }
 
   async _toggleActiveControls(event) {
