@@ -523,6 +523,21 @@ async function initialize() {
       'WRAPPER'
     );
 
+    libWrapper.register(
+      'token-variants',
+      'Token.prototype._refreshIcon',
+      async function (wrapped, ...args) {
+        let result = await wrapped(...args);
+        if (this.tva_overlays) {
+          for (const ov of this.tva_overlays) {
+            ov.refresh();
+          }
+        }
+        return result;
+      },
+      'WRAPPER'
+    );
+
     if (TVA_CONFIG.disableEffectIcons) {
       libWrapper.register(
         'token-variants',

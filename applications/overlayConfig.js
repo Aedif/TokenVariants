@@ -47,10 +47,10 @@ export default class OverlayConfig extends FormApplication {
     const tokens = this.token ? [this.token] : canvas.tokens.placeables;
     const previewIcons = [];
     for (const tkn of tokens) {
-      for (const c of tkn.icon.children) {
+      for (const c of tkn.children) {
         if (c.tvaOverlayConfig && c.tvaOverlayConfig.effect === this.config.effect) {
           // Effect icon found, however if we're in global preview then we need to take into account
-          // a token/actor specific mapping which may be override the global one
+          // a token/actor specific mapping which may override the global one
           if (this.token) {
             previewIcons.push(c);
           } else if (
@@ -69,14 +69,14 @@ export default class OverlayConfig extends FormApplication {
   async _applyPreviews() {
     const icons = this.getPreviewIcons();
     for (const icon of icons) {
-      icon.refreshConfig(this.previewConfig, true);
+      icon.refresh(this.previewConfig, true);
     }
   }
 
   async _removePreviews() {
     const icons = this.getPreviewIcons();
     for (const icon of icons) {
-      icon.refreshConfig();
+      icon.refresh();
     }
   }
 
@@ -87,13 +87,14 @@ export default class OverlayConfig extends FormApplication {
     const settings = mergeObject(
       {
         alpha: 1,
-        scaleX: 0,
-        scaleY: 0,
+        scaleX: 1,
+        scaleY: 1,
         offsetX: 0,
         offsetY: 0,
         angle: 0,
         filter: 'NONE',
         inheritTint: false,
+        linkRotation: true,
         tint: '',
         loop: true,
         effect: null,

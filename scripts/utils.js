@@ -780,7 +780,8 @@ export function tv_executeScript(script, { actor, token } = {}) {
   }
 }
 
-async function _drawEffectOverlay(token, conf) {
+// TODO remove export
+export async function _drawEffectOverlay(token, conf) {
   const texture = await loadTexture(conf.img, {
     fallback: 'modules/token-variants/img/token-images.svg',
   });
@@ -795,7 +796,7 @@ export async function drawOverlays(token) {
   const mappings = mergeObject(
     TVA_CONFIG.globalMappings,
     token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
-    { inplace: false }
+    { inplace: false, recursive: false }
   );
 
   let filteredOverlays = getTokenEffects(token)
@@ -808,7 +809,7 @@ export async function drawOverlays(token) {
       return overlayConfig;
     });
 
-  // Process overlays
+  // See if the whole stack or just top of the stack should be used according to settings
   let overlays = [];
   if (filteredOverlays.length) {
     overlays = TVA_CONFIG.stackStatusConfig
@@ -818,11 +819,14 @@ export async function drawOverlays(token) {
 
   if (overlays.length) {
     waitForTexture(token, async (token) => {
+      // Make sure the token image has an above 0 zIndex
+      // token.icon.zIndex = 1;
+
       if (!token.tva_overlays) token.tva_overlays = [];
 
       const removedChildren = [];
       for (const overlay of token.tva_overlays) {
-        const removed = token.icon.removeChild(overlay);
+        const removed = token.removeChild(overlay);
         if (removed) removedChildren.push(overlay);
       }
 
@@ -833,11 +837,11 @@ export async function drawOverlays(token) {
         for (const c of removedChildren) {
           if (ov.effect === c.tvaOverlayConfig?.effect) {
             if (isObjectEmpty(diffObject(c.tvaOverlayConfig, ov))) {
-              overlayIcons.push(token.icon.addChild(c));
+              overlayIcons.push(token.addChild(c));
               found = true;
             } else if (c.tvaOverlayConfig.img === ov.img) {
-              c.refreshConfig(ov);
-              overlayIcons.push(token.icon.addChild(c));
+              c.refresh(ov);
+              overlayIcons.push(token.addChild(c));
               found = true;
             }
             break;
@@ -846,7 +850,7 @@ export async function drawOverlays(token) {
 
         // If none have been found draw a new one
         if (!found) {
-          const icon = token.icon.addChild(await _drawEffectOverlay(token, ov));
+          const icon = token.addChild(await _drawEffectOverlay(token, ov));
           overlayIcons.push(icon);
         }
       }
@@ -873,7 +877,7 @@ export async function drawOverlays(token) {
 
 function destroyOverlays(overlays, token) {
   for (const ol of overlays) {
-    token.icon.removeChild(ol)?.destroy();
+    token.removeChild(ol)?.destroy();
   }
 }
 
