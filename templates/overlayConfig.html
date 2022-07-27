@@ -1,18 +1,32 @@
 <form>
+
+    <h2>TVA Settings</h2>
+
     <div class="form-group">
         <label>Underlay</label>
         <div class="form-fields">
             <input type="checkbox" name="underlay" data-dtype="Boolean" value="{{underlay}}" {{#if underlay}}checked{{/if}}>
         </div>
+        <p class="notes">Place the image or video underneath the token.</p>
+    </div>
+
+    <h2>Link To Token Data</h2>
+
+    <div class="form-group">
+        <label>Tint Color</label>
+        <div class="form-fields">
+            <input type="checkbox" name="inheritTint" data-dtype="Boolean" value="{{inheritTint}}" {{#if inheritTint}}checked{{/if}}>
+        </div>
     </div>
 
     <div class="form-group">
-        <label>Opacity</label>
+        <label>Rotation</label>
         <div class="form-fields">
-            <input type="range" name="alpha" value="{{alpha}}" min="0" max="1" step="0.05">
-            <span class="range-value">{{alpha}}</span>
+            <input type="checkbox" name="linkRotation" data-dtype="Boolean" value="{{linkRotation}}" {{#if linkRotation}}checked{{/if}}>
         </div>
     </div>
+
+    <h2>Video</h2>
 
     <div class="form-group">
         <label>Loop Video</label>
@@ -22,9 +36,19 @@
     </div>
 
     <div class="form-group">
-        <label>Inherit Token Tint Color</label>
+        <label>Play Once and Hide</label>
         <div class="form-fields">
-            <input type="checkbox" name="inheritTint" data-dtype="Boolean" value="{{inheritTint}}" {{#if inheritTint}}checked{{/if}}>
+            <input type="checkbox" name="playOnce" data-dtype="Boolean" value="{{playOnce}}" {{#if playOnce}}checked{{/if}}>
+        </div>
+    </div>
+
+    <h2>Appearance</h2>
+
+    <div class="form-group">
+        <label>Opacity</label>
+        <div class="form-fields">
+            <input type="range" name="alpha" value="{{alpha}}" min="0" max="1" step="0.05">
+            <span class="range-value">{{alpha}}</span>
         </div>
     </div>
 
@@ -36,12 +60,6 @@
         </div>
     </div>
 
-    <div class="form-group">
-        <label>Link Rotation to Token</label>
-        <div class="form-fields">
-            <input type="checkbox" name="linkRotation" data-dtype="Boolean" value="{{linkRotation}}" {{#if linkRotation}}checked{{/if}}>
-        </div>
-    </div>
 
     <div class="form-group">
         <label>Horizontal Offset</label>

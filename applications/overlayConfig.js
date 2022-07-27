@@ -98,6 +98,7 @@ export default class OverlayConfig extends FormApplication {
         linkRotation: true,
         tint: '',
         loop: true,
+        playOnce: false,
         effect: null,
       },
       this.config || {}

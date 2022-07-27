@@ -69,7 +69,7 @@ export const TVA_CONFIG = {
   stackStatusConfig: true,
   staticCache: false,
   staticCacheFile: 'modules/token-variants/token-variants-cache.json',
-  tilesEnabled: false,
+  tilesEnabled: true,
   compendiumMapper: {
     missingOnly: false,
     diffImages: false,

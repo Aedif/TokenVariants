@@ -16,6 +16,7 @@ export class TVA_Sprite extends PIXI.Sprite {
         linkRotation: true,
         tint: null,
         loop: true,
+        playOnce: false,
       },
       config
     );
@@ -31,9 +32,16 @@ export class TVA_Sprite extends PIXI.Sprite {
       // Detach video from others
       const s = source.cloneNode();
 
-      s.loop = this.tvaOverlayConfig.loop;
+      s.loop = this.tvaOverlayConfig.loop && !this.tvaOverlayConfig.playOnce;
       s.muted = true;
       s.onplay = () => (s.currentTime = 0);
+
+      if (this.tvaOverlayConfig.playOnce) {
+        s.onended = () => {
+          this.alpha = 0;
+          this.tvaVideoEnded = true;
+        };
+      }
 
       await new Promise((resolve) => (s.oncanplay = resolve));
       this.texture = PIXI.Texture.from(s, { resourceOptions: { autoPlay: false } });
@@ -45,12 +53,6 @@ export class TVA_Sprite extends PIXI.Sprite {
     if (!this.texture) return;
     this.visible = false;
     const config = mergeObject(this.tvaOverlayConfig, configuration, { inplace: !preview });
-    // this.anchor.set(
-    //   1 / this.token.data.width - 1 + config.offsetX,
-    //   1 / this.token.data.height - 1 + config.offsetY
-    // );
-
-    // Implementation 2
 
     const source = foundry.utils.getProperty(this.texture, 'baseTexture.resource.source');
     if (source && source.tagName === 'VIDEO') {
@@ -64,7 +66,7 @@ export class TVA_Sprite extends PIXI.Sprite {
 
     if (this.anchor) this.anchor.set(0.5 + config.offsetX, 0.5 + config.offsetY);
 
-    //
+    // Scale the image using the same logic as the token
     const tex = this.texture;
     let aspect = tex.width / tex.height;
     const scale = this.scale;
@@ -76,57 +78,27 @@ export class TVA_Sprite extends PIXI.Sprite {
       scale.x = Number(scale.y);
     }
 
-    // this.width = this.width * (this.scale.x + config.scaleX);
-    // this.scale.y = this.scale.y + config.scaleY;
-    // this.scale.x = this.scale.x + config.scaleX;
-
+    // Center the image
     this.position.set(this.token.w / 2, this.token.h / 2);
 
-    // Mirror horizontally or vertically
+    // To support previous version config version where a scale of <=0 was possible
+    if (config.scaleX <= 0) config.scaleX = 1 + config.scaleX;
+    if (config.scaleY <= 0) config.scaleY = 1 + config.scaleY;
+
+    // Adjust scale according to config
     this.scale.x = this.scale.x * config.scaleX;
     this.scale.y = this.scale.y * config.scaleY;
 
-    // this.x = this.width / 2 / this.token.data.scale;
-    // this.y = this.height / 2 / this.token.data.scale;
+    // TODO: Logic to mirror the image
+    // Mirror horizontally or vertically
+    // this.scale.x = Math.abs(this.scale.x) * (token.data.mirrorX ? -1 : 1);
+    // this.scale.y = Math.abs(this.scale.y) * (token.data.mirrorY ? -1 : 1);
 
-    // aspect = this.token.data.width / this.token.data.height;
-    // if (aspect != 1) {
-    //   this.y = this.y / aspect;
-    // }
-
-    // scale.x = scale.x + config.scaleX;
-    // scale.y = scale.y + config.scaleY;
-
-    // Apply config options
-    // this.scale.x = Number(this.scale.x) + config.scaleX;
-    // this.scale.y = Number(this.scale.y) + config.scaleY;
-
-    // this.achor.set(this.achor.x + config.offsetX, this.anchor.y + config.offsetY);
-    // this.x = this.x + config.offsetX;
-    // this.y = this.y + config.offsetY;
-
-    // // Mirror horizontally or vertically
-    // this.icon.scale.x = Math.abs(this.icon.scale.x) * (this.data.mirrorX ? -1 : 1);
-    // this.icon.scale.y = Math.abs(this.icon.scale.y) * (this.data.mirrorY ? -1 : 1);
-
-    // Implementation 1 : CLOSE
-
-    // const tex = this.texture;
-    // let aspect = tex.width / tex.height;
-    // const scale = this.scale;
-    // if (aspect >= 1) {
-    //   this.width = this.width * this.data.scale;
-    //   scale.y = Number(scale.x);
-    // } else {
-    //   this.icon.height = this.h * this.data.scale;
-    //   scale.x = Number(scale.y);
-    // }
-
-    // // Mirror horizontally or vertically
-    // this.icon.scale.x = Math.abs(this.icon.scale.x) * (this.data.mirrorX ? -1 : 1);
-    // this.icon.scale.y = Math.abs(this.icon.scale.y) * (this.data.mirrorY ? -1 : 1);
-
-    this.alpha = config.alpha;
+    // Set alpha but only if playOnce is disabled and the video hasn't
+    // finished playing yet. Otherwise we want to keep alpha as 0 to keep the video hidden
+    if (!this.tvaVideoEnded) {
+      this.alpha = config.alpha;
+    }
 
     let filter = PIXI.filters[config.filter];
     if (filter) {
@@ -135,47 +107,12 @@ export class TVA_Sprite extends PIXI.Sprite {
       this.filters = [];
     }
 
-    // Adjust the scale to be relative to the token image so that when it gets attached
-    // as a child of the token image and inherits its scale, their sizes match up
-    // this.scale.x = this.token.texture.width / this.texture.width + config.scaleX;
-    // this.scale.y = this.token.texture.height / this.texture.height + config.scaleY;
-
-    // TEMP TEST
-    // const xRatio = this.token.texture.width / this.texture.width;
-    // const yRatio = this.token.texture.height / this.texture.height;
-
-    // this.scale.x =
-
-    // this.scale.x = 1 / Number(this.token.icon.scale.x) + config.scaleX;
-    // this.scale.y = 1 / Number(this.token.icon.scale.y) + config.scaleY;
-    // this.width = this.token.w * this.token.data.scale;
-    // this.height = this.token.h * this.token.data.scale;
-
-    // const tex = this.texture;
-    // let aspect = tex.width / tex.height;
-    // const scale = this.scale;
-    // if (aspect >= 1) {
-    //   this.width = this.token.w * this.token.data.scale;
-    //   scale.y = Number(scale.x);
-    // } else {
-    //   this.height = this.token.h * this.token.data.scale;
-    //   scale.x = Number(scale.y);
-    // }
-
-    // Mirror horizontally or vertically
-    // this.scale.x = Math.abs(this.scale.x) * (token.data.mirrorX ? -1 : 1);
-    // this.scale.y = Math.abs(this.scale.y) * (token.data.mirrorY ? -1 : 1);
-
     // Angle in degrees
     this.angle = config.linkRotation ? this.token.data.rotation + config.angle : config.angle;
 
     // Apply color tinting
     const tint = config.inheritTint ? this.token.data.tint : config.tint;
     this.tint = tint ? foundry.utils.colorStringToHex(tint) : 0xffffff;
-
-    // Scale
-    this.scale.x = this.scale.x * config.scaleX;
-    this.scale.y = this.scale.y * config.scaleY;
 
     this.visible = true;
   }

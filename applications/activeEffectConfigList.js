@@ -130,7 +130,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     const mapping = this.object.mappings[li.dataset.index];
     showOverlayJsonConfigDialog(
       mapping.overlayConfig,
-      (config) => (mappings.overlayConfig = config)
+      (config) => (mapping.overlayConfig = config)
     );
   }
 

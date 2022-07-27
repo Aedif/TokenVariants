@@ -780,17 +780,15 @@ export function tv_executeScript(script, { actor, token } = {}) {
   }
 }
 
-// TODO remove export
-export async function _drawEffectOverlay(token, conf) {
+async function _drawEffectOverlay(token, conf) {
   const texture = await loadTexture(conf.img, {
     fallback: 'modules/token-variants/img/token-images.svg',
   });
-  const icon = new TVA_Sprite(texture, token, conf);
-  return icon;
+  const sprite = new TVA_Sprite(texture, token, conf);
+  return sprite;
 }
 
 export async function drawOverlays(token) {
-  console.log('In draw overlays');
   if (token.tva_drawing_overlays) return;
   token.tva_drawing_overlays = true;
 
@@ -820,21 +818,21 @@ export async function drawOverlays(token) {
 
   if (overlays.length) {
     waitForTexture(token, async (token) => {
+      // Temporarily mark every overlay for removal.
+      // We'll only keep overlays that are still applicable to the token
       markAllOverlaysForRemoval(token);
-      // Make sure the token image has an above 0 zIndex
-      // token.icon.zIndex = 1;
 
+      // To keep track of the overlay order
+      // We're starting at 100 to make sure there is room for underlays
       let zIndex = 100;
       for (const ov of overlays) {
         let sprite = findTVASprite(ov.effect, token);
         if (sprite) {
-          console.log('FOUND', sprite);
           if (!isObjectEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
             if (sprite.tvaOverlayConfig.img !== ov.img) {
               token.removeChild(sprite);
               sprite = token.addChild(await _drawEffectOverlay(token, ov));
             } else {
-              console.log('refreshing', sprite);
               sprite.refresh(ov);
             }
           }
@@ -843,8 +841,10 @@ export async function drawOverlays(token) {
         }
         sprite.tvaRemove = false; // Sprite in use, do not remove
 
+        // Assign order to the overlay
         if (sprite.tvaOverlayConfig.underlay) {
           sprite.zIndex = zIndex - 100;
+          // Make sure the token icon is always above the underlays
           token.icon.zIndex = sprite.zIndex + 1;
         } else {
           sprite.zIndex = zIndex;
