@@ -14,6 +14,9 @@ export class TVA_Sprite extends PIXI.Sprite {
         inheritTint: false,
         underlay: false,
         linkRotation: true,
+        linkMirror: true,
+        linkOpacity: false,
+        mirror: false,
         tint: null,
         loop: true,
         playOnce: false,
@@ -89,15 +92,16 @@ export class TVA_Sprite extends PIXI.Sprite {
     this.scale.x = this.scale.x * config.scaleX;
     this.scale.y = this.scale.y * config.scaleY;
 
-    // TODO: Logic to mirror the image
-    // Mirror horizontally or vertically
-    // this.scale.x = Math.abs(this.scale.x) * (token.data.mirrorX ? -1 : 1);
-    // this.scale.y = Math.abs(this.scale.y) * (token.data.mirrorY ? -1 : 1);
+    // Check if mirroring should be inherited from the token and if so apply it
+    if (config.linkMirror) {
+      this.scale.x = Math.abs(this.scale.x) * (this.token.data.mirrorX ? -1 : 1);
+      this.scale.y = Math.abs(this.scale.y) * (this.token.data.mirrorY ? -1 : 1);
+    }
 
     // Set alpha but only if playOnce is disabled and the video hasn't
     // finished playing yet. Otherwise we want to keep alpha as 0 to keep the video hidden
     if (!this.tvaVideoEnded) {
-      this.alpha = config.alpha;
+      this.alpha = config.linkOpacity ? this.token.data.alpha : config.alpha;
     }
 
     let filter = PIXI.filters[config.filter];
