@@ -12,6 +12,7 @@ Main features include:
 
 - Sourcing images from local folders, rolltables, Imgur galleries, and s3 buckets
 - Pop-ups on Actor/Token create to select images found based on Actor/Token name
+- Overlaying images/videos on top or bellow the token
 - Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
 - Displaying different images for the same token for each user
 - Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRT].png
@@ -23,13 +24,6 @@ Main features include:
 The comprehensive list of settings is available bellow.
 
 https://user-images.githubusercontent.com/7693704/121926941-69aff780-cd36-11eb-864b-b2a9640baeea.mp4
-
-The image searches are done using the Actor's or Token's name, and will ignore special characters, case, or spaces in the files
-
-e.g.
-
-- '**Mage**' will match: **09_mage.png**, **red-MAGE-64.png**, **mage-s_fire.jpg**
-- '**Half-Red Dragon Veteran**' will match: **HalfRedDragonVeteran.png**, **hAlF_rEd_dRAgon-VETERAN.png**
 
 ## Table of Contents
 

@@ -194,8 +194,20 @@ export default class ActiveEffectConfigList extends FormApplication {
   }
 
   async _onImageClick(event) {
-    showArtSelect(this.token.name, {
-      searchType: SEARCH_TYPE.TOKEN,
+    let search = this.token.name;
+    if (search === 'Unknown') {
+      const li = event.currentTarget.closest('.table-row');
+      const mapping = this.object.mappings[li.dataset.index];
+      search = mapping.effectName;
+    }
+
+    let searchType = SEARCH_TYPE.TOKEN;
+    if (TVA_CONFIG.customImageCategories.includes('Overlays')) {
+      searchType = 'Overlays';
+    }
+
+    showArtSelect(search, {
+      searchType: searchType,
       callback: (imgSrc, imgName) => {
         const vid = $(event.target).closest('.effect-image').find('video');
         const img = $(event.target).closest('.effect-image').find('img');
@@ -214,8 +226,12 @@ export default class ActiveEffectConfigList extends FormApplication {
   }
 
   async _onImageRightClick(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+
     new FilePicker({
-      type: 'image',
+      type: 'imagevideo',
+      current: mapping.imgSrc,
       callback: (path) => {
         const vid = $(event.target).closest('.effect-image').find('video');
         const img = $(event.target).closest('.effect-image').find('img');

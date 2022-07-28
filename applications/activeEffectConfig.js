@@ -168,7 +168,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
 
   async _onImageRightClick(event) {
     new FilePicker({
-      type: 'image',
+      type: 'imagevideo',
       callback: (path) => {
         const vid = $(event.target).closest('.form-group').find('video.image');
         const img = $(event.target).closest('.form-group').find('img.image');
