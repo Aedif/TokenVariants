@@ -277,6 +277,9 @@ export async function registerSettings() {
   // 16/06/2022
   // Perform searchPaths and forgeSearchPaths conversions to new format if needed
   TVA_CONFIG.searchPaths = TVA_CONFIG.searchPaths.map((p) => {
+    if (typeof p === 'string') {
+      p = { text: p };
+    }
     if (!p.source) {
       if (p.text.startsWith('s3:')) {
         const parts = p.text.split(':');
@@ -370,6 +373,9 @@ export async function importSettingsFromJSON(json) {
   // Perform searchPaths and forgeSearchPaths conversions to new format if needed
   if (json.searchPaths)
     json.searchPaths = json.searchPaths.map((p) => {
+      if (typeof p === 'string') {
+        p = { text: p };
+      }
       if (!p.source) {
         if (p.text.startsWith('s3:')) {
           const parts = p.text.split(':');
