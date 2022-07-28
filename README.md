@@ -15,7 +15,7 @@ Main features include:
 - Overlaying images/videos on top or bellow the token
 - Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
 - Displaying different images for the same token for each user
-- Image filtering based on identifiers e.g. when selecting a portrait only showing images containg 'PRT': Bob[PRT].png, Tom[PRT].png
+- Image filtering based on identifiers e.g. when selecting a portrait only showing images containing 'PRT': Bob[PRT].png, Tom[PRT].png
 - Wildcard images shown in the Token HUD
 - Aided and/or automatic mapping of images to actor compendiums
 - Assigning art to status effects and Visibility/Combat states, updating tokens once conditions such as 'Dead' and 'Paralysis' have been applied
@@ -23,7 +23,13 @@ Main features include:
 
 The comprehensive list of settings is available bellow.
 
-https://user-images.githubusercontent.com/7693704/121926941-69aff780-cd36-11eb-864b-b2a9640baeea.mp4
+You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to helping me to continue working on FoundryVTT modules you will be granted access to a selection of pre-configured animated overlays to be used along with this module:
+
+!["Animated Overlays"](./docs/animated_overlays.gif)
+
+Watch a short feature showcase on YouTube:
+
+[![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
 
 ## Table of Contents
 

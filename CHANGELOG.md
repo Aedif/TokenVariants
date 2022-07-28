@@ -1,3 +1,27 @@
+# 3.4.0
+
+**Overlays**
+
+!!! There have been changes to how overlay scaling works. If you have existing overlays consider twice before updating as some or all overlays may require scaling to be re-adjusted !!!
+
+Overlays
+
+- Overlays are no longer affected by Token Magic FX
+- Fixed issues with overlays breaking on particular "Token Dimensions (Grid Spaces)" changes
+- Overlay cog icon can now be right-clicked to manually edit and copy options between overlays
+
+New options:
+
+- Link To Token Data: Rotation, Mirror Image, Opacity
+- Underlay
+  - Places the overlay bellow the token
+- Play once and hide
+  - If the overlay is a video it will be played only once and then hidden
+
+Misc.
+
+- Fixed particularly old "Search Paths" settings failing to convert to a newer format when updating the module
+
 # 3.3.2
 
 - Fixed 'Global Effect Configurations' not deleting when doing so through 'Configure Settings' window.
