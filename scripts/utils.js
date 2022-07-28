@@ -446,7 +446,7 @@ export function setTokenConfig(imgSrc, imgName, tokenConfig) {
  */
 export function getFileName(path) {
   if (!path) return '';
-  return decodeURI(path).split('\\').pop().split('/').pop().split('.')[0];
+  return decodeURI(path).split('\\').pop().split('/').pop().split('.').slice(0, -1).join('.');
 }
 
 /**

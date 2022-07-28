@@ -1,10 +1,15 @@
+# 3.5.0
+
+- Added a value _link_ for **Scale Width** and **Scale Height** sliders under Overlay Settings.
+  - While enabled the two sliders will have their value synced
+- Fixed all status effect being prevented from being drawn for Tokens with no represented Actor and when **Active Effects** > **Disable SOME Token Effect Icons** is enabled.
+- Fixed file names with multiple dots in them not being properly evaluated during searches.
+
 # 3.4.0
 
 **Overlays**
 
 !!! There have been changes to how overlay scaling works. If you have existing overlays consider twice before updating as some or all overlays may require scaling to be re-adjusted !!!
-
-Overlays
 
 - Overlays are no longer affected by Token Magic FX
 - Fixed issues with overlays breaking on particular "Token Dimensions (Grid Spaces)" changes

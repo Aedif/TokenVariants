@@ -572,7 +572,9 @@ async function initialize() {
           if (restrictedEffects.length) {
             if (tokenEffects.length) {
               this.data.effects = tokenEffects.filter(
-                (ef) => !restrictedEffects.includes(ef.data.label)
+                // check if it's a string here
+                // for tokens without representing actors effects are just stored as paths to icons
+                (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.data.label)
               );
             }
             if (this.actor && actorEffects.size) {

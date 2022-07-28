@@ -26,6 +26,30 @@ export default class OverlayConfig extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.find('input,select').on('change', this._onInputChange.bind(this));
+
+    // Controls for locking scale sliders together
+    let scaleState = { locked: true };
+    const lockButtons = $(html).find('.scaleLock > a');
+    const sliderScaleWidth = $(html).find('[name="scaleX"]');
+    const sliderScaleHeight = $(html).find('[name="scaleY"]');
+
+    lockButtons.on('click', function () {
+      scaleState.locked = !scaleState.locked;
+      lockButtons.html(
+        scaleState.locked ? '<i class="fas fa-link"></i>' : '<i class="fas fa-unlink"></i>'
+      );
+    });
+
+    sliderScaleWidth.on('change', function () {
+      if (scaleState.locked && sliderScaleWidth.val() !== sliderScaleHeight.val()) {
+        sliderScaleHeight.val(sliderScaleWidth.val()).trigger('change');
+      }
+    });
+    sliderScaleHeight.on('change', function () {
+      if (scaleState.locked && sliderScaleWidth.val() !== sliderScaleHeight.val()) {
+        sliderScaleWidth.val(sliderScaleHeight.val()).trigger('change');
+      }
+    });
   }
 
   async _onInputChange(event) {
