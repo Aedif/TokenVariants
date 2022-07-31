@@ -59,9 +59,9 @@ export const TVA_CONFIG = {
     syncImages: false,
   },
   popup: {
-    disableAutoPopupOnActorCreate: false,
-    disableAutoPopupOnTokenCreate: false,
-    disableAutoPopupOnTokenCopyPaste: false,
+    disableAutoPopupOnActorCreate: true,
+    disableAutoPopupOnTokenCreate: true,
+    disableAutoPopupOnTokenCopyPaste: true,
     twoPopups: false,
     twoPopupsNoDialog: false,
   },

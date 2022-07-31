@@ -2,6 +2,7 @@ import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 import { TVA_Sprite } from '../applications/TVA_Sprite.js';
+import { getTokenData } from './compatability.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -197,7 +198,9 @@ export async function updateTokenImage(
 
   if (token) {
     if (TVA_CONFIG.updateTokenProto && token.actor) {
-      await token.actor.update({ token: tokenUpdateObj });
+      // Timeout to prevent race conditions with other modules namely MidiQOL
+      // this is a low priority update so it should be Ok to do
+      setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
     }
     queueTokenUpdate(token.id, tokenUpdateObj, callback);
   }
@@ -951,19 +954,19 @@ export function getEffectsFromActor(actor) {
 
 export function getTokenEffects(token) {
   if (game.system.id === 'pf2e') {
-    if (token.data.actorLink) {
+    if (getTokenData(token).actorLink) {
       return getEffectsFromActor(token.actor);
     } else {
-      return (token.data.actorData?.items || [])
+      return (getTokenData(token).actorData?.items || [])
         .filter((item) => item.type === 'condition')
         .map((item) => item.name);
     }
   } else {
-    if (token.data.actorLink && token.actor) {
+    if (getTokenData(token).actorLink && token.actor) {
       return getEffectsFromActor(token.actor);
     } else {
       const actorEffects = getEffectsFromActor(token.actor);
-      return (token.data.effects || [])
+      return (getTokenData(token).effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
         .map((ef) => ef.label)
         .concat(actorEffects);

@@ -14,6 +14,7 @@ import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import TokenFlags from './tokenFlags.js';
+import { getTokenData, getTokenImg } from '../scripts/compatability.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
@@ -140,7 +141,9 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
 
         // Merge wildcard images
         if (worldHudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
-          const protoImg = tokenActor.data.token.img;
+          const protoImg = tokenActor.prototypeToken
+            ? tokenActor.prototypeToken.texture.src
+            : tokenActor.data.token.img;
           if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
             // Modified version of Actor.getTokenImages()
             const getTokenImages = async () => {
@@ -196,7 +199,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   if (token.flags['token-variants'] && token.flags['token-variants']['name']) {
     tokenImageName = token.flags['token-variants']['name'];
   } else {
-    tokenImageName = getFileName(token.img);
+    tokenImageName = getFileName(getTokenImg(token));
   }
 
   let imagesParsed = [];
@@ -227,7 +230,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
     imagesParsed.push({
       route: imageObj.path,
       name: imageObj.name,
-      used: imageObj.path === token.img && imageObj.name === tokenImageName,
+      used: imageObj.path === getTokenImg(token) && imageObj.name === tokenImageName,
       img,
       vid,
       unknownType: !img && !vid,
@@ -363,7 +366,8 @@ async function _onImageClick(event, tokenId) {
   event.preventDefault();
   event.stopPropagation();
 
-  let token = canvas.tokens.controlled.find((t) => t.data._id === tokenId);
+  let token = canvas.tokens.controlled.find((t) => getTokenData(t)._id === tokenId);
+  console.log(token);
   if (!token) return;
 
   const worldHudSettings = TVA_CONFIG.worldHud;
@@ -384,7 +388,7 @@ async function _onImageClick(event, tokenId) {
       }
     };
     new TokenCustomConfig(token, {}, imgSrc, name, toggleCog).render(true);
-  } else if (token.data.img === imgSrc) {
+  } else if (getTokenData(token).img === imgSrc) {
     let tokenImageName = token.document.getFlag('token-variants', 'name');
     if (!tokenImageName) tokenImageName = getFileName(token.data.img);
     if (tokenImageName !== name) {

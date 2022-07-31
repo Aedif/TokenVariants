@@ -1,3 +1,8 @@
+# 3.5.1
+
+- Fixing a conflict with Midi QOL when 'Transfer Token Updates to Prototype' is enabled
+  - Namely Concentration not being removed upon HP drop to 0, though there were likely others as well
+
 # 3.5.0
 
 - Added a value _link_ for **Scale Width** and **Scale Height** sliders under Overlay Settings.
