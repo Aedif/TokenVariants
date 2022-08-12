@@ -1,3 +1,7 @@
+# 3.5.2
+
+- Non-image/video files will no longer be displayed in the Token HUD or Art Select window
+
 # 3.5.1
 
 - Fixing a conflict with Midi QOL when 'Transfer Token Updates to Prototype' is enabled

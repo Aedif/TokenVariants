@@ -174,7 +174,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
             };
 
             const wildcardImages = (await getTokenImages())
-              .filter((img) => !img.includes('*'))
+              .filter((img) => !img.includes('*') && (isImage(img) || isVideo(img)))
               .map((variant) => {
                 return { imgSrc: variant, names: [getFileName(variant)] };
               });

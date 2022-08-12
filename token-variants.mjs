@@ -29,6 +29,8 @@ import {
   getFilePath,
   waitForTexture,
   getTokenEffects,
+  isVideo,
+  isImage,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -524,6 +526,7 @@ async function initialize() {
       'WRAPPER'
     );
 
+    // if (isNewerVersion('10', game.version)) {
     libWrapper.register(
       'token-variants',
       'Token.prototype._refreshIcon',
@@ -538,6 +541,7 @@ async function initialize() {
       },
       'WRAPPER'
     );
+    // }
 
     if (TVA_CONFIG.disableEffectIcons) {
       libWrapper.register(
@@ -1296,10 +1300,12 @@ async function walkAllPaths(searchType) {
 }
 
 function addToFound(img, typeKey) {
-  if (FOUND_IMAGES[typeKey] == null) {
-    FOUND_IMAGES[typeKey] = [img];
-  } else {
-    FOUND_IMAGES[typeKey].push(img);
+  if (isImage(img.path) || isVideo(img.path)) {
+    if (FOUND_IMAGES[typeKey] == null) {
+      FOUND_IMAGES[typeKey] = [img];
+    } else {
+      FOUND_IMAGES[typeKey].push(img);
+    }
   }
 }
 
