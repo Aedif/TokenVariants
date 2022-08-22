@@ -103,14 +103,17 @@ export default class TVAActiveEffectConfig extends FormApplication {
     const configEdit = $(event.target).closest('.form-group').find('.effect-config-edit');
     const scriptEdit = $(event.target).closest('.form-group').find('.effect-config-script');
 
-    let hasTokenConfig = Object.keys(this.config).length;
+    let hasTokenConfig = Object.keys(this.config).filter((k) => this.config[k]).length;
     if (this.config.flags) hasTokenConfig--;
     if (this.config.tv_script) hasTokenConfig--;
+
+    console.log('here', hasTokenConfig, this.config);
 
     if (hasTokenConfig) tokenConfig.addClass('active');
     else tokenConfig.removeClass('active');
 
-    if (!isObjectEmpty(this.config)) configEdit.addClass('active');
+    if (Object.keys(this.config).filter((k) => this.config[k]).length)
+      configEdit.addClass('active');
     else configEdit.removeClass('active');
 
     if (this.config.tv_script) scriptEdit.addClass('active');
@@ -139,6 +142,11 @@ export default class TVAActiveEffectConfig extends FormApplication {
       null,
       null,
       (config) => {
+        if (!config || isObjectEmpty(config)) {
+          config = {};
+          config.tv_script = this.config.tv_script;
+          config.flags = this.config.flags;
+        }
         this.config = config;
         this._toggleActiveControls(event);
       },
@@ -203,14 +211,17 @@ export default class TVAActiveEffectConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
+    console.log(formData);
     if (this.objectToFlag) {
-      if (!formData.imgSrc && !formData.config) this._onRemove();
+      const hasKeys = Object.keys(this.config).filter((k) => this.config[k]).length;
+      if (!formData.imgSrc && !hasKeys) this._onRemove();
       else {
         if (!formData.priority) formData.priority = 50;
         formData.config = this.config;
         formData.overlayConfig = this.overlayConfig;
         const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
         effectMappings[this.effectName] = formData;
+        console.log('setting', effectMappings);
         setEffectMappingsFlag(this.objectToFlag, effectMappings);
       }
     }

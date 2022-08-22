@@ -243,6 +243,7 @@ export default class CompendiumMapConfig extends FormApplication {
       permissions: false,
       worldHud: false,
       misc: false,
+      activeEffects: false,
     }).render(true);
   }
 

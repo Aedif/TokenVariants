@@ -141,14 +141,15 @@ export default class ActiveEffectConfigList extends FormApplication {
     const configEdit = $(event.target).closest('.effect-config').find('.config-edit');
     const scriptEdit = $(event.target).closest('.effect-config').find('.config-script');
 
-    let hasTokenConfig = Object.keys(mapping.config).length;
+    let hasTokenConfig = Object.keys(mapping.config).filter((k) => mapping.config[k]).length;
     if (mapping.config.flags) hasTokenConfig--;
     if (mapping.config.tv_script) hasTokenConfig--;
 
     if (hasTokenConfig) tokenConfig.addClass('active');
     else tokenConfig.removeClass('active');
 
-    if (!isObjectEmpty(mapping.config)) configEdit.addClass('active');
+    if (Object.keys(mapping.config).filter((k) => mapping.config[k]).length)
+      configEdit.addClass('active');
     else configEdit.removeClass('active');
 
     if (mapping.config.tv_script) scriptEdit.addClass('active');
@@ -186,6 +187,12 @@ export default class ActiveEffectConfigList extends FormApplication {
       null,
       null,
       (config) => {
+        if (!config || isObjectEmpty(config)) {
+          config = {};
+          config.tv_script = mapping.config.tv_script;
+          config.flags = mapping.config.flags;
+        }
+
         mapping.config = config;
         this._toggleActiveControls(event);
       },
@@ -278,7 +285,8 @@ export default class ActiveEffectConfigList extends FormApplication {
       let mappings = this.object.mappings;
       mappings = mappings.filter(function (mapping) {
         if (!mapping.effectName) return false;
-        if (mapping.config && !isObjectEmpty(mapping.config)) return true;
+        if (mapping.config && Object.keys(mapping.config).filter((k) => mapping.config[k]).length)
+          return true;
         if (mapping.imgSrc && mapping.imgName) return true;
         return false;
       });
