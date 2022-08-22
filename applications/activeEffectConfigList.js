@@ -277,6 +277,73 @@ export default class ActiveEffectConfigList extends FormApplication {
     this.render();
   }
 
+  _getHeaderButtons() {
+    const buttons = super._getHeaderButtons();
+    buttons.unshift({
+      label: 'Copy Global Effect',
+      class: 'token-variants-copy-global',
+      icon: 'fas fa-globe',
+      onclick: (ev) => this._copyGlobalEffect(ev),
+    });
+    return buttons;
+  }
+
+  _copyGlobalEffect(event) {
+    const mappings = TVA_CONFIG.globalMappings;
+    if (!mappings || isObjectEmpty(mappings)) return;
+
+    let content = '<form><h2>Select effects to copy:</h2>';
+    for (const key of Object.keys(mappings)) {
+      content += `
+      <div class="form-group">
+        <label>${key}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="${key}" data-dtype="Boolean">
+        </div>
+      </div>
+      `;
+    }
+    content += `</form><div class="form-group"><button type="button" class="select-all">Select all</div>`;
+
+    new Dialog({
+      title: `Global Effect Mappings`,
+      content: content,
+      buttons: {
+        Ok: {
+          label: `Copy`,
+          callback: (html) => {
+            const toCopy = {};
+            html.find('input[type="checkbox"]').each(function () {
+              if (this.checked && mappings[this.name]) {
+                toCopy[this.name] = deepClone(mappings[this.name]);
+              }
+            });
+            console.log('toCopy', toCopy);
+            if (!isObjectEmpty(toCopy)) {
+              console.log(Object.keys(toCopy));
+              for (const effect of Object.keys(toCopy)) {
+                console.log(toCopy[effect], effect);
+                toCopy[effect].effectName = effect;
+
+                const found = this.object.mappings.find((m) => m.effectName === effect);
+                if (found) {
+                  this.object.mappings.splice(found, 1);
+                }
+                this.object.mappings.push(toCopy[effect]);
+              }
+              this.render();
+            }
+          },
+        },
+      },
+      render: (html) => {
+        html.find('.select-all').click(() => {
+          html.find('input[type="checkbox"]').prop('checked', true);
+        });
+      },
+    }).render(true);
+  }
+
   // TODO fix this spaghetti code related to globalMappings...
   async _onSaveMappings(event) {
     await this._onSubmit(event);

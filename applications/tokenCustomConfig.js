@@ -157,6 +157,10 @@ export default class TokenCustomConfig extends TokenConfig {
       childList: true,
       subtree: true,
     });
+
+    // On any field being changed we want to automatically select the form-group to be included in the update
+    $(html).on('change', 'input, select', onInputChange);
+    $(html).on('click', 'button', onInputChange);
   }
 
   async _onCheckboxChange(event) {
@@ -187,4 +191,11 @@ export default class TokenCustomConfig extends TokenConfig {
   get id() {
     return `token-custom-config-${this.object.id}`;
   }
+}
+
+// Toggle checkbox if input has been detected inside it's form-group
+async function onInputChange(event) {
+  console.log(event);
+  if (event.target.parentNode.className === 'tva-config-checkbox') return;
+  $(event.target).closest('.form-group').find('.tva-config-checkbox input').prop('checked', true);
 }
