@@ -279,6 +279,8 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   _getHeaderButtons() {
     const buttons = super._getHeaderButtons();
+    if (this.globalMappings) return buttons;
+
     buttons.unshift({
       label: 'Copy Global Effect',
       class: 'token-variants-copy-global',
@@ -292,7 +294,8 @@ export default class ActiveEffectConfigList extends FormApplication {
     const mappings = TVA_CONFIG.globalMappings;
     if (!mappings || isObjectEmpty(mappings)) return;
 
-    let content = '<form><h2>Select effects to copy:</h2>';
+    let content =
+      '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
     for (const key of Object.keys(mappings)) {
       content += `
       <div class="form-group">
@@ -318,11 +321,8 @@ export default class ActiveEffectConfigList extends FormApplication {
                 toCopy[this.name] = deepClone(mappings[this.name]);
               }
             });
-            console.log('toCopy', toCopy);
             if (!isObjectEmpty(toCopy)) {
-              console.log(Object.keys(toCopy));
               for (const effect of Object.keys(toCopy)) {
-                console.log(toCopy[effect], effect);
                 toCopy[effect].effectName = effect;
 
                 const found = this.object.mappings.find((m) => m.effectName === effect);

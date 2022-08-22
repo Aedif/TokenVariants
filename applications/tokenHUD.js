@@ -367,7 +367,6 @@ async function _onImageClick(event, tokenId) {
   event.stopPropagation();
 
   let token = canvas.tokens.controlled.find((t) => getTokenData(t)._id === tokenId);
-  console.log(token);
   if (!token) return;
 
   const worldHudSettings = TVA_CONFIG.worldHud;

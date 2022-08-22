@@ -1,3 +1,10 @@
+# 3.6.0
+
+- Global Effect Mappings can now be copied onto and re-adjusted for specific Actors
+- Custom Token Config window will not automatically select fields to be saved as they are changed/interacted with
+- Fixed 'Active Effect' settings showing up in Compendium Mapper
+- Fixed Effect Mapping windows not correctly toggling controls and removing configurations
+
 # 3.5.2
 
 - Non-image/video files will no longer be displayed in the Token HUD or Art Select window

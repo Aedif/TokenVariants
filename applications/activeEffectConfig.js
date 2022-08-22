@@ -107,8 +107,6 @@ export default class TVAActiveEffectConfig extends FormApplication {
     if (this.config.flags) hasTokenConfig--;
     if (this.config.tv_script) hasTokenConfig--;
 
-    console.log('here', hasTokenConfig, this.config);
-
     if (hasTokenConfig) tokenConfig.addClass('active');
     else tokenConfig.removeClass('active');
 
@@ -211,7 +209,6 @@ export default class TVAActiveEffectConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    console.log(formData);
     if (this.objectToFlag) {
       const hasKeys = Object.keys(this.config).filter((k) => this.config[k]).length;
       if (!formData.imgSrc && !hasKeys) this._onRemove();
@@ -221,7 +218,6 @@ export default class TVAActiveEffectConfig extends FormApplication {
         formData.overlayConfig = this.overlayConfig;
         const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
         effectMappings[this.effectName] = formData;
-        console.log('setting', effectMappings);
         setEffectMappingsFlag(this.objectToFlag, effectMappings);
       }
     }

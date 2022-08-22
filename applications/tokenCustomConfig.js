@@ -195,7 +195,6 @@ export default class TokenCustomConfig extends TokenConfig {
 
 // Toggle checkbox if input has been detected inside it's form-group
 async function onInputChange(event) {
-  console.log(event);
   if (event.target.parentNode.className === 'tva-config-checkbox') return;
   $(event.target).closest('.form-group').find('.tva-config-checkbox input').prop('checked', true);
 }
