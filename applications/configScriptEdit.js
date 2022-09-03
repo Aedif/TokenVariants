@@ -1,4 +1,4 @@
-import { emptyObject } from '../scripts/utils.js';
+import { emptyObject } from '../scripts/compatibility.js';
 
 export default class EditScriptConfig extends FormApplication {
   constructor(script, callback) {

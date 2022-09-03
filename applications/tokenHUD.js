@@ -6,7 +6,6 @@ import {
   keyPressed,
   updateActorImage,
   updateTokenImage,
-  getData,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import TVAActiveEffectConfig from './activeEffectConfig.js';
@@ -15,7 +14,7 @@ import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import TokenFlags from './tokenFlags.js';
-import { getTokenData, getTokenImg } from '../scripts/compatability.js';
+import { getData, getTokenImg } from '../scripts/compatibility.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
@@ -367,7 +366,7 @@ async function _onImageClick(event, tokenId) {
   event.preventDefault();
   event.stopPropagation();
 
-  let token = canvas.tokens.controlled.find((t) => getTokenData(t)._id === tokenId);
+  let token = canvas.tokens.controlled.find((t) => getData(t)._id === tokenId);
   if (!token) return;
 
   const worldHudSettings = TVA_CONFIG.worldHud;
@@ -388,7 +387,7 @@ async function _onImageClick(event, tokenId) {
       }
     };
     new TokenCustomConfig(token, {}, imgSrc, name, toggleCog).render(true);
-  } else if (getTokenData(token).img === imgSrc) {
+  } else if (getData(token).img === imgSrc) {
     let tokenImageName = token.document.getFlag('token-variants', 'name');
     if (!tokenImageName) tokenImageName = getFileName(token.data.img);
     if (tokenImageName !== name) {

@@ -2,7 +2,7 @@ import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 import { TVA_Sprite } from '../applications/TVA_Sprite.js';
-import { getTokenData } from './compatability.js';
+import { getData, getTokenImg } from './compatibility.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -160,7 +160,10 @@ export async function updateTokenImage(
   if (tokenCustomConfig) {
     if (token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
-      const tokenData = token.data.toObject ? token.data.toObject() : deepClone(token.data);
+      const tokenData = getData(token).toObject
+        ? getData(token).toObject()
+        : deepClone(getData(token));
+
       const defConf = constructDefaultConfig(
         mergeObject(tokenData, defaultConfig),
         tokenCustomConfig
@@ -954,40 +957,22 @@ export function getEffectsFromActor(actor) {
 
 export function getTokenEffects(token) {
   if (game.system.id === 'pf2e') {
-    if (getTokenData(token).actorLink) {
+    if (getData(token).actorLink) {
       return getEffectsFromActor(token.actor);
     } else {
-      return (getTokenData(token).actorData?.items || [])
+      return (getData(token).actorData?.items || [])
         .filter((item) => item.type === 'condition')
         .map((item) => item.name);
     }
   } else {
-    if (getTokenData(token).actorLink && token.actor) {
+    if (getData(token).actorLink && token.actor) {
       return getEffectsFromActor(token.actor);
     } else {
       const actorEffects = getEffectsFromActor(token.actor);
-      return (getTokenData(token).effects || [])
+      return (getData(token).effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
         .map((ef) => ef.label)
         .concat(actorEffects);
     }
-  }
-}
-
-// To get rid of v10 warnings
-export function emptyObject(obj) {
-  if (isNewerVersion('10', game.version)) {
-    return foundry.utils.isObjectEmpty(obj);
-  } else {
-    return foundry.utils.isEmpty(obj);
-  }
-}
-
-// To get rid of v10 warnings
-export function getData(obj) {
-  if (isNewerVersion('10', game.version)) {
-    return obj.data;
-  } else {
-    return obj.document ? obj.document : obj;
   }
 }

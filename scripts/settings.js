@@ -1,15 +1,11 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
-import {
-  BASE_IMAGE_CATEGORIES,
-  emptyObject,
-  userRequiresImageCache,
-  waitForTexture,
-} from './utils.js';
+import { BASE_IMAGE_CATEGORIES, userRequiresImageCache, waitForTexture } from './utils.js';
 import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
 import ImportExport from '../applications/importExport.js';
 import ConfigureSettings from '../applications/configureSettings.js';
+import { emptyObject } from './compatibility.js';
 
 export const TVA_CONFIG = {
   debug: false,

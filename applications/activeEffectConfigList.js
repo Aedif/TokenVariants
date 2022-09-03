@@ -6,7 +6,6 @@ import {
   setEffectMappingsFlag,
   getTokenEffects,
   setGlobalEffectMappings,
-  emptyObject,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -14,6 +13,7 @@ import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog } from './dialogs.js';
+import { emptyObject } from '../scripts/compatibility.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token, globalMappings = false, callback = null) {

@@ -31,13 +31,13 @@ import {
   getTokenEffects,
   isVideo,
   isImage,
-  getData,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
 import { libWrapper } from './scripts/libWrapper/shim.js';
 import { TVA_Sprite } from './applications/TVA_Sprite.js';
+import { getData, getTokenImg } from './scripts/compatibility.js';
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -157,7 +157,7 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
       newImg.imgName = tokenDefaultImg.imgName;
     } else if (!tokenDefaultImg) {
       tokenUpdateObj['flags.token-variants.defaultImg'] = {
-        imgSrc: getData(token).img,
+        imgSrc: getTokenImg(token),
         imgName: tokenImgName,
       };
     }
