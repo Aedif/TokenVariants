@@ -1,7 +1,7 @@
 # 3.6.0
 
 - Global Effect Mappings can now be copied onto and re-adjusted for specific Actors
-- Custom Token Config window will not automatically select fields to be saved as they are changed/interacted with
+- Custom Token Config window will now automatically select fields to be saved as they are changed/interacted with
 - Fixed 'Active Effect' settings showing up in Compendium Mapper
 - Fixed Effect Mapping windows not correctly toggling controls and removing configurations
 

@@ -6,6 +6,7 @@ import {
   setEffectMappingsFlag,
   getTokenEffects,
   setGlobalEffectMappings,
+  emptyObject,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -62,7 +63,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           imgSrc: attrs.imgSrc,
           isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
           priority: attrs.priority,
-          hasConfig: attrs.config ? !isObjectEmpty(attrs.config) : false,
+          hasConfig: attrs.config ? !emptyObject(attrs.config) : false,
           hasScript: attrs.config && attrs.config.tv_script,
           hasTokenConfig: hasTokenConfig > 0,
           config: attrs.config,
@@ -187,7 +188,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       null,
       null,
       (config) => {
-        if (!config || isObjectEmpty(config)) {
+        if (!config || emptyObject(config)) {
           config = {};
           config.tv_script = mapping.config.tv_script;
           config.flags = mapping.config.flags;
@@ -208,13 +209,8 @@ export default class ActiveEffectConfigList extends FormApplication {
       search = mapping.effectName;
     }
 
-    let searchType = SEARCH_TYPE.TOKEN;
-    if (TVA_CONFIG.customImageCategories.includes('Overlays')) {
-      searchType = 'Overlays';
-    }
-
     showArtSelect(search, {
-      searchType: searchType,
+      searchType: SEARCH_TYPE.TOKEN,
       callback: (imgSrc, imgName) => {
         const vid = $(event.target).closest('.effect-image').find('video');
         const img = $(event.target).closest('.effect-image').find('img');
@@ -292,7 +288,7 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   _copyGlobalEffect(event) {
     const mappings = TVA_CONFIG.globalMappings;
-    if (!mappings || isObjectEmpty(mappings)) return;
+    if (!mappings || emptyObject(mappings)) return;
 
     let content =
       '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
@@ -314,14 +310,15 @@ export default class ActiveEffectConfigList extends FormApplication {
       buttons: {
         Ok: {
           label: `Copy`,
-          callback: (html) => {
+          callback: async (html) => {
             const toCopy = {};
             html.find('input[type="checkbox"]').each(function () {
               if (this.checked && mappings[this.name]) {
                 toCopy[this.name] = deepClone(mappings[this.name]);
               }
             });
-            if (!isObjectEmpty(toCopy)) {
+            if (!emptyObject(toCopy)) {
+              await this._onSubmit(event);
               for (const effect of Object.keys(toCopy)) {
                 toCopy[effect].effectName = effect;
 

@@ -1,5 +1,11 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, setEffectMappingsFlag } from '../scripts/utils.js';
+import {
+  SEARCH_TYPE,
+  getFileName,
+  isVideo,
+  setEffectMappingsFlag,
+  emptyObject,
+} from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -60,7 +66,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
       priority: mapping.priority || 50,
       overlay: mapping.overlay,
       config: this.config,
-      hasConfig: this.config ? !isObjectEmpty(this.config) : false,
+      hasConfig: this.config ? !emptyObject(this.config) : false,
       hasTokenConfig: hasTokenConfig > 0,
       hasScript: this.config && this.config.tv_script,
       isVideo: mapping.imgSrc ? isVideo(mapping.imgSrc) : false,
@@ -140,7 +146,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
       null,
       null,
       (config) => {
-        if (!config || isObjectEmpty(config)) {
+        if (!config || emptyObject(config)) {
           config = {};
           config.tv_script = this.config.tv_script;
           config.flags = this.config.flags;

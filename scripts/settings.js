@@ -1,5 +1,10 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
-import { BASE_IMAGE_CATEGORIES, userRequiresImageCache, waitForTexture } from './utils.js';
+import {
+  BASE_IMAGE_CATEGORIES,
+  emptyObject,
+  userRequiresImageCache,
+  waitForTexture,
+} from './utils.js';
 import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
@@ -264,7 +269,7 @@ export async function registerSettings() {
   const settings = game.settings.get('token-variants', 'settings');
   mergeObject(TVA_CONFIG, settings);
 
-  if (isObjectEmpty(TVA_CONFIG.searchFilters)) {
+  if (emptyObject(TVA_CONFIG.searchFilters)) {
     BASE_IMAGE_CATEGORIES.forEach((cat) => {
       TVA_CONFIG.searchFilters[cat] = {
         include: '',
@@ -494,9 +499,9 @@ export function _arrayAwareDiffObject(original, other, { inner = false } = {}) {
     if (t0 !== t1) return [true, v1];
     if (t0 === 'Array') return [!_arrayEquality(v0, v1), v1];
     if (t0 === 'Object') {
-      if (isObjectEmpty(v0) !== isObjectEmpty(v1)) return [true, v1];
+      if (emptyObject(v0) !== emptyObject(v1)) return [true, v1];
       let d = _arrayAwareDiffObject(v0, v1, { inner });
-      return [!isObjectEmpty(d), d];
+      return [!emptyObject(d), d];
     }
     return [v0 !== v1, v1];
   }

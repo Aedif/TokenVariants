@@ -831,7 +831,7 @@ export async function drawOverlays(token) {
       for (const ov of overlays) {
         let sprite = findTVASprite(ov.effect, token);
         if (sprite) {
-          if (!isObjectEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
+          if (!emptyObject(diffObject(sprite.tvaOverlayConfig, ov))) {
             if (sprite.tvaOverlayConfig.img !== ov.img) {
               token.removeChild(sprite);
               sprite = token.addChild(await _drawEffectOverlay(token, ov));
@@ -943,9 +943,9 @@ export function getEffectsFromActor(actor) {
       if (item.type === 'condition' && item.isActive) effects.push(item.name);
     });
   } else {
-    (actor.data.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.data.disabled && !activeEffect.isSuppressed)
-        effects.push(activeEffect.data.label);
+    (getData(actor).effects || []).forEach((activeEffect, id) => {
+      if (!getData(activeEffect).disabled && !activeEffect.isSuppressed)
+        effects.push(getData(activeEffect).label);
     });
   }
 
@@ -971,5 +971,23 @@ export function getTokenEffects(token) {
         .map((ef) => ef.label)
         .concat(actorEffects);
     }
+  }
+}
+
+// To get rid of v10 warnings
+export function emptyObject(obj) {
+  if (isNewerVersion('10', game.version)) {
+    return foundry.utils.isObjectEmpty(obj);
+  } else {
+    return foundry.utils.isEmpty(obj);
+  }
+}
+
+// To get rid of v10 warnings
+export function getData(obj) {
+  if (isNewerVersion('10', game.version)) {
+    return obj.data;
+  } else {
+    return obj.document ? obj.document : obj;
   }
 }

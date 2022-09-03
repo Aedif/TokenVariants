@@ -6,6 +6,7 @@ import {
   keyPressed,
   updateActorImage,
   updateTokenImage,
+  getData,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import TVAActiveEffectConfig from './activeEffectConfig.js';
@@ -413,7 +414,7 @@ async function _onImageClick(event, tokenId) {
 }
 
 async function _onImageRightClick(event, tokenId) {
-  let token = canvas.tokens.controlled.find((t) => t.data._id === tokenId);
+  let token = canvas.tokens.controlled.find((t) => getData(t)._id === tokenId);
   if (!token) return;
 
   const imgButton = $(event.target).closest('.token-variants-button-select');
