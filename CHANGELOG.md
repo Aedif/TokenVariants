@@ -1,3 +1,10 @@
+# 3.6.1
+
+- Fixing issues when using non-cached Search Paths
+  - Image duplication
+  - Paths not being scanned
+- Some v10 compatibility fixes (the module DOES NOT yet fully support v10)
+
 # 3.6.0
 
 - Global Effect Mappings can now be copied onto and re-adjusted for specific Actors

@@ -2,7 +2,8 @@
 
 export function getTokenImg(token) {
   if (isNewerVersion('10', game.version)) {
-    return token.img;
+    if (token.data) return token.data.img;
+    else return token.img;
   } else {
     console.log('getTokenImg', token);
     if (token.document) {
@@ -12,8 +13,6 @@ export function getTokenImg(token) {
     } else {
       console.log('WARNING WEIRD TOKEN', token);
     }
-    // console.log(token);
-    // return token.document ? token.document.texture.src : token.img;
   }
 }
 
