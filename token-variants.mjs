@@ -1257,7 +1257,7 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
     for (const typeKey in container) {
       const types = typeKey.split(',');
       if (types.includes(searchType)) {
-        for (const imgObj of CACHED_IMAGES[typeKey]) {
+        for (const imgObj of container[typeKey]) {
           if (imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)) {
             fuse.add(imgObj);
           }
@@ -1285,9 +1285,7 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
 
 function filterPathsByType(paths, searchType) {
   if (!searchType) return paths;
-  return paths.filter((p) => {
-    p.types.includes(searchType);
-  });
+  return paths.filter((p) => p.types.includes(searchType));
 }
 
 async function walkAllPaths(searchType) {
