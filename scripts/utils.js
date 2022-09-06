@@ -2,7 +2,6 @@ import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 import { TVA_Sprite } from '../applications/TVA_Sprite.js';
-import { getData } from './compatibility.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -160,9 +159,7 @@ export async function updateTokenImage(
   if (tokenCustomConfig) {
     if (token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
-      const tokenData = getData(token).toObject
-        ? getData(token).toObject()
-        : deepClone(getData(token));
+      const tokenData = token.document ? token.document.toObject() : deepClone(token);
 
       const defConf = constructDefaultConfig(
         mergeObject(tokenData, defaultConfig),
@@ -827,7 +824,7 @@ export async function drawOverlays(token) {
   if (token.inCombat) {
     filteredOverlays.unshift('token-variants-combat');
   }
-  if (getData(token).hidden) {
+  if (token.document.hidden) {
     filteredOverlays.unshift('token-variants-visibility');
   }
 
@@ -977,9 +974,9 @@ export function getEffectsFromActor(actor) {
       if (item.type === 'condition' && item.isActive) effects.push(item.name);
     });
   } else {
-    (getData(actor).effects || []).forEach((activeEffect, id) => {
-      if (!getData(activeEffect).disabled && !activeEffect.isSuppressed)
-        effects.push(getData(activeEffect).label);
+    (actor.effects || []).forEach((activeEffect, id) => {
+      console.log('active Effect', activeEffect);
+      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.label);
     });
   }
 
@@ -988,19 +985,19 @@ export function getEffectsFromActor(actor) {
 
 export function getTokenEffects(token) {
   if (game.system.id === 'pf2e') {
-    if (getData(token).actorLink) {
+    if (token.document.actorLink) {
       return getEffectsFromActor(token.actor);
     } else {
-      return (getData(token).actorData?.items || [])
+      return (token.document.actorData?.items || [])
         .filter((item) => item.type === 'condition')
         .map((item) => item.name);
     }
   } else {
-    if (getData(token).actorLink && token.actor) {
+    if (token.document.actorLink && token.actor) {
       return getEffectsFromActor(token.actor);
     } else {
       const actorEffects = getEffectsFromActor(token.actor);
-      return (getData(token).effects || [])
+      return (token.document.effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
         .map((ef) => ef.label)
         .concat(actorEffects);
