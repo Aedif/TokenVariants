@@ -74,19 +74,15 @@ export class TVA_Sprite extends PIXI.Sprite {
     let aspect = tex.width / tex.height;
     const scale = this.scale;
     if (aspect >= 1) {
-      this.width = this.token.w * this.token.texture.scaleX;
+      this.width = this.token.w * this.token.document.texture.scaleX;
       scale.y = Number(scale.x);
     } else {
-      this.height = this.token.h * this.token.texture.scaleY;
+      this.height = this.token.h * this.token.document.texture.scaleY;
       scale.x = Number(scale.y);
     }
 
     // Center the image
     this.position.set(this.token.w / 2, this.token.h / 2);
-
-    // To support previous version config version where a scale of <=0 was possible
-    if (config.scaleX <= 0) config.scaleX = 1 + config.scaleX;
-    if (config.scaleY <= 0) config.scaleY = 1 + config.scaleY;
 
     // Adjust scale according to config
     this.scale.x = this.scale.x * config.scaleX;

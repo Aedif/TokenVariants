@@ -596,24 +596,14 @@ async function _overrideIcon(token, img) {
 
 export async function waitForTexture(token, callback, checks = 40) {
   // v10/v9 compatibility
-  if (isNewerVersion('10', game.version)) {
-    if (!token.icon || !token.icon.texture) {
-      checks--;
-      if (checks > 1)
-        new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-          waitForTexture(token, callback, checks)
-        );
-      return;
-    }
-  } else {
-    if (!token.mesh || !token.mesh.texture) {
-      checks--;
-      if (checks > 1)
-        new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-          waitForTexture(token, callback, checks)
-        );
-      return;
-    }
+
+  if (!token.mesh || !token.mesh.texture) {
+    checks--;
+    if (checks > 1)
+      new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
+        waitForTexture(token, callback, checks)
+      );
+    return;
   }
 
   callback(token);
@@ -805,8 +795,6 @@ async function _drawEffectOverlay(token, conf) {
 }
 
 export async function drawOverlays(token) {
-  console.log('in drawOverlays', token);
-
   if (token.tva_drawing_overlays) return;
   token.tva_drawing_overlays = true;
 
@@ -815,9 +803,6 @@ export async function drawOverlays(token) {
     token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
     { inplace: false, recursive: false }
   );
-
-  console.log('mappings', mappings);
-  console.log('token effects', getTokenEffects(token));
 
   let filteredOverlays = getTokenEffects(token);
 
@@ -837,8 +822,6 @@ export async function drawOverlays(token) {
       overlayConfig.effect = ef;
       return overlayConfig;
     });
-
-  console.log('filtered', filteredOverlays);
 
   // See if the whole stack or just top of the stack should be used according to settings
   let overlays = [];
@@ -872,8 +855,6 @@ export async function drawOverlays(token) {
           sprite = token.addChild(await _drawEffectOverlay(token, ov));
         }
         sprite.tvaRemove = false; // Sprite in use, do not remove
-
-        console.log('sprite', sprite);
 
         // Assign order to the overlay
         if (sprite.tvaOverlayConfig.underlay) {
@@ -975,7 +956,6 @@ export function getEffectsFromActor(actor) {
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
-      console.log('active Effect', activeEffect);
       if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.label);
     });
   }
@@ -984,20 +964,22 @@ export function getEffectsFromActor(actor) {
 }
 
 export function getTokenEffects(token) {
+  const data = token.document ? token.document : token;
+
   if (game.system.id === 'pf2e') {
-    if (token.document.actorLink) {
+    if (data.actorLink) {
       return getEffectsFromActor(token.actor);
     } else {
-      return (token.document.actorData?.items || [])
+      return (data.actorData?.items || [])
         .filter((item) => item.type === 'condition')
         .map((item) => item.name);
     }
   } else {
-    if (token.document.actorLink && token.actor) {
+    if (data.actorLink && token.actor) {
       return getEffectsFromActor(token.actor);
     } else {
       const actorEffects = getEffectsFromActor(token.actor);
-      return (token.document.effects || [])
+      return (data.effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
         .map((ef) => ef.label)
         .concat(actorEffects);
