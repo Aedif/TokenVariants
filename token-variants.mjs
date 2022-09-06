@@ -529,7 +529,7 @@ async function initialize() {
       'WRAPPER'
     );
 
-    if (isNewerVersion('10', game.version)) {
+    if (isNewerVersion(game.version, '10')) {
       libWrapper.register(
         'token-variants',
         'Token.prototype._refreshIcon',
