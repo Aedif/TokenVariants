@@ -6,7 +6,6 @@ import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog } from './dialogs.js';
-import { emptyObject } from '../scripts/compatibility.js';
 
 export default class TVAActiveEffectConfig extends FormApplication {
   constructor(token, effectImg, effectName) {
@@ -61,7 +60,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
       priority: mapping.priority || 50,
       overlay: mapping.overlay,
       config: this.config,
-      hasConfig: this.config ? !emptyObject(this.config) : false,
+      hasConfig: this.config ? !isEmpty(this.config) : false,
       hasTokenConfig: hasTokenConfig > 0,
       hasScript: this.config && this.config.tv_script,
       isVideo: mapping.imgSrc ? isVideo(mapping.imgSrc) : false,
@@ -141,7 +140,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
       null,
       null,
       (config) => {
-        if (!config || emptyObject(config)) {
+        if (!config || isEmpty(config)) {
           config = {};
           config.tv_script = this.config.tv_script;
           config.flags = this.config.flags;

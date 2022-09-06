@@ -14,7 +14,6 @@ import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import TokenFlags from './tokenFlags.js';
-import { getData, getTokenImg } from '../scripts/compatibility.js';
 
 // not call if still caching
 export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
@@ -199,7 +198,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   if (token.flags['token-variants'] && token.flags['token-variants']['name']) {
     tokenImageName = token.flags['token-variants']['name'];
   } else {
-    tokenImageName = getFileName(getTokenImg(token));
+    tokenImageName = getFileName(token.texture.src);
   }
 
   let imagesParsed = [];
@@ -230,7 +229,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
     imagesParsed.push({
       route: imageObj.path,
       name: imageObj.name,
-      used: imageObj.path === getTokenImg(token) && imageObj.name === tokenImageName,
+      used: imageObj.path === token.texture.src && imageObj.name === tokenImageName,
       img,
       vid,
       unknownType: !img && !vid,
@@ -366,7 +365,7 @@ async function _onImageClick(event, tokenId) {
   event.preventDefault();
   event.stopPropagation();
 
-  let token = canvas.tokens.controlled.find((t) => getData(t)._id === tokenId);
+  const token = canvas.tokens.controlled.find((t) => t.document.id === tokenId);
   if (!token) return;
 
   const worldHudSettings = TVA_CONFIG.worldHud;
@@ -387,7 +386,7 @@ async function _onImageClick(event, tokenId) {
       }
     };
     new TokenCustomConfig(token, {}, imgSrc, name, toggleCog).render(true);
-  } else if (getData(token).img === imgSrc) {
+  } else if (token.document.texture.src === imgSrc) {
     let tokenImageName = token.document.getFlag('token-variants', 'name');
     if (!tokenImageName) tokenImageName = getFileName(token.data.img);
     if (tokenImageName !== name) {
@@ -413,7 +412,7 @@ async function _onImageClick(event, tokenId) {
 }
 
 async function _onImageRightClick(event, tokenId) {
-  let token = canvas.tokens.controlled.find((t) => getData(t)._id === tokenId);
+  let token = canvas.tokens.controlled.find((t) => t.document.id === tokenId);
   if (!token) return;
 
   const imgButton = $(event.target).closest('.token-variants-button-select');

@@ -13,7 +13,6 @@ import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog } from './dialogs.js';
-import { emptyObject } from '../scripts/compatibility.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token, globalMappings = false, callback = null) {
@@ -63,7 +62,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           imgSrc: attrs.imgSrc,
           isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
           priority: attrs.priority,
-          hasConfig: attrs.config ? !emptyObject(attrs.config) : false,
+          hasConfig: attrs.config ? !isEmpty(attrs.config) : false,
           hasScript: attrs.config && attrs.config.tv_script,
           hasTokenConfig: hasTokenConfig > 0,
           config: attrs.config,
@@ -188,7 +187,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       null,
       null,
       (config) => {
-        if (!config || emptyObject(config)) {
+        if (!config || isEmpty(config)) {
           config = {};
           config.tv_script = mapping.config.tv_script;
           config.flags = mapping.config.flags;
@@ -288,7 +287,7 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   _copyGlobalEffect(event) {
     const mappings = TVA_CONFIG.globalMappings;
-    if (!mappings || emptyObject(mappings)) return;
+    if (!mappings || isEmpty(mappings)) return;
 
     let content =
       '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
@@ -317,7 +316,7 @@ export default class ActiveEffectConfigList extends FormApplication {
                 toCopy[this.name] = deepClone(mappings[this.name]);
               }
             });
-            if (!emptyObject(toCopy)) {
+            if (!isEmpty(toCopy)) {
               await this._onSubmit(event);
               for (const effect of Object.keys(toCopy)) {
                 toCopy[effect].effectName = effect;

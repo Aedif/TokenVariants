@@ -1,3 +1,5 @@
+import { getData } from '../scripts/compatibility.js';
+
 export class TVA_Sprite extends PIXI.Sprite {
   constructor(texture, token, config) {
     super(texture);
@@ -74,10 +76,10 @@ export class TVA_Sprite extends PIXI.Sprite {
     let aspect = tex.width / tex.height;
     const scale = this.scale;
     if (aspect >= 1) {
-      this.width = this.token.w * this.token.data.scale;
+      this.width = this.token.w * getData(this.token).scale;
       scale.y = Number(scale.x);
     } else {
-      this.height = this.token.h * this.token.data.scale;
+      this.height = this.token.h * getData(this.token).scale;
       scale.x = Number(scale.y);
     }
 
@@ -94,14 +96,14 @@ export class TVA_Sprite extends PIXI.Sprite {
 
     // Check if mirroring should be inherited from the token and if so apply it
     if (config.linkMirror) {
-      this.scale.x = Math.abs(this.scale.x) * (this.token.data.mirrorX ? -1 : 1);
-      this.scale.y = Math.abs(this.scale.y) * (this.token.data.mirrorY ? -1 : 1);
+      this.scale.x = Math.abs(this.scale.x) * (getData(this.token).mirrorX ? -1 : 1);
+      this.scale.y = Math.abs(this.scale.y) * (getData(this.token).mirrorY ? -1 : 1);
     }
 
     // Set alpha but only if playOnce is disabled and the video hasn't
     // finished playing yet. Otherwise we want to keep alpha as 0 to keep the video hidden
     if (!this.tvaVideoEnded) {
-      this.alpha = config.linkOpacity ? this.token.data.alpha : config.alpha;
+      this.alpha = config.linkOpacity ? getData(this.token).alpha : config.alpha;
     }
 
     let filter = PIXI.filters[config.filter];
@@ -112,10 +114,10 @@ export class TVA_Sprite extends PIXI.Sprite {
     }
 
     // Angle in degrees
-    this.angle = config.linkRotation ? this.token.data.rotation + config.angle : config.angle;
+    this.angle = config.linkRotation ? getData(this.token).rotation + config.angle : config.angle;
 
     // Apply color tinting
-    const tint = config.inheritTint ? this.token.data.tint : config.tint;
+    const tint = config.inheritTint ? getData(this.token).tint : config.tint;
     this.tint = tint ? foundry.utils.colorStringToHex(tint) : 0xffffff;
 
     this.visible = true;

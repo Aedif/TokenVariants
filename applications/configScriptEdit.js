@@ -1,5 +1,3 @@
-import { emptyObject } from '../scripts/compatibility.js';
-
 export default class EditScriptConfig extends FormApplication {
   constructor(script, callback) {
     super({}, {});
@@ -24,7 +22,7 @@ export default class EditScriptConfig extends FormApplication {
     const data = super.getData(options);
 
     const script = this.script ? this.script : {};
-    data.hasScript = !emptyObject(script);
+    data.hasScript = !isEmpty(script);
     data.onApply = script.onApply;
     data.onRemove = script.onRemove;
 

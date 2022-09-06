@@ -5,7 +5,6 @@ import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
 import ImportExport from '../applications/importExport.js';
 import ConfigureSettings from '../applications/configureSettings.js';
-import { emptyObject } from './compatibility.js';
 
 export const TVA_CONFIG = {
   debug: false,
@@ -265,7 +264,7 @@ export async function registerSettings() {
   const settings = game.settings.get('token-variants', 'settings');
   mergeObject(TVA_CONFIG, settings);
 
-  if (emptyObject(TVA_CONFIG.searchFilters)) {
+  if (isEmpty(TVA_CONFIG.searchFilters)) {
     BASE_IMAGE_CATEGORIES.forEach((cat) => {
       TVA_CONFIG.searchFilters[cat] = {
         include: '',
@@ -495,9 +494,9 @@ export function _arrayAwareDiffObject(original, other, { inner = false } = {}) {
     if (t0 !== t1) return [true, v1];
     if (t0 === 'Array') return [!_arrayEquality(v0, v1), v1];
     if (t0 === 'Object') {
-      if (emptyObject(v0) !== emptyObject(v1)) return [true, v1];
+      if (isEmpty(v0) !== isEmpty(v1)) return [true, v1];
       let d = _arrayAwareDiffObject(v0, v1, { inner });
-      return [!emptyObject(d), d];
+      return [!isEmpty(d), d];
     }
     return [v0 !== v1, v1];
   }

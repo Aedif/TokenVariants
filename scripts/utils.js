@@ -2,7 +2,7 @@ import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 import { TVA_Sprite } from '../applications/TVA_Sprite.js';
-import { getData, getTokenImg } from './compatibility.js';
+import { getData } from './compatibility.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -598,14 +598,27 @@ async function _overrideIcon(token, img) {
 }
 
 export async function waitForTexture(token, callback, checks = 40) {
-  if (!token.icon || !token.icon.texture) {
-    checks--;
-    if (checks > 1)
-      new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-        waitForTexture(token, callback, checks)
-      );
-    return;
+  // v10/v9 compatibility
+  if (isNewerVersion('10', game.version)) {
+    if (!token.icon || !token.icon.texture) {
+      checks--;
+      if (checks > 1)
+        new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
+          waitForTexture(token, callback, checks)
+        );
+      return;
+    }
+  } else {
+    if (!token.mesh || !token.mesh.texture) {
+      checks--;
+      if (checks > 1)
+        new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
+          waitForTexture(token, callback, checks)
+        );
+      return;
+    }
   }
+
   callback(token);
 }
 
@@ -795,6 +808,8 @@ async function _drawEffectOverlay(token, conf) {
 }
 
 export async function drawOverlays(token) {
+  console.log('in drawOverlays', token);
+
   if (token.tva_drawing_overlays) return;
   token.tva_drawing_overlays = true;
 
@@ -804,7 +819,19 @@ export async function drawOverlays(token) {
     { inplace: false, recursive: false }
   );
 
-  let filteredOverlays = getTokenEffects(token)
+  console.log('mappings', mappings);
+  console.log('token effects', getTokenEffects(token));
+
+  let filteredOverlays = getTokenEffects(token);
+
+  if (token.inCombat) {
+    filteredOverlays.unshift('token-variants-combat');
+  }
+  if (getData(token).hidden) {
+    filteredOverlays.unshift('token-variants-visibility');
+  }
+
+  filteredOverlays = filteredOverlays
     .filter((ef) => ef in mappings && mappings[ef].overlay)
     .sort((ef1, ef2) => mappings[ef1].priority - mappings[ef2].priority)
     .map((ef) => {
@@ -813,6 +840,8 @@ export async function drawOverlays(token) {
       overlayConfig.effect = ef;
       return overlayConfig;
     });
+
+  console.log('filtered', filteredOverlays);
 
   // See if the whole stack or just top of the stack should be used according to settings
   let overlays = [];
@@ -834,7 +863,7 @@ export async function drawOverlays(token) {
       for (const ov of overlays) {
         let sprite = findTVASprite(ov.effect, token);
         if (sprite) {
-          if (!emptyObject(diffObject(sprite.tvaOverlayConfig, ov))) {
+          if (!isEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
             if (sprite.tvaOverlayConfig.img !== ov.img) {
               token.removeChild(sprite);
               sprite = token.addChild(await _drawEffectOverlay(token, ov));
@@ -847,11 +876,13 @@ export async function drawOverlays(token) {
         }
         sprite.tvaRemove = false; // Sprite in use, do not remove
 
+        console.log('sprite', sprite);
+
         // Assign order to the overlay
         if (sprite.tvaOverlayConfig.underlay) {
           sprite.zIndex = zIndex - 100;
           // Make sure the token icon is always above the underlays
-          token.icon.zIndex = sprite.zIndex + 1;
+          token.mesh.zIndex = sprite.zIndex + 1;
         } else {
           sprite.zIndex = zIndex;
         }

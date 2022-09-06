@@ -37,7 +37,6 @@ import { renderTileHUD } from './applications/tileHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
 import { libWrapper } from './scripts/libWrapper/shim.js';
 import { TVA_Sprite } from './applications/TVA_Sprite.js';
-import { getData, getTokenImg } from './scripts/compatibility.js';
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -83,7 +82,8 @@ function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {
 export async function updateWithEffectMapping(token, effects, { added = [], removed = [] } = {}) {
   token = token._object ? token._object : token;
   const tokenImgName =
-    (token.document ?? token).getFlag('token-variants', 'name') || getFileName(getData(token).img);
+    (token.document ?? token).getFlag('token-variants', 'name') ||
+    getFileName(token.document.texture.src);
   const tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
   const tokenUpdateObj = {};
   const hadActiveHUD = token.hasActiveHUD;
@@ -157,11 +157,12 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
       newImg.imgName = tokenDefaultImg.imgName;
     } else if (!tokenDefaultImg) {
       tokenUpdateObj['flags.token-variants.defaultImg'] = {
-        imgSrc: getTokenImg(token),
+        imgSrc: token.document.texture.src,
         imgName: tokenImgName,
       };
     }
-    await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : getData(token).img, {
+
+    await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : token.document.texture.src, {
       token: token,
       imgName: newImg.imgName ? newImg.imgName : tokenImgName,
       tokenUpdate: tokenUpdateObj,
@@ -200,7 +201,7 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
     effects.length === 0 &&
     (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')
   ) {
-    await updateTokenImage(getData(token).img, {
+    await updateTokenImage(token.document.texture.src, {
       token: token,
       imgName: tokenImgName,
       tokenUpdate: tokenUpdateObj,
@@ -261,7 +262,7 @@ async function initialize() {
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
     if (game.userId !== userId) return;
-    const token = combatant._token || canvas.tokens.get(getData(combatant).tokenId);
+    const token = combatant._token || canvas.tokens.get(combatant.tokenId);
     if (!token || !token.actor) return;
 
     const mappings = mergeObject(
@@ -272,7 +273,8 @@ async function initialize() {
     if (!('token-variants-combat' in mappings)) return;
 
     const effects = getTokenEffects(token);
-    if (getData(token).hidden) effects.push('token-variants-visibility');
+
+    if (token.document.hidden) effects.push('token-variants-visibility');
     // if (token.tva_dim) effects.push('token-variants-dim');
     effects.push('token-variants-combat');
     updateWithEffectMapping(token, effects, {
@@ -281,7 +283,7 @@ async function initialize() {
   });
 
   const deleteCombatant = async function (combatant) {
-    const token = combatant._token || canvas.tokens.get(getData(combatant).tokenId);
+    const token = combatant._token || canvas.tokens.get(combatant.tokenId);
     if (!token || !token.actor) return;
 
     const mappings = mergeObject(
@@ -292,7 +294,7 @@ async function initialize() {
     if (!('token-variants-combat' in mappings)) return;
 
     const effects = getTokenEffects(token);
-    if (getData(token).hidden) effects.push('token-variants-visibility');
+    if (token.document.hidden) effects.push('token-variants-visibility');
     await updateWithEffectMapping(token, effects, {
       removed: ['token-variants-combat'],
     });
@@ -323,11 +325,11 @@ async function initialize() {
     if (effectName in mappings) {
       const tokens = actor.token
         ? [actor.token]
-        : actor.getActiveTokens().filter((tkn) => getData(tkn).actorLink);
+        : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
       for (const token of tokens) {
         const effects = getTokenEffects(token);
         if (token.inCombat) effects.unshift('token-variants-combat');
-        if (getData(token).hidden) effects.unshift('token-variants-visibility');
+        if (token.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
           added: added ? [effectName] : [],
           removed: !added ? [effectName] : [],
@@ -349,11 +351,11 @@ async function initialize() {
     ) {
       const tokens = actor.token
         ? [actor.token]
-        : actor.getActiveTokens().filter((tkn) => getData(tkn).actorLink);
+        : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
       for (const token of tokens) {
         const effects = getTokenEffects(token);
         if (token.inCombat) effects.unshift('token-variants-combat');
-        if (getData(token).hidden) effects.unshift('token-variants-visibility');
+        if (token.document.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
           added: added,
           removed: removed,
@@ -363,16 +365,15 @@ async function initialize() {
   };
 
   Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || getData(activeEffect).disabled || game.userId !== userId) return;
-    const effectName =
-      game.system.id === 'pf2e' ? getData(activeEffect).name : getData(activeEffect).label;
+    console.log('createActiveEffect', activeEffect);
+    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
+    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
     updateImageOnEffectChange(effectName, activeEffect.parent, true);
   });
 
   Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || getData(activeEffect).disabled || game.userId !== userId) return;
-    const effectName =
-      game.system.id === 'pf2e' ? getData(activeEffect).name : getData(activeEffect).label;
+    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
+    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
     updateImageOnEffectChange(effectName, activeEffect.parent, false);
   });
 
@@ -380,7 +381,7 @@ async function initialize() {
     if (!activeEffect.parent || game.userId !== userId) return;
 
     if ('label' in change) {
-      options['token-variants-old-name'] = getData(activeEffect).label;
+      options['token-variants-old-name'] = activeEffect.label;
     }
   });
 
@@ -391,8 +392,8 @@ async function initialize() {
     const removed = [];
 
     if ('disabled' in change) {
-      if (change.disabled) removed.push(getData(activeEffect).label);
-      else added.push(getData(activeEffect).label);
+      if (change.disabled) removed.push(activeEffect.label);
+      else added.push(activeEffect.label);
     }
     if ('label' in change) {
       removed.push(options['token-variants-old-name']);
@@ -412,7 +413,7 @@ async function initialize() {
       ['condition', 'effect'].includes(item.type) &&
       'name' in change
     ) {
-      options['token-variants-old-name'] = getData(item).name;
+      options['token-variants-old-name'] = item.name;
     }
   });
 
@@ -434,17 +435,17 @@ async function initialize() {
     // Status Effects can be applied "stealthily" on item equip/un-equip
     if (
       item.parent &&
-      change.data &&
-      'equipped' in change.data &&
+      change.system &&
+      'equipped' in change.system &&
       item.effects &&
       item.effects.size
     ) {
       const added = [];
       const removed = [];
       item.effects.forEach((effect) => {
-        if (!effect.data.disabled) {
-          if (change.data.equipped) added.push(effect.data.label);
-          else removed.push(effect.data.label);
+        if (!effect.disabled) {
+          if (change.system.equipped) added.push(effect.label);
+          else removed.push(effect.label);
         }
       });
 
@@ -459,26 +460,23 @@ async function initialize() {
   //
 
   Hooks.on('createItem', (item, options, userId) => {
+    console.log('item', item);
     if (game.userId !== userId) return;
-    if (
-      game.system.id !== 'pf2e' ||
-      !['condition', 'effect'].includes(item.data.type) ||
-      !item.parent
-    )
+    if (game.system.id !== 'pf2e' || !['condition', 'effect'].includes(item.type) || !item.parent)
       return;
-    updateImageOnEffectChange(item.data.name, item.parent, true);
+    updateImageOnEffectChange(item.name, item.parent, true);
   });
 
   Hooks.on('deleteItem', (item, options, userId) => {
     if (
       game.system.id !== 'pf2e' ||
-      !['condition', 'effect'].includes(item.data.type) ||
+      !['condition', 'effect'].includes(item.type) ||
       !item.parent ||
-      item.data.disabled ||
+      item.disabled ||
       game.userId !== userId
     )
       return;
-    updateImageOnEffectChange(item.data.name, item.parent, false);
+    updateImageOnEffectChange(item.name, item.parent, false);
   });
 
   if (typeof libWrapper === 'function') {
