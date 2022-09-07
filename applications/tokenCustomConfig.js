@@ -4,11 +4,11 @@ export default class TokenCustomConfig extends TokenConfig {
   constructor(object, options, imgSrc, imgName, callback, config) {
     let token;
     if (object instanceof Actor) {
-      token = new TokenDocument(object.data.token, {
+      token = new TokenDocument(object.token, {
         actor: object,
       });
     } else {
-      token = new TokenDocument(object.data, {
+      token = new TokenDocument(object.document, {
         actor: game.actors.get(object.actorId),
       });
     }

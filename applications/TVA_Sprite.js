@@ -35,10 +35,6 @@ export class TVA_Sprite extends PIXI.Sprite {
       // Detach video from others
       const s = source.cloneNode();
 
-      s.loop = this.tvaOverlayConfig.loop && !this.tvaOverlayConfig.playOnce;
-      s.muted = true;
-      s.onplay = () => (s.currentTime = 0);
-
       if (this.tvaOverlayConfig.playOnce) {
         s.onended = () => {
           this.alpha = 0;
@@ -48,7 +44,14 @@ export class TVA_Sprite extends PIXI.Sprite {
 
       await new Promise((resolve) => (s.oncanplay = resolve));
       this.texture = PIXI.Texture.from(s, { resourceOptions: { autoPlay: false } });
-      game.video.play(s);
+
+      const options = {
+        loop: this.tvaOverlayConfig.loop && !this.tvaOverlayConfig.playOnce,
+        volume: 0,
+        offset: 0,
+        playing: true,
+      };
+      game.video.play(s, options);
     }
   }
 

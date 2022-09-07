@@ -230,7 +230,7 @@ export default class ConfigureSettings extends FormApplication {
     // Global Mappings
     html.find('button.token-variants-global-mapping').click(() => {
       const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
-      const data = new foundry.data.TokenData(setting);
+      const data = new foundry.data.PrototypeToken(setting);
       const token = new TokenDocument(data, { actor: null });
       new ActiveEffectConfigList(
         token,

@@ -365,7 +365,6 @@ async function initialize() {
   };
 
   Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
-    console.log('createActiveEffect', activeEffect);
     if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
     const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
     updateImageOnEffectChange(effectName, activeEffect.parent, true);
@@ -460,7 +459,6 @@ async function initialize() {
   //
 
   Hooks.on('createItem', (item, options, userId) => {
-    console.log('item', item);
     if (game.userId !== userId) return;
     if (game.system.id !== 'pf2e' || !['condition', 'effect'].includes(item.type) || !item.parent)
       return;
