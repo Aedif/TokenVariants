@@ -529,10 +529,11 @@ async function initialize() {
       'WRAPPER'
     );
 
-    if (isNewerVersion('10', game.version)) {
+    try {
+      const target = isNewerVersion('10', game.version) ? 'Token' : 'TokenMesh';
       libWrapper.register(
         'token-variants',
-        'Token.prototype._refreshIcon',
+        `${target}.prototype.refresh`,
         async function (wrapped, ...args) {
           let result = await wrapped(...args);
           for (const child of this.children) {
@@ -544,85 +545,79 @@ async function initialize() {
         },
         'WRAPPER'
       );
-    } else {
-      libWrapper.register(
-        'token-variants',
-        'TokenMesh.prototype.refresh',
-        async function (wrapped, ...args) {
-          let result = await wrapped(...args);
-          for (const child of this.children) {
-            if (child instanceof TVA_Sprite) {
-              child.refresh();
-            }
-          }
-          return result;
-        },
-        'WRAPPER'
-      );
+    } catch (e) {
+      console.log(`Unable to wrap: ${target}.prototype.refresh`, e);
     }
 
-    if (TVA_CONFIG.disableEffectIcons) {
-      libWrapper.register(
-        'token-variants',
-        'Token.prototype.drawEffects',
-        function (...args) {
-          // Simply override and do nothing here. No effect icons will be drawn on top of the token
-        },
-        'OVERRIDE'
-      );
-    } else if (TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
-      libWrapper.register(
-        'token-variants',
-        'Token.prototype.drawEffects',
-        async function (wrapped, ...args) {
-          // Temporarily removing token and actor effects based on module settings
-          // after the effect icons have been drawn, they will be reset to originals
-          const tokenEffects = this.data.effects;
-          const actorEffects = this.actor?.effects;
+    try {
+      if (TVA_CONFIG.disableEffectIcons) {
+        libWrapper.register(
+          'token-variants',
+          'Token.prototype.drawEffects',
+          function (...args) {
+            // Simply override and do nothing here. No effect icons will be drawn on top of the token
+          },
+          'OVERRIDE'
+        );
+      } else if (TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
+        libWrapper.register(
+          'token-variants',
+          'Token.prototype.drawEffects',
+          async function (wrapped, ...args) {
+            // Temporarily removing token and actor effects based on module settings
+            // after the effect icons have been drawn, they will be reset to originals
+            const tokenEffects = this.data.effects;
+            const actorEffects = this.actor?.effects;
 
-          let restrictedEffects = TVA_CONFIG.filterIconList;
-          if (TVA_CONFIG.filterCustomEffectIcons) {
-            const mappings = mergeObject(
-              TVA_CONFIG.globalMappings,
-              (this.actor ? this.actor : this.document).getFlag('token-variants', 'effectMappings'),
-              { inplace: false }
-            );
-            if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
-          }
-
-          let removed = [];
-          if (restrictedEffects.length) {
-            if (tokenEffects.length) {
-              this.data.effects = tokenEffects.filter(
-                // check if it's a string here
-                // for tokens without representing actors effects are just stored as paths to icons
-                (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.data.label)
+            let restrictedEffects = TVA_CONFIG.filterIconList;
+            if (TVA_CONFIG.filterCustomEffectIcons) {
+              const mappings = mergeObject(
+                TVA_CONFIG.globalMappings,
+                (this.actor ? this.actor : this.document).getFlag(
+                  'token-variants',
+                  'effectMappings'
+                ),
+                { inplace: false }
               );
+              if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
             }
-            if (this.actor && actorEffects.size) {
-              removed = actorEffects.filter((ef) => restrictedEffects.includes(ef.data.label));
-              for (const r of removed) {
-                actorEffects.delete(r.id);
+
+            let removed = [];
+            if (restrictedEffects.length) {
+              if (tokenEffects.length) {
+                this.data.effects = tokenEffects.filter(
+                  // check if it's a string here
+                  // for tokens without representing actors effects are just stored as paths to icons
+                  (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.data.label)
+                );
+              }
+              if (this.actor && actorEffects.size) {
+                removed = actorEffects.filter((ef) => restrictedEffects.includes(ef.data.label));
+                for (const r of removed) {
+                  actorEffects.delete(r.id);
+                }
               }
             }
-          }
 
-          const result = await wrapped(...args);
+            const result = await wrapped(...args);
 
-          if (restrictedEffects.length) {
-            if (tokenEffects.length) {
-              this.data.effects = tokenEffects;
-            }
-            if (removed.length) {
-              for (const r of removed) {
-                actorEffects.set(r.id, r);
+            if (restrictedEffects.length) {
+              if (tokenEffects.length) {
+                this.data.effects = tokenEffects;
+              }
+              if (removed.length) {
+                for (const r of removed) {
+                  actorEffects.set(r.id, r);
+                }
               }
             }
-          }
-          return result;
-        },
-        'WRAPPER'
-      );
+            return result;
+          },
+          'WRAPPER'
+        );
+      }
+    } catch (e) {
+      console.log(`Unable to wrap: Token.prototype.drawEffects`, e);
     }
   }
 

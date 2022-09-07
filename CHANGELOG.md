@@ -1,3 +1,7 @@
+# 3.6.2
+
+- Fixed failing to register libwrapper on older minor versions of v9
+
 # 3.6.1
 
 - Fixing issues when using non-cached Search Paths
