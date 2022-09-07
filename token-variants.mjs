@@ -227,9 +227,6 @@ async function initialize() {
 
   // Want this to be executed once the module has initialized
   onInit.push(() => {
-    // Prevent drawing of effects icon
-    if (!TVA_CONFIG.disableEffectIcons && !TVA_CONFIG.filterEffectIcons) return;
-
     // Need to wait for icons do be drawn first however I could not find a way
     // to wait until that has occurred. Instead we'll just wait for some static
     // amount of time.
@@ -490,9 +487,9 @@ async function initialize() {
           const mappings = token.document?.getFlag('token-variants', 'userMappings') || {};
           const img = mappings[game.userId];
           if (img) {
-            toUndo.push([token, token.data._source.img]);
-            token.data._source.img = img;
-            token.document.data.img = img;
+            toUndo.push([token, token.document._source.img]);
+            token.document._source.img = img;
+            token.document.texture.src = img;
           }
         }
 
@@ -501,8 +498,8 @@ async function initialize() {
 
         // Now that the image is drawn, reset the source data back to the original
         for (const [token, img] of toUndo) {
-          token.data._source.img = img;
-          token.document.data.img = img;
+          token.document._source.img = img;
+          token.document.texture.src = img;
         }
 
         return result;
@@ -556,7 +553,7 @@ async function initialize() {
         async function (wrapped, ...args) {
           // Temporarily removing token and actor effects based on module settings
           // after the effect icons have been drawn, they will be reset to originals
-          const tokenEffects = this.data.effects;
+          const tokenEffects = this.document.effects;
           const actorEffects = this.actor?.effects;
 
           let restrictedEffects = TVA_CONFIG.filterIconList;
@@ -572,14 +569,14 @@ async function initialize() {
           let removed = [];
           if (restrictedEffects.length) {
             if (tokenEffects.length) {
-              this.data.effects = tokenEffects.filter(
+              this.document.effects = tokenEffects.filter(
                 // check if it's a string here
                 // for tokens without representing actors effects are just stored as paths to icons
-                (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.data.label)
+                (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.label)
               );
             }
             if (this.actor && actorEffects.size) {
-              removed = actorEffects.filter((ef) => restrictedEffects.includes(ef.data.label));
+              removed = actorEffects.filter((ef) => restrictedEffects.includes(ef.label));
               for (const r of removed) {
                 actorEffects.delete(r.id);
               }
@@ -590,7 +587,7 @@ async function initialize() {
 
           if (restrictedEffects.length) {
             if (tokenEffects.length) {
-              this.data.effects = tokenEffects;
+              this.document.effects = tokenEffects;
             }
             if (removed.length) {
               for (const r of removed) {
@@ -652,7 +649,7 @@ async function initialize() {
       if (!game.user.isGM) return;
       const isResponsibleGM = !game.users
         .filter((user) => user.isGM && (user.active || user.isActive))
-        .some((other) => other.data._id < game.user.data._id);
+        .some((other) => other.id < game.user.id);
       if (!isResponsibleGM) return;
       updateSettings({ forgeSearchPaths: message.args });
     }
@@ -705,7 +702,6 @@ async function createToken(token, options, userId) {
   updateWithEffectMapping(token, getTokenEffects(token));
 
   // Check if random search is enabled and if so perform it
-
   const randSettings = TVA_CONFIG.randomizer;
   let vDown = keyPressed('v');
   const flagTarget = token.actor ? game.actors.get(token.actor.id) : token.document ?? token;
@@ -717,14 +713,14 @@ async function createToken(token, options, userId) {
       let performRandomSearch = true;
       if (randFlag == null) {
         if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
-        if (randSettings.linkedActorDisable && token.data.actorLink) performRandomSearch = false;
+        if (randSettings.linkedActorDisable && token.actorLink) performRandomSearch = false;
         if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
       } else {
         performRandomSearch = randFlag;
       }
 
       if (performRandomSearch) {
-        const img = await doRandomSearch(token.data.name, {
+        const img = await doRandomSearch(token.name, {
           searchType: SEARCH_TYPE.TOKEN,
           actor: token.actor,
         });
@@ -741,12 +737,12 @@ async function createToken(token, options, userId) {
         if (randSettings.diffImages) {
           let imgPortrait;
           if (randSettings.syncImages) {
-            imgPortrait = await doSyncSearch(token.data.name, img[1], {
+            imgPortrait = await doSyncSearch(token.name, img[1], {
               actor: token.actor,
               searchType: SEARCH_TYPE.PORTRAIT,
             });
           } else {
-            imgPortrait = await doRandomSearch(token.data.name, {
+            imgPortrait = await doRandomSearch(token.name, {
               searchType: SEARCH_TYPE.PORTRAIT,
               actor: token.actor,
             });
@@ -789,7 +785,7 @@ async function createToken(token, options, userId) {
     }
   }
 
-  showArtSelect(token.data.name, {
+  showArtSelect(token.name, {
     callback: async function (imgSrc, imgName) {
       if (TVA_CONFIG.popup.twoPopups) {
         await updateActorImage(token.actor, imgSrc);
@@ -811,15 +807,18 @@ async function createToken(token, options, userId) {
 async function createActor(actor, options, userId) {
   if (userId && game.user.id != userId) return;
 
+  console.log(actor);
+
   // Check if random search is enabled and if so perform it
   const randSettings = TVA_CONFIG.randomizer;
   if (randSettings.actorCreate) {
     let performRandomSearch = true;
-    if (randSettings.linkedActorDisable && actor.data.token.actorLink) performRandomSearch = false;
+    if (randSettings.linkedActorDisable && actor.prototypeToken.actorLink)
+      performRandomSearch = false;
     if (disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
 
     if (performRandomSearch) {
-      const img = await doRandomSearch(actor.data.name, {
+      const img = await doRandomSearch(actor.name, {
         searchType: SEARCH_TYPE.PORTRAIT,
         actor: actor,
       });
@@ -832,9 +831,9 @@ async function createActor(actor, options, userId) {
       if (randSettings.diffImages) {
         let imgToken;
         if (randSettings.syncImages) {
-          imgToken = await doSyncSearch(actor.data.name, img[1], { actor: actor });
+          imgToken = await doSyncSearch(actor.name, img[1], { actor: actor });
         } else {
-          imgToken = await doRandomSearch(actor.data.name, {
+          imgToken = await doRandomSearch(actor.name, {
             searchType: SEARCH_TYPE.TOKEN,
             actor: actor,
           });
@@ -862,7 +861,7 @@ async function createActor(actor, options, userId) {
     return;
   }
 
-  showArtSelect(actor.data.name, {
+  showArtSelect(actor.name, {
     callback: async function (imgSrc, name) {
       const actTokens = actor.getActiveTokens();
       const token = actTokens.length === 1 ? actTokens[0] : null;
@@ -890,7 +889,7 @@ function modTokenConfig(tokenConfig, html, _) {
   if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
     let fields = html[0].getElementsByClassName('image');
     for (let field of fields) {
-      if (field.getAttribute('name') == 'img') {
+      if (field.getAttribute('name') == 'texture.src') {
         let el = document.createElement('button');
         el.type = 'button';
         el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
@@ -898,9 +897,9 @@ function modTokenConfig(tokenConfig, html, _) {
         el.innerHTML = '<i class="fas fa-images"></i>';
         el.tabIndex = -1;
         el.setAttribute('data-type', 'imagevideo');
-        el.setAttribute('data-target', 'img');
+        el.setAttribute('data-target', 'texture.src');
         el.onclick = async () => {
-          showArtSelect(tokenConfig.object.data.name, {
+          showArtSelect(tokenConfig.object.name, {
             callback: (imgSrc, name) => {
               field.value = imgSrc;
               const tokenConfig = getTokenConfigForUpdate(imgSrc, name);
@@ -1628,7 +1627,7 @@ export async function doImageSearch(
 
 function twoPopupPrompt(actor, imgSrc, imgName, token) {
   if (TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog) {
-    showArtSelect((token ?? actor.data.token).name, {
+    showArtSelect((token ?? actor.prototypeToken).name, {
       callback: (imgSrc, name) =>
         updateTokenImage(imgSrc, {
           actor: actor,
@@ -1661,7 +1660,7 @@ function twoPopupPrompt(actor, imgSrc, imgName, token) {
         two: {
           icon: '<i class="fas fa-times"></i>',
           callback: () => {
-            showArtSelect((token ?? actor.data.token).name, {
+            showArtSelect((token ?? actor.prototypeToken).name, {
               callback: (imgSrc, name) =>
                 updateTokenImage(imgSrc, {
                   actor: actor,

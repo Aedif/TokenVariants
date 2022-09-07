@@ -18,7 +18,7 @@ async function autoApply(actor, image1, image2, formData, typeOverride) {
     let results = [];
 
     if (!formData.ignorePortrait) {
-      results = await doImageSearch(actor.data.name, {
+      results = await doImageSearch(actor.name, {
         searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT,
         simpleResults: true,
         searchOptions: formData.searchOptions,
@@ -31,7 +31,7 @@ async function autoApply(actor, image1, image2, formData, typeOverride) {
     }
 
     if (!formData.ignoreToken) {
-      results = await doImageSearch(actor.data.token.name, {
+      results = await doImageSearch(actor.prototypeToken.name, {
         searchType: SEARCH_TYPE.TOKEN,
         simpleResults: true,
         searchOptions: formData.searchOptions,
@@ -43,7 +43,7 @@ async function autoApply(actor, image1, image2, formData, typeOverride) {
       }
     }
   } else {
-    let results = await doImageSearch(actor.data.name, {
+    let results = await doImageSearch(actor.name, {
       searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT_AND_TOKEN,
       simpleResults: true,
       searchOptions: formData.searchOptions,
@@ -67,7 +67,7 @@ async function autoApply(actor, image1, image2, formData, typeOverride) {
 function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
   if (formData.diffImages) {
     if (!formData.ignorePortrait && !formData.ignoreToken) {
-      addToQueue(actor.data.name, {
+      addToQueue(actor.name, {
         searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT,
         object: actor,
         preventClose: true,
@@ -77,7 +77,7 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
         searchOptions: formData.searchOptions,
         callback: async function (imgSrc, _) {
           await updateActorImage(actor, imgSrc);
-          showArtSelect(actor.data.token.name, {
+          showArtSelect(actor.prototypeToken.name, {
             searchType: typeOverride ?? SEARCH_TYPE.TOKEN,
             object: actor,
             force: true,
@@ -94,7 +94,7 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
         },
       });
     } else if (formData.ignorePortrait) {
-      addToQueue(actor.data.name, {
+      addToQueue(actor.name, {
         searchType: typeOverride ?? SEARCH_TYPE.TOKEN,
         object: actor,
         image1: image1,
@@ -109,7 +109,7 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
         },
       });
     } else if (formData.ignoreToken) {
-      addToQueue(actor.data.name, {
+      addToQueue(actor.name, {
         searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT,
         object: actor,
         image1: image1,
@@ -122,7 +122,7 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
       });
     }
   } else {
-    addToQueue(actor.data.name, {
+    addToQueue(actor.name, {
       searchType: typeOverride ?? SEARCH_TYPE.PORTRAIT_AND_TOKEN,
       object: actor,
       image1: image1,
@@ -265,12 +265,12 @@ export default class CompendiumMapConfig extends FormApplication {
         const actor = await compendium.getDocument(item._id);
 
         let hasPortrait = actor.img !== CONST.DEFAULT_TOKEN;
-        let hasToken = actor.data.token.img !== CONST.DEFAULT_TOKEN;
+        let hasToken = actor.prototypeToken.texture.src !== CONST.DEFAULT_TOKEN;
         if (formData.syncImages && hasPortrait !== hasToken) {
           if (hasPortrait) {
             await updateTokenImage(actor.img, { actor: actor });
           } else {
-            await updateActorImage(actor, actor.data.token.img);
+            await updateActorImage(actor, actor.prototypeToken.texture.src);
           }
           hasPortrait = hasToken = true;
         }
@@ -279,7 +279,7 @@ export default class CompendiumMapConfig extends FormApplication {
         let includeThisToken = !(formData.missingOnly && hasToken) && !formData.ignoreToken;
 
         const image1 = formData.showImages ? actor.img : '';
-        const image2 = formData.showImages ? actor.data.token.img : '';
+        const image2 = formData.showImages ? actor.prototypeToken.texture.src : '';
 
         if (includeThisActor || includeThisToken) {
           if (formData.autoApply) {
