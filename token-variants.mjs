@@ -527,37 +527,20 @@ async function initialize() {
       'WRAPPER'
     );
 
-    if (isNewerVersion('10', game.version)) {
-      libWrapper.register(
-        'token-variants',
-        'Token.prototype._refreshIcon',
-        async function (wrapped, ...args) {
-          let result = await wrapped(...args);
-          for (const child of this.children) {
-            if (child instanceof TVA_Sprite) {
-              child.refresh();
-            }
+    libWrapper.register(
+      'token-variants',
+      'TokenMesh.prototype.refresh',
+      async function (wrapped, ...args) {
+        let result = await wrapped(...args);
+        for (const child of this.children) {
+          if (child instanceof TVA_Sprite) {
+            child.refresh();
           }
-          return result;
-        },
-        'WRAPPER'
-      );
-    } else {
-      libWrapper.register(
-        'token-variants',
-        'TokenMesh.prototype.refresh',
-        async function (wrapped, ...args) {
-          let result = await wrapped(...args);
-          for (const child of this.children) {
-            if (child instanceof TVA_Sprite) {
-              child.refresh();
-            }
-          }
-          return result;
-        },
-        'WRAPPER'
-      );
-    }
+        }
+        return result;
+      },
+      'WRAPPER'
+    );
 
     if (TVA_CONFIG.disableEffectIcons) {
       libWrapper.register(
