@@ -1,3 +1,7 @@
+# 4.0.0
+
+- v10 compatible version
+
 # 3.6.1
 
 - Fixing issues when using non-cached Search Paths
