@@ -86,7 +86,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
 
   const tokenActor = game.actors.get(token.actorId);
   if (worldHudSettings.disableIfTHWEnabled && game.modules.get('token-hud-wildcard')?.active) {
-    if (tokenActor && tokenActor.data.token.randomImg) return;
+    if (tokenActor && tokenActor.prototypeToken.randomImg) return;
   }
 
   let images = [];
@@ -140,16 +140,14 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
 
         // Merge wildcard images
         if (worldHudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
-          const protoImg = tokenActor.prototypeToken
-            ? tokenActor.prototypeToken.texture.src
-            : tokenActor.data.token.img;
+          const protoImg = tokenActor.prototypeToken.texture.src;
           if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
             // Modified version of Actor.getTokenImages()
             const getTokenImages = async () => {
               if (tokenActor._tokenImages) return tokenActor._tokenImages;
 
               let source = 'data';
-              let pattern = tokenActor.data.token.img;
+              let pattern = tokenActor.prototypeToken.texture.src;
               const browseOptions = { wildcard: true };
 
               // Support non-user sources
@@ -272,8 +270,9 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   contextMenu.find('.file-picker').click((event) => {
     new FilePicker({
       type: 'folder',
-      callback: (path, fp) => {
-        let files = fp.result.files.filter((f) => isImage(f) || isVideo(f));
+      callback: async (path, fp) => {
+        const content = await FilePicker.browse(fp.activeSource, fp.result.target);
+        let files = content.files.filter((f) => isImage(f) || isVideo(f));
         if (files.length) {
           $(event.target)
             .closest('.control-icon[data-action="token-variants-side-selector"]')
@@ -388,7 +387,7 @@ async function _onImageClick(event, tokenId) {
     new TokenCustomConfig(token, {}, imgSrc, name, toggleCog).render(true);
   } else if (token.document.texture.src === imgSrc) {
     let tokenImageName = token.document.getFlag('token-variants', 'name');
-    if (!tokenImageName) tokenImageName = getFileName(token.data.img);
+    if (!tokenImageName) tokenImageName = getFileName(token.document.texture.src);
     if (tokenImageName !== name) {
       await updateTokenImage(imgSrc, { token: token, imgName: name });
       if (token.actor && worldHudSettings.updateActorImage) {
@@ -496,12 +495,12 @@ function genTitleAndStyle(mappings, imgSrc, name) {
       const user = game.users.get(userId);
       if (!user) continue;
       if (style.length === 0) {
-        style = `inset 0 0 0 ${offset}px ${user.data.color}`;
+        style = `inset 0 0 0 ${offset}px ${user.color}`;
       } else {
-        style += `, inset 0 0 0 ${offset}px ${user.data.color}`;
+        style += `, inset 0 0 0 ${offset}px ${user.color}`;
       }
       offset += 2;
-      title += `\nDisplayed to: ${user.data.name}`;
+      title += `\nDisplayed to: ${user.name}`;
     }
   }
   return [title, style];

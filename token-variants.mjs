@@ -807,8 +807,6 @@ async function createToken(token, options, userId) {
 async function createActor(actor, options, userId) {
   if (userId && game.user.id != userId) return;
 
-  console.log(actor);
-
   // Check if random search is enabled and if so perform it
   const randSettings = TVA_CONFIG.randomizer;
   if (randSettings.actorCreate) {
@@ -1354,9 +1352,9 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
           })
         );
       } else {
-        for (let baseTableData of table.data.results) {
-          const rtPath = baseTableData.data.img;
-          const rtName = baseTableData.data.text || getFileName(rtPath);
+        for (let baseTableData of table.results) {
+          const rtPath = baseTableData.img;
+          const rtName = baseTableData.text || getFileName(rtPath);
           addToFound({ path: rtPath, name: rtName }, typeKey);
         }
       }

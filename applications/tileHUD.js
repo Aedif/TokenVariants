@@ -57,7 +57,7 @@ export async function renderTileHUD(hud, html, tileData, searchText = '') {
   // Retrieving the possibly custom name attached as a flag to the token
   let tileImageName = tile.document.getFlag('token-variants', 'name');
   if (!tileImageName) {
-    tileImageName = getFileName(tile.img);
+    tileImageName = getFileName(tile.document.texture.src);
   }
 
   let imagesParsed = [];
@@ -80,7 +80,7 @@ export async function renderTileHUD(hud, html, tileData, searchText = '') {
     imagesParsed.push({
       route: imageObj.path,
       name: imageObj.name,
-      used: imageObj.path === tile.data.img && imageObj.name === tileImageName,
+      used: imageObj.path === tile.document.texture.src && imageObj.name === tileImageName,
       img,
       vid,
       unknownType: !img && !vid,
@@ -187,7 +187,7 @@ async function _onImageClick(event, tile) {
   const imgSrc = imgButton.attr('data-name');
   const name = imgButton.attr('data-filename');
   if (imgSrc) {
-    canvas.background.hud.clear();
+    canvas.tiles.hud.clear();
     await tile.document.update({ img: imgSrc });
     try {
       await tile.document.setFlag('token-variants', 'name', name);
@@ -258,12 +258,12 @@ function genTitleAndStyle(mappings, imgSrc, name) {
       const user = game.users.get(userId);
       if (!user) continue;
       if (style.length === 0) {
-        style = `inset 0 0 0 ${offset}px ${user.data.color}`;
+        style = `inset 0 0 0 ${offset}px ${user.color}`;
       } else {
-        style += `, inset 0 0 0 ${offset}px ${user.data.color}`;
+        style += `, inset 0 0 0 ${offset}px ${user.color}`;
       }
       offset += 2;
-      title += `\nDisplayed to: ${user.data.name}`;
+      title += `\nDisplayed to: ${user.name}`;
     }
   }
   return [title, style];
@@ -280,7 +280,7 @@ function setNameDialog(tile) {
         callback: (html) => {
           const name = html.find('input').val();
           if (name) {
-            canvas.background.hud.clear();
+            canvas.tiles.hud.clear();
             tile.document.setFlag('token-variants', 'tileName', name);
           }
         },

@@ -294,14 +294,10 @@ export default class CompendiumMapConfig extends FormApplication {
         const doc = await compendium.getDocument(item._id);
 
         let defaultImg = '';
-        if (doc.data.schema.img.default) {
-          if (typeof doc.data.schema.img.default == 'function') {
-            defaultImg = doc.data.schema.img.default();
-          } else {
-            defaultImg = doc.data.schema.img.default;
-          }
+        if (doc.schema.fields.img || doc.schema.fields.texture) {
+          defaultImg = (doc.schema.fields.img ?? doc.schema.fields.texture).initial();
         }
-        const hasImage = doc.data.img != null && doc.data.img !== defaultImg;
+        const hasImage = doc.img != null && doc.img !== defaultImg;
 
         let imageFound = false;
         if (formData.missingOnly && hasImage) return;
@@ -322,7 +318,7 @@ export default class CompendiumMapConfig extends FormApplication {
           addToQueue(doc.name, {
             searchType: typeOverride ?? compendium.documentName,
             object: doc,
-            image1: formData.showImages ? doc.data.img : '',
+            image1: formData.showImages ? doc.img : '',
             displayMode: ArtSelect.IMAGE_DISPLAY.IMAGE,
             searchOptions: formData.searchOptions,
             callback: async function (imgSrc, name) {

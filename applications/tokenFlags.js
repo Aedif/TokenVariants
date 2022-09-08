@@ -1,7 +1,7 @@
 export default class TokenFlags extends FormApplication {
   constructor(token) {
     super({}, {});
-    this.objectToFlag = game.actors.get(token.data.actorId) || token.document;
+    this.objectToFlag = game.actors.get(token.document.actorId) || token.document;
   }
 
   static get defaultOptions() {

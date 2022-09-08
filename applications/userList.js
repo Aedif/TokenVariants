@@ -30,7 +30,7 @@ export default class UserList extends FormApplication {
         name: user.name,
         apply: user.id in mappings && mappings[user.id] === this.img,
         userId: user.id,
-        color: user.data.color,
+        color: user.color,
       });
     });
     data.users = users;

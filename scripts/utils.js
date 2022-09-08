@@ -115,7 +115,7 @@ export async function updateTokenImage(
       configEntries =
         (token.document ? token.document : token).getFlag('token-variants', 'defaultConfig') || [];
     else if (actor) {
-      const tokenData = actor.data.token;
+      const tokenData = actor.prototypeToken;
       if ('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
         configEntries = tokenData['token-variants']['defaultConfig'];
     }
@@ -169,7 +169,9 @@ export async function updateTokenImage(
     } else if (actor && !token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
       const tokenData =
-        actor.data.token instanceof Object ? actor.data.token : actor.data.token.toObject();
+        actor.prototypeToken instanceof Object
+          ? actor.prototypeToken
+          : actor.prototypeToken.toObject();
       const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
       tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
     }
@@ -227,16 +229,14 @@ export async function updateActorImage(actor, imgSrc, directUpdate = true, pack 
 }
 
 async function showTileArtSelect() {
-  for (const tileLayer of [canvas.background.controlled, canvas.foreground.controlled]) {
-    for (const tile of tileLayer) {
-      const tileName = tile.document.getFlag('token-variants', 'tileName') || tile.id;
-      showArtSelect(tileName, {
-        callback: async function (imgSrc, name) {
-          tile.document.update({ img: imgSrc });
-        },
-        searchType: SEARCH_TYPE.TILE,
-      });
-    }
+  for (const tile of canvas.tiles.controlled) {
+    const tileName = tile.document.getFlag('token-variants', 'tileName') || tile.id;
+    showArtSelect(tileName, {
+      callback: async function (imgSrc, name) {
+        tile.document.update({ img: imgSrc });
+      },
+      searchType: SEARCH_TYPE.TILE,
+    });
   }
 }
 
@@ -297,9 +297,9 @@ export function registerKeybinds() {
     ],
     onDown: () => {
       for (const token of canvas.tokens.controlled) {
-        const actor = game.actors.get(token.data.actorId);
+        const actor = game.actors.get(token.document.actorId);
         if (!actor) continue;
-        showArtSelect(actor.data.name, {
+        showArtSelect(actor.name, {
           callback: async function (imgSrc, name) {
             await updateActorImage(actor, imgSrc);
           },
@@ -323,7 +323,7 @@ export function registerKeybinds() {
     ],
     onDown: () => {
       for (const token of canvas.tokens.controlled) {
-        showArtSelect(token.data.name, {
+        showArtSelect(token.name, {
           callback: async function (imgSrc, imgName) {
             updateTokenImage(imgSrc, {
               actor: token.actor,
@@ -351,8 +351,8 @@ export function registerKeybinds() {
     ],
     onDown: () => {
       for (const token of canvas.tokens.controlled) {
-        const actor = game.actors.get(token.data.actorId);
-        showArtSelect(token.data.name, {
+        const actor = game.actors.get(token.document.actorId);
+        showArtSelect(token.name, {
           callback: async function (imgSrc, imgName) {
             if (actor) await updateActorImage(actor, imgSrc);
             updateTokenImage(imgSrc, {
@@ -576,22 +576,33 @@ export function userRequiresImageCache(perm) {
   );
 }
 
-async function _drawIcon(token) {
-  let icon = new PIXI.Sprite(token.texture);
-  icon.anchor.set(0.5, 0.5);
-  if (!token.texture) return icon;
-  icon.tint = token.data.tint ? foundry.utils.colorStringToHex(token.data.tint) : 0xffffff;
-  icon.visible = false;
-  return icon;
+async function _loadTexture(img) {
+  // Load token texture
+  let texture = await loadTexture(img, { fallback: CONST.DEFAULT_TOKEN });
+
+  // Manage video playback
+  let video = game.video.getVideoSource(texture);
+  if (video) {
+    const playOptions = { volume: 0 };
+    game.video.play(video, playOptions);
+  }
+  return texture;
 }
 
 async function _overrideIcon(token, img) {
-  token.texture = await loadTexture(img, { fallback: CONST.DEFAULT_TOKEN });
-  token.removeChild(token.icon);
-  token.icon = token.addChild(await _drawIcon(token));
+  let mesh = canvas.primary.tokens.get(token.sourceId);
+  if (!mesh) mesh = canvas.primary.addChild(new TokenMesh(token));
+  else mesh.object = token;
+  mesh.texture = await _loadTexture(img);
+  mesh.anchor.set(0.5, 0.5);
+  canvas.primary.tokens.set(token.sourceId, mesh);
+  if (mesh.isVideo) canvas.primary.videoMeshes.add(mesh);
+
   token.tva_iconOverride = img;
-  token._refreshIcon();
+  token.refresh();
   drawOverlays(token);
+
+  return mesh;
 }
 
 export async function waitForTexture(token, callback, checks = 40) {
@@ -622,12 +633,12 @@ export async function checkAndDisplayUserSpecificImage(token, forceDraw = false,
 
   const mappings = token.document.getFlag('token-variants', 'userMappings') || {};
   const img = mappings[game.userId];
-  if (img && img !== token.data.img) {
+  if (img && img !== token.document.texture.src) {
     // This function may be called while the Token is in the middle of loading it's textures.
     // Attempting to perform a draw() call then would result in multiple overlapped images.
     // We should wait for the texture to be loaded and change the image after. As a failsafe
     // give up after a certain number of checks.
-    if (!token.icon || !token.icon.texture) {
+    if (!token.mesh || !token.texture) {
       checks--;
       if (checks > 1)
         new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
@@ -640,7 +651,7 @@ export async function checkAndDisplayUserSpecificImage(token, forceDraw = false,
     _overrideIcon(token, img);
   } else if (img) {
   } else if (token.tva_iconOverride) {
-    await _overrideIcon(token, token.data.img);
+    await _overrideIcon(token, token.document.texture.src);
     delete token.tva_iconOverride;
   }
 }
