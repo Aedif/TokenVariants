@@ -1,3 +1,9 @@
+# 4.0.1
+
+- Added **Wildcard** randomization setting
+  - Allows to merge wildcard images together with the module's other randomization options
+- Fixed randomizer failing in some cases when randomizing multiple tokens at the same time
+
 # 4.0.0
 
 - v10 compatible version

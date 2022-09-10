@@ -45,21 +45,14 @@ let onInit = [];
 // True if in the middle of caching image paths
 let caching = false;
 
-// Caches of all images found
+// Cached images
 let CACHED_IMAGES = {};
-
-// To track images found during image search
-let FOUND_IMAGES = {};
 
 // showArtSelect(...) can take a while to fully execute and it is possible for it to be called
 // multiple times in very quick succession especially if copy pasting tokens or importing actors.
 // This variable set early in the function execution is used to queue additional requests rather
 // than continue execution
 const showArtSelectExecuting = { inProgress: false };
-
-// Controls for when performing multiple searches for one result set aka keywords search
-let multiSearch = false;
-let usedImages = new Set();
 
 function disableRandomSearchForType(randSettings, actor) {
   if (!actor) return false;
@@ -1105,8 +1098,8 @@ export async function cacheImages({
     ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
   if (TVA_CONFIG.debug) console.log('STARTING: Token Caching');
-  await walkAllPaths();
-  CACHED_IMAGES = FOUND_IMAGES;
+  const found_images = await walkAllPaths();
+  CACHED_IMAGES = found_images;
 
   if (TVA_CONFIG.debug) console.log('ENDING: Token Caching');
 
@@ -1170,9 +1163,9 @@ function imagePassesFilter(imageName, imagePath, filters, runSearchOnPath) {
 async function findImages(name, searchType = '', searchOptions = {}) {
   const sOptions = mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
   if (sOptions.algorithm.exact) {
-    return findImagesExact(name, searchType, sOptions);
+    return await findImagesExact(name, searchType, sOptions);
   } else {
-    return findImagesFuzzy(name, searchType, sOptions);
+    return await findImagesFuzzy(name, searchType, sOptions);
   }
 }
 
@@ -1180,14 +1173,14 @@ async function findImagesExact(name, searchType, searchOptions) {
   if (TVA_CONFIG.debug)
     console.log('STARTING: Exact Image Search', name, searchType, searchOptions);
 
-  await walkAllPaths(searchType);
+  const found_images = await walkAllPaths(searchType);
 
   const simpleName = simplifyName(name);
   const filters = getFilters(searchType, searchOptions.searchFilters);
 
   const matchedImages = [];
 
-  for (const container of [FOUND_IMAGES, CACHED_IMAGES]) {
+  for (const container of [CACHED_IMAGES, found_images]) {
     for (const typeKey in container) {
       const types = typeKey.split(',');
       if (types.includes(searchType)) {
@@ -1208,7 +1201,7 @@ async function findImagesExact(name, searchType, searchOptions) {
     }
   }
 
-  if (TVA_CONFIG.debug) console.log('ENDING: Exact Tile Search', matchedImages);
+  if (TVA_CONFIG.debug) console.log('ENDING: Exact Image Search', matchedImages);
   return matchedImages;
 }
 
@@ -1227,9 +1220,9 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
     threshold: searchOptions.algorithm.fuzzyThreshold,
   });
 
-  await walkAllPaths(searchType);
+  const found_images = await walkAllPaths(searchType);
 
-  for (const container of [CACHED_IMAGES, FOUND_IMAGES]) {
+  for (const container of [CACHED_IMAGES, found_images]) {
     for (const typeKey in container) {
       const types = typeKey.split(',');
       if (types.includes(searchType)) {
@@ -1265,11 +1258,12 @@ function filterPathsByType(paths, searchType) {
 }
 
 async function walkAllPaths(searchType) {
-  FOUND_IMAGES = {};
+  const found_images = {};
   const paths = filterPathsByType(TVA_CONFIG.searchPaths, searchType);
 
   for (const path of paths) {
-    if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindImages(path, {}, found_images);
   }
 
   // ForgeVTT specific path handling
@@ -1279,29 +1273,32 @@ async function walkAllPaths(searchType) {
     const paths = filterPathsByType(TVA_CONFIG.forgeSearchPaths[uid].paths, searchType);
     if (uid === userId) {
       for (const path of paths) {
-        if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path);
+        if ((path.cache && caching) || (!path.cache && !caching))
+          await walkFindImages(path, {}, found_images);
       }
     } else if (apiKey) {
       for (const path of paths) {
         if ((path.cache && caching) || (!path.cache && !caching)) {
-          if (path.share) await walkFindImages(path, { apiKey: apiKey });
+          if (path.share) await walkFindImages(path, { apiKey: apiKey }, found_images);
         }
       }
     }
   }
+
+  return found_images;
 }
 
-function addToFound(img, typeKey) {
+function addToFound(img, typeKey, found_images) {
   if (isImage(img.path) || isVideo(img.path)) {
-    if (FOUND_IMAGES[typeKey] == null) {
-      FOUND_IMAGES[typeKey] = [img];
+    if (found_images[typeKey] == null) {
+      found_images[typeKey] = [img];
     } else {
-      FOUND_IMAGES[typeKey].push(img);
+      found_images[typeKey].push(img);
     }
   }
 }
 
-async function walkFindImages(path, { apiKey = '' } = {}) {
+async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
   let files = {};
   if (!path.source) {
     path.source = 'data';
@@ -1337,7 +1334,7 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
           }
           result.data.images.forEach((img) => {
             const rtName = img.title ?? img.description ?? getFileName(img.link);
-            addToFound({ path: img.link, name: rtName }, typeKey);
+            addToFound({ path: img.link, name: rtName }, typeKey, found_images);
           });
         })
         .catch((error) => console.log('Token Variant Art: ', error));
@@ -1355,7 +1352,7 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
         for (let baseTableData of table.results) {
           const rtPath = baseTableData.img;
           const rtName = baseTableData.text || getFileName(rtPath);
-          addToFound({ path: rtPath, name: rtName }, typeKey);
+          addToFound({ path: rtPath, name: rtName }, typeKey, found_images);
         }
       }
       return;
@@ -1375,7 +1372,7 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
 
   if (files.files) {
     files.files.forEach((tokenSrc) => {
-      addToFound({ path: tokenSrc, name: getFileName(tokenSrc) }, typeKey);
+      addToFound({ path: tokenSrc, name: getFileName(tokenSrc) }, typeKey, found_images);
     });
   }
 
@@ -1384,7 +1381,8 @@ async function walkFindImages(path, { apiKey = '' } = {}) {
   for (let f_dir of files.dirs) {
     await walkFindImages(
       { text: f_dir, source: path.source, types: path.types },
-      { apiKey: apiKey }
+      { apiKey: apiKey },
+      found_images
     );
   }
 }
@@ -1457,7 +1455,15 @@ async function _randSearchUtil(
   } = {}
 ) {
   const randSettings = mergeObject(randomizerOptions, TVA_CONFIG.randomizer, { overwrite: false });
-  if (!(randSettings.tokenName || randSettings.keywords || randSettings.shared)) return null;
+  if (
+    !(
+      randSettings.tokenName ||
+      randSettings.keywords ||
+      randSettings.shared ||
+      randSettings.wildcard
+    )
+  )
+    return null;
 
   // Randomizer settings take precedence
   searchOptions.keywordSearch = randSettings.keywords;
@@ -1484,6 +1490,42 @@ async function _randSearchUtil(
         });
       });
       results.set('variants95436723', sv);
+    }
+  }
+  if (randSettings.wildcard && actor) {
+    let protoImg = actor.prototypeToken.texture.src;
+    if (protoImg.includes('*') || (protoImg.includes('{') && protoImg.includes('}'))) {
+      // Modified version of Actor.getTokenImages()
+      const getTokenImages = async (actor) => {
+        if (actor._tokenImages) return actor._tokenImages;
+        let source = 'data';
+        const browseOptions = { wildcard: true };
+
+        // Support non-user sources
+        if (/\.s3\./.test(protoImg)) {
+          source = 's3';
+          const { bucket, keyPrefix } = FilePicker.parseS3URL(protoImg);
+          if (bucket) {
+            browseOptions.bucket = bucket;
+            protoImg = keyPrefix;
+          }
+        } else if (protoImg.startsWith('icons/')) source = 'public';
+
+        // Retrieve wildcard content
+        try {
+          const content = await FilePicker.browse(source, protoImg, browseOptions);
+          return content.files;
+        } catch (err) {
+          return [];
+        }
+      };
+
+      const wildcardImages = (await getTokenImages(actor))
+        .filter((img) => !img.includes('*') && (isImage(img) || isVideo(img)))
+        .map((variant) => {
+          return { path: variant, name: getFileName(variant) };
+        });
+      results.set('variants95436623', wildcardImages);
     }
   }
 
@@ -1536,27 +1578,20 @@ async function doRandomSearch(
 ) {
   if (caching) return null;
 
-  const results = await _randSearchUtil(search, {
-    searchType: searchType,
-    actor: actor,
-    randomizerOptions: randomizerOptions,
-    searchOptions: searchOptions,
-  });
-  if (!results) return results;
+  const results = flattenSearchResults(
+    await _randSearchUtil(search, {
+      searchType: searchType,
+      actor: actor,
+      randomizerOptions: randomizerOptions,
+      searchOptions: searchOptions,
+    })
+  );
+  if (results.length === 0) return null;
 
   // Pick random image
-  let total = 0;
-  results.forEach((v) => (total += v.length));
-  let randImageNum = Math.floor(Math.random() * total);
-  for (const [_, images] of results.entries()) {
-    if (randImageNum < images.length) {
-      if (callback) callback([images[randImageNum].path, images[randImageNum].name]);
-      return [images[randImageNum].path, images[randImageNum].name];
-    } else {
-      randImageNum -= images.length;
-    }
-  }
-  return null;
+  let randImageNum = Math.floor(Math.random() * results.length);
+  if (callback) callback([results[randImageNum].path, results[randImageNum].name]);
+  return [results[randImageNum].path, results[randImageNum].name];
 }
 
 /**
@@ -1598,8 +1633,7 @@ export async function doImageSearch(
     );
   }
 
-  multiSearch = true; // TODO: transfer this logic to findImages()
-  usedImages = new Set();
+  let usedImages = new Set();
   for (const search of searches) {
     if (allImages.get(search) !== undefined) continue;
 
@@ -1608,10 +1642,7 @@ export async function doImageSearch(
 
     allImages.set(search, results);
     results.forEach(usedImages.add, usedImages);
-
-    multiSearch = true; // TODO: transfer this logic to findImages()
   }
-  multiSearch = false;
 
   if (TVA_CONFIG.debug) console.log('ENDING: Art Search');
 
