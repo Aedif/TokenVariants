@@ -53,6 +53,7 @@ export const TVA_CONFIG = {
     tokenName: true,
     keywords: false,
     shared: false,
+    wildcard: false,
     representedActorDisable: false,
     linkedActorDisable: true,
     popupOnDisable: false,

@@ -1,3 +1,9 @@
+# 3.7.0
+
+- Added **Wildcard** randomization setting
+  - Allows to merge wildcard images together with the module's other randomization options
+- Fixed randomizer failing in some cases when randomizing multiple tokens at the same time
+
 # 3.6.2
 
 - Fixed failing to register libwrapper on older minor versions of v9

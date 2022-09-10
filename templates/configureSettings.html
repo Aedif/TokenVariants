@@ -243,6 +243,11 @@
               <label>{{localize "token-variants.common.shared"}} <i class="fas fa-share"></i></label>
               <input type="checkbox" name="randomizer.shared" data-dtype="Boolean" {{#if randomizer.shared}}checked{{/if}}>
             </div>
+
+            <div class="form-group">
+              <label>Wildcard *</label>
+              <input type="checkbox" name="randomizer.wildcard" data-dtype="Boolean" {{#if randomizer.wildcard}}checked{{/if}}>
+            </div>
           
             <h2>{{localize "token-variants.settings.randomizer.window.disable-for"}}</h2>
           
