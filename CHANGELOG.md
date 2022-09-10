@@ -1,4 +1,4 @@
-# 4.0.1
+# 4.1.0
 
 - Added **Wildcard** randomization setting
   - Allows to merge wildcard images together with the module's other randomization options
