@@ -693,6 +693,7 @@ async function initialize() {
   Hooks.on('renderTileConfig', modTileConfig);
   Hooks.on('renderActorSheet', modActorSheet);
   Hooks.on('renderItemSheet', modItemSheet);
+  Hooks.on('renderItemActionSheet', modItemSheet);
   Hooks.on('renderJournalSheet', modJournalSheet);
 
   Hooks.on('renderTokenHUD', renderHud);

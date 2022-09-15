@@ -1,3 +1,7 @@
+# 3.7.1
+
+- Added right-click listeners for Item Actions
+
 # 3.7.0
 
 - Added **Wildcard** randomization setting
