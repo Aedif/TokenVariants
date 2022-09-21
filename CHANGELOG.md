@@ -1,3 +1,9 @@
+# 4.2.0
+
+- Art Select button added to the Measured Template config form
+- API change to allow multiple image selection on the Art Select window
+  - Needed for integration with Mass Edit's randomization feature
+
 # 4.1.1
 
 - Added right-click listeners for Item Actions

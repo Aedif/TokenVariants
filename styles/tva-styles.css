@@ -164,6 +164,11 @@
   border-width: 1px;
 }
 
+.token-variants-grid > div > .token-variants-grid-box.selected {
+  border-color: lime;
+  border-width: 2px;
+}
+
 .token-variants-grid-image {
   max-width: 98%;
   max-height: 113px;

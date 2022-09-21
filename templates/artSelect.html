@@ -30,6 +30,12 @@
       <span class="token-variants-range-value">{{fuzzyThreshold}}%</span>
     </div>
     {{/if}}
+    {{#if multipleSelection}}
+    <div class="form-group">
+      <button type="button" id="token-variant-art-return-selected">Return selected</button>
+      <button type="button" id="token-variant-art-return-all">Return All</button>
+    </div>
+    {{/if}}
 </div>
   {{#if allImages}} {{#each allImages as |search index|}}
   <div>

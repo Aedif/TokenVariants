@@ -675,6 +675,7 @@ async function initialize() {
 
   Hooks.on('renderTokenConfig', modTokenConfig);
   Hooks.on('renderTileConfig', modTileConfig);
+  Hooks.on('renderMeasuredTemplateConfig', modTemplateConfig);
   Hooks.on('renderActorSheet', modActorSheet);
   Hooks.on('renderItemSheet', modItemSheet);
   Hooks.on('renderItemActionSheet', modItemSheet);
@@ -935,6 +936,37 @@ function modTileConfig(tileConfig, html, _) {
             tileConfig.object.id ||
             'new tile';
           showArtSelect(tileName, {
+            callback: (imgSrc, name) => {
+              field.value = imgSrc;
+            },
+            searchType: SEARCH_TYPE.TILE,
+          });
+        };
+        field.parentNode.append(el);
+        return;
+      }
+    }
+  }
+}
+
+/**
+ * Adds a button to 'Measured Template Configuration' window
+ */
+function modTemplateConfig(templateConfig, html, _) {
+  if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
+    let fields = html[0].getElementsByClassName('image');
+    for (let field of fields) {
+      if (field.getAttribute('name') == 'texture') {
+        let el = document.createElement('button');
+        el.type = 'button';
+        el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
+        el.className = 'token-variants-image-select-button';
+        el.innerHTML = '<i class="fas fa-images"></i>';
+        el.tabIndex = -1;
+        el.setAttribute('data-type', 'imagevideo');
+        el.setAttribute('data-target', 'img');
+        el.onclick = async () => {
+          showArtSelect('template', {
             callback: (imgSrc, name) => {
               field.value = imgSrc;
             },
@@ -1409,6 +1441,7 @@ export async function showArtSelect(
     image1 = '',
     image2 = '',
     displayMode = ArtSelect.IMAGE_DISPLAY.NONE,
+    multipleSelection = false,
     searchOptions = {},
   } = {}
 ) {
@@ -1442,6 +1475,7 @@ export async function showArtSelect(
     image1: image1,
     image2: image2,
     displayMode: displayMode,
+    multipleSelection: multipleSelection,
     searchOptions: searchOptions,
   }).render(true);
 }

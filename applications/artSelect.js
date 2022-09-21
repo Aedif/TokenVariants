@@ -78,6 +78,7 @@ export class ArtSelect extends FormApplication {
       image1 = '',
       image2 = '',
       displayMode = ArtSelect.IMAGE_DISPLAY.NONE,
+      multipleSelection = false,
       searchOptions = {},
     } = {}
   ) {
@@ -106,6 +107,7 @@ export class ArtSelect extends FormApplication {
     this.image1 = image1;
     this.image2 = image2;
     this.displayMode = displayMode;
+    this.multipleSelection = multipleSelection;
     this.searchType = searchType;
     this.searchOptions = mergeObject(searchOptions, getSearchOptions(), {
       overwrite: false,
@@ -241,6 +243,7 @@ export class ArtSelect extends FormApplication {
     data.image1 = this.image1;
     data.image2 = this.image2;
     data.displayMode = this.displayMode;
+    data.multipleSelection = this.multipleSelection;
     data.displaySlider = algorithm.fuzzy && algorithm.fuzzyArtSelectPercentSlider;
     data.fuzzyThreshold = algorithm.fuzzyThreshold;
     if (data.displaySlider) {
@@ -259,6 +262,7 @@ export class ArtSelect extends FormApplication {
     const close = () => this.close();
     const object = this.doc;
     const preventClose = this.preventClose;
+    const multipleSelection = this.multipleSelection;
 
     const boxes = html.find(`.token-variants-grid-box`);
     boxes.map((box) => {
@@ -280,6 +284,11 @@ export class ArtSelect extends FormApplication {
           }
         }
       });
+      if (multipleSelection) {
+        boxes[box].addEventListener('contextmenu', async function (event) {
+          $(event.target).toggleClass('selected');
+        });
+      }
     });
 
     let searchInput = html.find('#custom-art-search');
@@ -310,6 +319,32 @@ export class ArtSelect extends FormApplication {
           this._performSearch(this.search, true);
         }, 350)
       );
+
+    if (multipleSelection) {
+      html.find(`button#token-variant-art-return-selected`).on('click', () => {
+        if (callback) {
+          const images = [];
+          html
+            .find(`.token-variants-grid-box.selected`)
+            .siblings('.token-variants-grid-image')
+            .each(function () {
+              images.push(this.getAttribute('src'));
+            });
+          callback(images);
+        }
+        close();
+      });
+      html.find(`button#token-variant-art-return-all`).on('click', () => {
+        if (callback) {
+          const images = [];
+          html.find(`.token-variants-grid-image`).each(function () {
+            images.push(this.getAttribute('src'));
+          });
+          callback(images);
+        }
+        close();
+      });
+    }
   }
 
   _performSearch(search, force = false) {
@@ -322,6 +357,7 @@ export class ArtSelect extends FormApplication {
       image1: this.image1,
       image2: this.image2,
       displayMode: this.displayMode,
+      multipleSelection: this.multipleSelection,
       searchOptions: this.searchOptions,
       preventClose: this.preventClose,
     });
