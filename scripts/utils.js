@@ -2,7 +2,7 @@ import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 import { TVA_Sprite } from '../applications/TVA_Sprite.js';
-import { getData, getTokenImg } from './compatibility.js';
+import { emptyObject, getData } from './compatibility.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 

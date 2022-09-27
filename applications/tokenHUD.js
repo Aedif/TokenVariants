@@ -257,6 +257,10 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   let divR = html.find('div.right').append(sideSelect);
 
   // Activate listeners
+  divR.find('.token-variants-button-select').hover((event, type) => {
+    if (event.target.nodeName === 'VIDEO') {
+    }
+  });
   divR.find('#token-variants-side-button').click((event) => _onSideButtonClick(event, token._id));
   divR.click(_deactiveTokenVariantsSideSelector);
   divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));

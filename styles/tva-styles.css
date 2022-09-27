@@ -467,6 +467,15 @@ ol.token-variant-table .table-row .effect-config-script.active {
   pointer-events: none;
 }
 
+#tile-hud .token-variants-button-select .fa-play,
+#token-hud .token-variants-button-select .fa-play {
+  position: absolute;
+  left: 5px;
+  top: 70%;
+  color: dimgray;
+  pointer-events: none;
+}
+
 #tile-hud .token-variants-button-select .fa-cog.active,
 #token-hud .token-variants-button-select .fa-cog.active {
   opacity: 1;

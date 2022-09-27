@@ -40,10 +40,11 @@
           class="token-variants-button-image"
           src="{{image.route}}"
           style="opacity:{{../imageOpacity}};"
-          autoplay
           loop
+          onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0;"
           muted>
         </video>
+        <i class="fas fa-play"></i>
         {{/if}}
         {{#if image.unknownType}}
         <img
