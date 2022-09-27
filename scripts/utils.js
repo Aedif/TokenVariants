@@ -124,6 +124,7 @@ export async function updateTokenImage(
 
   const constructDefaultConfig = (origData, customConfig) => {
     const flatOrigData = flattenObject(origData);
+    TokenDataAdapter.dataToForm(flatOrigData);
     const flatCustomConfig = flattenObject(customConfig);
     let filtered = filterObject(flatOrigData, flatCustomConfig);
 
@@ -190,6 +191,7 @@ export async function updateTokenImage(
   }
 
   if (actor && !token) {
+    TokenDataAdapter.formToData(actor.prototypeToken, tokenUpdateObj);
     actorUpdate.token = tokenUpdateObj;
     if (pack) {
       queueActorUpdate(actor.id, actorUpdate, { pack: pack });
@@ -199,6 +201,7 @@ export async function updateTokenImage(
   }
 
   if (token) {
+    TokenDataAdapter.formToData(token, tokenUpdateObj);
     if (TVA_CONFIG.updateTokenProto && token.actor) {
       // Timeout to prevent race conditions with other modules namely MidiQOL
       // this is a low priority update so it should be Ok to do
@@ -994,6 +997,32 @@ export function getTokenEffects(token) {
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
         .map((ef) => ef.label)
         .concat(actorEffects);
+    }
+  }
+}
+
+export class TokenDataAdapter {
+  static dataToForm(data) {
+    if ('texture.scaleX' in data) {
+      data.scale = Math.abs(data['texture.scaleX']);
+      data.mirrorX = data['texture.scaleX'] < 0;
+    }
+    if ('texture.scaleY' in data) {
+      data.scale = Math.abs(data['texture.scaleY']);
+      data.mirrorY = data['texture.scaleY'] < 0;
+    }
+  }
+
+  static formToData(token, formData) {
+    // Scale/mirroring
+    if ('scale' in formData || 'mirrorX' in formData || 'mirrorY' in formData) {
+      const doc = token.document ? token.document : token;
+      if (!('scale' in formData)) formData.scale = Math.abs(doc.texture.scaleX);
+      if (!('mirrorX' in formData)) formData.mirrorX = doc.texture.scaleX < 0;
+      if (!('mirrorY' in formData)) formData.mirrorY = doc.texture.scaleY < 0;
+      formData['texture.scaleX'] = formData.scale * (formData.mirrorX ? -1 : 1);
+      formData['texture.scaleY'] = formData.scale * (formData.mirrorY ? -1 : 1);
+      ['scale', 'mirrorX', 'mirrorY'].forEach((k) => delete formData[k]);
     }
   }
 }

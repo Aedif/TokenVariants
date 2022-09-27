@@ -23,6 +23,21 @@ export default class TokenCustomConfig extends TokenConfig {
     }
   }
 
+  _getSubmitData(updateData = {}) {
+    if (!this.form) throw new Error('The FormApplication subclass has no registered form element');
+    const fd = new FormDataExtended(this.form, { editors: this.editors });
+    let data = fd.object;
+    if (updateData) data = foundry.utils.flattenObject(foundry.utils.mergeObject(data, updateData));
+
+    // Clear detection modes array
+    if (!('detectionModes.0.id' in data)) data.detectionModes = [];
+
+    // Treat "None" as null for bar attributes
+    data['bar1.attribute'] ||= null;
+    data['bar2.attribute'] ||= null;
+    return data;
+  }
+
   async _updateObject(event, formData) {
     const filtered = {};
 

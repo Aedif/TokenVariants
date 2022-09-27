@@ -1,3 +1,7 @@
+# 4.2.1
+
+- Fixing issues with managing scale and mirroring on v10 when setting up custom image configurations
+
 # 4.2.0
 
 - Art Select button added to the Measured Template config form
