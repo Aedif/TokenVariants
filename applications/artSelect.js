@@ -250,6 +250,7 @@ export class ArtSelect extends FormApplication {
       data.fuzzyThreshold = 100 - data.fuzzyThreshold * 100;
       data.fuzzyThreshold = data.fuzzyThreshold.toFixed(0);
     }
+    data.autoplay = !TVA_CONFIG.playVideoOnHover;
     return data;
   }
 
@@ -264,7 +265,29 @@ export class ArtSelect extends FormApplication {
     const preventClose = this.preventClose;
     const multipleSelection = this.multipleSelection;
 
+    // Activate listeners
     const boxes = html.find(`.token-variants-grid-box`);
+    boxes.hover(
+      function () {
+        if (TVA_CONFIG.playVideoOnHover) {
+          const vid = $(this).siblings('video');
+          if (vid.length) {
+            vid[0].play();
+            $(this).siblings('.fa-play').hide();
+          }
+        }
+      },
+      function () {
+        if (TVA_CONFIG.pauseVideoOnHoverOut) {
+          const vid = $(this).siblings('video');
+          if (vid.length) {
+            vid[0].pause();
+            vid[0].currentTime = 0;
+            $(this).siblings('.fa-play').show();
+          }
+        }
+      }
+    );
     boxes.map((box) => {
       boxes[box].addEventListener('click', async function (event) {
         if (keyPressed('config')) {

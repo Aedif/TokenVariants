@@ -148,6 +148,8 @@ export default class ConfigureSettings extends FormApplication {
     data.filterIconList = settings.filterIconList.join(',');
     data.tilesEnabled = settings.tilesEnabled;
     data.updateTokenProto = settings.updateTokenProto;
+    data.playVideoOnHover = settings.playVideoOnHover;
+    data.pauseVideoOnHoverOut = settings.pauseVideoOnHoverOut;
 
     // Controls
     data.pathfinder = ['pf1e', 'pf2e'].includes(game.system.id);
@@ -553,6 +555,8 @@ export default class ConfigureSettings extends FormApplication {
         .map((t) => t.trim())
         .filter((t) => t),
       updateTokenProto: formData.updateTokenProto,
+      playVideoOnHover: formData.playVideoOnHover,
+      pauseVideoOnHoverOut: formData.pauseVideoOnHoverOut,
     });
 
     // Save Settings

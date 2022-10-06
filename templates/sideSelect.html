@@ -41,10 +41,14 @@
           src="{{image.route}}"
           style="opacity:{{../imageOpacity}};"
           loop
-          onmouseover="this.play()" onmouseout="this.pause();this.currentTime=0;"
+          {{#if ../autoplay}}
+          autoplay
+          {{/if}}
           muted>
         </video>
+        {{#unless ../autoplay}}
         <i class="fas fa-play"></i>
+        {{/unless}}
         {{/if}}
         {{#if image.unknownType}}
         <img

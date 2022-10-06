@@ -58,10 +58,15 @@
         class="token-variants-grid-image"
         src="{{image.path}}"
         alt="{{image.name}}"
+        {{#if ../autoplay}}
         autoplay
+        {{/if}}
         loop
         muted>
       </video>
+      {{#unless ../autoplay}}
+      <i class="fas fa-play fa-lg"></i>
+      {{/unless}}
       {{/if}} {{#unless image.type}}
       <p class="token-variants-grid-image" alt="{{image.name}}">{{image.path}}</p>
       {{/unless}}

@@ -101,11 +101,27 @@ export async function renderTileHUD(hud, html, tileData, searchText = '') {
     imagesParsed,
     imageDisplay,
     imageOpacity,
+    autoplay: !TVA_CONFIG.playVideoOnHover,
   });
 
   let divR = html.find('div.right').append(sideSelect);
 
   // Activate listeners
+  divR.find('video').hover(
+    function () {
+      if (TVA_CONFIG.playVideoOnHover) {
+        this.play();
+        $(this).siblings('.fa-play').hide();
+      }
+    },
+    function () {
+      if (TVA_CONFIG.pauseVideoOnHoverOut) {
+        this.pause();
+        this.currentTime = 0;
+        $(this).siblings('.fa-play').show();
+      }
+    }
+  );
   divR.find('#token-variants-side-button').click((event) => _onSideButtonClick(event, tile));
   divR.find('.token-variants-button-select').click((event) => _onImageClick(event, tile));
   // Prevent enter key re-loading the world

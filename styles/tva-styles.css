@@ -178,6 +178,15 @@
   pointer-events: none;
 }
 
+.token-variants-grid > div > .fa-play {
+  display: inline-block;
+  position: relative;
+  grid-area: 1 / 1 / 2 / 2;
+  left: -38%;
+  top: 80%;
+  pointer-events: none;
+}
+
 .token-variants-grid > div > .fa-cog {
   display: inline-block;
   position: relative;
