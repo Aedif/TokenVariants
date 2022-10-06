@@ -112,6 +112,7 @@ export class ArtSelect extends FormApplication {
     this.searchOptions = mergeObject(searchOptions, getSearchOptions(), {
       overwrite: false,
     });
+
     ArtSelect.instance = this;
   }
 
@@ -167,6 +168,10 @@ export class ArtSelect extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
+    if (this.doc instanceof Item) {
+      data.item = true;
+      data.description = this.doc.data.data?.description?.value ?? '';
+    }
     const searchOptions = this.searchOptions;
     const algorithm = searchOptions.algorithm;
 

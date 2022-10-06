@@ -238,6 +238,11 @@
   font-weight: bold;
 }
 
+.token-variants-portrait-token.item {
+  float: left;
+  margin-right: 15px;
+}
+
 .token-variants-portrait-token > div > .image.active {
   box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
 }
@@ -245,12 +250,14 @@
   text-align: center;
 }
 
-/* .token-variants-banner {
+.token-variants-banner {
   position: sticky;
   top: 0;
-  background-color: beige;
-
-} */
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background: inherit;
+  top: -8px;
+}
 
 /* ---------------------------------------- */
 /* General                                  */
