@@ -320,14 +320,15 @@ export class ArtSelect extends FormApplication {
     });
 
     let searchInput = html.find('#custom-art-search');
+    searchInput.focus();
+    searchInput[0].selectionStart = searchInput[0].selectionEnd = 10000;
+
     searchInput.on(
       'input',
       delay((event) => {
         this._performSearch(event.target.value);
       }, 350)
     );
-    searchInput = searchInput[0];
-    searchInput.selectionStart = searchInput.selectionEnd = searchInput.value.length;
 
     html.find(`button#token-variant-art-clear-queue`).on('click', (event) => {
       ART_SELECT_QUEUE.queue = [];
