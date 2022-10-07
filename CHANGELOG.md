@@ -1,3 +1,17 @@
+# 3.9.0
+
+New Settings
+
+- Misc > Play Videos on mouse hover
+  - When enabled videos will not auto-play in the Art Select and Token/Tile HUD, and instead will only un-pause when the mouse is hovered over them
+- Misc > Pause Videos on mouse hover out
+  - When enabled videos will pause when the mouse is no longer hovered over them
+
+Compendium Mapper
+
+- With the **Show current images in the 'Art Select' window** enabled the Art Select will now also contain Item and Journal entry descriptions
+- Art Select window will now auto-focus and place the cursor at the end of text
+
 # 3.8.0
 
 - Art Select button added to the Measured Template config form
