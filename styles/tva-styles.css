@@ -250,6 +250,15 @@
   text-align: center;
 }
 
+.token-variants-banner > .item-description {
+  overflow: hidden;
+}
+
+.token-variants-banner > .item-description > .item-description-content {
+  overflow: scroll;
+  max-height: 200px;
+}
+
 .token-variants-banner {
   position: sticky;
   top: 0;

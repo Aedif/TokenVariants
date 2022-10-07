@@ -2,7 +2,7 @@
   <div class="token-variants-banner">
     {{#if displayMode}}
       {{#if image1}}
-      <div class="token-variants-portrait-token form-group {{#if (eq displayMode 4)}}item{{/if}}">
+      <div class="token-variants-portrait-token form-group {{#if item}}item{{/if}}">
         {{#if (eq displayMode 4)}}
         <div>Current<img class="image active" src="{{image1}}" title="{{image1}}" alt="" width="80" height="80"></img></div>
         {{else}}
@@ -12,8 +12,10 @@
       </div>
       {{/if}}
       {{#if item}}
-      <h2>Description</h2>
-      <p>{{{description}}}</p>
+      <div class="item-description">
+        <h2>Description</h2>
+        <div class="item-description-content">{{{description}}}</div>
+      </div>
       {{/if}}
     {{/if}}
     <div class="form-group">

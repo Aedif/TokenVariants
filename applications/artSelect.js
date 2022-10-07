@@ -171,6 +171,9 @@ export class ArtSelect extends FormApplication {
     if (this.doc instanceof Item) {
       data.item = true;
       data.description = this.doc.data.data?.description?.value ?? '';
+    } else if (this.doc instanceof JournalEntry) {
+      data.item = true;
+      data.description = this.doc.data.content;
     }
     const searchOptions = this.searchOptions;
     const algorithm = searchOptions.algorithm;
