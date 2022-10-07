@@ -254,6 +254,21 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   let divR = html.find('div.right').append(sideSelect);
 
   // Activate listeners
+  divR.find('video').hover(
+    function () {
+      if (TVA_CONFIG.playVideoOnHover) {
+        this.play();
+        $(this).siblings('.fa-play').hide();
+      }
+    },
+    function () {
+      if (TVA_CONFIG.pauseVideoOnHoverOut) {
+        this.pause();
+        this.currentTime = 0;
+        $(this).siblings('.fa-play').show();
+      }
+    }
+  );
   divR.find('#token-variants-side-button').click((event) => _onSideButtonClick(event, token._id));
   divR.click(_deactiveTokenVariantsSideSelector);
   divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));

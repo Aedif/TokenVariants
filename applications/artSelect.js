@@ -167,6 +167,10 @@ export class ArtSelect extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
+    if (this.doc instanceof Item) {
+      data.item = true;
+      data.description = this.doc.system?.description?.value ?? '';
+    }
     const searchOptions = this.searchOptions;
     const algorithm = searchOptions.algorithm;
 
@@ -250,6 +254,7 @@ export class ArtSelect extends FormApplication {
       data.fuzzyThreshold = 100 - data.fuzzyThreshold * 100;
       data.fuzzyThreshold = data.fuzzyThreshold.toFixed(0);
     }
+    data.autoplay = !TVA_CONFIG.playVideoOnHover;
     return data;
   }
 
@@ -265,6 +270,27 @@ export class ArtSelect extends FormApplication {
     const multipleSelection = this.multipleSelection;
 
     const boxes = html.find(`.token-variants-grid-box`);
+    boxes.hover(
+      function () {
+        if (TVA_CONFIG.playVideoOnHover) {
+          const vid = $(this).siblings('video');
+          if (vid.length) {
+            vid[0].play();
+            $(this).siblings('.fa-play').hide();
+          }
+        }
+      },
+      function () {
+        if (TVA_CONFIG.pauseVideoOnHoverOut) {
+          const vid = $(this).siblings('video');
+          if (vid.length) {
+            vid[0].pause();
+            vid[0].currentTime = 0;
+            $(this).siblings('.fa-play').show();
+          }
+        }
+      }
+    );
     boxes.map((box) => {
       boxes[box].addEventListener('click', async function (event) {
         if (keyPressed('config')) {
@@ -292,14 +318,15 @@ export class ArtSelect extends FormApplication {
     });
 
     let searchInput = html.find('#custom-art-search');
+    searchInput.focus();
+    searchInput[0].selectionStart = searchInput[0].selectionEnd = 10000;
+
     searchInput.on(
       'input',
       delay((event) => {
         this._performSearch(event.target.value);
       }, 350)
     );
-    searchInput = searchInput[0];
-    searchInput.selectionStart = searchInput.selectionEnd = searchInput.value.length;
 
     html.find(`button#token-variant-art-clear-queue`).on('click', (event) => {
       ART_SELECT_QUEUE.queue = [];

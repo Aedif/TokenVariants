@@ -126,6 +126,8 @@ export const TVA_CONFIG = {
   filterCustomEffectIcons: true,
   filterIconList: [],
   updateTokenProto: false,
+  playVideoOnHover: true,
+  pauseVideoOnHoverOut: false,
 };
 
 export async function registerSettings() {

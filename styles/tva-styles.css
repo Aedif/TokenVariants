@@ -178,6 +178,15 @@
   pointer-events: none;
 }
 
+.token-variants-grid > div > .fa-play {
+  display: inline-block;
+  position: relative;
+  grid-area: 1 / 1 / 2 / 2;
+  left: -38%;
+  top: 80%;
+  pointer-events: none;
+}
+
 .token-variants-grid > div > .fa-cog {
   display: inline-block;
   position: relative;
@@ -229,6 +238,11 @@
   font-weight: bold;
 }
 
+.token-variants-portrait-token.item {
+  float: left;
+  margin-right: 15px;
+}
+
 .token-variants-portrait-token > div > .image.active {
   box-shadow: 0 0 8px rgba(255, 0, 0, 0.6);
 }
@@ -236,12 +250,23 @@
   text-align: center;
 }
 
-/* .token-variants-banner {
+.token-variants-banner > .item-description {
+  overflow: hidden;
+}
+
+.token-variants-banner > .item-description > .item-description-content {
+  overflow: scroll;
+  max-height: 200px;
+}
+
+.token-variants-banner {
   position: sticky;
   top: 0;
-  background-color: beige;
-
-} */
+  padding-bottom: 10px;
+  padding-top: 10px;
+  background: inherit;
+  top: -8px;
+}
 
 /* ---------------------------------------- */
 /* General                                  */
@@ -464,6 +489,15 @@ ol.token-variant-table .table-row .effect-config-script.active {
   right: 0;
   color: rgb(182, 182, 121);
   opacity: 0;
+  pointer-events: none;
+}
+
+#tile-hud .token-variants-button-select .fa-play,
+#token-hud .token-variants-button-select .fa-play {
+  position: absolute;
+  left: 5px;
+  top: 70%;
+  color: dimgray;
   pointer-events: none;
 }
 

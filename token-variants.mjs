@@ -921,7 +921,7 @@ function modTileConfig(tileConfig, html, _) {
   if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
     let fields = html[0].getElementsByClassName('image');
     for (let field of fields) {
-      if (field.getAttribute('name') == 'img') {
+      if (field.getAttribute('name') == 'texture.src') {
         let el = document.createElement('button');
         el.type = 'button';
         el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');

@@ -166,7 +166,7 @@ export default class CompendiumMapConfig extends FormApplication {
     let data = super.getData(options);
     data = mergeObject(data, TVA_CONFIG.compendiumMapper);
 
-    const supportedPacks = ['Actor', 'Cards', 'Item', 'JournalEntry', 'Macro', 'RollTable'];
+    const supportedPacks = ['Actor', 'Cards', 'Item', 'Macro', 'RollTable'];
     data.supportedPacks = supportedPacks.join(', ');
 
     const packs = [];

@@ -1,14 +1,20 @@
-<form>
+<form style="background: inherit;">
   <div class="token-variants-banner">
     {{#if displayMode}}
       {{#if image1}}
-      <div class="token-variants-portrait-token form-group">
+      <div class="token-variants-portrait-token form-group {{#if item}}item{{/if}}">
         {{#if (eq displayMode 4)}}
         <div>Current<img class="image active" src="{{image1}}" title="{{image1}}" alt="" width="80" height="80"></img></div>
         {{else}}
         <div>Portrait<img class="image {{#if (eq displayMode 1)}}active{{else if (eq displayMode 3)}}active{{/if}}" src="{{image1}}" title="{{image1}}" alt="" width="80" height="80"></img></div>
         <div>Token<img class="image {{#if (eq displayMode 2)}}active{{else if (eq displayMode 3)}}active{{/if}}" src="{{image2}}" title="{{image2}}" alt="" width="80" height="80"></img></div>
         {{/if}}
+      </div>
+      {{/if}}
+      {{#if item}}
+      <div class="item-description">
+        <h2>Description</h2>
+        <div class="item-description-content">{{{description}}}</div>
       </div>
       {{/if}}
     {{/if}}
@@ -37,6 +43,7 @@
     </div>
     {{/if}}
 </div>
+<div class="search-content">
   {{#if allImages}} {{#each allImages as |search index|}}
   <div>
     <h2><b>{{search.[0]}}</b></h2>
@@ -58,10 +65,15 @@
         class="token-variants-grid-image"
         src="{{image.path}}"
         alt="{{image.name}}"
+        {{#if ../autoplay}}
         autoplay
+        {{/if}}
         loop
         muted>
       </video>
+      {{#unless ../autoplay}}
+      <i class="fas fa-play fa-lg"></i>
+      {{/unless}}
       {{/if}} {{#unless image.type}}
       <p class="token-variants-grid-image" alt="{{image.name}}">{{image.path}}</p>
       {{/unless}}
@@ -75,6 +87,8 @@
   <div>
     <p>{{localize "token-variants.windows.art-select.no-art-found"}}: <b>{{search}}</b></p>
   </div>
+
+</div>
 
   {{/if}}
 </form>

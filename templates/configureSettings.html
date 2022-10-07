@@ -634,6 +634,25 @@
             </div>
             <p class="notes">Token updates using the module will also affect the prototype token.</p>
           </div>
+
+          <hr>
+
+          <div class="form-group">
+            <label>Play Videos on mouse hover</label>
+            <div class="form-fields">
+              <input type="checkbox" name="playVideoOnHover" data-dtype="Boolean" {{#if playVideoOnHover}}checked{{/if}}>
+            </div>
+            <p class="notes">When enabled videos will not auto-play, and instead will unpause only when the mouse is hovered over them.</p>
+          </div>
+
+          <div class="form-group">
+            <label>Pause Videos on mouse hover out</label>
+            <div class="form-fields">
+              <input type="checkbox" name="pauseVideoOnHoverOut" data-dtype="Boolean" {{#if pauseVideoOnHoverOut}}checked{{/if}}>
+            </div>
+            <p class="notes">When enabled videos will pause when the mouse leaves them.</p>
+          </div>
+
         </div>
         {{/if}}
 
