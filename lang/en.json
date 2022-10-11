@@ -128,7 +128,7 @@
         "Hint": "Apply images to compendiums",
         "window": {
           "compendium-select": "Select an unlocked compendium to perform mappings on",
-          "missing-only": "Only include entries with missing images",
+          "missing-only": "Only include documents with missing images",
           "diff-images": "Apply different images for Portrait and Token",
           "ignore-token": "Ignore Token",
           "ignore-portrait": "Ignore Portrait",
