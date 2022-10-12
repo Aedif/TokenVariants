@@ -3,7 +3,6 @@ import {
   SEARCH_TYPE,
   getFileName,
   isVideo,
-  setEffectMappingsFlag,
   getTokenEffects,
   setGlobalEffectMappings,
 } from '../scripts/utils.js';
@@ -376,7 +375,8 @@ export default class ActiveEffectConfigList extends FormApplication {
           setGlobalEffectMappings(effectMappings);
           updateSettings({ globalMappings: effectMappings });
         } else {
-          setEffectMappingsFlag(this.objectToFlag, effectMappings);
+          await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+          this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
         }
       } else if (this.globalMappings) {
         setGlobalEffectMappings(null);

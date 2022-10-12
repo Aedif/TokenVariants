@@ -928,21 +928,6 @@ function removeAllOverlays(token) {
   }
 }
 
-export async function setEffectMappingsFlag(actor, mappings) {
-  const currentMappings = actor.getFlag('token-variants', 'effectMappings');
-  if (!currentMappings) {
-    actor.setFlag('token-variants', 'effectMappings', mappings);
-  } else {
-    const keys = Object.keys(currentMappings);
-    for (const key of keys) {
-      if (!(key in mappings)) {
-        mappings['-=' + key] = null;
-      }
-    }
-    actor.update({ flags: { 'token-variants': { effectMappings: mappings } } });
-  }
-}
-
 export async function setGlobalEffectMappings(mappings) {
   if (!mappings) {
     for (const k of Object.keys(TVA_CONFIG.globalMappings)) {
