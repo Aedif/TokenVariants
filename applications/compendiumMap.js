@@ -9,6 +9,7 @@ import {
 import { addToQueue, ArtSelect, renderFromQueue } from './artSelect.js';
 import { getSearchOptions, TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import ConfigureSettings from './configureSettings.js';
+import MissingImageConfig from './missingImageConfig.js';
 
 async function autoApply(actor, image1, image2, formData, typeOverride) {
   let portraitFound = formData.ignorePortrait;
@@ -196,6 +197,8 @@ export default class CompendiumMapConfig extends FormApplication {
     html.find('.token-variants-auto-apply').change(this._onAutoApply);
     html.find('.token-variants-diff-images').change(this._onDiffImages);
     html.find(`.token-variants-search-options`).on('click', this._onSearchOptions.bind(this));
+    html.find(`.token-variants-missing-images`).on('click', this._onMissingImages.bind(this));
+
     $(html)
       .find('[name="compendium"]')
       .change(this._onCompendiumSelect.bind(this))
@@ -245,6 +248,10 @@ export default class CompendiumMapConfig extends FormApplication {
       misc: false,
       activeEffects: false,
     }).render(true);
+  }
+
+  async _onMissingImages(event) {
+    new MissingImageConfig().render(true);
   }
 
   async startMapping(formData) {

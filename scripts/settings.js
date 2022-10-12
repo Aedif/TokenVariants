@@ -80,6 +80,7 @@ export const TVA_CONFIG = {
     syncImages: false,
     overrideCategory: false,
     category: 'Token',
+    missingImages: [{ document: 'all', image: CONST.DEFAULT_TOKEN }],
   },
   permissions: {
     popups: {

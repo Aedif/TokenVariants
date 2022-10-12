@@ -1,0 +1,40 @@
+<form>
+    <section>
+
+      <header class="table-header flexrow">
+        <div class="index add-row"><label><a>+</a></label></div>
+        <div><label>Document</label></div>
+        <div><label>Path</label></div>
+        <div><label>Image</label></div>
+        <div></div>
+      </header>
+
+    <ul>  
+        {{#each missingImages}}
+        <li class="form-group">
+          <div class="index"></div>
+          <div class="form-fields">
+            <select name="document">
+              {{#each ../documents as |doc|}}
+              <option value="{{doc}}" {{#if (eq this.document doc)}}selected="selected"{{/if}}>{{doc}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="form-fields">
+            <input name="image" type="text" value="{{this.image}}" />
+          </div>
+          <div class="form-fields">
+            <img height="32" width="32" src="{{this.image}}"/>
+          </div>
+          <div class="form-fields"><a><i class="far fa-search"></i></a></div>
+        </li>
+        {{/each}}
+      </ol>
+    </section>
+    <footer class="sheet-footer flexrow">
+      <button type="submit">
+        <i class="far fa-save"></i>{{localize "token-variants.common.save"}}
+      </button>
+    </footer>
+  </form>
+  
