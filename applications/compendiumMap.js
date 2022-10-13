@@ -267,7 +267,6 @@ export default class CompendiumMapConfig extends FormApplication {
     let missingImageList = TVA_CONFIG.compendiumMapper.missingImages
       .filter((mi) => mi.document === 'all' || mi.document === compendium.documentName)
       .map((mi) => mi.image);
-    console.log('missingImageList', missingImageList);
     const typeOverride = formData.overrideCategory ? formData.category : null;
     let artSelectDisplayed = false;
 
