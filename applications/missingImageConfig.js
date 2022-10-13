@@ -1,22 +1,22 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { getFileName } from '../scripts/utils.js';
+import { showArtSelect } from '../token-variants.mjs';
 
 export default class MissingImageConfig extends FormApplication {
   constructor() {
     super({}, {});
-    // this.token = token;
-    // this.img = img;
-    // this.regenStyle = regenStyle;
   }
 
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
-      id: 'token-variants-user-list',
+      id: 'token-variants-missing-images',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/missingImageConfig.html',
       resizable: true,
       minimizable: false,
-      title: 'User To Image',
+      title: 'Define Missing Images',
       width: 560,
+      height: 'auto',
     });
   }
 
@@ -27,9 +27,8 @@ export default class MissingImageConfig extends FormApplication {
       this.missingImages = deepClone(TVA_CONFIG.compendiumMapper.missingImages);
 
     data.missingImages = this.missingImages;
-    console.log(this.missingImages);
 
-    data.documents = ['All', 'Actor', 'Cards', 'Item', 'Macro', 'RollTable'];
+    data.documents = ['all', 'Actor', 'Cards', 'Item', 'Macro', 'RollTable'];
     return data;
   }
 
@@ -58,48 +57,79 @@ export default class MissingImageConfig extends FormApplication {
       this.missingImages.push({ document: 'all', image: CONST.DEFAULT_TOKEN });
       this.render();
     });
+
+    html.on('click', '.delete-row', (event) => {
+      const formData = this._getSubmitData();
+      this.missingImages = this._processFormData(formData);
+      const index = $(event.target).closest('li')[0].dataset.index;
+      this.missingImages.splice(index, 1);
+      this.render();
+    });
+
+    html.on('click', '.file-picker', (event) => {
+      new FilePicker({
+        type: 'imagevideo',
+        callback: (path) => {
+          $(event.target).closest('li').find('[name="image"]').val(path);
+          $(event.target).closest('li').find('img').attr('src', path);
+        },
+      }).render();
+    });
+
+    html.on('click', '.duplicate-picker', (event) => {
+      let content = `<select style="width: 100%;" name="compendium">`;
+
+      game.packs.forEach((pack) => {
+        content += `<option value='${pack.collection}'>${pack.title}</option>`;
+      });
+
+      content += `</select>`;
+
+      new Dialog({
+        title: `Compendiums`,
+        content: content,
+        buttons: {
+          yes: {
+            icon: "<i class='far fa-search'></i>",
+            label: 'Search for Duplicates',
+            callback: (html) => {
+              const found = new Set();
+              const duplicates = new Set();
+              const compendium = game.packs.get(html.find("[name='compendium']").val());
+              compendium.index.forEach((k) => {
+                if (found.has(k.img)) {
+                  duplicates.add(k.img);
+                }
+                found.add(k.img);
+              });
+              if (!duplicates.size) {
+                ui.notifications.info('No duplicates found in: ' + compendium.title);
+              }
+
+              const images = Array.from(duplicates).map((img) => {
+                return { path: img, name: getFileName(img) };
+              });
+              const allImages = new Map();
+              allImages.set('Duplicates', images);
+
+              showArtSelect('Duplicates', {
+                allImages,
+                callback: (img) => {
+                  $(event.target).closest('li').find('[name="image"]').val(img);
+                  $(event.target).closest('li').find('img').attr('src', img);
+                },
+              });
+            },
+          },
+        },
+        default: 'yes',
+      }).render(true);
+    });
   }
 
   async _updateObject(event, formData) {
     updateSettings({
-      compendiumMapper: { missingImages: this._processFormData(this.missingImages) },
+      compendiumMapper: { missingImages: this._processFormData(formData) },
     });
-
-    // const mappings = this.token.document.getFlag('token-variants', 'userMappings') || {};
-    // let newMappings = {};
-    // const affectedImages = [this.img];
-    // const affectedUsers = [];
-    // for (const [userId, apply] of Object.entries(formData)) {
-    //   if (apply) {
-    //     newMappings[userId] = this.img;
-    //     if (mappings[userId] && mappings[userId] !== this.img) {
-    //       affectedImages.push(mappings[userId]);
-    //       affectedUsers.push(userId);
-    //     } else if (!mappings[userId]) {
-    //       affectedUsers.push(userId);
-    //     }
-    //   } else if (mappings[userId] === this.img) {
-    //     delete mappings[userId];
-    //     affectedUsers.push(userId);
-    //   }
-    // }
-    // newMappings = mergeObject(mappings, newMappings);
-    // if (Object.keys(newMappings).length === 0) {
-    //   await this.token.document.unsetFlag('token-variants', 'userMappings');
-    // } else {
-    //   await this.token.document.unsetFlag('token-variants', 'userMappings');
-    //   await this.token.document.setFlag('token-variants', 'userMappings', newMappings);
-    // }
-    // for (const img of affectedImages) {
-    //   this.regenStyle(this.token, img);
-    // }
-    // if (affectedUsers.includes(game.userId)) checkAndDisplayUserSpecificImage(this.token, true);
-    // // Broadcast the update to the user specific image
-    // const message = {
-    //   handlerName: 'userMappingChange',
-    //   args: { tokenId: this.token.id, users: affectedUsers },
-    //   type: 'UPDATE',
-    // };
-    // game.socket?.emit('module.token-variants', message);
   }
 }

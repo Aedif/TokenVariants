@@ -2,6 +2,7 @@ import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 import { TVA_Sprite } from '../applications/TVA_Sprite.js';
+import CompendiumMapConfig from '../applications/compendiumMap.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -254,7 +255,6 @@ export function keyPressed(key) {
 }
 
 export function registerKeybinds() {
-  if (!game.keybindings) return;
   game.keybindings.register('token-variants', 'popupOverride', {
     name: 'Popup Override',
     hint: 'When held will trigger popups even when they are disabled.',
@@ -387,6 +387,22 @@ export function registerKeybinds() {
       const data = new foundry.data.PrototypeToken(setting);
       const token = new TokenDocument(data, { actor: null });
       new ActiveEffectConfigList(token, true).render(true);
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+
+  game.keybindings.register('token-variants', 'compendiumMapper', {
+    name: 'Compendium Mapper',
+    hint: 'Opens Compendium Mapper',
+    editable: [
+      {
+        key: 'KeyM',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      new CompendiumMapConfig().render(true);
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,

@@ -182,7 +182,8 @@
       "fuzzy": "Fuzzy",
       "limit": "Limit",
       "import": "Import",
-      "export": "Export"
+      "export": "Export",
+      "save": "Save"
     },
     "windows": {
       "art-select": {

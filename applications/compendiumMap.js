@@ -264,6 +264,10 @@ export default class CompendiumMapConfig extends FormApplication {
     }
 
     const compendium = game.packs.get(formData.compendium);
+    let missingImageList = TVA_CONFIG.compendiumMapper.missingImages
+      .filter((mi) => mi.document === 'all' || mi.document === compendium.documentName)
+      .map((mi) => mi.image);
+    console.log('missingImageList', missingImageList);
     const typeOverride = formData.overrideCategory ? formData.category : null;
     let artSelectDisplayed = false;
 
@@ -273,8 +277,11 @@ export default class CompendiumMapConfig extends FormApplication {
         const actor = await compendium.getDocument(item._id);
         if (actor.name === '#[CF_tempEntity]') return; // Compendium Folders module's control entity
 
-        let hasPortrait = actor.img !== CONST.DEFAULT_TOKEN;
-        let hasToken = actor.prototypeToken.texture.src !== CONST.DEFAULT_TOKEN;
+        let hasPortrait =
+          actor.img !== CONST.DEFAULT_TOKEN && !missingImageList.includes(actor.img);
+        let hasToken =
+          actor.prototypeToken.texture.src !== CONST.DEFAULT_TOKEN &&
+          !missingImageList.includes(actor.prototypeToken.texture.src);
         if (formData.syncImages && hasPortrait !== hasToken) {
           if (hasPortrait) {
             await updateTokenImage(actor.img, { actor: actor });
@@ -308,7 +315,8 @@ export default class CompendiumMapConfig extends FormApplication {
         if (doc.schema.fields.img || doc.schema.fields.texture) {
           defaultImg = (doc.schema.fields.img ?? doc.schema.fields.texture).initial();
         }
-        const hasImage = doc.img != null && doc.img !== defaultImg;
+        const hasImage =
+          doc.img != null && doc.img !== defaultImg && !missingImageList.includes(doc.img);
 
         let imageFound = false;
         if (formData.missingOnly && hasImage) return;

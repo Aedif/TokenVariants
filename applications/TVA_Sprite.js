@@ -115,7 +115,7 @@ export class TVA_Sprite extends PIXI.Sprite {
 
     // Apply color tinting
     const tint = config.inheritTint ? this.token.document.texture.tint : config.tint;
-    this.tint = tint ? foundry.utils.colorStringToHex(tint) : 0xffffff;
+    this.tint = tint ? Color.from(tint) : 0xffffff;
 
     this.visible = true;
   }

@@ -1,32 +1,34 @@
 <form>
     <section>
 
-      <header class="table-header flexrow">
-        <div class="index add-row"><label><a>+</a></label></div>
-        <div><label>Document</label></div>
-        <div><label>Path</label></div>
-        <div><label>Image</label></div>
-        <div></div>
+      <header class="missing-header table-header flexrow">
+        <div class="index add-row"><label><a><i class="fas fa-plus"></i></a></label></div>
+        <div class="missing-document"><label>Document</label></div>
+        <div class="missing-path"><label>Image Path</label></div>
+        <div class="missing-image"><label>Image</label></div>
+        <div class="missing-controls"></div>
       </header>
 
     <ul>  
         {{#each missingImages}}
-        <li class="form-group">
-          <div class="index"></div>
-          <div class="form-fields">
+        <li class="flexrow" data-index="{{@index}}">
+          <div class="index"><a class="delete-row" title="Delete Image"><i class="fas fa-trash"></i></a></div>
+          <div class="missing-document">
             <select name="document">
               {{#each ../documents as |doc|}}
-              <option value="{{doc}}" {{#if (eq this.document doc)}}selected="selected"{{/if}}>{{doc}}</option>
+              <option value="{{doc}}" {{#if (eq ../this.document doc)}}selected="selected"{{/if}}>{{doc}}</option>
               {{/each}}
             </select>
           </div>
-          <div class="form-fields">
+          <div class="missing-path">
             <input name="image" type="text" value="{{this.image}}" />
           </div>
-          <div class="form-fields">
+          <div class="missing-image">
             <img height="32" width="32" src="{{this.image}}"/>
           </div>
-          <div class="form-fields"><a><i class="far fa-search"></i></a></div>
+          <div class="missing-controls">
+            <a class="duplicate-picker"><i class="far fa-search"></i></a>
+            <a class="file-picker"><i class="fas fa-file-import fa-fw"></i></a></div>
         </li>
         {{/each}}
       </ol>
