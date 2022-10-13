@@ -1,3 +1,17 @@
+# 3.10.0
+
+Compendium Mapper
+
+- New setting: **Missing Images**
+  - Allows to define additional images to be considered as missing for the purpose of "Only include documents with missing images" setting
+- **Compendium Folders** module's control entities will now automatically be skipped
+- Warning message will now be displayed if Compendium Mapper is executed and no missing images have been found
+
+Misc
+
+- New header button has been added to Art Select window to open up FilePicker
+- Fixing Custom Effect Mapping bugs related to saving configs
+
 # 3.9.0
 
 New Settings

@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, setEffectMappingsFlag } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -24,7 +24,9 @@ export default class TVAActiveEffectConfig extends FormApplication {
     //   this.objectToFlag = canvas.tokens.get(token._id);
     // this.objectToFlag = this.objectToFlag.document || this.objectToFlag;
 
-    const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
+    const effectMappings = deepClone(
+      this.objectToFlag.getFlag('token-variants', 'effectMappings') || {}
+    );
     const mapping = effectMappings[this.effectName] || {};
     this.config = mapping.config || {};
     this.overlayConfig = mapping.overlayConfig;
@@ -45,7 +47,9 @@ export default class TVAActiveEffectConfig extends FormApplication {
   async getData(options) {
     const data = super.getData(options);
 
-    const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
+    const effectMappings = deepClone(
+      this.objectToFlag.getFlag('token-variants', 'effectMappings') || {}
+    );
     const mapping = effectMappings[this.effectName] || {};
     if (!mapping.config) mapping.config = {};
 
@@ -199,7 +203,8 @@ export default class TVAActiveEffectConfig extends FormApplication {
       if (effectMappings && this.effectName in effectMappings) {
         const tempMappings = deepClone(effectMappings);
         delete tempMappings[this.effectName];
-        setEffectMappingsFlag(this.objectToFlag, tempMappings);
+        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+        this.objectToFlag.setFlag('token-variants', 'effectMappings', tempMappings);
       }
     }
     this.close();
@@ -217,9 +222,12 @@ export default class TVAActiveEffectConfig extends FormApplication {
         if (!formData.priority) formData.priority = 50;
         formData.config = this.config;
         formData.overlayConfig = this.overlayConfig;
-        const effectMappings = this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
+        const effectMappings = deepClone(
+          this.objectToFlag.getFlag('token-variants', 'effectMappings') || {}
+        );
         effectMappings[this.effectName] = formData;
-        setEffectMappingsFlag(this.objectToFlag, effectMappings);
+        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+        this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
       }
     }
   }

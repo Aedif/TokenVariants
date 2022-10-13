@@ -9,6 +9,7 @@ import {
 import { addToQueue, ArtSelect, renderFromQueue } from './artSelect.js';
 import { getSearchOptions, TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import ConfigureSettings from './configureSettings.js';
+import MissingImageConfig from './missingImageConfig.js';
 
 async function autoApply(actor, image1, image2, formData, typeOverride) {
   let portraitFound = formData.ignorePortrait;
@@ -196,6 +197,7 @@ export default class CompendiumMapConfig extends FormApplication {
     html.find('.token-variants-auto-apply').change(this._onAutoApply);
     html.find('.token-variants-diff-images').change(this._onDiffImages);
     html.find(`.token-variants-search-options`).on('click', this._onSearchOptions.bind(this));
+    html.find(`.token-variants-missing-images`).on('click', this._onMissingImages.bind(this));
     $(html)
       .find('[name="compendium"]')
       .change(this._onCompendiumSelect.bind(this))
@@ -247,6 +249,10 @@ export default class CompendiumMapConfig extends FormApplication {
     }).render(true);
   }
 
+  async _onMissingImages() {
+    new MissingImageConfig().render(true);
+  }
+
   async startMapping(formData) {
     if (formData.diffImages && formData.ignoreToken && formData.ignorePortrait) {
       return;
@@ -257,15 +263,24 @@ export default class CompendiumMapConfig extends FormApplication {
     }
 
     const compendium = game.packs.get(formData.compendium);
+    let missingImageList = TVA_CONFIG.compendiumMapper.missingImages
+      .filter((mi) => mi.document === 'all' || mi.document === compendium.documentName)
+      .map((mi) => mi.image);
     const typeOverride = formData.overrideCategory ? formData.category : null;
+    let artSelectDisplayed = false;
 
     let processItem;
     if (compendium.documentName === 'Actor') {
       processItem = async function (item) {
         const actor = await compendium.getDocument(item._id);
+        if (actor.name === '#[CF_tempEntity]') return; // Compendium Folders module's control entity
 
-        let hasPortrait = actor.img !== CONST.DEFAULT_TOKEN;
-        let hasToken = actor.data.token.img !== CONST.DEFAULT_TOKEN;
+        let hasPortrait =
+          actor.img !== CONST.DEFAULT_TOKEN && !missingImageList.includes(actor.img);
+        let hasToken =
+          actor.data.token.img !== CONST.DEFAULT_TOKEN &&
+          !missingImageList.includes(actor.data.token.img);
+
         if (formData.syncImages && hasPortrait !== hasToken) {
           if (hasPortrait) {
             await updateTokenImage(actor.img, { actor: actor });
@@ -285,6 +300,7 @@ export default class CompendiumMapConfig extends FormApplication {
           if (formData.autoApply) {
             await autoApply(actor, image1, image2, formData, typeOverride);
           } else {
+            artSelectDisplayed = true;
             addToArtSelectQueue(actor, image1, image2, formData, typeOverride);
           }
         }
@@ -292,6 +308,7 @@ export default class CompendiumMapConfig extends FormApplication {
     } else {
       processItem = async function (item) {
         const doc = await compendium.getDocument(item._id);
+        if (doc.name === '#[CF_tempEntity]') return; // Compendium Folders module's control entity
 
         let defaultImg = '';
         if (doc.data.schema.img.default) {
@@ -301,7 +318,11 @@ export default class CompendiumMapConfig extends FormApplication {
             defaultImg = doc.data.schema.img.default;
           }
         }
-        const hasImage = doc.data.img != null && doc.data.img !== defaultImg;
+
+        const hasImage =
+          doc.data.img != null &&
+          doc.data.img !== defaultImg &&
+          !missingImageList.includes(doc.data.img);
 
         let imageFound = false;
         if (formData.missingOnly && hasImage) return;
@@ -319,6 +340,7 @@ export default class CompendiumMapConfig extends FormApplication {
         }
 
         if (!formData.autoApply || (formData.autoDisplayArtSelect && !imageFound)) {
+          artSelectDisplayed = true;
           addToQueue(doc.name, {
             searchType: typeOverride ?? compendium.documentName,
             object: doc,
@@ -349,6 +371,9 @@ export default class CompendiumMapConfig extends FormApplication {
       const tasks = allItems.map(processItem);
       Promise.all(tasks).then(() => {
         renderFromQueue();
+        if (formData.missingOnly && !artSelectDisplayed) {
+          ui.notifications.warn('Token Variant Art: No documents found containing missing images.');
+        }
       });
     }
   }

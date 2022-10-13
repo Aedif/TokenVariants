@@ -16,7 +16,6 @@ import {
   SEARCH_TYPE,
   callForgeVTT,
   keyPressed,
-  registerKeybinds,
   updateActorImage,
   updateTokenImage,
   startBatchUpdater,
@@ -1459,6 +1458,7 @@ export async function showArtSelect(
     displayMode = ArtSelect.IMAGE_DISPLAY.NONE,
     multipleSelection = false,
     searchOptions = {},
+    allImages = null,
   } = {}
 ) {
   if (caching) return;
@@ -1466,21 +1466,23 @@ export async function showArtSelect(
   const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
   if (showArtSelectExecuting.inProgress || (!force && artSelects.length !== 0)) {
     addToArtSelectQueue(search, {
-      callback: callback,
-      searchType: searchType,
-      object: object,
-      preventClose: preventClose,
-      searchOptions: searchOptions,
+      callback,
+      searchType,
+      object,
+      preventClose,
+      searchOptions,
+      allImages,
     });
     return;
   }
 
   showArtSelectExecuting.inProgress = true;
 
-  const allImages = await doImageSearch(search, {
-    searchType: searchType,
-    searchOptions: searchOptions,
-  });
+  if (!allImages)
+    allImages = await doImageSearch(search, {
+      searchType: searchType,
+      searchOptions: searchOptions,
+    });
 
   new ArtSelect(search, {
     allImages: allImages,
@@ -1763,10 +1765,8 @@ function twoPopupPrompt(actor, imgSrc, imgName, token) {
 // Initialize module
 Hooks.once('ready', initialize);
 
-// Register API and Keybinds
+// Register API
 Hooks.on('init', function () {
-  registerKeybinds();
-
   game.modules.get('token-variants').api = {
     cacheImages,
     doImageSearch,

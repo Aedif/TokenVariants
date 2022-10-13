@@ -5,6 +5,7 @@ import {
   keyPressed,
   SEARCH_TYPE,
   BASE_IMAGE_CATEGORIES,
+  getFileName,
 } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { TVA_CONFIG, getSearchOptions } from '../scripts/settings.js';
@@ -128,6 +129,24 @@ export class ArtSelect extends FormApplication {
 
   _getHeaderButtons() {
     const buttons = super._getHeaderButtons();
+    buttons.unshift({
+      label: 'FilePicker',
+      class: 'file-picker',
+      icon: 'fas fa-file-import fa-fw',
+      onclick: () => {
+        new FilePicker({
+          type: 'imagevideo',
+          callback: (path) => {
+            if (!this.preventClose) {
+              this.close();
+            }
+            if (this.callback) {
+              this.callback(path, getFileName(path));
+            }
+          },
+        }).render();
+      },
+    });
     buttons.unshift({
       label: 'Image Category',
       class: 'type',

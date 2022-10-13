@@ -68,6 +68,18 @@
   </div>
 
   <div class="form-group">
+    <label>Missing Images</label>
+    <button type="button" class="token-variants-missing-images">
+      <i class="fas fa-exchange-alt"></i>
+    </button>
+    <p class="notes">
+      Define additional images that are to be considered as "missing"
+    </p>
+  </div>
+
+  <hr />
+
+  <div class="form-group">
     <label>{{localize "token-variants.settings.compendium-mapper.window.show-images"}}</label>
     <input type="checkbox" name="showImages" data-dtype="Boolean" {{#if showImages}}checked{{/if}} />
   </div>
