@@ -66,15 +66,18 @@ export default class TokenCustomConfig extends TokenConfig {
     }
   }
 
-  async getData(options) {
-    let data = await super.getData(options);
-    const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName);
-    if (tokenConfig) {
-      mergeObject(data.object, tokenConfig, {
-        inplace: true,
-      });
+  applyCustomConfig() {
+    const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName) || {};
+    const form = $(this.form);
+    for (const key of Object.keys(tokenConfig)) {
+      const el = form.find(`[name="${key}"]`);
+      if (el.is(':checkbox')) {
+        el.prop('checked', tokenConfig[key]);
+      } else {
+        el.val(tokenConfig[key]);
+      }
+      el.trigger('change');
     }
-    return super.getData(options);
   }
 
   // *************
@@ -160,6 +163,7 @@ export default class TokenCustomConfig extends TokenConfig {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeName === 'DIV' && node.className === 'form-group') {
             processFormGroup(node);
+            this.applyCustomConfig();
           }
         });
       });
@@ -176,6 +180,8 @@ export default class TokenCustomConfig extends TokenConfig {
     // On any field being changed we want to automatically select the form-group to be included in the update
     $(html).on('change', 'input, select', onInputChange);
     $(html).on('click', 'button', onInputChange);
+
+    this.applyCustomConfig();
   }
 
   async _onCheckboxChange(event) {

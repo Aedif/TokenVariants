@@ -230,7 +230,9 @@ async function initialize() {
         // Disable effect icons
         if (TVA_CONFIG.disableEffectIcons) {
           waitForTexture(tkn, (token) => {
-            token.hud.effects.removeChildren().forEach((c) => c.destroy());
+            token.effects.removeChildren().forEach((c) => c.destroy());
+            token.effects.bg = token.effects.addChild(new PIXI.Graphics());
+            token.effects.overlay = null;
           });
         } else if (TVA_CONFIG.filterEffectIcons) {
           waitForTexture(tkn, (token) => {
@@ -534,8 +536,10 @@ async function initialize() {
       libWrapper.register(
         'token-variants',
         'Token.prototype.drawEffects',
-        function (...args) {
-          // Simply override and do nothing here. No effect icons will be drawn on top of the token
+        async function (...args) {
+          this.effects.removeChildren().forEach((c) => c.destroy());
+          this.effects.bg = this.effects.addChild(new PIXI.Graphics());
+          this.effects.overlay = null;
         },
         'OVERRIDE'
       );

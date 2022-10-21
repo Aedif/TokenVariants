@@ -966,7 +966,7 @@ export function getEffectsFromActor(actor) {
   if (!actor) return effects;
 
   if (game.system.id === 'pf2e') {
-    (actor.data.items || []).forEach((item, id) => {
+    (actor.items || []).forEach((item, id) => {
       if (item.type === 'condition' && item.isActive) effects.push(item.name);
     });
   } else {

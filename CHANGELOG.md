@@ -1,3 +1,11 @@
+# 4.4.1
+
+PF2e
+
+- Fixed assigning of custom configs via Shift-Left clicking the status effects resulting in effect name being picked up as "null"
+- Fixed errors thrown when 'Disable ALL Token Effect Icons' is on
+- Fixed some warnings
+
 # 4.4.0
 
 Compendium Mapper

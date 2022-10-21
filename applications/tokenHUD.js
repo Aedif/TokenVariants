@@ -71,13 +71,14 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          let effectNameAttr = 'title';
-          if (game.system.id === 'pf2e') effectNameAttr = 'data-condition';
-          new TVAActiveEffectConfig(
-            token,
-            event.target.getAttribute('src'),
-            event.target.getAttribute(effectNameAttr)
-          ).render(true);
+
+          let effectName = event.target.getAttribute('title');
+          if (game.system.id === 'pf2e') {
+            effectName = $(event.target).closest('picture').attr('title');
+          }
+          new TVAActiveEffectConfig(token, event.target.getAttribute('src'), effectName).render(
+            true
+          );
         }
       });
   }
