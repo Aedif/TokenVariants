@@ -1,3 +1,7 @@
+# 3.10.1
+
+- Fixed keybindings not registering
+
 # 3.10.0
 
 Compendium Mapper

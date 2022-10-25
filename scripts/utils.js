@@ -254,6 +254,146 @@ export function keyPressed(key) {
   return PRESSED_KEYS[key];
 }
 
+export function registerKeybinds() {
+  if (!game.keybindings) return;
+  game.keybindings.register('token-variants', 'popupOverride', {
+    name: 'Popup Override',
+    hint: 'When held will trigger popups even when they are disabled.',
+    editable: [
+      {
+        key: 'ShiftLeft',
+      },
+    ],
+    onDown: () => {
+      PRESSED_KEYS.popupOverride = true;
+    },
+    onUp: () => {
+      PRESSED_KEYS.popupOverride = false;
+    },
+    restricted: false,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'config', {
+    name: 'Config',
+    hint: 'When held during a mouse Left-Click of an Image or an Active Affect will display a configuration window.',
+    editable: [
+      {
+        key: 'ShiftLeft',
+      },
+    ],
+    onDown: () => {
+      PRESSED_KEYS.config = true;
+    },
+    onUp: () => {
+      PRESSED_KEYS.config = false;
+    },
+    restricted: false,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'showArtSelectPortrait', {
+    name: 'Show Art Select: Portrait',
+    hint: 'Brings up an Art Select pop-up to change the portrait images of the selected tokens.',
+    editable: [
+      {
+        key: 'Digit1',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      for (const token of canvas.tokens.controlled) {
+        const actor = game.actors.get(token.data.actorId);
+        if (!actor) continue;
+        showArtSelect(actor.data.name, {
+          callback: async function (imgSrc, name) {
+            await updateActorImage(actor, imgSrc);
+          },
+          searchType: SEARCH_TYPE.PORTRAIT,
+          object: actor,
+        });
+      }
+      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'showArtSelectToken', {
+    name: 'Show Art Select: Token',
+    hint: 'Brings up an Art Select pop-up to change the token images of the selected tokens.',
+    editable: [
+      {
+        key: 'Digit2',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      for (const token of canvas.tokens.controlled) {
+        showArtSelect(token.data.name, {
+          callback: async function (imgSrc, imgName) {
+            updateTokenImage(imgSrc, {
+              actor: token.actor,
+              imgName: imgName,
+              token: token,
+            });
+          },
+          searchType: SEARCH_TYPE.TOKEN,
+          object: token,
+        });
+      }
+      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'showArtSelectGeneral', {
+    name: 'Show Art Select: Portrait+Token',
+    hint: 'Brings up an Art Select pop-up to change both Portrait and Token images of the selected tokens.',
+    editable: [
+      {
+        key: 'Digit3',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      for (const token of canvas.tokens.controlled) {
+        const actor = game.actors.get(token.data.actorId);
+        showArtSelect(token.data.name, {
+          callback: async function (imgSrc, imgName) {
+            if (actor) await updateActorImage(actor, imgSrc);
+            updateTokenImage(imgSrc, {
+              actor: token.actor,
+              imgName: imgName,
+              token: token,
+            });
+          },
+          searchType: SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+          object: token,
+        });
+      }
+      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+  game.keybindings.register('token-variants', 'openGlobalMappings', {
+    name: 'Open Global Effect Configurations',
+    hint: 'Brings up the settings window for Global Effect Configurations',
+    editable: [
+      {
+        key: 'KeyC',
+        modifiers: ['Shift'],
+      },
+    ],
+    onDown: () => {
+      const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
+      const data = new foundry.data.TokenData(setting);
+      const token = new TokenDocument(data, { actor: null });
+      new ActiveEffectConfigList(token, true).render(true);
+    },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+}
+
 /**
  * Retrieves a custom token configuration if one exists for the given image
  */

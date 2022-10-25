@@ -30,6 +30,7 @@ import {
   getTokenEffects,
   isVideo,
   isImage,
+  registerKeybinds,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -1767,6 +1768,8 @@ Hooks.once('ready', initialize);
 
 // Register API
 Hooks.on('init', function () {
+  registerKeybinds();
+
   game.modules.get('token-variants').api = {
     cacheImages,
     doImageSearch,
