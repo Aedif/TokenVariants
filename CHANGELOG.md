@@ -1,3 +1,7 @@
+# 4.4.2
+
+- Small compatibility fix for Item Pile module
+
 # 4.4.1
 
 PF2e
