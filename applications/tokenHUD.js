@@ -252,7 +252,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
     tokenHud: true,
   });
 
-  let divR = html.find('div.right').append(sideSelect);
+  let divR = html.find('div.right').last().append(sideSelect);
 
   // Activate listeners
   divR.find('video').hover(
