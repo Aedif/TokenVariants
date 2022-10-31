@@ -407,9 +407,10 @@ async function initialize() {
   });
 
   Hooks.on('updateItem', (item, change, options, userId) => {
+    if (game.user.id !== userId) return;
+
     // Handle condition/effect name change
     if (
-      game.user.id === userId &&
       game.system.id === 'pf2e' &&
       ['condition', 'effect'].includes(item.type) &&
       'name' in change

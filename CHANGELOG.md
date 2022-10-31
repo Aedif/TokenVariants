@@ -1,3 +1,7 @@
+# 3.10.2
+
+- Fix for error thrown on item equip
+
 # 3.10.1
 
 - Fixed keybindings not registering
