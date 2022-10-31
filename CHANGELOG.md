@@ -1,3 +1,7 @@
+# 4.4.3
+
+- Fix for error thrown on item equip
+
 # 4.4.2
 
 - Small compatibility fix for Item Pile module
