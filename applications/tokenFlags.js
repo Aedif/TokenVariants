@@ -20,12 +20,16 @@ export default class TokenFlags extends FormApplication {
     const data = super.getData(options);
     const randomize = this.objectToFlag.getFlag('token-variants', 'randomize');
     const popups = this.objectToFlag.getFlag('token-variants', 'popups');
+    const directory = this.objectToFlag.getFlag('token-variants', 'directory') || {};
 
     return mergeObject(data, {
       randomize: randomize,
       randomizeSetFlag: randomize != null,
       popups: popups,
       popupsSetFlag: popups != null,
+      directory: directory.path,
+      directorySource: directory.source,
+      directorySetFlag: directory != null,
     });
   }
 
@@ -37,6 +41,24 @@ export default class TokenFlags extends FormApplication {
     html.find('.controlFlag').click((e) => {
       $(e.target).siblings('.flag').prop('disabled', !e.target.checked);
     });
+    html.find('.directory-fp').click((event) => {
+      new FilePicker({
+        type: 'folder',
+        activeSource: 'data',
+        callback: (path, fp) => {
+          html.find('[name="directory"]').val(fp.result.target);
+          $(event.target)
+            .closest('button')
+            .attr('title', 'Directory: ' + fp.result.target);
+          const sourceEl = html.find('[name="directorySource"]');
+          if (fp.activeSource === 's3') {
+            sourceEl.val(`s3:${fp.result.bucket}`);
+          } else {
+            sourceEl.val(fp.activeSource);
+          }
+        },
+      }).render(true);
+    });
   }
 
   /**
@@ -44,7 +66,11 @@ export default class TokenFlags extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    ['randomize', 'popups'].forEach((flag) => {
+    if ('directory' in formData) {
+      formData.directory = { path: formData.directory, source: formData.directorySource };
+    }
+
+    ['randomize', 'popups', 'directory'].forEach((flag) => {
       if (flag in formData) {
         this.objectToFlag.setFlag('token-variants', flag, formData[flag]);
       } else {

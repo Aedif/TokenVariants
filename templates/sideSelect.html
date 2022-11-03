@@ -1,68 +1,46 @@
-<div class="control-icon" data-action="token-variants-side-selector">
-  <img
-    id="token-variants-side-button"
-    src="modules/token-variants/img/token-images.svg"
-    width="36"
-    height="36"
-    title="{{localize token-variants.windows.art-select.select-variant}}"
-  />
-  <div class="token-variants-wrap {{#unless imageDisplay}}list{{/unless}}">
-    <div class="token-variants-context-menu">
-      <input class="token-variants-side-search" type="text" />
-      {{#if tokenHud}}
-      <button class="flags" type="button">
-        <i class="fab fa-font-awesome-flag"></i>
-        <label>Flags</label>
-      </button>
-      <button class="file-picker" type="button">
-        <i class="fas fa-file-import fa-fw"></i>
-        <label>FilePicker</label>
-      </button>
+<div class="token-variants-wrap images {{#unless imageDisplay}}list{{/unless}}">
+  {{#each imagesParsed as |image|}}
+  <div
+    class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}"
+    data-name="{{image.route}}"
+    data-filename="{{image.name}}"
+    title="{{#if image.unknownType}}{{image.route}}{{else}}{{image.title}}{{/if}}"
+    style="{{image.style}}">
+    {{#if ../imageDisplay}}
+      {{#if image.img}}
+      <img
+        class="token-variants-button-image"
+        src="{{image.route}}"
+        style="opacity:{{../imageOpacity}};"
+      />
+      {{/if}} 
+      {{#if image.vid}}
+      <video
+        class="token-variants-button-image"
+        src="{{image.route}}"
+        style="opacity:{{../imageOpacity}};"
+        loop
+        {{#if ../autoplay}}
+        autoplay
+        {{/if}}
+        muted>
+      </video>
+      {{#unless ../autoplay}}
+      <i class="fas fa-play"></i>
+      {{/unless}}
       {{/if}}
+      {{#if image.unknownType}}
+      <img
+        class="token-variants-button-image"
+        src="{{image.route}}"
+        style="opacity:{{../imageOpacity}};"
+      />
+      {{/if}}
+    {{else}}
+    <span>{{image.name}}</span>
+    {{/if}}
+    <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
+    <i class="fas fa-cog {{#if image.hasConfig}}active{{/if}}"></i>
     </div>
-    {{#each imagesParsed as |image|}}
-    <div
-      class="token-variants-button-select control-icon {{#unless ../imageDisplay}}list{{/unless}} {{#if image.used}}token-variants-button-disabled active{{/if}}"
-      data-name="{{image.route}}"
-      data-filename="{{image.name}}"
-      title="{{#if image.unknownType}}{{image.route}}{{else}}{{image.title}}{{/if}}"
-      style="{{image.style}}">
-      {{#if ../imageDisplay}}
-        {{#if image.img}}
-        <img
-          class="token-variants-button-image"
-          src="{{image.route}}"
-          style="opacity:{{../imageOpacity}};"
-        />
-        {{/if}} 
-        {{#if image.vid}}
-        <video
-          class="token-variants-button-image"
-          src="{{image.route}}"
-          style="opacity:{{../imageOpacity}};"
-          loop
-          {{#if ../autoplay}}
-          autoplay
-          {{/if}}
-          muted>
-        </video>
-        {{#unless ../autoplay}}
-        <i class="fas fa-play"></i>
-        {{/unless}}
-        {{/if}}
-        {{#if image.unknownType}}
-        <img
-          class="token-variants-button-image"
-          src="{{image.route}}"
-          style="opacity:{{../imageOpacity}};"
-        />
-        {{/if}}
-      {{else}}
-      <span>{{image.name}}</span>
-      {{/if}}
-      <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
-      <i class="fas fa-cog {{#if image.hasConfig}}active{{/if}}"></i>
-      </div>
-    {{/each}}
-  </div>
+  {{/each}}
 </div>

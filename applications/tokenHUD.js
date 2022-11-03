@@ -15,73 +15,148 @@ import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import TokenFlags from './tokenFlags.js';
 
-// not call if still caching
 export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
+  activateStatusEffectListeners(token);
+
+  const hudSettings = TVA_CONFIG.hud;
+  const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
+  const PARTIAL_ACCESS = TVA_CONFIG.permissions.hud[game.user.role];
+
+  if (!hudSettings.enableSideMenu || (!PARTIAL_ACCESS && !FULL_ACCESS)) return;
+
+  const button = $(`
+  <div class="control-icon" data-action="token-variants-side-selector">
+    <img
+      id="token-variants-side-button"
+      src="modules/token-variants/img/token-images.svg"
+      width="36"
+      height="36"
+      title="{{localize token-variants.windows.art-select.select-variant}}"
+    />
+  </div>
+`);
+
+  html.find('div.right').last().append(button);
+  html.find('div.right').click(_deactivateTokenVariantsSideSelector);
+
+  button.click((event) => _onButtonClick(event, token));
+  if (FULL_ACCESS) {
+    button.contextmenu((event) => _onButtonRightClick(event, hud, html, token));
+  }
+  const worldHudSettings = TVA_CONFIG.worldHud;
+}
+
+async function _onButtonClick(event, token) {
+  const button = $(event.target).closest('.control-icon');
+
+  // De-activate 'Status Effects'
+  button.closest('div.right').find('div.control-icon.effects').removeClass('active');
+  button.closest('div.right').find('.status-effects').removeClass('active');
+
+  // Remove contextmenu
+  button.find('.contextmenu').remove();
+
+  // Toggle variants side menu
+  button.toggleClass('active');
+  let variantsWrap = button.find('.token-variants-wrap');
+  if (button.hasClass('active')) {
+    if (!variantsWrap.length) {
+      variantsWrap = await renderSideSelect(token);
+      if (variantsWrap) button.find('img').after(variantsWrap);
+      else return;
+    }
+    variantsWrap.addClass('active');
+  } else {
+    variantsWrap.removeClass('active');
+  }
+}
+
+function _onButtonRightClick(event, hud, html, token) {
+  // Display side menu if button is not active yet
+  const button = $(event.target).closest('.control-icon');
+  if (!button.hasClass('active')) {
+    // button.trigger('click');
+    button.addClass('active');
+  }
+
+  if (button.find('.contextmenu').length) {
+    // Contextmenu already displayed. Remove and activate images
+    button.find('.contextmenu').remove();
+    button.removeClass('active').trigger('click');
+    //button.find('.token-variants-wrap.images').addClass('active');
+  } else {
+    // Contextmenu is not displayed. Hide images, create it and add it
+    button.find('.token-variants-wrap.images').removeClass('active');
+    const contextMenu = $(`
+    <div class="token-variants-wrap contextmenu active">
+      <div class="token-variants-context-menu active">
+        <input class="token-variants-side-search" type="text" />
+        <button class="flags" type="button"><i class="fab fa-font-awesome-flag"></i><label>Flags</label></button>
+        <button class="file-picker" type="button"><i class="fas fa-file-import fa-fw"></i><label>FilePicker</label></button>
+      </div>
+    </div>
+      `);
+    button.append(contextMenu);
+
+    // Register contextmenu listeners
+    contextMenu
+      .find('.token-variants-side-search')
+      .on('keyup', (event) => _onImageSearchKeyUp(event, token))
+      .on('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+    contextMenu.find('.flags').click(() => {
+      const tkn = canvas.tokens.get(token._id);
+      if (tkn) {
+        new TokenFlags(tkn).render(true);
+      }
+    });
+    contextMenu.find('.file-picker').click(async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      new FilePicker({
+        type: 'folder',
+        callback: async (path, fp) => {
+          const content = await FilePicker.browse(fp.activeSource, fp.result.target);
+          let files = content.files.filter((f) => isImage(f) || isVideo(f));
+          if (files.length) {
+            button.find('.token-variants-wrap').remove();
+            const sideSelect = await renderSideSelect(token, '', files);
+            sideSelect.addClass('active');
+            button.append(sideSelect);
+          }
+        },
+      }).render(true);
+    });
+  }
+}
+
+function _deactivateTokenVariantsSideSelector(event) {
+  const controlIcon = $(event.target).closest('.control-icon');
+  const dataAction = controlIcon.attr('data-action');
+
+  switch (dataAction) {
+    case 'effects':
+      break; // Effects button
+    case 'thwildcard-selector':
+      break; // Token HUD Wildcard module button
+    default:
+      return;
+  }
+
+  $(event.target)
+    .closest('div.right')
+    .find('.control-icon[data-action="token-variants-side-selector"]')
+    .removeClass('active');
+  $(event.target).closest('div.right').find('.token-variants-wrap').removeClass('active');
+}
+
+async function renderSideSelect(token, searchText = '', fp_files = null) {
   const hudSettings = TVA_CONFIG.hud;
   const worldHudSettings = TVA_CONFIG.worldHud;
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
   const PARTIAL_ACCESS = TVA_CONFIG.permissions.hud[game.user.role];
-
-  if (
-    TVA_CONFIG.permissions.statusConfig[game.user.role] &&
-    token.actorId &&
-    game.actors.get(token.actorId)
-  ) {
-    $('.control-icon[data-action="effects"]')
-      .find('img:first')
-      .click((event) => {
-        event.preventDefault();
-        if (keyPressed('config')) {
-          event.stopPropagation();
-          new ActiveEffectConfigList(token).render(true);
-        }
-      });
-
-    $('.control-icon[data-action="visibility"]')
-      .find('img')
-      .click((event) => {
-        event.preventDefault();
-        if (keyPressed('config')) {
-          event.stopPropagation();
-          new TVAActiveEffectConfig(
-            token,
-            event.target.getAttribute('src'),
-            'token-variants-visibility'
-          ).render(true);
-        }
-      });
-
-    $('.control-icon[data-action="combat"]')
-      .find('img')
-      .click((event) => {
-        event.preventDefault();
-        if (keyPressed('config')) {
-          event.stopPropagation();
-          new TVAActiveEffectConfig(
-            token,
-            event.target.getAttribute('src'),
-            'token-variants-combat'
-          ).render(true);
-        }
-      });
-
-    $('.status-effects')
-      .find('img')
-      .click((event) => {
-        event.preventDefault();
-        if (keyPressed('config')) {
-          event.stopPropagation();
-
-          let effectName = event.target.getAttribute('title');
-          if (game.system.id === 'pf2e') {
-            effectName = $(event.target).closest('picture').attr('title');
-          }
-          new TVAActiveEffectConfig(token, event.target.getAttribute('src'), effectName).render(
-            true
-          );
-        }
-      });
-  }
 
   if (!hudSettings.enableSideMenu || (!PARTIAL_ACCESS && !FULL_ACCESS)) return;
 
@@ -95,22 +170,6 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   if (!fp_files) {
     const search = searchText ? searchText : token.name;
     if (!search || search.length < 3) return;
-
-    const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
-
-    let artSearch = noSearch
-      ? null
-      : await doImageSearch(search, {
-          searchType: SEARCH_TYPE.TOKEN,
-          searchOptions: { keywordSearch: worldHudSettings.includeKeywords },
-        });
-
-    // Merge full search, and keywords into a single array
-    if (artSearch) {
-      artSearch.forEach((results) => {
-        images.push(...results);
-      });
-    }
 
     if (tokenActor) {
       actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
@@ -130,7 +189,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
           imgArr.forEach((variant) => {
             for (const name of variant.names) {
               if (!images.find((obj) => obj.path === variant.imgSrc && obj.name === name)) {
-                images.unshift({ path: variant.imgSrc, name: name });
+                images.push({ path: variant.imgSrc, name: name });
               }
             }
           });
@@ -138,6 +197,32 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
 
         // Merge images found through search, with variants shared through 'variant' flag
         mergeImages(actorVariants);
+
+        // Parse directory flag and include the images
+        const directoryFlag = tokenActor.getFlag('token-variants', 'directory');
+        if (directoryFlag) {
+          let dirFlagImages;
+          try {
+            let path = directoryFlag.path;
+            let source = directoryFlag.source;
+            let bucket = '';
+            if (source.startsWith('s3:')) {
+              bucket = source.substring(3, source.length);
+              source = 's3';
+            }
+            const content = await FilePicker.browse(source, path, {
+              type: 'imagevideo',
+              bucket,
+            });
+            dirFlagImages = content.files;
+          } catch (err) {
+            dirFlagImages = [];
+          }
+          dirFlagImages = dirFlagImages.map((f) => {
+            return { imgSrc: f, names: [getFileName(f)] };
+          });
+          mergeImages(dirFlagImages);
+        }
 
         // Merge wildcard images
         if (worldHudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
@@ -181,15 +266,27 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
         }
       }
     }
+
+    // Perform image search if needed
+    const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
+
+    let artSearch = noSearch
+      ? null
+      : await doImageSearch(search, {
+          searchType: SEARCH_TYPE.TOKEN,
+          searchOptions: { keywordSearch: worldHudSettings.includeKeywords },
+        });
+
+    // Merge full search, and keywords into a single array
+    if (artSearch) {
+      artSearch.forEach((results) => {
+        images.push(...results);
+      });
+    }
   } else {
     images = fp_files.map((f) => {
       return { path: f, name: getFileName(f) };
     });
-  }
-
-  // If no images have been found check if the HUD button should be displayed regardless
-  if (!images.length && !actorVariants.length) {
-    if (!(FULL_ACCESS && hudSettings.alwaysShowButton)) return;
   }
 
   // Retrieving the possibly custom name attached as a flag to the token
@@ -245,17 +342,17 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   const imageDisplay = hudSettings.displayAsImage;
   const imageOpacity = hudSettings.imageOpacity / 100;
 
-  const sideSelect = await renderTemplate('modules/token-variants/templates/sideSelect.html', {
-    imagesParsed,
-    imageDisplay,
-    imageOpacity,
-    tokenHud: true,
-  });
-
-  let divR = html.find('div.right').last().append(sideSelect);
+  const sideSelect = $(
+    await renderTemplate('modules/token-variants/templates/sideSelect.html', {
+      imagesParsed,
+      imageDisplay,
+      imageOpacity,
+      tokenHud: true,
+    })
+  );
 
   // Activate listeners
-  divR.find('video').hover(
+  sideSelect.find('video').hover(
     function () {
       if (TVA_CONFIG.playVideoOnHover) {
         this.play();
@@ -270,110 +367,23 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
       }
     }
   );
-  divR.find('#token-variants-side-button').click((event) => _onSideButtonClick(event, token._id));
-  divR.click(_deactiveTokenVariantsSideSelector);
-  divR.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));
-  const contextMenu = divR.find('.token-variants-context-menu');
-  contextMenu
-    .find('.token-variants-side-search')
-    .on('keyup', (event) => _onImageSearchKeyUp(event, hud, html, token));
-  contextMenu.find('.flags').click(() => {
-    const tkn = canvas.tokens.get(token._id);
-    if (tkn) {
-      new TokenFlags(tkn).render(true);
-    }
-  });
-  contextMenu.find('.file-picker').click((event) => {
-    new FilePicker({
-      type: 'folder',
-      callback: async (path, fp) => {
-        const content = await FilePicker.browse(fp.activeSource, fp.result.target);
-        let files = content.files.filter((f) => isImage(f) || isVideo(f));
-        if (files.length) {
-          $(event.target)
-            .closest('.control-icon[data-action="token-variants-side-selector"]')
-            .remove();
-          html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
-          renderHud(hud, html, token, '', files);
-        }
-      },
-    }).render(true);
-  });
+  sideSelect
+    .find('.token-variants-button-select')
+    .click((event) => _onImageClick(event, token._id));
+
   if (FULL_ACCESS) {
-    divR.find('#token-variants-side-button').on('contextmenu', _onSideButtonRightClick);
-    divR
+    sideSelect
       .find('.token-variants-button-select')
       .on('contextmenu', (event) => _onImageRightClick(event, token._id));
   }
+
+  return sideSelect;
 
   // If renderHud is being called from text box or FilePicker search the side menu should be enabled by default
   if (searchText || fp_files) {
     divR.find('#token-variants-side-button').parent().addClass('active');
     divR.find('.token-variants-wrap').addClass('active');
   }
-}
-
-function _onSideButtonClick(event, tokenId) {
-  // De-activate 'Status Effects'
-  const is080 = !isNewerVersion('0.8.0', game.version ?? game.data.version);
-  const variantsControlIcon = $(event.target.parentElement);
-  variantsControlIcon
-    .closest('div.right')
-    .find(is080 ? '.control-icon[data-action="effects"]' : 'div.control-icon.effects')
-    .removeClass('active');
-  variantsControlIcon.closest('div.right').find('.status-effects').removeClass('active');
-
-  // Toggle variants side menu
-  variantsControlIcon.toggleClass('active');
-  const variantsWrap = variantsControlIcon.find('.token-variants-wrap');
-  if (variantsControlIcon.hasClass('active')) {
-    variantsWrap.addClass('active');
-  } else {
-    variantsWrap.removeClass('active');
-  }
-}
-
-function _onSideButtonRightClick(event) {
-  // Display side menu if button is not active yet
-  const variantsControlIcon = $(event.target.parentElement);
-  if (!variantsControlIcon.hasClass('active')) {
-    variantsControlIcon.find('#token-variants-side-button').trigger('click');
-  }
-
-  // Display/hide buttons and search input
-  const contextMenu = $(event.target)
-    .closest('div.control-icon')
-    .find('.token-variants-context-menu');
-  const buttons = $(event.target).closest('div.control-icon').find('.token-variants-button-select');
-  if (contextMenu.hasClass('active')) {
-    contextMenu.removeClass('active');
-    buttons.removeClass('hide');
-  } else {
-    contextMenu.addClass('active');
-    buttons.addClass('hide');
-  }
-}
-
-function _deactiveTokenVariantsSideSelector(event) {
-  const controlIcon = $(event.target).closest('.control-icon');
-  const dataAction = controlIcon.attr('data-action');
-
-  switch (dataAction) {
-    case 'effects':
-      break; // Effects button
-    case 'thwildcard-selector':
-      break; // Token HUD Wildcard module button
-    default:
-      const is080 = !isNewerVersion('0.8.0', game.version ?? game.data.version);
-      if (is080 && controlIcon.hasClass('effects')) break;
-      return;
-  }
-
-  $(event.target)
-    .closest('div.right')
-    .find('.control-icon[data-action="token-variants-side-selector"]')
-    .removeClass('active');
-  $(event.target).closest('div.right').find('.token-variants-wrap').removeClass('active');
 }
 
 async function _onImageClick(event, tokenId) {
@@ -427,6 +437,9 @@ async function _onImageClick(event, tokenId) {
 }
 
 async function _onImageRightClick(event, tokenId) {
+  console.log('Am here');
+  event.preventDefault();
+  event.stopPropagation();
   let token = canvas.tokens.controlled.find((t) => t.document.id === tokenId);
   if (!token) return;
 
@@ -490,14 +503,16 @@ async function _onImageRightClick(event, tokenId) {
   }
 }
 
-function _onImageSearchKeyUp(event, hud, html, tokenData) {
+async function _onImageSearchKeyUp(event, token) {
   event.preventDefault();
   event.stopPropagation();
   if (event.key === 'Enter' || event.keyCode === 13) {
     if (event.target.value.length >= 3) {
-      $(event.target).closest('.control-icon[data-action="token-variants-side-selector"]').remove();
-      html.find('.control-icon[data-action="token-variants-side-selector"]').remove();
-      renderHud(hud, html, tokenData, event.target.value);
+      const button = $(event.target).closest('.control-icon');
+      button.find('.token-variants-wrap').remove();
+      const sideSelect = await renderSideSelect(token, event.target.value);
+      sideSelect.addClass('active');
+      button.append(sideSelect);
     }
   }
 }
@@ -537,5 +552,68 @@ async function updateActorWithSimilarName(imgSrc, imgName, actor) {
     updateActorImage(actor, results[0].path, { imgName: results[0].name });
   } else {
     updateActorImage(actor, imgSrc, { imgName: imgName });
+  }
+}
+
+function activateStatusEffectListeners(token) {
+  if (
+    TVA_CONFIG.permissions.statusConfig[game.user.role] &&
+    token.actorId &&
+    game.actors.get(token.actorId)
+  ) {
+    $('.control-icon[data-action="effects"]')
+      .find('img:first')
+      .click((event) => {
+        event.preventDefault();
+        if (keyPressed('config')) {
+          event.stopPropagation();
+          new ActiveEffectConfigList(token).render(true);
+        }
+      });
+
+    $('.control-icon[data-action="visibility"]')
+      .find('img')
+      .click((event) => {
+        event.preventDefault();
+        if (keyPressed('config')) {
+          event.stopPropagation();
+          new TVAActiveEffectConfig(
+            token,
+            event.target.getAttribute('src'),
+            'token-variants-visibility'
+          ).render(true);
+        }
+      });
+
+    $('.control-icon[data-action="combat"]')
+      .find('img')
+      .click((event) => {
+        event.preventDefault();
+        if (keyPressed('config')) {
+          event.stopPropagation();
+          new TVAActiveEffectConfig(
+            token,
+            event.target.getAttribute('src'),
+            'token-variants-combat'
+          ).render(true);
+        }
+      });
+
+    $('.status-effects')
+      .find('img')
+      .click((event) => {
+        event.preventDefault();
+        if (keyPressed('config')) {
+          event.stopPropagation();
+
+          let effectName = event.target.getAttribute('title');
+          if (game.system.id === 'pf2e') {
+            effectName = $(event.target).closest('picture').attr('title');
+          }
+          new TVAActiveEffectConfig(token, event.target.getAttribute('src'), effectName).render(
+            true
+          );
+        }
+      });
   }
 }

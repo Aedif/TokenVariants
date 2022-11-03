@@ -64,6 +64,9 @@
 .token-variants-permissions li.permission input[type='checkbox'] {
   margin: 0;
 }
+.token-variants-permissions li.permission button {
+  order: 0;
+}
 .token-variants-permissions .index {
   flex: 0 0 200px;
   text-align: left;
