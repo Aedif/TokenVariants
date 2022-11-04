@@ -13,7 +13,7 @@ import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
-import TokenFlags from './tokenFlags.js';
+import FlagsConfig from './flagsConfig.js';
 
 export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
   activateStatusEffectListeners(token);
@@ -31,7 +31,7 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
       src="modules/token-variants/img/token-images.svg"
       width="36"
       height="36"
-      title="{{localize token-variants.windows.art-select.select-variant}}"
+      title="${game.i18n.localize('token-variants.windows.art-select.select-variant')}"
     />
   </div>
 `);
@@ -43,7 +43,6 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   if (FULL_ACCESS) {
     button.contextmenu((event) => _onButtonRightClick(event, hud, html, token));
   }
-  const worldHudSettings = TVA_CONFIG.worldHud;
 }
 
 async function _onButtonClick(event, token) {
@@ -106,10 +105,12 @@ function _onButtonRightClick(event, hud, html, token) {
         event.preventDefault();
         event.stopPropagation();
       });
-    contextMenu.find('.flags').click(() => {
+    contextMenu.find('.flags').click((event) => {
       const tkn = canvas.tokens.get(token._id);
       if (tkn) {
-        new TokenFlags(tkn).render(true);
+        event.preventDefault();
+        event.stopPropagation();
+        new FlagsConfig(tkn).render(true);
       }
     });
     contextMenu.find('.file-picker').click(async (event) => {
@@ -123,8 +124,10 @@ function _onButtonRightClick(event, hud, html, token) {
           if (files.length) {
             button.find('.token-variants-wrap').remove();
             const sideSelect = await renderSideSelect(token, '', files);
-            sideSelect.addClass('active');
-            button.append(sideSelect);
+            if (sideSelect) {
+              sideSelect.addClass('active');
+              button.append(sideSelect);
+            }
           }
         },
       }).render(true);
@@ -378,12 +381,6 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
   }
 
   return sideSelect;
-
-  // If renderHud is being called from text box or FilePicker search the side menu should be enabled by default
-  if (searchText || fp_files) {
-    divR.find('#token-variants-side-button').parent().addClass('active');
-    divR.find('.token-variants-wrap').addClass('active');
-  }
 }
 
 async function _onImageClick(event, tokenId) {
@@ -511,8 +508,10 @@ async function _onImageSearchKeyUp(event, token) {
       const button = $(event.target).closest('.control-icon');
       button.find('.token-variants-wrap').remove();
       const sideSelect = await renderSideSelect(token, event.target.value);
-      sideSelect.addClass('active');
-      button.append(sideSelect);
+      if (sideSelect) {
+        sideSelect.addClass('active');
+        button.append(sideSelect);
+      }
     }
   }
 }

@@ -524,6 +524,7 @@ ol.token-variant-table .table-row .effect-config-script.active {
   display: block;
 }
 
+#tile-hud .token-variants-context-menu > button,
 #token-hud .token-variants-context-menu > button {
   width: 48%;
   background-color: rgb(28, 28, 28, 0.7);

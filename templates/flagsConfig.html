@@ -1,7 +1,6 @@
 <form>
   <div class="tab token-variants-permissions">
-    <p class="notes">Override module features for this token/actor</p>
-
+    
     <header class="table-header flexrow">
       <label class="index">Flag</label>
       <label>Value</label>
@@ -9,6 +8,7 @@
     </header>
   
     <ul class="permissions-list">
+      {{#unless tile}}
       <li class="permission form-group">
         <label class="index">Randomize</label>
         <div class="form-fields">
@@ -26,8 +26,11 @@
         </div>
         <p class="hint">Enable or disable pop-ups for this actor/token.</p>
       </li>
+
+      {{/unless}}
+
       <li class="permission form-group">
-        <label class="index">HUD Directory</label>
+        <label class="index">Image Directory</label>
         <div class="form-fields">
           <input class="flag" type="text" name="directory" value="{{directory}}" {{#unless directorySetFlag}}disabled{{/unless}} hidden/>
           <input class="flag" type="text" name="directorySource" value="{{directorySource}}" {{#unless directorySetFlag}}disabled{{/unless}} hidden/>

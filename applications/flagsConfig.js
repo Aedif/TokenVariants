@@ -1,14 +1,19 @@
-export default class TokenFlags extends FormApplication {
-  constructor(token) {
+export default class FlagsConfig extends FormApplication {
+  constructor(obj) {
     super({}, {});
-    this.objectToFlag = game.actors.get(token.document.actorId) || token.document;
+    if (obj instanceof Tile) {
+      this.objectToFlag = obj.document;
+      this.isTile = true;
+    } else {
+      this.objectToFlag = game.actors.get(obj.document.actorId) || obj.document;
+    }
   }
 
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
       id: 'token-variants-token-flags',
       classes: ['sheet'],
-      template: 'modules/token-variants/templates/tokenFlags.html',
+      template: 'modules/token-variants/templates/flagsConfig.html',
       resizable: true,
       minimizable: false,
       title: 'Flags',
@@ -30,6 +35,7 @@ export default class TokenFlags extends FormApplication {
       directory: directory.path,
       directorySource: directory.source,
       directorySetFlag: directory != null,
+      tile: this.isTile,
     });
   }
 
