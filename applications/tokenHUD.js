@@ -183,36 +183,38 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
 
   let images = [];
   let actorVariants = [];
+  let imageDuplicates = new Set();
+  const pushImage = (img) => {
+    if (imageDuplicates.has(img.path)) {
+      if (!images.find((obj) => obj.path === img.path && obj.name === img.name)) {
+        images.push(img);
+      }
+    } else {
+      images.push(img);
+      imageDuplicates.add(img.path);
+    }
+  };
+
   if (!fp_files) {
     const search = searchText ? searchText : token.name;
     if (!search || search.length < 3) return;
 
     if (tokenActor) {
-      actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
-
-      // To maintain compatibility with previous versions
-      if (!(actorVariants instanceof Array)) {
-        actorVariants = [];
-      } else if (actorVariants.length != 0 && !(actorVariants[0] instanceof Object)) {
-        actorVariants.forEach((src, i) => {
-          actorVariants[i] = { imgSrc: src, names: [getFileName(src)] };
-        });
-      }
-      // end of compatibility code
-
       if (!searchText) {
         const mergeImages = function (imgArr) {
           imgArr.forEach((variant) => {
             for (const name of variant.names) {
-              if (!images.find((obj) => obj.path === variant.imgSrc && obj.name === name)) {
-                images.push({ path: variant.imgSrc, name: name });
-              }
+              pushImage({ path: variant.imgSrc, name: name });
             }
           });
         };
 
-        // Merge images found through search, with variants shared through 'variant' flag
-        mergeImages(actorVariants);
+        actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
+        actorVariants.forEach((variant) => {
+          for (const name of variant.names) {
+            pushImage({ path: variant.imgSrc, name: name });
+          }
+        });
 
         // Parse directory flag and include the images
         const directoryFlag = tokenActor.getFlag('token-variants', 'directory');
@@ -234,10 +236,9 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
           } catch (err) {
             dirFlagImages = [];
           }
-          dirFlagImages = dirFlagImages.map((f) => {
-            return { imgSrc: f, names: [getFileName(f)] };
+          dirFlagImages = dirFlagImages.forEach((f) => {
+            if (isImage(f) || isVideo(f)) pushImage({ path: f, name: getFileName(f) });
           });
-          mergeImages(dirFlagImages);
         }
 
         // Merge wildcard images
@@ -274,10 +275,9 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
 
             const wildcardImages = (await getTokenImages())
               .filter((img) => !img.includes('*') && (isImage(img) || isVideo(img)))
-              .map((variant) => {
-                return { imgSrc: variant, names: [getFileName(variant)] };
+              .forEach((variant) => {
+                pushImage({ path: variant, name: getFileName(variant) });
               });
-            mergeImages(wildcardImages);
           }
         }
       }
@@ -296,7 +296,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
     // Merge full search, and keywords into a single array
     if (artSearch) {
       artSearch.forEach((results) => {
-        images.push(...results);
+        results.forEach((img) => pushImage(img));
       });
     }
   } else {
@@ -447,7 +447,6 @@ async function _onImageClick(event, tokenId) {
 }
 
 async function _onImageRightClick(event, tokenId) {
-  console.log('Am here');
   event.preventDefault();
   event.stopPropagation();
   let token = canvas.tokens.controlled.find((t) => t.document.id === tokenId);

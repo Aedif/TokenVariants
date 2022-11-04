@@ -146,24 +146,28 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
   let images = [];
   let variants = [];
+  let imageDuplicates = new Set();
+  const pushImage = (img) => {
+    if (imageDuplicates.has(img.path)) {
+      if (!images.find((obj) => obj.path === img.path && obj.name === img.name)) {
+        images.push(img);
+      }
+    } else {
+      images.push(img);
+      imageDuplicates.add(img.path);
+    }
+  };
+
   if (!fp_files) {
     if (searchText !== null && searchText < 3) return;
 
-    variants = tile.document.getFlag('token-variants', 'variants') || [];
-
     if (!searchText) {
-      const mergeImages = function (imgArr) {
-        imgArr.forEach((variant) => {
-          for (const name of variant.names) {
-            if (!images.find((obj) => obj.path === variant.imgSrc && obj.name === name)) {
-              images.push({ path: variant.imgSrc, name: name });
-            }
-          }
-        });
-      };
-
-      // Merge images found through search, with variants shared through 'variant' flag
-      mergeImages(variants);
+      variants = tile.document.getFlag('token-variants', 'variants') || [];
+      variants.forEach((variant) => {
+        for (const name of variant.names) {
+          pushImage({ path: variant.imgSrc, name: name });
+        }
+      });
 
       // Parse directory flag and include the images
       const directoryFlag = tile.document.getFlag('token-variants', 'directory');
@@ -185,10 +189,9 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
         } catch (err) {
           dirFlagImages = [];
         }
-        dirFlagImages = dirFlagImages.map((f) => {
-          return { imgSrc: f, names: [getFileName(f)] };
+        dirFlagImages.forEach((f) => {
+          if (isImage(f) || isVideo(f)) pushImage({ path: f, name: getFileName(f) });
         });
-        mergeImages(dirFlagImages);
       }
     }
 
