@@ -1,3 +1,7 @@
+# 3.10.3
+
+- Fix for errors thrown with Token HUD > 'Update Actor portrait' & 'User a similarly named file' settings on
+
 # 3.10.2
 
 - Fix for error thrown on item equip
