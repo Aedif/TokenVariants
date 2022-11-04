@@ -1,4 +1,5 @@
 ![GitHub Latest Version](https://img.shields.io/github/v/release/Aedif/TokenVariants?sort=semver)
+![GitHub Latest Release](https://img.shields.io/github/downloads/Aedif/TokenVariants/latest/token-variants.zip)
 ![GitHub v9 Release](https://img.shields.io/github/downloads/Aedif/TokenVariants/3.10.2/token-variants.zip)
 ![GitHub All Releases](https://img.shields.io/github/downloads/Aedif/TokenVariants/token-variants.zip)
 [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Ftoken-variants)](https://forge-vtt.com/bazaar#package=token-variants)
