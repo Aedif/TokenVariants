@@ -1,3 +1,12 @@
+# 4.5.0
+
+- Token/Tile HUD images will now only be searched when the button is clicked not when the HUD is opened
+  - Removed 'Always show HUD button' setting
+- New flag menu option: **Image Directory**
+  - Allows a directory to be attached to an actor/tile. Images in that directory will be searched and included along others in the HUD
+- New flag menu option: **Disable Name Search**
+  - When set the Token HUD will not include images from Token name searches
+
 # 4.4.3
 
 - Fix for error thrown on item equip

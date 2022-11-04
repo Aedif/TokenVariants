@@ -284,7 +284,10 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
     }
 
     // Perform image search if needed
-    const noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
+    let noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
+
+    const disableNameSearch = tokenActor?.getFlag('token-variants', 'disableNameSearch');
+    if (!searchText && disableNameSearch) noSearch = true;
 
     let artSearch = noSearch
       ? null

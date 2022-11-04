@@ -27,6 +27,15 @@
         <p class="hint">Enable or disable pop-ups for this actor/token.</p>
       </li>
 
+      <li class="permission form-group">
+        <label class="index">Disable Name Search</label>
+        <div class="form-fields">
+          <input class="flag" type="checkbox" name="disableNameSearch" {{#if disableNameSearch}}checked{{/if}} {{#unless disableNameSearchSetFlag}}disabled{{/unless}}/>
+          <input class="controlFlag" type="checkbox" {{#if disableNameSearchSetFlag}}checked{{/if}}/>
+        </div>
+        <p class="hint">Disable Token HUD name search</p>
+      </li>
+
       {{/unless}}
 
       <li class="permission form-group">
