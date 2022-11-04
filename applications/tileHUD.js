@@ -213,11 +213,6 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
     });
   }
 
-  // If no images have been found check if the HUD button should be displayed regardless
-  if (!images.length && !variants.length) {
-    if (!hudSettings.alwaysShowButton) return;
-  }
-
   // Retrieving the possibly custom name attached as a flag to the token
   let tileImageName = tile.document.getFlag('token-variants', 'name');
   if (!tileImageName) {

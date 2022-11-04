@@ -22,7 +22,23 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
   const PARTIAL_ACCESS = TVA_CONFIG.permissions.hud[game.user.role];
 
+  // Check if the HUD button should be displayed
   if (!hudSettings.enableSideMenu || (!PARTIAL_ACCESS && !FULL_ACCESS)) return;
+
+  const tokenActor = game.actors.get(token.actorId);
+
+  // Disable button if Token HUD Wildcard is enabled and appropriate setting is set
+  if (TVA_CONFIG.worldHud.disableIfTHWEnabled && game.modules.get('token-hud-wildcard')?.active) {
+    if (tokenActor && tokenActor.prototypeToken.randomImg) return;
+  }
+
+  // Disable if user only has partial access and no images have been 'Shared'
+  if (
+    !FULL_ACCESS &&
+    PARTIAL_ACCESS &&
+    (!tokenActor || !tokenActor.getFlag('token-variants', 'variants'))
+  )
+    return;
 
   const button = $(`
   <div class="control-icon" data-action="token-variants-side-selector">
@@ -164,9 +180,6 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
   if (!hudSettings.enableSideMenu || (!PARTIAL_ACCESS && !FULL_ACCESS)) return;
 
   const tokenActor = game.actors.get(token.actorId);
-  if (worldHudSettings.disableIfTHWEnabled && game.modules.get('token-hud-wildcard')?.active) {
-    if (tokenActor && tokenActor.prototypeToken.randomImg) return;
-  }
 
   let images = [];
   let actorVariants = [];

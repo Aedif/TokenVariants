@@ -77,10 +77,6 @@
             "Name": "Display only shared images",
             "Hint": "Only shared images will be shown in the side menu. Search can still be performed."
           },
-          "always-show": {
-            "Name": "Always show HUD Button",
-            "Hint": "The HUD Button will be shown even when no matches have been found."
-          },
           "display-as-image": {
             "Name": "Display as Image",
             "Hint": "Disable to display images as a list of their filenames in the HUD."
