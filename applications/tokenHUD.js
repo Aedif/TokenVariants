@@ -556,8 +556,10 @@ async function updateActorWithSimilarName(imgSrc, imgName, actor) {
     imgName,
     SEARCH_TYPE.PORTRAIT,
     {
-      fuzzyThreshold: 0.4,
-      fuzzyLimit: 50,
+      algorithm: {
+        fuzzyThreshold: 0.4,
+        fuzzyLimit: 50,
+      },
     },
     true
   );

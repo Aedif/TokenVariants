@@ -1,3 +1,7 @@
+# 4.5.1
+
+- Fixed errors thrown with Token HUD > 'Update Actor portrait' & 'Use a similarly named file' settings on
+
 # 4.5.0
 
 - Token/Tile HUD images will now only be searched when the button is clicked not when the HUD is opened
