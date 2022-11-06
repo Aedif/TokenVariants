@@ -32,14 +32,6 @@ export async function renderHud(hud, html, token, searchText = '', fp_files = nu
     if (tokenActor && tokenActor.prototypeToken.randomImg) return;
   }
 
-  // Disable if user only has partial access and no images have been 'Shared'
-  if (
-    !FULL_ACCESS &&
-    PARTIAL_ACCESS &&
-    (!tokenActor || !tokenActor.getFlag('token-variants', 'variants'))
-  )
-    return;
-
   const button = $(`
   <div class="control-icon" data-action="token-variants-side-selector">
     <img
@@ -177,8 +169,6 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
   const PARTIAL_ACCESS = TVA_CONFIG.permissions.hud[game.user.role];
 
-  if (!hudSettings.enableSideMenu || (!PARTIAL_ACCESS && !FULL_ACCESS)) return;
-
   const tokenActor = game.actors.get(token.actorId);
 
   let images = [];
@@ -196,55 +186,58 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
   };
 
   if (!fp_files) {
-    const search = searchText ? searchText : token.name;
-    if (!search || search.length < 3) return;
-
     if (tokenActor) {
       if (!searchText) {
-        const mergeImages = function (imgArr) {
-          imgArr.forEach((variant) => {
+        if (FULL_ACCESS || PARTIAL_ACCESS) {
+          actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
+          actorVariants.forEach((variant) => {
             for (const name of variant.names) {
               pushImage({ path: variant.imgSrc, name: name });
             }
           });
-        };
-
-        actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
-        actorVariants.forEach((variant) => {
-          for (const name of variant.names) {
-            pushImage({ path: variant.imgSrc, name: name });
-          }
-        });
-
-        // Parse directory flag and include the images
-        const directoryFlag = tokenActor.getFlag('token-variants', 'directory');
-        if (directoryFlag) {
-          let dirFlagImages;
-          try {
-            let path = directoryFlag.path;
-            let source = directoryFlag.source;
-            let bucket = '';
-            if (source.startsWith('s3:')) {
-              bucket = source.substring(3, source.length);
-              source = 's3';
-            }
-            const content = await FilePicker.browse(source, path, {
-              type: 'imagevideo',
-              bucket,
-            });
-            dirFlagImages = content.files;
-          } catch (err) {
-            dirFlagImages = [];
-          }
-          dirFlagImages = dirFlagImages.forEach((f) => {
-            if (isImage(f) || isVideo(f)) pushImage({ path: f, name: getFileName(f) });
-          });
         }
 
-        // Merge wildcard images
-        if (worldHudSettings.includeWildcard && !worldHudSettings.displayOnlySharedImages) {
+        // Parse directory flag and include the images
+        if (FULL_ACCESS || PARTIAL_ACCESS) {
+          const directoryFlag = tokenActor.getFlag('token-variants', 'directory');
+          if (directoryFlag) {
+            let dirFlagImages;
+            try {
+              let path = directoryFlag.path;
+              let source = directoryFlag.source;
+              let bucket = '';
+              if (source.startsWith('s3:')) {
+                bucket = source.substring(3, source.length);
+                source = 's3';
+              }
+              const content = await FilePicker.browse(source, path, {
+                type: 'imagevideo',
+                bucket,
+              });
+              dirFlagImages = content.files;
+            } catch (err) {
+              dirFlagImages = [];
+            }
+            dirFlagImages = dirFlagImages.forEach((f) => {
+              if (isImage(f) || isVideo(f)) pushImage({ path: f, name: getFileName(f) });
+            });
+          }
+        }
+
+        if (
+          (FULL_ACCESS || PARTIAL_ACCESS) &&
+          worldHudSettings.includeWildcard &&
+          !worldHudSettings.displayOnlySharedImages
+        ) {
+          // Merge wildcard images
           const protoImg = tokenActor.prototypeToken.texture.src;
-          if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
+          if (tokenActor.prototypeToken.randomImg) {
+            (await tokenActor.getTokenImages())
+              .filter((img) => !img.includes('*'))
+              .forEach((img) => {
+                pushImage({ path: img, name: getFileName(img) });
+              });
+          } else if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
             // Modified version of Actor.getTokenImages()
             const getTokenImages = async () => {
               if (tokenActor._tokenImages) return tokenActor._tokenImages;
@@ -273,7 +266,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
               return tokenActor._tokenImages;
             };
 
-            const wildcardImages = (await getTokenImages())
+            (await getTokenImages())
               .filter((img) => !img.includes('*') && (isImage(img) || isVideo(img)))
               .forEach((variant) => {
                 pushImage({ path: variant, name: getFileName(variant) });
@@ -284,23 +277,34 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
     }
 
     // Perform image search if needed
-    let noSearch = !searchText && (worldHudSettings.displayOnlySharedImages || !FULL_ACCESS);
+    if (FULL_ACCESS) {
+      let search;
+      if (searchText) {
+        search = searchText.length > 2 ? searchText : null;
+      } else {
+        if (
+          worldHudSettings.displayOnlySharedImages ||
+          tokenActor?.getFlag('token-variants', 'disableNameSearch')
+        ) {
+          // No search
+        } else if (token.name.length > 2) {
+          search = token.name;
+        }
+      }
 
-    const disableNameSearch = tokenActor?.getFlag('token-variants', 'disableNameSearch');
-    if (!searchText && disableNameSearch) noSearch = true;
-
-    let artSearch = noSearch
-      ? null
-      : await doImageSearch(search, {
+      if (search) {
+        let artSearch = await doImageSearch(search, {
           searchType: SEARCH_TYPE.TOKEN,
           searchOptions: { keywordSearch: worldHudSettings.includeKeywords },
         });
 
-    // Merge full search, and keywords into a single array
-    if (artSearch) {
-      artSearch.forEach((results) => {
-        results.forEach((img) => pushImage(img));
-      });
+        // Merge full search, and keywords into a single array
+        if (artSearch) {
+          artSearch.forEach((results) => {
+            results.forEach((img) => pushImage(img));
+          });
+        }
+      }
     }
   } else {
     images = fp_files.map((f) => {

@@ -1,3 +1,9 @@
+# 4.5.2
+
+- Fixed Token HUD button appearing to players only when the token has attached 'Shared' images
+- When 'Randomize Wildcard Images' is enabled under the Prototype Token the module will now use Foundry's default getTokenImages() implementation
+  - Will allow images to be retrieved for player even without 'Use File Browser' permissions
+
 # 4.5.1
 
 - Fixed errors thrown with Token HUD > 'Update Actor portrait' & 'Use a similarly named file' settings on
