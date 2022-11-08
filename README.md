@@ -25,6 +25,10 @@ Main features include:
 
 For the comprehensive list of settings and features checkout the module's [wiki](https://github.com/Aedif/TokenVariants/wiki).
 
+Watch a short feature showcase on YouTube:
+
+[![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
+
 You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to helping me to continue working on FoundryVTT modules you will be granted access to a selection of pre-configured animated overlays to be used along with this module:
 
 !["Animated Overlays"](./docs/animated_overlays.gif)
@@ -32,10 +36,6 @@ You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to h
 Higher tiers will also grant you condition rings:
 
 !["Condition Ring Overlays"](./docs/condition_rings.gif)
-
-Watch a short feature showcase on YouTube:
-
-[![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
 
 ## Image to User mappings
 
