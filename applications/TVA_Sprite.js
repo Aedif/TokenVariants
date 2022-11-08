@@ -223,6 +223,7 @@ export class TVA_Sprite extends PIXI.Sprite {
     if (this.texture?.baseTexture.resource.source?.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();
     }
+    this.stopAnimation();
     super.destroy();
   }
 }
