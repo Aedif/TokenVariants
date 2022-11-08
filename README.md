@@ -29,6 +29,10 @@ You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to h
 
 !["Animated Overlays"](./docs/animated_overlays.gif)
 
+Higher tiers will also grant you condition rings:
+
+!["Condition Ring Overlays"](./docs/condition_rings.gif)
+
 Watch a short feature showcase on YouTube:
 
 [![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
