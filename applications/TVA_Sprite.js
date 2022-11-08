@@ -1,3 +1,59 @@
+class OutlineFilter extends OutlineOverlayFilter {
+  /** @inheritdoc */
+  static createFragmentShader() {
+    return `
+    varying vec2 vTextureCoord;
+    varying vec2 vFilterCoord;
+    uniform sampler2D uSampler;
+    
+    uniform vec2 thickness;
+    uniform vec4 outlineColor;
+    uniform vec4 filterClamp;
+    uniform float alphaThreshold;
+    uniform float time;
+    uniform bool knockout;
+    uniform bool wave;
+    
+    ${this.CONSTANTS}
+    ${this.WAVE()}
+    
+    void main(void) {
+        float dist = distance(vFilterCoord, vec2(0.5)) * 2.0;
+        vec4 ownColor = texture2D(uSampler, vTextureCoord);
+        vec4 wColor = wave ? outlineColor * 
+                             wcos(0.0, 1.0, dist * 75.0, 
+                                  -time * 0.01 + 3.0 * dot(vec4(1.0), ownColor)) 
+                             * 0.33 * (1.0 - dist) : vec4(0.0);
+        float texAlpha = smoothstep(alphaThreshold, 1.0, ownColor.a);
+        vec4 curColor;
+        float maxAlpha = 0.;
+        vec2 displaced;
+        for ( float angle = 0.0; angle <= TWOPI; angle += ${this.#quality.toFixed(7)} ) {
+            displaced.x = vTextureCoord.x + thickness.x * cos(angle);
+            displaced.y = vTextureCoord.y + thickness.y * sin(angle);
+            curColor = texture2D(uSampler, clamp(displaced, filterClamp.xy, filterClamp.zw));
+            curColor.a = clamp((curColor.a - 0.6) * 2.5, 0.0, 1.0);
+            maxAlpha = max(maxAlpha, curColor.a);
+        }
+        float resultAlpha = max(maxAlpha, texAlpha);
+        vec3 result = (ownColor.rgb + outlineColor.rgb * (1.0 - texAlpha)) * resultAlpha;
+        gl_FragColor = vec4((ownColor.rgb + outlineColor.rgb * (1. - ownColor.a)) * resultAlpha, resultAlpha);
+    }
+    `;
+  }
+
+  static get #quality() {
+    switch (canvas.performance.mode) {
+      case CONST.CANVAS_PERFORMANCE_MODES.LOW:
+        return (Math.PI * 2) / 10;
+      case CONST.CANVAS_PERFORMANCE_MODES.MED:
+        return (Math.PI * 2) / 20;
+      default:
+        return (Math.PI * 2) / 30;
+    }
+  }
+}
+
 export class TVA_Sprite extends PIXI.Sprite {
   constructor(texture, token, config) {
     super(texture);
@@ -11,6 +67,11 @@ export class TVA_Sprite extends PIXI.Sprite {
         offsetY: 0,
         angle: 0,
         filter: 'NONE',
+        filterOptions: {
+          outlineColor: [0, 0, 0, 1],
+          trueThickness: 1,
+          animate: false,
+        },
         inheritTint: false,
         underlay: false,
         linkRotation: true,
@@ -20,6 +81,11 @@ export class TVA_Sprite extends PIXI.Sprite {
         tint: null,
         loop: true,
         playOnce: false,
+        animation: {
+          rotate: false,
+          duration: 5000,
+          clockwise: true,
+        },
       },
       config
     );
@@ -106,6 +172,11 @@ export class TVA_Sprite extends PIXI.Sprite {
     let filter = PIXI.filters[config.filter];
     if (filter) {
       this.filters = [new filter()];
+    } else if (config.filter === 'OutlineOverlayFilter') {
+      filter = OutlineFilter.create(config.filterOptions);
+      filter.thickness = config.filterOptions.trueThickness ?? 1;
+      filter.animate = config.filterOptions.animate ?? false;
+      this.filters = [filter];
     } else {
       this.filters = [];
     }
@@ -118,6 +189,34 @@ export class TVA_Sprite extends PIXI.Sprite {
     this.tint = tint ? Color.from(tint) : 0xffffff;
 
     this.visible = true;
+
+    if (config.animation.rotate) {
+      this.animate(config);
+    } else {
+      this.stopAnimation();
+    }
+  }
+
+  async stopAnimation() {
+    if (this.animationName) {
+      CanvasAnimation.terminateAnimation(this.animationName);
+    }
+  }
+
+  //test
+  async animate(config) {
+    if (!this.animationName) this.animationName = this.token.sourceId + '.' + randomID(5);
+
+    let newAngle = this.angle + (config.animation.clockwise ? 360 : -360);
+    const rotate = [{ parent: this, attribute: 'angle', to: newAngle }];
+
+    const completed = await CanvasAnimation.animate(rotate, {
+      duration: config.animation.duration,
+      name: this.animationName,
+    });
+    if (completed) {
+      this.animate(config);
+    }
   }
 
   destroy() {

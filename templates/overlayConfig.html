@@ -128,9 +128,61 @@
             {{/each}}
           </select>
         </div>
-      </div>
+    </div>
 
-      <input type="hidden" name="effect" value="{{effect}}">
+    <div class="filterOptions" {{#unless showOutlineSettings}}hidden{{/unless}}>
+
+        <h3>Filter Options</h3>
+
+        <div class="form-group">
+            <label>Color</label>
+            <div class="form-fields">
+                <input class="color" type="text" name="filterOptions.outlineColor" value="{{filterOptions.outlineColor}}">
+                <input type="color" value="{{filterOptions.outlineColor}}" data-edit="filterOptions.outlineColor">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Thickness</label>
+            <div class="form-fields">
+                <input type="range" name="filterOptions.trueThickness" value="{{filterOptions.trueThickness}}" min="0" max="5" step="0.01">
+                <span class="range-value">{{filterOptions.trueThickness}}</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Oscillate</label>
+            <div class="form-fields">
+                <input type="checkbox" name="filterOptions.animate" data-dtype="Boolean" value="{{filterOptions.animate}}" {{#if filterOptions.animate}}checked{{/if}}>
+            </div>
+        </div>
+    </div>
+
+    <h2>Animation</h2>
+
+    <div class="form-group">
+        <label>Rotate</label>
+        <div class="form-fields">
+            <input type="checkbox" name="animation.rotate" data-dtype="Boolean" value="{{animation.rotate}}" {{#if animation.rotate}}checked{{/if}}>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Duration (ms)</label>
+        <div class="form-fields">
+            <input type="range" name="animation.duration" value="{{animation.duration}}" min="100" max="30000" step="100">
+            <span class="range-value">{{animation.duration}}</span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Clockwise</label>
+        <div class="form-fields">
+            <input type="checkbox" name="animation.clockwise" data-dtype="Boolean" value="{{animation.clockwise}}" {{#if animation.clockwise}}checked{{/if}}>
+        </div>
+    </div>
+
+    <input type="hidden" name="effect" value="{{effect}}">
 
     <footer class="sheet-footer flexrow">
         <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>

@@ -27,6 +27,14 @@ export default class OverlayConfig extends FormApplication {
     super.activateListeners(html);
     html.find('input,select').on('change', this._onInputChange.bind(this));
 
+    html.find('[name="filter"]').on('change', (event) => {
+      if (event.target.value === 'OutlineOverlayFilter') {
+        html.find('.filterOptions').show();
+      } else {
+        html.find('.filterOptions').hide();
+      }
+    });
+
     // Controls for locking scale sliders together
     let scaleState = { locked: true };
     const lockButtons = $(html).find('.scaleLock > a');
@@ -52,12 +60,28 @@ export default class OverlayConfig extends FormApplication {
     });
   }
 
+  _convertColor(colString) {
+    try {
+      const c = Color.fromString(colString);
+      const rgba = c.rgb;
+      rgba.push(1);
+      return rgba;
+    } catch (e) {
+      return [1, 1, 1, 1];
+    }
+  }
+
   async _onInputChange(event) {
     if (event.target.type === 'range') {
       this.previewConfig[event.target.name] = parseFloat($(event.target).val());
     } else if (event.target.type === 'color') {
       const color = $(event.target).siblings('.color');
-      this.previewConfig[color.attr('name')] = event.target.value;
+
+      if (color.attr('name') === 'filterOptions.outlineColor') {
+        this.previewConfig[color.attr('name')] = this._convertColor(event.target.value);
+      } else {
+        this.previewConfig[color.attr('name')] = event.target.value;
+      }
     } else if (event.target.type === 'checkbox') {
       this.previewConfig[event.target.name] = event.target.checked;
     } else {
@@ -92,8 +116,9 @@ export default class OverlayConfig extends FormApplication {
 
   async _applyPreviews() {
     const icons = this.getPreviewIcons();
+    const preview = expandObject(this.previewConfig);
     for (const icon of icons) {
-      icon.refresh(this.previewConfig, true);
+      icon.refresh(preview, true);
     }
   }
 
@@ -106,7 +131,9 @@ export default class OverlayConfig extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    data.filters = Object.keys(PIXI.filters).sort();
+    data.filters = Object.keys(PIXI.filters);
+    data.filters.push('OutlineOverlayFilter');
+    data.filters.sort();
     data.filters.unshift('NONE');
     const settings = mergeObject(
       {
@@ -117,6 +144,11 @@ export default class OverlayConfig extends FormApplication {
         offsetY: 0,
         angle: 0,
         filter: 'NONE',
+        filterOptions: {
+          outlineColor: [0, 0, 0, 1],
+          trueThickness: 1,
+          animate: false,
+        },
         inheritTint: false,
         underlay: false,
         linkRotation: true,
@@ -126,9 +158,21 @@ export default class OverlayConfig extends FormApplication {
         loop: true,
         playOnce: false,
         effect: null,
+        animation: {
+          rotate: false,
+          duration: 5000,
+          clockwise: true,
+        },
       },
       this.config || {}
     );
+
+    settings.filterOptions.outlineColor = Color.fromRGB(
+      settings.filterOptions.outlineColor
+    ).toString();
+
+    if (settings.filter === 'OutlineOverlayFilter') data.showOutlineSettings = true;
+
     return mergeObject(data, settings);
   }
 
@@ -142,6 +186,12 @@ export default class OverlayConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    if (this.callback) this.callback(formData);
+    if ('filterOptions.outlineColor' in formData) {
+      formData['filterOptions.outlineColor'] = this._convertColor(
+        formData['filterOptions.outlineColor']
+      );
+    }
+
+    if (this.callback) this.callback(expandObject(formData));
   }
 }
