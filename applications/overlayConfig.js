@@ -28,11 +28,10 @@ export default class OverlayConfig extends FormApplication {
     html.find('input,select').on('change', this._onInputChange.bind(this));
 
     html.find('[name="filter"]').on('change', (event) => {
-      if (event.target.value === 'OutlineOverlayFilter') {
-        html.find('.filterOptions').show();
-      } else {
-        html.find('.filterOptions').hide();
-      }
+      html.find('.filterOptions').empty();
+      const filterOptions = $(genFilterOptionControls(event.target.value));
+      html.find('.filterOptions').append(filterOptions);
+      this.activateListeners(filterOptions);
     });
 
     // Controls for locking scale sliders together
@@ -72,11 +71,13 @@ export default class OverlayConfig extends FormApplication {
   }
 
   async _onInputChange(event) {
-    if (event.target.type === 'range') {
+    if (event.target.name.startsWith('filterOptions')) {
+      const filterOptions = expandObject(this._getSubmitData()).filterOptions;
+      this.previewConfig.filterOptions = filterOptions;
+    } else if (event.target.type === 'range') {
       this.previewConfig[event.target.name] = parseFloat($(event.target).val());
     } else if (event.target.type === 'color') {
       const color = $(event.target).siblings('.color');
-
       if (color.attr('name') === 'filterOptions.outlineColor') {
         this.previewConfig[color.attr('name')] = this._convertColor(event.target.value);
       } else {
@@ -144,11 +145,7 @@ export default class OverlayConfig extends FormApplication {
         offsetY: 0,
         angle: 0,
         filter: 'NONE',
-        filterOptions: {
-          outlineColor: [0, 0, 0, 1],
-          trueThickness: 1,
-          animate: false,
-        },
+        filterOptions: {},
         inheritTint: false,
         underlay: false,
         linkRotation: true,
@@ -167,11 +164,16 @@ export default class OverlayConfig extends FormApplication {
       this.config || {}
     );
 
-    settings.filterOptions.outlineColor = Color.fromRGB(
-      settings.filterOptions.outlineColor
-    ).toString();
-
-    if (settings.filter === 'OutlineOverlayFilter') data.showOutlineSettings = true;
+    if (settings.filter !== 'NONE') {
+      const filterOptions = genFilterOptionControls(settings.filter, settings.filterOptions);
+      if (filterOptions) {
+        settings.filterOptions = filterOptions;
+      } else {
+        settings.filterOptions = null;
+      }
+    } else {
+      settings.filterOptions = null;
+    }
 
     return mergeObject(data, settings);
   }
@@ -181,17 +183,156 @@ export default class OverlayConfig extends FormApplication {
     this._removePreviews();
   }
 
-  /**
-   * @param {Event} event
-   * @param {Object} formData
-   */
-  async _updateObject(event, formData) {
+  _getSubmitData() {
+    const formData = super._getSubmitData();
     if ('filterOptions.outlineColor' in formData) {
       formData['filterOptions.outlineColor'] = this._convertColor(
         formData['filterOptions.outlineColor']
       );
     }
+    return formData;
+  }
 
+  /**
+   * @param {Event} event
+   * @param {Object} formData
+   */
+  async _updateObject(event, formData) {
     if (this.callback) this.callback(expandObject(formData));
+  }
+}
+
+export const FILTER_OPTIONS = {
+  OutlineOverlayFilter: {
+    outlineColor: [0, 0, 0, 1],
+    trueThickness: 1,
+    animate: false,
+  },
+  AlphaFilter: {
+    alpha: 1,
+  },
+  BlurFilter: {
+    strength: 8,
+    quality: 4,
+  },
+  BlurFilterPass: {
+    horizontal: false,
+    strength: 8,
+    quality: 4,
+  },
+  NoiseFilter: {
+    noise: 0.5,
+    seed: 4475160954091,
+  },
+};
+
+export const FILTER_CONTROLS = {
+  OutlineOverlayFilter: [
+    {
+      type: 'color',
+      label: 'Color',
+      name: 'outlineColor',
+    },
+    {
+      type: 'range',
+      label: 'Thickness',
+      name: 'trueThickness',
+      min: 0,
+      max: 5,
+      step: 0.01,
+    },
+    {
+      type: 'boolean',
+      label: 'Oscillate',
+      name: 'animate',
+    },
+  ],
+  AlphaFilter: [
+    {
+      type: 'range',
+      label: 'Alpha',
+      name: 'alpha',
+      min: 0,
+      max: 1,
+      step: 0.01,
+    },
+  ],
+  BlurFilter: [
+    { type: 'range', label: 'Strength', name: 'strength', min: 0, max: 20, step: 1 },
+    { type: 'range', label: 'Quality', name: 'quality', min: 0, max: 20, step: 1 },
+  ],
+  BlurFilterPass: [
+    {
+      type: 'boolean',
+      label: 'Horizontal',
+      name: 'horizontal',
+    },
+    { type: 'range', label: 'Strength', name: 'strength', min: 0, max: 20, step: 1 },
+    { type: 'range', label: 'Quality', name: 'quality', min: 0, max: 20, step: 1 },
+  ],
+  NoiseFilter: [
+    { type: 'range', label: 'Noise', name: 'noise', min: 0, max: 1, step: 0.01 },
+    { type: 'range', label: 'Seed', name: 'seed', min: 0, max: 100000, step: 1 },
+  ],
+};
+
+function genFilterOptionControls(filterName, filterOptions = {}) {
+  if (!(filterName in FILTER_CONTROLS)) return;
+
+  const options = mergeObject(FILTER_OPTIONS[filterName], filterOptions);
+  const values = getControlValues(filterName, options);
+
+  const controls = FILTER_CONTROLS[filterName];
+  let controlsHTML = '<h3>Filter Options</h3>\n';
+  for (const control of controls) {
+    controlsHTML += genControl(control, values);
+  }
+
+  return controlsHTML;
+}
+
+function getControlValues(filterName, options) {
+  if (filterName === 'OutlineOverlayFilter') {
+    options.outlineColor = Color.fromRGB(options.outlineColor).toString();
+  }
+  return options;
+}
+
+function genControl(control, values) {
+  const label = control.label;
+  const val = values[control.name];
+  const name = control.name;
+  const type = control.type;
+  if (type === 'color') {
+    return `
+<div class="form-group">
+  <label>${label}</label>
+  <div class="form-fields">
+      <input class="color" type="text" name="filterOptions.${name}" value="${val}">
+      <input type="color" value="${val}" data-edit="filterOptions.${name}">
+  </div>
+</div>
+`;
+  } else if (type === 'range') {
+    return `
+<div class="form-group">
+  <label>${label}</label>
+  <div class="form-fields">
+      <input type="range" name="filterOptions.${name}" value="${val}" min="${control.min}" max="${control.max}" step="${control.step}">
+      <span class="range-value">${val}</span>
+  </div>
+</div>
+`;
+  } else if (type === 'boolean') {
+    return `
+<div class="form-group">
+  <label>${label}</label>
+  <div class="form-fields">
+      <input type="checkbox" name="filterOptions.${name}" data-dtype="Boolean" value="${val}" ${
+      val ? 'checked' : ''
+    }>
+  </div>
+</div>
+    `;
   }
 }

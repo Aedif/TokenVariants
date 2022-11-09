@@ -1,3 +1,5 @@
+import { FILTER_CONTROLS, FILTER_OPTIONS } from './overlayConfig.js';
+
 class OutlineFilter extends OutlineOverlayFilter {
   /** @inheritdoc */
   static createFragmentShader() {
@@ -169,17 +171,8 @@ export class TVA_Sprite extends PIXI.Sprite {
       this.alpha = config.linkOpacity ? this.token.alpha : config.alpha;
     }
 
-    let filter = PIXI.filters[config.filter];
-    if (filter) {
-      this.filters = [new filter()];
-    } else if (config.filter === 'OutlineOverlayFilter') {
-      filter = OutlineFilter.create(config.filterOptions);
-      filter.thickness = config.filterOptions.trueThickness ?? 1;
-      filter.animate = config.filterOptions.animate ?? false;
-      this.filters = [filter];
-    } else {
-      this.filters = [];
-    }
+    // Apply filters
+    this.filters = this._getFilters(config);
 
     // Angle in degrees
     this.angle = config.linkRotation ? this.token.rotation + config.angle : config.angle;
@@ -195,6 +188,30 @@ export class TVA_Sprite extends PIXI.Sprite {
     } else {
       this.stopAnimation();
     }
+  }
+
+  _getFilters(config) {
+    const filterName = config.filter;
+    const FilterClass = PIXI.filters[filterName];
+    const options = mergeObject(FILTER_OPTIONS[filterName] || {}, config.filterOptions);
+    let filter;
+    if (FilterClass) {
+      let args = [];
+      const controls = FILTER_CONTROLS[filterName];
+      if (controls) {
+        controls.forEach((c) => args.push(options[c.name]));
+      }
+      filter = new FilterClass(...args);
+    } else if (filterName === 'OutlineOverlayFilter') {
+      filter = OutlineFilter.create(options);
+      filter.thickness = options.trueThickness ?? 1;
+      filter.animate = options.animate ?? false;
+    }
+
+    if (filter) {
+      return [filter];
+    }
+    return [];
   }
 
   async stopAnimation() {
