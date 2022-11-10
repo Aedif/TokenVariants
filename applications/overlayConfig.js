@@ -32,6 +32,7 @@ export default class OverlayConfig extends FormApplication {
       const filterOptions = $(genFilterOptionControls(event.target.value));
       html.find('.filterOptions').append(filterOptions);
       this.activateListeners(filterOptions);
+      this.setPosition({ height: 'auto' });
     });
 
     // Controls for locking scale sliders together
@@ -78,11 +79,8 @@ export default class OverlayConfig extends FormApplication {
       this.previewConfig[event.target.name] = parseFloat($(event.target).val());
     } else if (event.target.type === 'color') {
       const color = $(event.target).siblings('.color');
-      if (color.attr('name') === 'filterOptions.outlineColor') {
-        this.previewConfig[color.attr('name')] = this._convertColor(event.target.value);
-      } else {
-        this.previewConfig[color.attr('name')] = event.target.value;
-      }
+      color.val(event.target.value).trigger('change');
+      return;
     } else if (event.target.type === 'checkbox') {
       this.previewConfig[event.target.name] = event.target.checked;
     } else {
@@ -185,10 +183,22 @@ export default class OverlayConfig extends FormApplication {
 
   _getSubmitData() {
     const formData = super._getSubmitData();
-    if ('filterOptions.outlineColor' in formData) {
+    if (formData.filter === 'OutlineOverlayFilter' && 'filterOptions.outlineColor' in formData) {
       formData['filterOptions.outlineColor'] = this._convertColor(
         formData['filterOptions.outlineColor']
       );
+    } else if (formData.filter === 'BevelFilter') {
+      if ('filterOptions.lightColor' in formData)
+        formData['filterOptions.lightColor'] = Number(
+          Color.fromString(formData['filterOptions.lightColor'])
+        );
+      if ('filterOptions.shadowColor' in formData)
+        formData['filterOptions.shadowColor'] = Number(
+          Color.fromString(formData['filterOptions.shadowColor'])
+        );
+    } else if (formData.filter === 'DropShadowFilter' || formData.filter === 'GlowFilter') {
+      if ('filterOptions.color' in formData)
+        formData['filterOptions.color'] = Number(Color.fromString(formData['filterOptions.color']));
     }
     return formData;
   }
@@ -202,87 +212,304 @@ export default class OverlayConfig extends FormApplication {
   }
 }
 
-export const FILTER_OPTIONS = {
+export const FILTERS = {
   OutlineOverlayFilter: {
-    outlineColor: [0, 0, 0, 1],
-    trueThickness: 1,
-    animate: false,
+    defaultValues: {
+      outlineColor: [0, 0, 0, 1],
+      trueThickness: 1,
+      animate: false,
+    },
+    controls: [
+      {
+        type: 'color',
+        name: 'outlineColor',
+      },
+      {
+        type: 'range',
+        label: 'Thickness',
+        name: 'trueThickness',
+        min: 0,
+        max: 5,
+        step: 0.01,
+      },
+      {
+        type: 'boolean',
+        label: 'Oscillate',
+        name: 'animate',
+      },
+    ],
+    argType: 'args',
   },
   AlphaFilter: {
-    alpha: 1,
+    defaultValues: {
+      alpha: 1,
+    },
+    controls: [
+      {
+        type: 'range',
+        name: 'alpha',
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+    ],
+    argType: 'args',
   },
   BlurFilter: {
-    strength: 8,
-    quality: 4,
+    defaultValues: {
+      strength: 8,
+      quality: 4,
+    },
+    controls: [
+      { type: 'range', name: 'strength', min: 0, max: 20, step: 1 },
+      { type: 'range', name: 'quality', min: 0, max: 20, step: 1 },
+    ],
+    argType: 'args',
   },
   BlurFilterPass: {
-    horizontal: false,
-    strength: 8,
-    quality: 4,
+    defaultValues: {
+      horizontal: false,
+      strength: 8,
+      quality: 4,
+    },
+    controls: [
+      {
+        type: 'boolean',
+        name: 'horizontal',
+      },
+      { type: 'range', name: 'strength', min: 0, max: 20, step: 1 },
+      { type: 'range', name: 'quality', min: 0, max: 20, step: 1 },
+    ],
+    argType: 'args',
   },
   NoiseFilter: {
-    noise: 0.5,
-    seed: 4475160954091,
+    defaultValues: {
+      noise: 0.5,
+      seed: 4475160954091,
+    },
+    controls: [
+      { type: 'range', name: 'noise', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'seed', min: 0, max: 100000, step: 1 },
+    ],
+    argType: 'args',
   },
-};
-
-export const FILTER_CONTROLS = {
-  OutlineOverlayFilter: [
-    {
-      type: 'color',
-      label: 'Color',
-      name: 'outlineColor',
+  AdjustmentFilter: {
+    defaultValues: {
+      gamma: 1,
+      saturation: 1,
+      contrast: 1,
+      brightness: 1,
+      red: 1,
+      green: 1,
+      blue: 1,
+      alpha: 1,
     },
-    {
-      type: 'range',
-      label: 'Thickness',
-      name: 'trueThickness',
-      min: 0,
-      max: 5,
-      step: 0.01,
+    controls: [
+      { type: 'range', name: 'gamma', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'saturation', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'contrast', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'brightness', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'red', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'green', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'blue', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'alpha', min: 0, max: 1, step: 0.01 },
+    ],
+    argType: 'options',
+  },
+  AdvancedBloomFilter: {
+    defaultValues: {
+      threshold: 0.5,
+      bloomScale: 1,
+      brightness: 1,
+      blur: 8,
+      quality: 4,
     },
-    {
-      type: 'boolean',
-      label: 'Oscillate',
-      name: 'animate',
+    controls: [
+      { type: 'range', name: 'threshold', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'bloomScale', min: 0, max: 5, step: 0.01 },
+      { type: 'range', name: 'brightness', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'blur', min: 0, max: 20, step: 1 },
+      { type: 'range', name: 'quality', min: 0, max: 20, step: 1 },
+    ],
+    argType: 'options',
+  },
+  AsciiFilter: {
+    defaultValues: {
+      size: 8,
     },
-  ],
-  AlphaFilter: [
-    {
-      type: 'range',
-      label: 'Alpha',
-      name: 'alpha',
-      min: 0,
-      max: 1,
-      step: 0.01,
+    controls: [{ type: 'range', name: 'size', min: 0, max: 20, step: 0.01 }],
+    argType: 'args',
+  },
+  BevelFilter: {
+    defaultValues: {
+      rotation: 45,
+      thickness: 2,
+      lightColor: 0xffffff,
+      lightAlpha: 0.7,
+      shadowColor: 0x000000,
+      shadowAlpha: 0.7,
     },
-  ],
-  BlurFilter: [
-    { type: 'range', label: 'Strength', name: 'strength', min: 0, max: 20, step: 1 },
-    { type: 'range', label: 'Quality', name: 'quality', min: 0, max: 20, step: 1 },
-  ],
-  BlurFilterPass: [
-    {
-      type: 'boolean',
-      label: 'Horizontal',
-      name: 'horizontal',
+    controls: [
+      { type: 'range', name: 'rotation', min: 0, max: 360, step: 1 },
+      { type: 'range', name: 'thickness', min: 0, max: 20, step: 0.01 },
+      { type: 'color', name: 'lightColor' },
+      { type: 'range', name: 'lightAlpha', min: 0, max: 1, step: 0.01 },
+      { type: 'color', name: 'shadowColor' },
+      { type: 'range', name: 'shadowAlpha', min: 0, max: 1, step: 0.01 },
+    ],
+    argType: 'options',
+  },
+  BloomFilter: {
+    defaultValues: {
+      blur: 2,
+      quality: 4,
     },
-    { type: 'range', label: 'Strength', name: 'strength', min: 0, max: 20, step: 1 },
-    { type: 'range', label: 'Quality', name: 'quality', min: 0, max: 20, step: 1 },
-  ],
-  NoiseFilter: [
-    { type: 'range', label: 'Noise', name: 'noise', min: 0, max: 1, step: 0.01 },
-    { type: 'range', label: 'Seed', name: 'seed', min: 0, max: 100000, step: 1 },
-  ],
+    controls: [
+      { type: 'range', name: 'blur', min: 0, max: 20, step: 1 },
+      { type: 'range', name: 'quality', min: 0, max: 20, step: 1 },
+    ],
+    argType: 'args',
+  },
+  BulgePinchFilter: {
+    defaultValues: {
+      radius: 100,
+      strength: 1,
+    },
+    controls: [
+      { type: 'range', name: 'radius', min: 0, max: 500, step: 1 },
+      { type: 'range', name: 'strength', min: -1, max: 1, step: 0.01 },
+    ],
+    argType: 'options',
+  },
+  CRTFilter: {
+    defaultValues: {
+      curvature: 1,
+      lineWidth: 1,
+      lineContrast: 0.25,
+      verticalLine: false,
+      noise: 0.3,
+      noiseSize: 1,
+      seed: 0,
+      vignetting: 0.3,
+      vignettingAlpha: 1,
+      vignettingBlur: 0.3,
+      time: 0,
+    },
+    controls: [
+      { type: 'range', name: 'curvature', min: 0, max: 20, step: 0.01 },
+      { type: 'range', name: 'lineWidth', min: 0, max: 20, step: 0.01 },
+      { type: 'range', name: 'lineContrast', min: 0, max: 5, step: 0.01 },
+      { type: 'boolean', name: 'verticalLine' },
+      { type: 'range', name: 'noise', min: 0, max: 2, step: 0.01 },
+      { type: 'range', name: 'noiseSize', min: 0, max: 20, step: 0.01 },
+      { type: 'range', name: 'seed', min: 0, max: 100000, step: 1 },
+      { type: 'range', name: 'vignetting', min: 0, max: 20, step: 0.01 },
+      { type: 'range', name: 'vignettingAlpha', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'vignettingBlur', min: 0, max: 5, step: 0.01 },
+      { type: 'range', name: 'time', min: 0, max: 10000, step: 1 },
+    ],
+    argType: 'options',
+  },
+  DotFilter: {
+    defaultValues: {
+      scale: 1,
+      angle: 5,
+    },
+    controls: [
+      { type: 'range', name: 'scale', min: 0, max: 50, step: 1 },
+      { type: 'range', name: 'angle', min: 0, max: 360, step: 0.1 },
+    ],
+    argType: 'args',
+  },
+  DropShadowFilter: {
+    defaultValues: {
+      rotation: 45,
+      distance: 5,
+      color: 0x000000,
+      alpha: 0.5,
+      shadowOnly: false,
+      blur: 2,
+      quality: 3,
+    },
+    controls: [
+      { type: 'range', name: 'rotation', min: 0, max: 360, step: 0.1 },
+      { type: 'range', name: 'distance', min: 0, max: 100, step: 0.1 },
+      { type: 'color', name: 'color' },
+      { type: 'range', name: 'alpha', min: 0, max: 1, step: 0.01 },
+      { type: 'boolean', name: 'shadowOnly' },
+      { type: 'range', name: 'blur', min: 0, max: 20, step: 0.1 },
+      { type: 'range', name: 'quality', min: 0, max: 20, step: 1 },
+    ],
+    argType: 'options',
+  },
+  EmbossFilter: {
+    defaultValues: {
+      strength: 5,
+    },
+    controls: [{ type: 'range', name: 'strength', min: 0, max: 20, step: 1 }],
+    argType: 'args',
+  },
+  GlitchFilter: {
+    defaultValues: {
+      slices: 5,
+      offset: 100,
+      direction: 0,
+      fillMode: 0,
+      seed: 0,
+      average: false,
+      minSize: 8,
+      sampleSize: 512,
+    },
+    controls: [
+      { type: 'range', name: 'slices', min: 0, max: 50, step: 1 },
+      { type: 'range', name: 'distance', min: 0, max: 1000, step: 1 },
+      { type: 'range', name: 'direction', min: 0, max: 360, step: 0.1 },
+      {
+        type: 'select',
+        name: 'fillMode',
+        options: [
+          { value: 0, label: 'TRANSPARENT' },
+          { value: 1, label: 'ORIGINAL' },
+          { value: 2, label: 'LOOP' },
+          { value: 3, label: 'CLAMP' },
+          { value: 4, label: 'MIRROR' },
+        ],
+      },
+      { type: 'range', name: 'seed', min: 0, max: 10000, step: 1 },
+      { type: 'boolean', name: 'average' },
+      { type: 'range', name: 'minSize', min: 0, max: 500, step: 1 },
+      { type: 'range', name: 'sampleSize', min: 0, max: 1024, step: 1 },
+    ],
+    argType: 'options',
+  },
+  GlowFilter: {
+    defaultValues: {
+      distance: 10,
+      outerStrength: 4,
+      innerStrength: 0,
+      color: 0xffffff,
+      quality: 0.1,
+      knockout: false,
+    },
+    controls: [
+      { type: 'range', name: 'distance', min: 1, max: 50, step: 1 },
+      { type: 'range', name: 'outerStrength', min: 0, max: 20, step: 1 },
+      { type: 'range', name: 'innerStrength', min: 0, max: 20, step: 1 },
+      { type: 'color', name: 'color' },
+      { type: 'range', name: 'quality', min: 0, max: 5, step: 0.1 },
+      { type: 'boolean', name: 'knockout' },
+    ],
+    argType: 'options',
+  },
 };
 
 function genFilterOptionControls(filterName, filterOptions = {}) {
-  if (!(filterName in FILTER_CONTROLS)) return;
+  if (!(filterName in FILTERS)) return;
 
-  const options = mergeObject(FILTER_OPTIONS[filterName], filterOptions);
+  const options = mergeObject(FILTERS[filterName].defaultValues, filterOptions);
   const values = getControlValues(filterName, options);
 
-  const controls = FILTER_CONTROLS[filterName];
+  const controls = FILTERS[filterName].controls;
   let controlsHTML = '<h3>Filter Options</h3>\n';
   for (const control of controls) {
     controlsHTML += genControl(control, values);
@@ -294,14 +521,19 @@ function genFilterOptionControls(filterName, filterOptions = {}) {
 function getControlValues(filterName, options) {
   if (filterName === 'OutlineOverlayFilter') {
     options.outlineColor = Color.fromRGB(options.outlineColor).toString();
+  } else if (filterName === 'BevelFilter') {
+    options.lightColor = Color.from(options.lightColor).toString();
+    options.shadowColor = Color.from(options.shadowColor).toString();
+  } else if (filterName === 'DropShadowFilter' || filterName === 'GlowFilter') {
+    options.color = Color.from(options.color).toString();
   }
   return options;
 }
 
 function genControl(control, values) {
-  const label = control.label;
   const val = values[control.name];
   const name = control.name;
+  const label = control.label ?? name.charAt(0).toUpperCase() + name.slice(1);
   const type = control.type;
   if (type === 'color') {
     return `
@@ -334,5 +566,22 @@ function genControl(control, values) {
   </div>
 </div>
     `;
+  } else if (type === 'select') {
+    let select = `
+    <div class="form-group">
+    <label>${label}</label>
+    <div class="form-fields">
+      <select name="${name}">
+`;
+
+    for (const opt of control.options) {
+      select += `<option value="${opt.value}" ${val === opt.value ? 'selected="selected"' : ''}>${
+        opt.label
+      }</option>`;
+    }
+
+    select += `</select></div></div>`;
+
+    return select;
   }
 }

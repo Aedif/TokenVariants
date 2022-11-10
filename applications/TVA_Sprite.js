@@ -1,4 +1,4 @@
-import { FILTER_CONTROLS, FILTER_OPTIONS } from './overlayConfig.js';
+import { FILTERS } from './overlayConfig.js';
 
 class OutlineFilter extends OutlineOverlayFilter {
   /** @inheritdoc */
@@ -69,11 +69,7 @@ export class TVA_Sprite extends PIXI.Sprite {
         offsetY: 0,
         angle: 0,
         filter: 'NONE',
-        filterOptions: {
-          outlineColor: [0, 0, 0, 1],
-          trueThickness: 1,
-          animate: false,
-        },
+        filterOptions: {},
         inheritTint: false,
         underlay: false,
         linkRotation: true,
@@ -193,15 +189,21 @@ export class TVA_Sprite extends PIXI.Sprite {
   _getFilters(config) {
     const filterName = config.filter;
     const FilterClass = PIXI.filters[filterName];
-    const options = mergeObject(FILTER_OPTIONS[filterName] || {}, config.filterOptions);
+    const options = mergeObject(FILTERS[filterName]?.defaultValues || {}, config.filterOptions);
     let filter;
     if (FilterClass) {
-      let args = [];
-      const controls = FILTER_CONTROLS[filterName];
-      if (controls) {
-        controls.forEach((c) => args.push(options[c.name]));
+      if (FILTERS[filterName]?.argType === 'args') {
+        let args = [];
+        const controls = FILTERS[filterName]?.controls;
+        if (controls) {
+          controls.forEach((c) => args.push(options[c.name]));
+        }
+        filter = new FilterClass(...args);
+      } else if (FILTERS[filterName]?.argType === 'options') {
+        filter = new FilterClass(options);
+      } else {
+        filter = new FilterClass();
       }
-      filter = new FilterClass(...args);
     } else if (filterName === 'OutlineOverlayFilter') {
       filter = OutlineFilter.create(options);
       filter.thickness = options.trueThickness ?? 1;

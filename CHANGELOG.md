@@ -1,3 +1,10 @@
+# 4.7.0
+
+> Note that some of these community filters will only be available if Token Magic FX is active.
+
+- Controls added for the following overlay filters:
+  - OutlineOverlay, Alpha, Blur, BlurPass, Noise, Adjustment, AdvancedBloom, Ascii, Bevel, Bloom, BulgePinch, CRT, Dot, DropShadow, Emboss, Glitch, Glow
+
 # 4.6.0
 
 Overlays
