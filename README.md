@@ -33,7 +33,7 @@ You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to h
 
 !["Animated Overlays"](./docs/animated_overlays.gif)
 
-Higher tiers will also grant you condition rings:
+Higher tiers will also grant you condition rings (v10 exclusive):
 
 !["Condition Ring Overlays"](./docs/condition_rings.gif)
 
