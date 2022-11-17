@@ -49,13 +49,22 @@ By Shift+Left-clicking the Token HUD button you are able to override certain mod
 
 !["Setting Override"](./docs/override.png)
 
-### Status Config
+## Status Config
 
 Allows to map images to Visibility/Combat status and Active Effects.
 
 !["Status Configuration"](./docs/status_config.png)
 
 The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
+
+### HP Based Effects
+
+Instead of effect names the module also allows to enter hp comparisons into these fields allowing you to apply images and configuration based on the current health of the token:
+
+![HP Effects](https://user-images.githubusercontent.com/7693704/202446190-3ed56f37-3ad8-438d-a700-b3b18f25d2c6.png)
+
+- Accepts both percentages and exact values (e.g. `hp<=15`, `hp=100%`)
+- Accepted signs: `<, >, =, <=, >=`
 
 ## Installation
 
