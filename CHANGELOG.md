@@ -1,9 +1,20 @@
+# 4.8.0
+
+- Controls added for the following filters:
+  - Godray, KawaseBlur, OldFilm, Outline,Pixelate, RGBSplit, RadialBlur, Reflection
+- New simulated effect added: `hp`
+  - Allows to apply images, overlays, and configurations to tokens based on their current health
+  - e.g. `hp<50%` will be applied when actors health drops bellow 50%
+  - Accepts both percentages and exact values (e.g. `hp<=15`, `hp=100%`)
+  - Accepted signs: `<, >, =, <=, >=`
+  - HP effects with the same priority will overwrite each other, if you want multiple HP effects to be active at the same time set their priorities to unique values
+
 # 4.7.0
 
 > Note that some of these community filters will only be available if Token Magic FX is active.
 
 - Controls added for the following overlay filters:
-  - OutlineOverlay, Alpha, Blur, BlurPass, Noise, Adjustment, AdvancedBloom, Ascii, Bevel, Bloom, BulgePinch, CRT, Dot, DropShadow, Emboss, Glitch, Glow
+  - Alpha, Blur, BlurPass, Noise, Adjustment, AdvancedBloom, Ascii, Bevel, Bloom, BulgePinch, CRT, Dot, DropShadow, Emboss, Glitch, Glow
 
 # 4.6.0
 

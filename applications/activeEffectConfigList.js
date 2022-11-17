@@ -35,7 +35,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       closeOnSubmit: false,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      width: 470,
+      width: 490,
     });
   }
 
@@ -376,7 +376,10 @@ export default class ActiveEffectConfigList extends FormApplication {
           updateSettings({ globalMappings: effectMappings });
         } else {
           await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
-          this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
+          setTimeout(
+            () => this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings),
+            500
+          );
         }
       } else if (this.globalMappings) {
         setGlobalEffectMappings(null);

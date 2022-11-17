@@ -371,7 +371,7 @@ ol.token-variant-table .table-header {
 /* Active Effect Config List                */
 /* ---------------------------------------- */
 ol.token-variant-table .table-row .effect-priority {
-  flex: 0.5;
+  flex: 0.15;
 }
 
 ol.token-variant-table .table-row .effect-image {

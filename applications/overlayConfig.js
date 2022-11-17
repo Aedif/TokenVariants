@@ -196,7 +196,7 @@ export default class OverlayConfig extends FormApplication {
         formData['filterOptions.shadowColor'] = Number(
           Color.fromString(formData['filterOptions.shadowColor'])
         );
-    } else if (formData.filter === 'DropShadowFilter' || formData.filter === 'GlowFilter') {
+    } else if (['DropShadowFilter', 'GlowFilter', 'OutlineFilter'].includes(formData.filter)) {
       if ('filterOptions.color' in formData)
         formData['filterOptions.color'] = Number(Color.fromString(formData['filterOptions.color']));
     }
@@ -501,6 +501,128 @@ export const FILTERS = {
     ],
     argType: 'options',
   },
+  GodrayFilter: {
+    defaultValues: {
+      angle: 30,
+      gain: 0.5,
+      lacunarity: 2.5,
+      parallel: true,
+      time: 0,
+      alpha: 1.0,
+    },
+    controls: [
+      { type: 'range', name: 'angle', min: 0, max: 360, step: 0.1 },
+      { type: 'range', name: 'gain', min: 0, max: 5, step: 0.01 },
+      { type: 'range', name: 'lacunarity', min: 0, max: 5, step: 0.01 },
+      { type: 'boolean', name: 'parallel' },
+      { type: 'range', name: 'time', min: 0, max: 10000, step: 1 },
+      { type: 'range', name: 'alpha', min: 0, max: 1, step: 0.01 },
+    ],
+    argType: 'options',
+  },
+  KawaseBlurFilter: {
+    defaultValues: {
+      blur: 4,
+      quality: 3,
+      clamp: false,
+    },
+    controls: [
+      { type: 'range', name: 'blur', min: 0, max: 20, step: 0.1 },
+      { type: 'range', name: 'quality', min: 0, max: 20, step: 1 },
+      { type: 'boolean', name: 'clamp' },
+    ],
+    argType: 'args',
+  },
+  OldFilmFilter: {
+    defaultValues: {
+      sepia: 0.3,
+      noise: 0.3,
+      noiseSize: 1.0,
+      scratch: 0.5,
+      scratchDensity: 0.3,
+      scratchWidth: 1.0,
+      vignetting: 0.3,
+      vignettingAlpha: 1.0,
+      vignettingBlur: 0.3,
+    },
+    controls: [
+      { type: 'range', name: 'sepia', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'noise', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'noiseSize', min: 0, max: 5, step: 0.01 },
+      { type: 'range', name: 'scratch', min: 0, max: 5, step: 0.01 },
+      { type: 'range', name: 'scratchDensity', min: 0, max: 5, step: 0.01 },
+      { type: 'range', name: 'scratchWidth', min: 0, max: 20, step: 0.01 },
+      { type: 'range', name: 'vignetting', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'vignettingAlpha', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'vignettingBlur', min: 0, max: 5, step: 0.01 },
+    ],
+    argType: 'options',
+  },
+  OutlineFilter: {
+    defaultValues: {
+      thickness: 1,
+      color: 0x000000,
+      quality: 0.1,
+    },
+    controls: [
+      { type: 'range', name: 'thickness', min: 0, max: 20, step: 0.1 },
+      { type: 'color', name: 'color' },
+      { type: 'range', name: 'quality', min: 0, max: 1, step: 0.01 },
+    ],
+    argType: 'args',
+  },
+  PixelateFilter: {
+    defaultValues: {
+      size: 1,
+    },
+    controls: [{ type: 'range', name: 'size', min: 1, max: 100, step: 1 }],
+    argType: 'args',
+  },
+  RGBSplitFilter: {
+    defaultValues: {
+      red: [-10, 0],
+      green: [0, 10],
+      blue: [0, 0],
+    },
+    controls: [
+      { type: 'point', name: 'red', min: 0, max: 50, step: 1 },
+      { type: 'point', name: 'green', min: 0, max: 50, step: 1 },
+      { type: 'point', name: 'blue', min: 0, max: 50, step: 1 },
+    ],
+    argType: 'args',
+  },
+  RadialBlurFilter: {
+    defaultValues: {
+      angle: 0,
+      center: [0, 0],
+      radius: -1,
+    },
+    controls: [
+      { type: 'range', name: 'angle', min: 0, max: 360, step: 1 },
+      { type: 'point', name: 'center', min: 0, max: 1000, step: 1 },
+      { type: 'range', name: 'radius', min: -1, max: 1000, step: 1 },
+    ],
+    argType: 'args',
+  },
+  ReflectionFilter: {
+    defaultValues: {
+      mirror: true,
+      boundary: 0.5,
+      amplitude: [0, 20],
+      waveLength: [30, 100],
+      alpha: [1, 1],
+      time: 0,
+    },
+    controls: [
+      { type: 'boolean', name: 'mirror' },
+      { type: 'range', name: 'boundary', min: 0, max: 1, step: 0.01 },
+      { type: 'point', name: 'amplitude', min: 0, max: 100, step: 1 },
+      { type: 'point', name: 'waveLength', min: 0, max: 500, step: 1 },
+      { type: 'point', name: 'alpha', min: 0, max: 1, step: 0.01 },
+      { type: 'range', name: 'time', min: 0, max: 10000, step: 1 },
+    ],
+    argType: 'options',
+  },
 };
 
 function genFilterOptionControls(filterName, filterOptions = {}) {
@@ -524,7 +646,7 @@ function getControlValues(filterName, options) {
   } else if (filterName === 'BevelFilter') {
     options.lightColor = Color.from(options.lightColor).toString();
     options.shadowColor = Color.from(options.shadowColor).toString();
-  } else if (filterName === 'DropShadowFilter' || filterName === 'GlowFilter') {
+  } else if (['DropShadowFilter', 'GlowFilter', 'OutlineFilter'].includes(filterName)) {
     options.color = Color.from(options.color).toString();
   }
   return options;
@@ -583,5 +705,19 @@ function genControl(control, values) {
     select += `</select></div></div>`;
 
     return select;
+  } else if (type === 'point') {
+    return `
+<div class="form-group">
+  <label>${label}</label>
+  <div class="form-fields">
+      <input type="range" name="filterOptions.${name}" value="${val[0]}" min="${control.min}" max="${control.max}" step="${control.step}">
+      <span class="range-value">${val[0]}</span>
+  </div>
+  <div class="form-fields">
+    <input type="range" name="filterOptions.${name}" value="${val[1]}" min="${control.min}" max="${control.max}" step="${control.step}">
+    <span class="range-value">${val[1]}</span>
+  </div>
+</div>
+`;
   }
 }

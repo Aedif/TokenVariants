@@ -31,6 +31,7 @@ import {
   getTokenEffects,
   isVideo,
   isImage,
+  applyHealthEffects,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -148,14 +149,14 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
       tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
       newImg.imgSrc = tokenDefaultImg.imgSrc;
       newImg.imgName = tokenDefaultImg.imgName;
-    } else if (!tokenDefaultImg) {
+    } else if (!tokenDefaultImg && newImg.imgSrc) {
       tokenUpdateObj['flags.token-variants.defaultImg'] = {
         imgSrc: token.document.texture.src,
         imgName: tokenImgName,
       };
     }
 
-    await updateTokenImage(newImg.imgSrc ? newImg.imgSrc : token.document.texture.src, {
+    await updateTokenImage(newImg.imgSrc ?? null, {
       token: token,
       imgName: newImg.imgName ? newImg.imgName : tokenImgName,
       tokenUpdate: tokenUpdateObj,
@@ -264,10 +265,8 @@ async function initialize() {
     );
     if (!('token-variants-combat' in mappings)) return;
 
-    const effects = getTokenEffects(token);
+    const effects = getTokenEffects(token, ['token-variants-combat']);
 
-    if (token.document.hidden) effects.push('token-variants-visibility');
-    // if (token.tva_dim) effects.push('token-variants-dim');
     effects.push('token-variants-combat');
     updateWithEffectMapping(token, effects, {
       added: ['token-variants-combat'],
@@ -285,8 +284,7 @@ async function initialize() {
     );
     if (!('token-variants-combat' in mappings)) return;
 
-    const effects = getTokenEffects(token);
-    if (token.document.hidden) effects.push('token-variants-visibility');
+    const effects = getTokenEffects(token, ['token-variants-combat']);
     await updateWithEffectMapping(token, effects, {
       removed: ['token-variants-combat'],
     });
@@ -320,8 +318,6 @@ async function initialize() {
         : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
       for (const token of tokens) {
         const effects = getTokenEffects(token);
-        if (token.inCombat) effects.unshift('token-variants-combat');
-        if (token.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
           added: added ? [effectName] : [],
           removed: !added ? [effectName] : [],
@@ -346,8 +342,6 @@ async function initialize() {
         : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
       for (const token of tokens) {
         const effects = getTokenEffects(token);
-        if (token.inCombat) effects.unshift('token-variants-combat');
-        if (token.document.hidden) effects.unshift('token-variants-visibility');
         await updateWithEffectMapping(token, effects, {
           added: added,
           removed: removed,
@@ -599,6 +593,24 @@ async function initialize() {
     }
   }
 
+  Hooks.on('preUpdateActor', function (actor, change, options, userId) {
+    if (game.user.id !== userId) return;
+
+    // If this is an HP update we need to determine what the current HP effects would be
+    // so that they can be compared against in 'updateActor' hook
+    if (change.system?.attributes?.hp) {
+      const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
+      for (const tkn of tokens) {
+        const hpEffects = [];
+        applyHealthEffects(tkn, hpEffects);
+        if (hpEffects.length) {
+          if (!options['token-variants']) options['token-variants'] = {};
+          options['token-variants'][tkn.id] = { hpEffects };
+        }
+      }
+    }
+  });
+
   Hooks.on('updateActor', async function (actor, change, options, userId) {
     if (game.user.id !== userId) return;
 
@@ -616,18 +628,41 @@ async function initialize() {
         }
       }
     }
+    if (change.system?.attributes?.hp) {
+      const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
+      for (const tkn of tokens) {
+        // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
+        const newHPEffects = [];
+        const added = [];
+        const removed = [];
+        applyHealthEffects(tkn, newHPEffects);
+        const oldEffects = options['token-variants']?.[tkn.id]?.hpEffects || [];
+
+        for (const ef of newHPEffects) {
+          if (!oldEffects.includes(ef)) {
+            added.push(ef);
+          }
+        }
+        for (const ef of oldEffects) {
+          if (!newHPEffects.includes(ef)) {
+            removed.push(ef);
+          }
+        }
+
+        if (added.length || removed.length)
+          updateWithEffectMapping(tkn, getTokenEffects(tkn), { added, removed });
+      }
+    }
   });
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
     if (game.user.id !== userId) return;
-    if ('actorLink' in change) {
+    if ('actorLink' in change || change.actorData?.system?.attributes?.hp) {
       updateWithEffectMapping(token, getTokenEffects(token));
     }
 
     if (game.userId === userId && 'hidden' in change) {
-      const effects = getTokenEffects(token);
-      if (token.inCombat) effects.unshift('token-variants-combat');
-      // if (token.tva_dim) effects.unshift('token-variants-dim');
+      const effects = getTokenEffects(token, ['token-variants-visibility']);
       if (change.hidden) effects.push('token-variants-visibility');
       updateWithEffectMapping(token, effects, {
         added: change.hidden ? ['token-variants-visibility'] : [],
@@ -1766,6 +1801,7 @@ Hooks.on('init', function () {
     updateTokenImage,
     exportSettingsToJSON,
     TVA_CONFIG,
+    applyHealthEffects,
   };
 });
 
@@ -1773,7 +1809,10 @@ Hooks.on('canvasReady', async function () {
   for (const tkn of canvas.tokens.placeables) {
     // Once canvas is ready we need to overwrite token images if specific maps exist for the user
     checkAndDisplayUserSpecificImage(tkn);
-    if (initialized) drawOverlays(tkn);
+    if (initialized) {
+      updateWithEffectMapping(tkn, getTokenEffects(tkn));
+      drawOverlays(tkn);
+    }
   }
 
   // // Effect Mappings may have changed while on a different scene, re-apply them

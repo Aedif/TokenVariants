@@ -105,7 +105,7 @@ export async function updateTokenImage(
     return;
   }
 
-  if (!imgName) imgName = getFileName(imgSrc);
+  if (imgSrc && !imgName) imgName = getFileName(imgSrc);
   if (!actor && token.actor) {
     actor = game.actors.get(token.actor.id);
   }
@@ -158,7 +158,7 @@ export async function updateTokenImage(
     tokenUpdateObj = modMergeObject(tokenUpdateObj, defaultConfig);
   }
 
-  if (tokenCustomConfig) {
+  if (tokenCustomConfig && !isEmpty(tokenCustomConfig)) {
     if (token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
       const tokenData = token.document ? token.document.toObject() : deepClone(token);
@@ -191,24 +191,26 @@ export async function updateTokenImage(
     tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
   }
 
-  if (actor && !token) {
-    TokenDataAdapter.formToData(actor.prototypeToken, tokenUpdateObj);
-    actorUpdate.token = tokenUpdateObj;
-    if (pack) {
-      queueActorUpdate(actor.id, actorUpdate, { pack: pack });
-    } else {
-      await (actor.document ?? actor).update(actorUpdate);
+  if (!isEmpty(tokenUpdateObj)) {
+    if (actor && !token) {
+      TokenDataAdapter.formToData(actor.prototypeToken, tokenUpdateObj);
+      actorUpdate.token = tokenUpdateObj;
+      if (pack) {
+        queueActorUpdate(actor.id, actorUpdate, { pack: pack });
+      } else {
+        await (actor.document ?? actor).update(actorUpdate);
+      }
     }
-  }
 
-  if (token) {
-    TokenDataAdapter.formToData(token, tokenUpdateObj);
-    if (TVA_CONFIG.updateTokenProto && token.actor) {
-      // Timeout to prevent race conditions with other modules namely MidiQOL
-      // this is a low priority update so it should be Ok to do
-      setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
+    if (token) {
+      TokenDataAdapter.formToData(token, tokenUpdateObj);
+      if (TVA_CONFIG.updateTokenProto && token.actor) {
+        // Timeout to prevent race conditions with other modules namely MidiQOL
+        // this is a low priority update so it should be Ok to do
+        setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
+      }
+      queueTokenUpdate(token.id, tokenUpdateObj, callback);
     }
-    queueTokenUpdate(token.id, tokenUpdateObj, callback);
   }
 }
 
@@ -422,6 +424,7 @@ export function getTokenConfig(imgSrc, imgName) {
  * returning a clean config that can be used in token update.
  */
 export function getTokenConfigForUpdate(imgSrc, imgName) {
+  if (!imgSrc || !imgName) return undefined;
   const tokenConfig = getTokenConfig(imgSrc, imgName);
   if (tokenConfig) {
     const config = deepClone(tokenConfig);
@@ -836,13 +839,6 @@ export async function drawOverlays(token) {
 
   let filteredOverlays = getTokenEffects(token);
 
-  if (token.inCombat) {
-    filteredOverlays.unshift('token-variants-combat');
-  }
-  if (token.document.hidden) {
-    filteredOverlays.unshift('token-variants-visibility');
-  }
-
   filteredOverlays = filteredOverlays
     .filter((ef) => ef in mappings && mappings[ef].overlay)
     .sort((ef1, ef2) => mappings[ef1].priority - mappings[ef2].priority)
@@ -978,28 +974,43 @@ export function getEffectsFromActor(actor) {
   return effects;
 }
 
-export function getTokenEffects(token) {
+export function getTokenEffects(token, ignore = []) {
   const data = token.document ? token.document : token;
+  let effects = [];
 
   if (game.system.id === 'pf2e') {
     if (data.actorLink) {
-      return getEffectsFromActor(token.actor);
+      effects = getEffectsFromActor(token.actor);
     } else {
-      return (data.actorData?.items || [])
+      effects = (data.actorData?.items || [])
         .filter((item) => item.type === 'condition')
         .map((item) => item.name);
     }
   } else {
     if (data.actorLink && token.actor) {
-      return getEffectsFromActor(token.actor);
+      effects = getEffectsFromActor(token.actor);
     } else {
       const actorEffects = getEffectsFromActor(token.actor);
-      return (data.effects || [])
+      effects = (data.effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
         .map((ef) => ef.label)
         .concat(actorEffects);
     }
   }
+
+  if (data.inCombat) {
+    effects.unshift('token-variants-combat');
+  }
+  if (data.hidden) {
+    effects.unshift('token-variants-visibility');
+  }
+
+  applyHealthEffects(token, effects);
+
+  // console.log('getTokenEffects', effects);
+
+  if (ignore.length) return effects.filter((ef) => !ignore.includes(ef));
+  else return effects;
 }
 
 export class TokenDataAdapter {
@@ -1026,4 +1037,72 @@ export class TokenDataAdapter {
       ['scale', 'mirrorX', 'mirrorY'].forEach((k) => delete formData[k]);
     }
   }
+}
+
+export function applyHealthEffects(token, effects = []) {
+  if (!token.actor) return;
+
+  token = token.document ?? token;
+
+  let attributes = {};
+
+  if (token.actorLink) {
+    attributes = token.actor.system?.attributes;
+  } else {
+    attributes = mergeObject(token.actor.system?.attributes, token.actorData?.system?.attributes, {
+      inplace: false,
+    });
+  }
+
+  const maxHP = attributes?.hp?.max;
+  const currHP = attributes?.hp?.value;
+
+  if (!isNaN(currHP) && !isNaN(maxHP)) {
+    const mappings = mergeObject(
+      TVA_CONFIG.globalMappings,
+      token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
+      { inplace: false }
+    );
+
+    const re = new RegExp(/hp([><=]+)(\d+)(%{0,1})/);
+
+    const hpPercent = (currHP / maxHP) * 100;
+
+    const matched = {};
+
+    for (const key of Object.keys(mappings)) {
+      const match = key.match(re);
+      if (match) {
+        const mapping = match[0];
+        const sign = match[1];
+        const val = match[2];
+        const isPercentage = Boolean(match[3]);
+
+        const toCompare = isPercentage ? hpPercent : currHP;
+
+        let passed = false;
+        if (sign === '=') {
+          passed = toCompare == val;
+        } else if (sign === '>') {
+          passed = toCompare > val;
+        } else if (sign === '<') {
+          passed = toCompare < val;
+        } else if (sign === '>=') {
+          passed = toCompare >= val;
+        } else if (sign === '<=') {
+          passed = toCompare <= val;
+        }
+
+        if (passed) {
+          matched[mappings[key].priority] = mapping;
+        }
+      }
+    }
+
+    for (const [k, v] of Object.entries(matched)) {
+      effects.unshift(v);
+    }
+  }
+
+  return effects;
 }

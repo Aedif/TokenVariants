@@ -67,7 +67,9 @@ export default class TokenCustomConfig extends TokenConfig {
   }
 
   applyCustomConfig() {
-    const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName) || {};
+    const tokenConfig = flattenObject(
+      this.config || getTokenConfig(this.imgSrc, this.imgName) || {}
+    );
     const form = $(this.form);
     for (const key of Object.keys(tokenConfig)) {
       const el = form.find(`[name="${key}"]`);
