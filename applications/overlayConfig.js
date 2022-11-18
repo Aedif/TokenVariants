@@ -17,6 +17,7 @@ export default class OverlayConfig extends FormApplication {
       minimizable: false,
       title: 'Overlay Settings',
       width: 500,
+      height: 700,
     });
   }
 
@@ -32,7 +33,6 @@ export default class OverlayConfig extends FormApplication {
       const filterOptions = $(genFilterOptionControls(event.target.value));
       html.find('.filterOptions').append(filterOptions);
       this.activateListeners(filterOptions);
-      this.setPosition({ height: 'auto' });
     });
 
     // Controls for locking scale sliders together
@@ -161,6 +161,9 @@ export default class OverlayConfig extends FormApplication {
           clockwise: true,
           relative: false,
         },
+        limitToUser: false,
+        limitedUsers: [],
+        alwaysVisible: false,
       },
       this.config || {}
     );
@@ -175,6 +178,10 @@ export default class OverlayConfig extends FormApplication {
     } else {
       settings.filterOptions = null;
     }
+
+    data.users = game.users.map((u) => {
+      return { id: u.id, name: u.name, selected: settings.limitedUsers.includes(u.id) };
+    });
 
     return mergeObject(data, settings);
   }

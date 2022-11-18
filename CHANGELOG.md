@@ -1,3 +1,12 @@
+# 4.10.0
+
+- Fixed `Link To Token Data` -> `Rotation` option
+- Added Visibility options to Overlay configuration
+  - Always Visible
+    - Overlay will be visible in explored areas of the map even when the Token is not
+  - Limit Visibility to Users
+    - Overlay will only be displayed to the selected list of users
+
 # 4.9.0
 
 - Added a control to duplicate Effect Configs

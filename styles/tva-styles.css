@@ -680,3 +680,15 @@ ol.token-variant-table .table-row .effect-config-script.active {
   flex: 0 0 50px;
   margin-left: 15px;
 }
+
+/* ---------------------------------------- */
+/* OVerlay Config Select                    */
+/* ---------------------------------------- */
+
+.limited-user-select option {
+  background: lightcoral;
+}
+
+.limited-user-select option:checked {
+  background: lightgreen;
+}

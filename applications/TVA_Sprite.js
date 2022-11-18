@@ -87,19 +87,27 @@ export class TVA_Sprite extends TokenMesh {
           clockwise: true,
           relative: false,
         },
+        limitToUser: false,
+        limitedUsers: [],
+        alwaysVisible: false,
       },
       config
     );
     this._tvaPlay().then(() => this.refresh());
   }
 
-  // get sort() {
-  //   return (this.object.document.sort || 0) + (this.tvaOverlayConfig.underlay ? -1 : 1);
-  // }
-
   get sort() {
     return this.overlaySort || this.object.document.sort || 0;
   }
+
+  get visible() {
+    return (
+      (this.object.visible || this.tvaOverlayConfig.alwaysVisible) &&
+      (!this.tvaOverlayConfig.limitToUser ||
+        this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
+    );
+  }
+  set visible(visible) {}
 
   async _tvaPlay() {
     // Ensure playback state for video
@@ -198,10 +206,10 @@ export class TVA_Sprite extends TokenMesh {
 
     // Angle in degrees
     if (fullRefresh) {
-      if (config.linkRotation) this.angle = this.object.rotation + config.angle;
+      if (config.linkRotation) this.angle = this.object.document.rotation + config.angle;
       else this.angle = config.angle;
     } else if (!config.animation.rotate) {
-      if (config.linkRotation) this.angle = this.object.rotation + config.angle;
+      if (config.linkRotation) this.angle = this.object.document.rotation + config.angle;
     }
 
     // Apply color tinting
