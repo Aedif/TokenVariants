@@ -56,9 +56,11 @@ class OutlineFilter extends OutlineOverlayFilter {
   }
 }
 
-export class TVA_Sprite extends PIXI.Sprite {
+export class TVA_Sprite extends TokenMesh {
   constructor(texture, token, config) {
-    super(texture);
+    super(token);
+
+    this.texture = texture;
 
     this.tvaOverlayConfig = mergeObject(
       {
@@ -83,13 +85,20 @@ export class TVA_Sprite extends PIXI.Sprite {
           rotate: false,
           duration: 5000,
           clockwise: true,
+          relative: false,
         },
       },
       config
     );
-    this.token = token;
-    this.visible = false;
     this._tvaPlay().then(() => this.refresh());
+  }
+
+  // get sort() {
+  //   return (this.object.document.sort || 0) + (this.tvaOverlayConfig.underlay ? -1 : 1);
+  // }
+
+  get sort() {
+    return this.overlaySort || this.object.document.sort || 0;
   }
 
   async _tvaPlay() {
@@ -119,37 +128,41 @@ export class TVA_Sprite extends PIXI.Sprite {
     }
   }
 
-  refresh(configuration, preview = false) {
+  refresh(configuration, preview = false, fullRefresh = true) {
     if (!this.texture) return;
-    this.visible = false;
     const config = mergeObject(this.tvaOverlayConfig, configuration, { inplace: !preview });
 
-    const source = foundry.utils.getProperty(this.texture, 'baseTexture.resource.source');
-    if (source && source.tagName === 'VIDEO') {
-      if (!source.loop && config.loop) {
-        game.video.play(source);
-      } else if (source.loop && !config.loop) {
-        game.video.stop(source);
+    if (fullRefresh) {
+      const source = foundry.utils.getProperty(this.texture, 'baseTexture.resource.source');
+      if (source && source.tagName === 'VIDEO') {
+        if (!source.loop && config.loop) {
+          game.video.play(source);
+        } else if (source.loop && !config.loop) {
+          game.video.stop(source);
+        }
+        source.loop = config.loop;
       }
-      source.loop = config.loop;
-    }
 
-    if (this.anchor) this.anchor.set(0.5 + config.offsetX, 0.5 + config.offsetY);
+      if (this.anchor) {
+        if (config.animation.relative) {
+          this.anchor.set(0.5, 0.5);
+        } else {
+          this.anchor.set(0.5 + config.offsetX, 0.5 + config.offsetY);
+        }
+      }
+    }
 
     // Scale the image using the same logic as the token
     const tex = this.texture;
     let aspect = tex.width / tex.height;
     const scale = this.scale;
     if (aspect >= 1) {
-      this.width = this.token.w * this.token.document.texture.scaleX;
+      this.width = this.object.w * this.object.document.texture.scaleX;
       scale.y = Number(scale.x);
     } else {
-      this.height = this.token.h * this.token.document.texture.scaleY;
+      this.height = this.object.h * this.object.document.texture.scaleY;
       scale.x = Number(scale.y);
     }
-
-    // Center the image
-    this.position.set(this.token.w / 2, this.token.h / 2);
 
     // Adjust scale according to config
     this.scale.x = this.scale.x * config.scaleX;
@@ -157,32 +170,50 @@ export class TVA_Sprite extends PIXI.Sprite {
 
     // Check if mirroring should be inherited from the token and if so apply it
     if (config.linkMirror) {
-      this.scale.x = Math.abs(this.scale.x) * (this.token.document.texture.scaleX < 0 ? -1 : 1);
-      this.scale.y = Math.abs(this.scale.y) * (this.token.document.texture.scaleY < 0 ? -1 : 1);
+      this.scale.x = Math.abs(this.scale.x) * (this.object.document.texture.scaleX < 0 ? -1 : 1);
+      this.scale.y = Math.abs(this.scale.y) * (this.object.document.texture.scaleY < 0 ? -1 : 1);
+    }
+
+    // Center the image
+    if (config.animation.relative) {
+      this.position.set(
+        this.object.document.x + this.object.w / 2 - config.offsetX * this.width,
+        this.object.document.y + this.object.h / 2 - config.offsetY * this.width
+      );
+    } else {
+      this.position.set(
+        this.object.document.x + this.object.w / 2,
+        this.object.document.y + this.object.h / 2
+      );
     }
 
     // Set alpha but only if playOnce is disabled and the video hasn't
     // finished playing yet. Otherwise we want to keep alpha as 0 to keep the video hidden
     if (!this.tvaVideoEnded) {
-      this.alpha = config.linkOpacity ? this.token.alpha : config.alpha;
+      this.alpha = config.linkOpacity ? this.object.document.alpha : config.alpha;
     }
 
     // Apply filters
-    this.filters = this._getFilters(config);
+    if (fullRefresh) this.filters = this._getFilters(config);
 
     // Angle in degrees
-    this.angle = config.linkRotation ? this.token.rotation + config.angle : config.angle;
+    if (fullRefresh) {
+      if (config.linkRotation) this.angle = this.object.rotation + config.angle;
+      else this.angle = config.angle;
+    } else if (!config.animation.rotate) {
+      if (config.linkRotation) this.angle = this.object.rotation + config.angle;
+    }
 
     // Apply color tinting
-    const tint = config.inheritTint ? this.token.document.texture.tint : config.tint;
+    const tint = config.inheritTint ? this.object.document.texture.tint : config.tint;
     this.tint = tint ? Color.from(tint) : 0xffffff;
 
-    this.visible = true;
-
-    if (config.animation.rotate) {
-      this.animate(config);
-    } else {
-      this.stopAnimation();
+    if (fullRefresh) {
+      if (config.animation.rotate) {
+        this.animate(config);
+      } else {
+        this.stopAnimation();
+      }
     }
   }
 
@@ -222,9 +253,8 @@ export class TVA_Sprite extends PIXI.Sprite {
     }
   }
 
-  //test
   async animate(config) {
-    if (!this.animationName) this.animationName = this.token.sourceId + '.' + randomID(5);
+    if (!this.animationName) this.animationName = this.object.sourceId + '.' + randomID(5);
 
     let newAngle = this.angle + (config.animation.clockwise ? 360 : -360);
     const rotate = [{ parent: this, attribute: 'angle', to: newAngle }];

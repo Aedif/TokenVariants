@@ -82,6 +82,7 @@ export default class ActiveEffectConfigList extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.find('.delete-mapping').click(this._onRemove.bind(this));
+    html.find('.clone-mapping').click(this._onClone.bind(this));
     html.find('.create-mapping').click(this._onCreate.bind(this));
     html.find('.save-mappings').click(this._onSaveMappings.bind(this));
     if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
@@ -255,6 +256,16 @@ export default class ActiveEffectConfigList extends FormApplication {
     await this._onSubmit(event);
     const li = event.currentTarget.closest('.table-row');
     this.object.mappings.splice(li.dataset.index, 1);
+    this.render();
+  }
+
+  async _onClone(event) {
+    event.preventDefault();
+    await this._onSubmit(event);
+    const li = event.currentTarget.closest('.table-row');
+    const clone = deepClone(this.object.mappings[li.dataset.index]);
+    clone.effectName = clone.effectName + ' - Copy';
+    this.object.mappings.push(clone);
     this.render();
   }
 

@@ -94,18 +94,20 @@ export default class OverlayConfig extends FormApplication {
     const tokens = this.token ? [this.token] : canvas.tokens.placeables;
     const previewIcons = [];
     for (const tkn of tokens) {
-      for (const c of tkn.children) {
-        if (c.tvaOverlayConfig && c.tvaOverlayConfig.effect === this.config.effect) {
-          // Effect icon found, however if we're in global preview then we need to take into account
-          // a token/actor specific mapping which may override the global one
-          if (this.token) {
-            previewIcons.push(c);
-          } else if (
-            !(tkn.actor ? tkn.actor.getFlag('token-variants', 'effectMappings') || {} : {})[
-              this.config.effect
-            ]
-          ) {
-            previewIcons.push(c);
+      if (tkn.tva_sprites) {
+        for (const c of tkn.tva_sprites) {
+          if (c.tvaOverlayConfig && c.tvaOverlayConfig.effect === this.config.effect) {
+            // Effect icon found, however if we're in global preview then we need to take into account
+            // a token/actor specific mapping which may override the global one
+            if (this.token) {
+              previewIcons.push(c);
+            } else if (
+              !(tkn.actor ? tkn.actor.getFlag('token-variants', 'effectMappings') || {} : {})[
+                this.config.effect
+              ]
+            ) {
+              previewIcons.push(c);
+            }
           }
         }
       }
@@ -157,6 +159,7 @@ export default class OverlayConfig extends FormApplication {
           rotate: false,
           duration: 5000,
           clockwise: true,
+          relative: false,
         },
       },
       this.config || {}

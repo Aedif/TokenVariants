@@ -345,7 +345,7 @@ ol.token-variant-table .table-row .path-share {
 ol.token-variant-table .table-row .path-controls,
 ol.token-variant-table .table-row .effect-controls,
 ol.token-variant-table .table-row .imgur-control {
-  flex: 0 0 40px;
+  flex: 0 0 44px;
   margin: 0;
   text-align: center;
 }

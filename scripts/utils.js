@@ -859,42 +859,41 @@ export async function drawOverlays(token) {
 
   if (overlays.length) {
     waitForTexture(token, async (token) => {
+      if (!token.tva_sprites) token.tva_sprites = [];
       // Temporarily mark every overlay for removal.
       // We'll only keep overlays that are still applicable to the token
       markAllOverlaysForRemoval(token);
 
       // To keep track of the overlay order
-      // We're starting at 100 to make sure there is room for underlays
-      let zIndex = 100;
+      let sort = (token.document.sort || 0) + 1;
       for (const ov of overlays) {
         let sprite = findTVASprite(ov.effect, token);
         if (sprite) {
           if (!isEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
             if (sprite.tvaOverlayConfig.img !== ov.img) {
-              token.removeChild(sprite);
-              sprite = token.addChild(await _drawEffectOverlay(token, ov));
+              canvas.primary.removeChild(sprite)?.destroy();
+              sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
+              token.tva_sprites.push(sprite);
             } else {
               sprite.refresh(ov);
             }
           }
         } else {
-          sprite = token.addChild(await _drawEffectOverlay(token, ov));
+          sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
+          token.tva_sprites.push(sprite);
         }
         sprite.tvaRemove = false; // Sprite in use, do not remove
 
         // Assign order to the overlay
         if (sprite.tvaOverlayConfig.underlay) {
-          sprite.zIndex = zIndex - 100;
-          // Make sure the token icon is always above the underlays
-          token.mesh.zIndex = sprite.zIndex + 1;
+          sprite.overlaySort = sort - 100;
         } else {
-          sprite.zIndex = zIndex;
+          sprite.overlaySort = sort;
         }
-        zIndex += 1;
+        sort += 1;
       }
 
       removeMarkedOverlays(token);
-      token.sortChildren();
       token.tva_drawing_overlays = false;
     });
   } else {
@@ -904,7 +903,7 @@ export async function drawOverlays(token) {
 }
 
 function markAllOverlaysForRemoval(token) {
-  for (const child of token.children) {
+  for (const child of token.tva_sprites) {
     if (child instanceof TVA_Sprite) {
       child.tvaRemove = true;
     }
@@ -912,15 +911,19 @@ function markAllOverlaysForRemoval(token) {
 }
 
 function removeMarkedOverlays(token) {
-  for (const child of token.children) {
+  const sprites = [];
+  for (const child of token.tva_sprites) {
     if (child.tvaRemove) {
-      token.removeChild(child)?.destroy();
+      canvas.primary.removeChild(child)?.destroy();
+    } else {
+      sprites.push(child);
     }
   }
+  token.tva_sprites = sprites;
 }
 
 function findTVASprite(effect, token) {
-  for (const child of token.children) {
+  for (const child of token.tva_sprites) {
     if (child.tvaOverlayConfig?.effect === effect) {
       return child;
     }
@@ -929,15 +932,11 @@ function findTVASprite(effect, token) {
 }
 
 function removeAllOverlays(token) {
-  const toRemove = [];
-  for (const child of token.children) {
-    if (child instanceof TVA_Sprite) {
-      toRemove.push(child);
+  if (token.tva_sprites)
+    for (const child of token.tva_sprites) {
+      canvas.primary.removeChild(child)?.destroy();
     }
-  }
-  for (const child of toRemove) {
-    token.removeChild(child)?.destroy();
-  }
+  token.tva_sprites = null;
 }
 
 export async function setGlobalEffectMappings(mappings) {
@@ -1006,8 +1005,6 @@ export function getTokenEffects(token, ignore = []) {
   }
 
   applyHealthEffects(token, effects);
-
-  // console.log('getTokenEffects', effects);
 
   if (ignore.length) return effects.filter((ef) => !ignore.includes(ef));
   else return effects;

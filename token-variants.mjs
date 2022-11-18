@@ -504,27 +504,28 @@ async function initialize() {
       'Token.prototype.draw',
       async function (wrapped, ...args) {
         let result = await wrapped(...args);
-        drawOverlays(this);
+        // drawOverlays(this);
         checkAndDisplayUserSpecificImage(this);
         return result;
       },
       'WRAPPER'
     );
 
-    libWrapper.register(
-      'token-variants',
-      'TokenMesh.prototype.refresh',
-      async function (wrapped, ...args) {
-        let result = await wrapped(...args);
-        for (const child of this.children) {
+    Hooks.on('refreshToken', (token) => {
+      if (token.tva_sprites)
+        for (const child of token.tva_sprites) {
           if (child instanceof TVA_Sprite) {
-            child.refresh();
+            child.refresh(null, false, false);
           }
         }
-        return result;
-      },
-      'WRAPPER'
-    );
+    });
+
+    Hooks.on('destroyToken', (token) => {
+      if (token.tva_sprites)
+        for (const child of token.tva_sprites) {
+          canvas.primary.removeChild(child)?.destroy();
+        }
+    });
 
     if (TVA_CONFIG.disableEffectIcons) {
       libWrapper.register(

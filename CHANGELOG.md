@@ -1,3 +1,11 @@
+# 4.9.0
+
+- Added a control to duplicate Effect Configs
+- Added `Relative` option under Overlay Animation
+  - By default rotation is done around the centre of the token, with this option enabled it will be around the centre of the overlay
+- Fixed `Underlay` option not placing `Overlays` underneath the token
+- Fixed `Link To Token Data` -> `Opacity` option
+
 # 4.8.0
 
 - Controls added for the following filters:

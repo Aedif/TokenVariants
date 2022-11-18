@@ -78,7 +78,7 @@
     <div class="form-group">
         <label>Horizontal Offset</label>
         <div class="form-fields">
-            <input type="range" name="offsetX" value="{{offsetX}}" min="-1" max="1" step="0.01">
+            <input type="range" name="offsetX" value="{{offsetX}}" min="-2" max="2" step="0.01">
             <span class="range-value">{{offsetX}}</span>
         </div>
     </div>
@@ -86,7 +86,7 @@
     <div class="form-group">
         <label>Vertical Offset</label>
         <div class="form-fields">
-            <input type="range" name="offsetY" value="{{offsetY}}" min="-1" max="1" step="0.01">
+            <input type="range" name="offsetY" value="{{offsetY}}" min="-2" max="2" step="0.01">
             <span class="range-value">{{offsetY}}</span>
         </div>
     </div>
@@ -140,6 +140,13 @@
         <label>Rotate</label>
         <div class="form-fields">
             <input type="checkbox" name="animation.rotate" data-dtype="Boolean" value="{{animation.rotate}}" {{#if animation.rotate}}checked{{/if}}>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Relative</label>
+        <div class="form-fields">
+            <input type="checkbox" name="animation.relative" data-dtype="Boolean" value="{{animation.relative}}" {{#if animation.relative}}checked{{/if}}>
         </div>
     </div>
 
