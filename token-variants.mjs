@@ -599,7 +599,14 @@ async function initialize() {
 
     // If this is an HP update we need to determine what the current HP effects would be
     // so that they can be compared against in 'updateActor' hook
-    if (change.system?.attributes?.hp) {
+    let containsHPUpdate = false;
+    if (game.system.id === 'cyberpunk-red-core') {
+      containsHPUpdate = change.system?.derivedStats?.hp;
+    } else {
+      containsHPUpdate = change.system?.attributes?.hp;
+    }
+
+    if (containsHPUpdate) {
       const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
       for (const tkn of tokens) {
         const hpEffects = [];
@@ -629,7 +636,15 @@ async function initialize() {
         }
       }
     }
-    if (change.system?.attributes?.hp) {
+
+    let containsHPUpdate = false;
+    if (game.system.id === 'cyberpunk-red-core') {
+      containsHPUpdate = change.system?.derivedStats?.hp;
+    } else {
+      containsHPUpdate = change.system?.attributes?.hp;
+    }
+
+    if (containsHPUpdate) {
       const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
       for (const tkn of tokens) {
         // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor

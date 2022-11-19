@@ -1043,12 +1043,30 @@ export function applyHealthEffects(token, effects = []) {
 
   let attributes = {};
 
-  if (token.actorLink) {
-    attributes = token.actor.system?.attributes;
+  if (game.system.id === 'cyberpunk-red-core') {
+    if (token.actorLink) {
+      attributes = token.actor.system?.derivedStats;
+    } else {
+      attributes = mergeObject(
+        token.actor.system?.derivedStats || {},
+        token.actorData?.system?.derivedStats || {},
+        {
+          inplace: false,
+        }
+      );
+    }
   } else {
-    attributes = mergeObject(token.actor.system?.attributes, token.actorData?.system?.attributes, {
-      inplace: false,
-    });
+    if (token.actorLink) {
+      attributes = token.actor.system?.attributes;
+    } else {
+      attributes = mergeObject(
+        token.actor.system?.attributes || {},
+        token.actorData?.system?.attributes || {},
+        {
+          inplace: false,
+        }
+      );
+    }
   }
 
   const maxHP = attributes?.hp?.max;

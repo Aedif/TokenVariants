@@ -1,3 +1,7 @@
+# 4.10.1
+
+- Fixed `Cyberpunk RED - Core` system related HP processing bug
+
 # 4.10.0
 
 - Fixed `Link To Token Data` -> `Rotation` option
