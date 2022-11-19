@@ -673,7 +673,15 @@ async function initialize() {
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
     if (game.user.id !== userId) return;
-    if ('actorLink' in change || change.actorData?.system?.attributes?.hp) {
+
+    let containsHPUpdate = false;
+    if (game.system.id === 'cyberpunk-red-core') {
+      containsHPUpdate = change.actorData?.system?.derivedStats?.hp;
+    } else {
+      containsHPUpdate = change.actorData?.system?.attributes?.hp;
+    }
+
+    if ('actorLink' in change || containsHPUpdate) {
       updateWithEffectMapping(token, getTokenEffects(token));
     }
 
