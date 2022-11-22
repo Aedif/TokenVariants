@@ -27,6 +27,7 @@ export default class OverlayConfig extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
     html.find('input,select').on('change', this._onInputChange.bind(this));
+    html.find('textarea').on('input', this._onInputChange.bind(this));
 
     html.find('[name="filter"]').on('change', (event) => {
       html.find('.filterOptions').empty();
@@ -135,6 +136,7 @@ export default class OverlayConfig extends FormApplication {
     data.filters = Object.keys(PIXI.filters);
     data.filters.push('OutlineOverlayFilter');
     data.filters.sort();
+    if (TokenMagic) data.filters.unshift('Token Magic FX');
     data.filters.unshift('NONE');
     const settings = mergeObject(
       {
@@ -206,7 +208,9 @@ export default class OverlayConfig extends FormApplication {
         formData['filterOptions.shadowColor'] = Number(
           Color.fromString(formData['filterOptions.shadowColor'])
         );
-    } else if (['DropShadowFilter', 'GlowFilter', 'OutlineFilter'].includes(formData.filter)) {
+    } else if (
+      ['DropShadowFilter', 'GlowFilter', 'OutlineFilter', 'FilterFire'].includes(formData.filter)
+    ) {
       if ('filterOptions.color' in formData)
         formData['filterOptions.color'] = Number(Color.fromString(formData['filterOptions.color']));
     }
@@ -633,6 +637,12 @@ export const FILTERS = {
     ],
     argType: 'options',
   },
+  'Token Magic FX': {
+    defaultValues: {
+      params: [],
+    },
+    controls: [{ type: 'json', name: 'params' }],
+  },
 };
 
 function genFilterOptionControls(filterName, filterOptions = {}) {
@@ -726,6 +736,15 @@ function genControl(control, values) {
   <div class="form-fields">
     <input type="range" name="filterOptions.${name}" value="${val[1]}" min="${control.min}" max="${control.max}" step="${control.step}">
     <span class="range-value">${val[1]}</span>
+  </div>
+</div>
+`;
+  } else if (type === 'json') {
+    return `
+<div class="form-group">
+  <label>${label}</label>
+  <div class="form-fields">
+      <textarea name="filterOptions.${name}">${val}</textarea>
   </div>
 </div>
 `;

@@ -201,9 +201,6 @@ export class TVA_Sprite extends TokenMesh {
       this.alpha = config.linkOpacity ? this.object.document.alpha : config.alpha;
     }
 
-    // Apply filters
-    if (fullRefresh) this.filters = this._getFilters(config);
-
     // Angle in degrees
     if (fullRefresh) {
       if (config.linkRotation) this.angle = this.object.document.rotation + config.angle;
@@ -223,9 +220,13 @@ export class TVA_Sprite extends TokenMesh {
         this.stopAnimation();
       }
     }
+
+    // Apply filters
+    if (fullRefresh) this._applyFilters(config);
+    //if (fullRefresh) this.filters = this._getFilters(config);
   }
 
-  _getFilters(config) {
+  async _applyFilters(config) {
     const filterName = config.filter;
     const FilterClass = PIXI.filters[filterName];
     const options = mergeObject(FILTERS[filterName]?.defaultValues || {}, config.filterOptions);
@@ -247,12 +248,44 @@ export class TVA_Sprite extends TokenMesh {
       filter = OutlineFilter.create(options);
       filter.thickness = options.trueThickness ?? 1;
       filter.animate = options.animate ?? false;
+    } else if (filterName === 'Token Magic FX') {
+      this.filters = await constructTMFXFilters(options.params || [], this);
+      return;
+    } else if (filterName === 'FilterFire') {
+      let fxModule = await import('../../tokenmagic/fx/filters/FilterFire.js');
+
+      options.animated = {
+        time: {
+          active: true,
+          speed: -0.0024,
+          animType: 'move',
+        },
+        intensity: {
+          active: true,
+          loopDuration: 15000,
+          val1: 0.8,
+          val2: 2,
+          animType: 'syncCosOscillation',
+        },
+        amplitude: {
+          active: true,
+          loopDuration: 4400,
+          val1: 1,
+          val2: 1.4,
+          animType: 'syncCosOscillation',
+        },
+      };
+
+      filter = new fxModule.FilterFire({ dummy: false, ...options });
+      filter.placeableImg = this;
+      filter.targetPlaceable = this.object;
     }
 
     if (filter) {
-      return [filter];
+      this.filters = [filter];
+    } else {
+      this.filters = [];
     }
-    return [];
   }
 
   async stopAnimation() {
@@ -284,3 +317,121 @@ export class TVA_Sprite extends TokenMesh {
     super.destroy();
   }
 }
+
+async function constructTMFXFilters(paramsArray, sprite) {
+  if (!TokenMagic) return [];
+
+  try {
+    paramsArray = eval(paramsArray);
+  } catch (e) {
+    return [];
+  }
+
+  if (!Array.isArray(paramsArray)) {
+    paramsArray = TokenMagic.getPreset(paramsArray);
+  }
+  if (!(paramsArray instanceof Array && paramsArray.length > 0)) return [];
+
+  let filters = [];
+  for (const params of paramsArray) {
+    if (
+      !params.hasOwnProperty('filterType') ||
+      !TMFXFilterTypes.hasOwnProperty(params.filterType)
+    ) {
+      // one invalid ? all rejected.
+      return [];
+    }
+
+    if (!params.hasOwnProperty('rank')) {
+      params.rank = 5000;
+    }
+
+    if (!params.hasOwnProperty('filterId') || params.filterId == null) {
+      params.filterId = randomID();
+    }
+
+    if (!params.hasOwnProperty('enabled') || !(typeof params.enabled === 'boolean')) {
+      params.enabled = true;
+    }
+
+    // params.placeableId = token.id;
+    params.filterInternalId = randomID();
+    params.filterOwner = game.data.userId;
+    // params.placeableType = placeable._TMFXgetPlaceableType();
+    params.updateId = randomID();
+
+    const filterClass = await getTMFXFilter(params.filterType);
+    if (filterClass) {
+      const filter = new filterClass(params);
+      if (filter) {
+        // Patch fixes
+        filter.placeableImg = sprite;
+        filter.targetPlaceable = sprite.object;
+        // end of fixes
+        filters.unshift(filter);
+      }
+    }
+  }
+  return filters;
+}
+
+async function getTMFXFilter(id) {
+  if (id in TMFXFilterTypes) {
+    if (id in LOADED_TMFXFilters) return LOADED_TMFXFilters[id];
+    else {
+      try {
+        const className = TMFXFilterTypes[id];
+        let fxModule = await import(`../../tokenmagic/fx/filters/${className}.js`);
+        if (fxModule && fxModule[className]) {
+          LOADED_TMFXFilters[id] = fxModule[className];
+          return fxModule[className];
+        }
+      } catch (e) {}
+    }
+  }
+  return null;
+}
+
+const LOADED_TMFXFilters = {};
+
+const TMFXFilterTypes = {
+  adjustment: 'FilterAdjustment',
+  distortion: 'FilterDistortion',
+  oldfilm: 'FilterOldFilm',
+  glow: 'FilterGlow',
+  outline: 'FilterOutline',
+  bevel: 'FilterBevel',
+  xbloom: 'FilterXBloom',
+  shadow: 'FilterDropShadow',
+  twist: 'FilterTwist',
+  zoomblur: 'FilterZoomBlur',
+  blur: 'FilterBlur',
+  bulgepinch: 'FilterBulgePinch',
+  zapshadow: 'FilterRemoveShadow',
+  ray: 'FilterRays',
+  fog: 'FilterFog',
+  xfog: 'FilterXFog',
+  electric: 'FilterElectric',
+  wave: 'FilterWaves',
+  shockwave: 'FilterShockwave',
+  fire: 'FilterFire',
+  fumes: 'FilterFumes',
+  smoke: 'FilterSmoke',
+  flood: 'FilterFlood',
+  images: 'FilterMirrorImages',
+  field: 'FilterForceField',
+  xray: 'FilterXRays',
+  liquid: 'FilterLiquid',
+  xglow: 'FilterGleamingGlow',
+  pixel: 'FilterPixelate',
+  web: 'FilterSpiderWeb',
+  ripples: 'FilterSolarRipples',
+  globes: 'FilterGlobes',
+  transform: 'FilterTransform',
+  splash: 'FilterSplash',
+  polymorph: 'FilterPolymorph',
+  xfire: 'FilterXFire',
+  sprite: 'FilterSprite',
+  replaceColor: 'FilterReplaceColor',
+  ddTint: 'FilterDDTint',
+};

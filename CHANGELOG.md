@@ -1,3 +1,9 @@
+# 4.11.0
+
+- Added support for `Token Magic FX` filters
+  - When TMFX is active Overlays will now contain 'Token Magic FX' as a filter option
+  - This filter accepts a TMFX params array
+
 # 4.10.2
 
 - Fixed another `Cyberpunk RED - Core` system related HP processing bug
