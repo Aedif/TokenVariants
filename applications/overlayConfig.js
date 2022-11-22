@@ -136,7 +136,7 @@ export default class OverlayConfig extends FormApplication {
     data.filters = Object.keys(PIXI.filters);
     data.filters.push('OutlineOverlayFilter');
     data.filters.sort();
-    if (TokenMagic) data.filters.unshift('Token Magic FX');
+    if (typeof TokenMagic !== 'undefined') data.filters.unshift('Token Magic FX');
     data.filters.unshift('NONE');
     const settings = mergeObject(
       {

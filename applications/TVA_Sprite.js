@@ -319,7 +319,7 @@ export class TVA_Sprite extends TokenMesh {
 }
 
 async function constructTMFXFilters(paramsArray, sprite) {
-  if (!TokenMagic) return [];
+  if (typeof TokenMagic === 'undefined') return [];
 
   try {
     paramsArray = eval(paramsArray);

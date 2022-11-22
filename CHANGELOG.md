@@ -1,3 +1,7 @@
+# 4.11.1
+
+- Fixed error thrown with TMFX disabled
+
 # 4.11.0
 
 - Added support for `Token Magic FX` filters
