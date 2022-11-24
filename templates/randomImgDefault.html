@@ -1,0 +1,13 @@
+<fieldset class="token-variants-randomImgDefault {{#if active}}active{{/if}}">
+    <legend>Token Variant Art</legend>
+    <div class="form-group">
+        <label for="texture">Default Wildcard Image</label>
+        <div class="form-fields">
+                <button type="button" class="file-picker" data-type="imagevideo" data-target="flags.token-variants.randomImgDefault" title="Select Default Image" tabindex="-1">
+                    <i class="fas fa-file-import fa-fw"></i>
+                </button>
+                <input class="imagevideo" type="text" name="flags.token-variants.randomImgDefault" placeholder="path/image.png" value="{{defaultImg}}"/>
+        </div>
+        <p class="hint">Rather than randomizing the image upon token creation this default image will be used instead.</p>
+    </div>
+</fieldset>

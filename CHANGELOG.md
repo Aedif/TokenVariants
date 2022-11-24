@@ -1,3 +1,10 @@
+# 4.12.0
+
+- Added `Default Wildcard Image` field under Prototype Token Configuration
+  - Available when 'Randomize Wildcard Images' is enabled
+  - Will prevent the image from being randomized and instead set the it to this default upon token creation
+  - Token HUD Wildcard default image will be used if it has previously been set
+
 # 4.11.1
 
 - Fixed error thrown with TMFX disabled

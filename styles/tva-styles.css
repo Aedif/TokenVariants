@@ -682,7 +682,7 @@ ol.token-variant-table .table-row .effect-config-script.active {
 }
 
 /* ---------------------------------------- */
-/* OVerlay Config Select                    */
+/* Overlay Config Select                    */
 /* ---------------------------------------- */
 
 .limited-user-select option {
@@ -691,4 +691,16 @@ ol.token-variant-table .table-row .effect-config-script.active {
 
 .limited-user-select option:checked {
   background: lightgreen;
+}
+
+/* ---------------------------------------- */
+/* Token Config                             */
+/* ---------------------------------------- */
+
+.token-variants-randomImgDefault {
+  display: none;
+}
+
+.token-variants-randomImgDefault.active {
+  display: block;
 }
