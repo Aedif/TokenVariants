@@ -1,3 +1,7 @@
+# 4.13.0
+
+- With `Mass Edit >=v1.27.8` active Token Magic FX overlay filters will now provide a control to more conveniently edit filter parameters
+
 # 4.12.0
 
 - Added `Default Wildcard Image` field under Prototype Token Configuration

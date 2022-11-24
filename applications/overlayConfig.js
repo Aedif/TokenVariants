@@ -59,6 +59,38 @@ export default class OverlayConfig extends FormApplication {
         sliderScaleWidth.val(sliderScaleHeight.val()).trigger('change');
       }
     });
+
+    html.find('.me-edit-json').on('click', async (event) => {
+      const textarea = $(event.target).closest('.form-group').find('textarea');
+      let params;
+      try {
+        params = eval(textarea.val());
+      } catch (e) {}
+
+      if (params) {
+        let param;
+        if (Array.isArray(params)) {
+          if (params.length === 1) param = params[0];
+          else {
+            let i = await promptParamChoice(params);
+            if (i < 0) return;
+            param = params[i];
+          }
+        } else {
+          param = params;
+        }
+
+        if (param)
+          game.modules
+            .get('multi-token-edit')
+            .api.showGenericForm(param, param.filterType ?? 'TMFX', {
+              inputChangeCallback: (selected) => {
+                mergeObject(param, selected, { inplace: true });
+                textarea.val(JSON.stringify(params, null, 2)).trigger('input');
+              },
+            });
+      }
+    });
   }
 
   _convertColor(colString) {
@@ -740,13 +772,42 @@ function genControl(control, values) {
 </div>
 `;
   } else if (type === 'json') {
-    return `
+    let control = `
 <div class="form-group">
   <label>${label}</label>
   <div class="form-fields">
-      <textarea name="filterOptions.${name}">${val}</textarea>
-  </div>
-</div>
-`;
+      <textarea style="width: 450px; height: 200px;" name="filterOptions.${name}">${val}</textarea>
+  </div>`;
+    if (game.modules.get('multi-token-edit')?.api.showGenericForm) {
+      control += `
+  <div style="text-align: right;">
+      <a> <i class="me-edit-json fas fa-edit" title="Show Generic Form"></i></a>
+  </div>`;
+    }
+    control += `</div>`;
+    return control;
   }
+}
+
+async function promptParamChoice(params) {
+  return new Promise((resolve, reject) => {
+    const buttons = {};
+    for (let i = 0; i < params.length; i++) {
+      const label = params[i].filterId ?? params[i].filterType;
+      buttons[label] = {
+        label,
+        callback: () => {
+          resolve(i);
+        },
+      };
+    }
+
+    const dialog = new Dialog({
+      title: 'Select Filter To Edit',
+      content: '',
+      buttons,
+      close: () => resolve(-1),
+    });
+    dialog.render(true);
+  });
 }
