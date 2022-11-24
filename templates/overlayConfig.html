@@ -1,195 +1,211 @@
 <form>
 
-    <h2>TVA Settings</h2>
+    <nav class="sheet-tabs tabs" data-group="main" aria-role="Form Tab Navigation">
+        <a class="item active" data-tab="misc"><i class="fas fa-wrench"></i> Misc</a>
+        <a class="item" data-tab="appearance"><i class="fas fa-expand"></i> Appearance</a>
+        <a class="item" data-tab="filter"><i class="fas fa-paint-roller"></i> Filter</a>
+        <a class="item" data-tab="animation"><i class="fas fa-camera-movie"></i> Animation</a>
+        <a class="item" data-tab="visibility"><i class="fas fa-eye"></i> Visibility</a>
+    </nav>
 
-    <div class="form-group">
-        <label>Underlay</label>
-        <div class="form-fields">
-            <input type="checkbox" name="underlay" data-dtype="Boolean" value="{{underlay}}" {{#if underlay}}checked{{/if}}>
-        </div>
-        <p class="notes">Place the image or video underneath the token.</p>
-    </div>
+    <section class = "content">
+        <div class="tab active" data-group="main" data-tab="misc">
 
-    <h2>Link To Token Data</h2>
-
-    <div class="form-group">
-        <label>Tint Color</label>
-        <div class="form-fields">
-            <input type="checkbox" name="inheritTint" data-dtype="Boolean" value="{{inheritTint}}" {{#if inheritTint}}checked{{/if}}>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Rotation</label>
-        <div class="form-fields">
-            <input type="checkbox" name="linkRotation" data-dtype="Boolean" value="{{linkRotation}}" {{#if linkRotation}}checked{{/if}}>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Mirror Image</label>
-        <div class="form-fields">
-            <input type="checkbox" name="linkMirror" data-dtype="Boolean" value="{{linkMirror}}" {{#if linkMirror}}checked{{/if}}>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Opacity</label>
-        <div class="form-fields">
-            <input type="checkbox" name="linkOpacity" data-dtype="Boolean" value="{{linkOpacity}}" {{#if linkOpacity}}checked{{/if}}>
-        </div>
-    </div>
-
-    <h2>Video</h2>
-
-    <div class="form-group">
-        <label>Loop Video</label>
-        <div class="form-fields">
-            <input type="checkbox" name="loop" data-dtype="Boolean" value="{{loop}}" {{#if loop}}checked{{/if}}>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Play Once and Hide</label>
-        <div class="form-fields">
-            <input type="checkbox" name="playOnce" data-dtype="Boolean" value="{{playOnce}}" {{#if playOnce}}checked{{/if}}>
-        </div>
-    </div>
-
-    <h2>Appearance</h2>
-
-    <div class="form-group">
-        <label>Opacity</label>
-        <div class="form-fields">
-            <input type="range" name="alpha" value="{{alpha}}" min="0" max="1" step="0.05">
-            <span class="range-value">{{alpha}}</span>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Tint Color</label>
-        <div class="form-fields">
-            <input class="color" type="text" name="tint" value="{{tint}}">
-            <input type="color" value="{{tint}}" data-edit="tint">
-        </div>
-    </div>
-
-
-    <div class="form-group">
-        <label>Horizontal Offset</label>
-        <div class="form-fields">
-            <input type="range" name="offsetX" value="{{offsetX}}" min="-2" max="2" step="0.01">
-            <span class="range-value">{{offsetX}}</span>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Vertical Offset</label>
-        <div class="form-fields">
-            <input type="range" name="offsetY" value="{{offsetY}}" min="-2" max="2" step="0.01">
-            <span class="range-value">{{offsetY}}</span>
-        </div>
-    </div>
-
-    <div>
-        <div class="form-group">
-            <label>Scale Width</label>
-            <div class="form-fields">
-                <input type="range" name="scaleX" value="{{scaleX}}" min="0.2" max="3" step="0.01">
-                <span class="range-value">{{scaleX}}</span>
+            <div class="form-group">
+                <label>Underlay</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="underlay" data-dtype="Boolean" value="{{underlay}}" {{#if underlay}}checked{{/if}}>
+                </div>
+                <p class="notes">Place the image or video underneath the token.</p>
             </div>
-            <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
+
+            <fieldset>
+                <legend>Link To Token</legend>
+                <div class="form-group">
+                    <label>Tint Color</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="inheritTint" data-dtype="Boolean" value="{{inheritTint}}" {{#if inheritTint}}checked{{/if}}>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Rotation</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="linkRotation" data-dtype="Boolean" value="{{linkRotation}}" {{#if linkRotation}}checked{{/if}}>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Mirror Image</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="linkMirror" data-dtype="Boolean" value="{{linkMirror}}" {{#if linkMirror}}checked{{/if}}>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Opacity</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="linkOpacity" data-dtype="Boolean" value="{{linkOpacity}}" {{#if linkOpacity}}checked{{/if}}>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Video</legend>
+                <div class="form-group">
+                    <label>Loop Video</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="loop" data-dtype="Boolean" value="{{loop}}" {{#if loop}}checked{{/if}}>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Play Once and Hide</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="playOnce" data-dtype="Boolean" value="{{playOnce}}" {{#if playOnce}}checked{{/if}}>
+                    </div>
+                </div>
+            </fieldset>
         </div>
 
-        <div class="form-group">
-            <label>Scale Height</label>
-            <div class="form-fields">
-                <input type="range" name="scaleY" value="{{scaleY}}" min="0.2" max="3" step="0.01">
-                <span class="range-value">{{scaleY}}</span>
+        <div class="tab active" data-group="main" data-tab="appearance">
+            <div class="form-group">
+                <label>Opacity</label>
+                <div class="form-fields">
+                    <input type="range" name="alpha" value="{{alpha}}" min="0" max="1" step="0.05">
+                    <span class="range-value">{{alpha}}</span>
+                </div>
             </div>
-            <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
+
+            <div class="form-group">
+                <label>Tint Color</label>
+                <div class="form-fields">
+                    <input class="color" type="text" name="tint" value="{{tint}}">
+                    <input type="color" value="{{tint}}" data-edit="tint">
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label>Horizontal Offset</label>
+                <div class="form-fields">
+                    <input type="range" name="offsetX" value="{{offsetX}}" min="-2" max="2" step="0.01">
+                    <span class="range-value">{{offsetX}}</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Vertical Offset</label>
+                <div class="form-fields">
+                    <input type="range" name="offsetY" value="{{offsetY}}" min="-2" max="2" step="0.01">
+                    <span class="range-value">{{offsetY}}</span>
+                </div>
+            </div>
+
+            <div>
+                <div class="form-group">
+                    <label>Scale Width</label>
+                    <div class="form-fields">
+                        <input type="range" name="scaleX" value="{{scaleX}}" min="0.2" max="3" step="0.01">
+                        <span class="range-value">{{scaleX}}</span>
+                    </div>
+                    <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
+                </div>
+
+                <div class="form-group">
+                    <label>Scale Height</label>
+                    <div class="form-fields">
+                        <input type="range" name="scaleY" value="{{scaleY}}" min="0.2" max="3" step="0.01">
+                        <span class="range-value">{{scaleY}}</span>
+                    </div>
+                    <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Rotation</label>
+                <div class="form-fields">
+                    <input type="range" name="angle" value="{{angle}}" min="-360" max="360" step="1">
+                    <span class="range-value">{{angle}}</span>
+                </div>
+            </div>
+
         </div>
-    </div>
 
-    <div class="form-group">
-        <label>Rotation</label>
-        <div class="form-fields">
-            <input type="range" name="angle" value="{{angle}}" min="-360" max="360" step="1">
-            <span class="range-value">{{angle}}</span>
+        <div class="tab active" data-group="main" data-tab="filter">
+            <div class="form-group">
+                <label>Filter</label>
+                <div class="form-fields">
+                <select name="filter">
+                    {{#each filters as |filter|}}
+                    <option value="{{filter}}" {{#if (eq ../filter filter)}}selected="selected"{{/if}}>{{filter}}</option>
+                    {{/each}}
+                </select>
+                </div>
+            </div>
+
+            <div class="filterOptions">
+                {{{filterOptions}}}
+            </div>
         </div>
-    </div>
 
-    <div class="form-group">
-        <label>Filter</label>
-        <div class="form-fields">
-          <select name="filter">
-            {{#each filters as |filter|}}
-            <option value="{{filter}}" {{#if (eq ../filter filter)}}selected="selected"{{/if}}>{{filter}}</option>
-            {{/each}}
-          </select>
+        <div class="tab active" data-group="main" data-tab="animation">
+            <div class="form-group">
+                <label>Rotate</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="animation.rotate" data-dtype="Boolean" value="{{animation.rotate}}" {{#if animation.rotate}}checked{{/if}}>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Relative</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="animation.relative" data-dtype="Boolean" value="{{animation.relative}}" {{#if animation.relative}}checked{{/if}}>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Duration (ms)</label>
+                <div class="form-fields">
+                    <input type="range" name="animation.duration" value="{{animation.duration}}" min="100" max="30000" step="100">
+                    <span class="range-value">{{animation.duration}}</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Clockwise</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="animation.clockwise" data-dtype="Boolean" value="{{animation.clockwise}}" {{#if animation.clockwise}}checked{{/if}}>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div class="filterOptions">
-        {{{filterOptions}}}
-    </div>
+        <div class="tab active" data-group="main" data-tab="visibility">
+            <div class="form-group">
+                <label>Always Visible</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="alwaysVisible" data-dtype="Boolean" value="{{alwaysVisible}}" {{#if alwaysVisible}}checked{{/if}}>
+                </div>
+                <p class="notes">Overlay will be visible in explored areas of the map even when the Token is not.</p>
+            </div>
 
-    <h2>Animation</h2>
+            <div class="form-group">
+                <label>Limit Visibility to Users</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="limitToUser" data-dtype="Boolean" value="{{limitToUser}}" {{#if limitToUser}}checked{{/if}}>
+                </div>
+            </div>
 
-    <div class="form-group">
-        <label>Rotate</label>
-        <div class="form-fields">
-            <input type="checkbox" name="animation.rotate" data-dtype="Boolean" value="{{animation.rotate}}" {{#if animation.rotate}}checked{{/if}}>
+            <div class="form-group">
+                <label>Limited to:</label>
+                <select class="limited-user-select" name="limitedUsers" data-dtype="string" multiple="multiple">
+                    {{#each users as |user|}}
+                        <option value="{{user.id}}" {{#if user.selected}}selected{{/if}}>{{user.name}}</option>
+                    {{/each}}
+                </select>
+            </div>
         </div>
-    </div>
-
-    <div class="form-group">
-        <label>Relative</label>
-        <div class="form-fields">
-            <input type="checkbox" name="animation.relative" data-dtype="Boolean" value="{{animation.relative}}" {{#if animation.relative}}checked{{/if}}>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Duration (ms)</label>
-        <div class="form-fields">
-            <input type="range" name="animation.duration" value="{{animation.duration}}" min="100" max="30000" step="100">
-            <span class="range-value">{{animation.duration}}</span>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Clockwise</label>
-        <div class="form-fields">
-            <input type="checkbox" name="animation.clockwise" data-dtype="Boolean" value="{{animation.clockwise}}" {{#if animation.clockwise}}checked{{/if}}>
-        </div>
-    </div>
-
-    <h2>Visibility</h2>
-
-    <div class="form-group">
-        <label>Always Visible</label>
-        <div class="form-fields">
-            <input type="checkbox" name="alwaysVisible" data-dtype="Boolean" value="{{alwaysVisible}}" {{#if alwaysVisible}}checked{{/if}}>
-        </div>
-        <p class="notes">Overlay will be visible in explored areas of the map even when the Token is not.</p>
-    </div>
-
-    <div class="form-group">
-        <label>Limit Visibility to Users</label>
-        <div class="form-fields">
-            <input type="checkbox" name="limitToUser" data-dtype="Boolean" value="{{limitToUser}}" {{#if limitToUser}}checked{{/if}}>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Limited to:</label>
-        <select class="limited-user-select" name="limitedUsers" data-dtype="string" multiple="multiple">
-            {{#each users as |user|}}
-                <option value="{{user.id}}" {{#if user.selected}}selected{{/if}}>{{user.name}}</option>
-            {{/each}}
-        </select>
-    </div>
+    </section>
 
     <input type="hidden" name="effect" value="{{effect}}">
 

@@ -13,11 +13,12 @@ export default class OverlayConfig extends FormApplication {
       id: 'token-variants-overlay-config',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/overlayConfig.html',
-      resizable: true,
+      resizable: false,
       minimizable: false,
       title: 'Overlay Settings',
       width: 500,
-      height: 700,
+      height: 'auto',
+      tabs: [{ navSelector: '.sheet-tabs', contentSelector: '.content', initial: 'misc' }],
     });
   }
 
@@ -33,6 +34,7 @@ export default class OverlayConfig extends FormApplication {
       html.find('.filterOptions').empty();
       const filterOptions = $(genFilterOptionControls(event.target.value));
       html.find('.filterOptions').append(filterOptions);
+      this.setPosition({ height: 'auto' });
       this.activateListeners(filterOptions);
     });
 
@@ -684,10 +686,11 @@ function genFilterOptionControls(filterName, filterOptions = {}) {
   const values = getControlValues(filterName, options);
 
   const controls = FILTERS[filterName].controls;
-  let controlsHTML = '<h3>Filter Options</h3>\n';
+  let controlsHTML = '<fieldset><legend>Options</legend>';
   for (const control of controls) {
     controlsHTML += genControl(control, values);
   }
+  controlsHTML += '</fieldset>';
 
   return controlsHTML;
 }
@@ -780,7 +783,7 @@ function genControl(control, values) {
   </div>`;
     if (game.modules.get('multi-token-edit')?.api.showGenericForm) {
       control += `
-  <div style="text-align: right;">
+  <div style="text-align: right; color: orangered;">
       <a> <i class="me-edit-json fas fa-edit" title="Show Generic Form"></i></a>
   </div>`;
     }
