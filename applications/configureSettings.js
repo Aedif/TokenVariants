@@ -143,6 +143,7 @@ export default class ConfigureSettings extends FormApplication {
     data.stackStatusConfig = settings.stackStatusConfig;
     data.customImageCategories = settings.customImageCategories.join(',');
     data.disableEffectIcons = settings.disableEffectIcons;
+    data.displayEffectIconsOnHover = settings.displayEffectIconsOnHover;
     data.filterEffectIcons = settings.filterEffectIcons;
     data.filterCustomEffectIcons = settings.filterCustomEffectIcons;
     data.filterIconList = settings.filterIconList.join(',');
@@ -548,6 +549,7 @@ export default class ConfigureSettings extends FormApplication {
         .map((t) => t.trim())
         .filter((t) => t),
       disableEffectIcons: formData.disableEffectIcons,
+      displayEffectIconsOnHover: formData.displayEffectIconsOnHover,
       filterEffectIcons: formData.filterEffectIcons,
       filterCustomEffectIcons: formData.filterCustomEffectIcons,
       filterIconList: (formData.filterIconList || '')

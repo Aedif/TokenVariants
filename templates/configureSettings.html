@@ -525,6 +525,16 @@
           <hr>
 
           <div class="form-group">
+            <label>Display Token Effect Icons on Hover</label>
+            <div class="form-fields">
+              <input type="checkbox" name="displayEffectIconsOnHover" data-dtype="Boolean" {{#if displayEffectIconsOnHover}}checked{{/if}}>
+            </div>
+            <p class="notes">Effect icons will only be displayed while hovering over the token.</p>
+          </div>
+
+          <hr>
+
+          <div class="form-group">
             <label>Disable ALL Token Effect Icons</label>
             <div class="form-fields">
               <input type="checkbox" name="disableEffectIcons" data-dtype="Boolean" {{#if disableEffectIcons}}checked{{/if}}>

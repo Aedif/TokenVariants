@@ -796,7 +796,7 @@ async function promptParamChoice(params) {
   return new Promise((resolve, reject) => {
     const buttons = {};
     for (let i = 0; i < params.length; i++) {
-      const label = params[i].filterId ?? params[i].filterType;
+      const label = params[i].filterType ?? params[i].filterId;
       buttons[label] = {
         label,
         callback: () => {

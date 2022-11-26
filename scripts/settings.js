@@ -122,6 +122,7 @@ export const TVA_CONFIG = {
   },
   globalMappings: {},
   customImageCategories: [],
+  displayEffectIconsOnHover: false,
   disableEffectIcons: false,
   filterEffectIcons: false,
   filterCustomEffectIcons: true,
@@ -188,6 +189,12 @@ export async function registerSettings() {
       if (diff.staticCache) {
         const cacheFile = diff.staticCacheFile ? diff.staticCacheFile : TVA_CONFIG.staticCacheFile;
         saveCache(cacheFile);
+      }
+
+      if ('displayEffectIconsOnHover' in diff) {
+        for (const tkn of canvas.tokens.placeables) {
+          if (tkn.effects) tkn.effects.visible = !diff.displayEffectIconsOnHover;
+        }
       }
     },
   });

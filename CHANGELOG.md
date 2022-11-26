@@ -1,3 +1,8 @@
+# 4.14.0
+
+- New setting: Display Token Effect Icons on Hover
+  - When enabled effect icons will only be displayed while hovering over the token
+
 # 4.13.1
 
 - Improved the look of Overlay Config window

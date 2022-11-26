@@ -571,6 +571,24 @@ async function initialize() {
         }
     });
 
+    Hooks.on('hoverToken', (token, hoverIn) => {
+      if (TVA_CONFIG.displayEffectIconsOnHover) {
+        if (token.effects) {
+          token.effects.visible = hoverIn;
+        }
+      }
+    });
+
+    Hooks.on('highlightObjects', () => {
+      if (TVA_CONFIG.displayEffectIconsOnHover && canvas.tokens.active) {
+        for (const tkn of canvas.tokens.placeables) {
+          if (tkn.effects) {
+            tkn.effects.visible = tkn.hover;
+          }
+        }
+      }
+    });
+
     if (TVA_CONFIG.disableEffectIcons) {
       libWrapper.register(
         'token-variants',
@@ -587,6 +605,9 @@ async function initialize() {
         'token-variants',
         'Token.prototype.drawEffects',
         async function (wrapped, ...args) {
+          if (this.effects && TVA_CONFIG.displayEffectIconsOnHover) {
+            this.effects.visible = false;
+          }
           // Temporarily removing token and actor effects based on module settings
           // after the effect icons have been drawn, they will be reset to originals
           const tokenEffects = this.document.effects;
@@ -632,6 +653,18 @@ async function initialize() {
             }
           }
           return result;
+        },
+        'WRAPPER'
+      );
+    } else if (TVA_CONFIG.displayEffectIconsOnHover) {
+      libWrapper.register(
+        'token-variants',
+        'Token.prototype.drawEffects',
+        async function (wrapped, ...args) {
+          if (this.effects && TVA_CONFIG.displayEffectIconsOnHover) {
+            this.effects.visible = false;
+          }
+          return wrapped(...args);
         },
         'WRAPPER'
       );
