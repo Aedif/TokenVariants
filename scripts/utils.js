@@ -105,6 +105,15 @@ export async function updateTokenImage(
     return;
   }
 
+  // Check if it's a wildcard image
+  if ((imgSrc && imgSrc.includes('*')) || (imgSrc.includes('{') && imgSrc.includes('}'))) {
+    const images = await wildcardImageSearch(imgSrc);
+    if (images.length) {
+      imgSrc = images[Math.floor(Math.random() * images.length)];
+      imgName = getFileName(imgSrc);
+    }
+  }
+
   if (imgSrc && !imgName) imgName = getFileName(imgSrc);
   if (!actor && token.actor) {
     actor = game.actors.get(token.actor.id);
@@ -820,7 +829,17 @@ export function tv_executeScript(script, { actor, token } = {}) {
 }
 
 async function _drawEffectOverlay(token, conf) {
-  const texture = await loadTexture(conf.img, {
+  let img = conf.img;
+  if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
+    const images = await wildcardImageSearch(conf.img);
+    if (images.length) {
+      if (images.length) {
+        img = images[Math.floor(Math.random() * images.length)];
+      }
+    }
+  }
+
+  const texture = await loadTexture(img, {
     fallback: 'modules/token-variants/img/token-images.svg',
   });
   const sprite = new TVA_Sprite(texture, token, conf);
@@ -870,7 +889,9 @@ export async function drawOverlays(token) {
         let sprite = findTVASprite(ov.effect, token);
         if (sprite) {
           if (!isEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
-            if (sprite.tvaOverlayConfig.img !== ov.img) {
+            if (ov.img.includes('*') || (ov.img.includes('{') && ov.img.includes('}'))) {
+              sprite.refresh(ov);
+            } else if (sprite.tvaOverlayConfig.img !== ov.img) {
               canvas.primary.removeChild(sprite)?.destroy();
               sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
               token.tva_sprites.push(sprite);
@@ -1120,4 +1141,26 @@ export function applyHealthEffects(token, effects = []) {
   }
 
   return effects;
+}
+
+export async function wildcardImageSearch(imgSrc) {
+  let source = 'data';
+  const browseOptions = { wildcard: true };
+
+  // Support non-user sources
+  if (/\.s3\./.test(imgSrc)) {
+    source = 's3';
+    const { bucket, keyPrefix } = FilePicker.parseS3URL(imgSrc);
+    if (bucket) {
+      browseOptions.bucket = bucket;
+      imgSrc = keyPrefix;
+    }
+  } else if (imgSrc.startsWith('icons/')) source = 'public';
+
+  // Retrieve wildcard content
+  try {
+    const content = await FilePicker.browse(source, imgSrc, browseOptions);
+    return content.files;
+  } catch (err) {}
+  return [];
 }

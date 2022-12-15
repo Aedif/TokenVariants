@@ -284,6 +284,14 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   _getHeaderButtons() {
     const buttons = super._getHeaderButtons();
+
+    // buttons.unshift({
+    //   label: 'Import',
+    //   class: 'token-variants-import',
+    //   icon: 'fas fa-globe',
+    //   onclick: (ev) => this._importConfigs(ev),
+    // });
+
     if (this.globalMappings) return buttons;
 
     buttons.unshift({
@@ -293,6 +301,50 @@ export default class ActiveEffectConfigList extends FormApplication {
       onclick: (ev) => this._copyGlobalEffect(ev),
     });
     return buttons;
+  }
+
+  async _importConfigs(event) {
+    const content = await renderTemplate('templates/apps/import-data.html', {
+      entity: 'token-variants',
+      name: 'settings',
+    });
+    let dialog = new Promise((resolve, reject) => {
+      new Dialog(
+        {
+          title: 'Import Effect Configurations',
+          content: content,
+          buttons: {
+            import: {
+              icon: '<i class="fas fa-file-import"></i>',
+              label: game.i18n.localize('token-variants.common.import'),
+              callback: (html) => {
+                const form = html.find('form')[0];
+                if (!form.data.files.length)
+                  return ui.notifications?.error('You did not upload a data file!');
+                readTextFromFile(form.data.files[0]).then((json) => {
+                  json = JSON.parse(json);
+                  if (!json || !('globalMappings' in json)) {
+                    return ui.notifications?.error('No mappings found within the file!');
+                  }
+                  // importSettingsFromJSON(json);
+                  resolve(true);
+                });
+              },
+            },
+            no: {
+              icon: '<i class="fas fa-times"></i>',
+              label: 'Cancel',
+              callback: (html) => resolve(false),
+            },
+          },
+          default: 'import',
+        },
+        {
+          width: 400,
+        }
+      ).render(true);
+    });
+    return await dialog;
   }
 
   _copyGlobalEffect(event) {

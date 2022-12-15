@@ -1,3 +1,7 @@
+# 4.15.0
+
+- Wildcard image support added for **Effect Configs**
+
 # 4.14.0
 
 - New setting: Display Token Effect Icons on Hover
