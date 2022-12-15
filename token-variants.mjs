@@ -121,6 +121,15 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
     const newImg = { imgSrc: '', imgName: '' };
     for (let i = effects.length - 1; i >= 0; i--) {
       if (effects[i].imgSrc && !effects[i].overlay) {
+        let iSrc = effects[i].imgSrc;
+        if (iSrc.includes('*') || (iSrc.includes('{') && iSrc.includes('}'))) {
+          // wildcard image, if this effect hasn't been newly applied we do not want to randomize the image again
+          if (!added.includes(effects[i].overlayConfig?.effect)) {
+            newImg.imgSrc = token.document.texture.src;
+            newImg.imgName = getFileName(newImg.imgSrc);
+            break;
+          }
+        }
         newImg.imgSrc = effects[i].imgSrc;
         newImg.imgName = effects[i].imgName;
         break;

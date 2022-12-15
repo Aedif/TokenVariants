@@ -1,3 +1,7 @@
+# 4.15.1
+
+- Fix to prevent wildcard images from being re-randomized when toggling unrelated active effects
+
 # 4.15.0
 
 - Wildcard image support added for **Effect Configs**
