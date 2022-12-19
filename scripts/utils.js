@@ -850,12 +850,7 @@ export async function drawOverlays(token) {
   if (token.tva_drawing_overlays) return;
   token.tva_drawing_overlays = true;
 
-  const mappings = mergeObject(
-    TVA_CONFIG.globalMappings,
-    token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
-    { inplace: false, recursive: false }
-  );
-
+  const mappings = getAllEffectMappings(token);
   let filteredOverlays = getTokenEffects(token);
 
   filteredOverlays = filteredOverlays
@@ -1025,6 +1020,12 @@ export function getTokenEffects(token, ignore = []) {
     effects.unshift('token-variants-visibility');
   }
 
+  // Include mappings marked as always applicable
+  const mappings = getAllEffectMappings(token);
+  for (const [k, m] of Object.entries(mappings)) {
+    if (m.alwaysOn) effects.unshift(k);
+  }
+
   applyHealthEffects(token, effects);
 
   if (ignore.length) return effects.filter((ef) => !ignore.includes(ef));
@@ -1094,11 +1095,7 @@ export function applyHealthEffects(token, effects = []) {
   const currHP = attributes?.hp?.value;
 
   if (!isNaN(currHP) && !isNaN(maxHP)) {
-    const mappings = mergeObject(
-      TVA_CONFIG.globalMappings,
-      token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
-      { inplace: false }
-    );
+    const mappings = getAllEffectMappings(token);
 
     const re = new RegExp(/hp([><=]+)(\d+)(%{0,1})/);
 
@@ -1163,4 +1160,16 @@ export async function wildcardImageSearch(imgSrc) {
     return content.files;
   } catch (err) {}
   return [];
+}
+
+export function getAllEffectMappings(token = null) {
+  if (token) {
+    return mergeObject(
+      TVA_CONFIG.globalMappings,
+      token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
+      { inplace: false, recursive: false }
+    );
+  } else {
+    return TVA_CONFIG.globalMappings;
+  }
 }

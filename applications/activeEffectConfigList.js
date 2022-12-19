@@ -35,7 +35,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       closeOnSubmit: false,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      width: 490,
+      width: 520,
     });
   }
 
@@ -66,6 +66,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           hasTokenConfig: hasTokenConfig > 0,
           config: attrs.config,
           overlay: attrs.overlay,
+          alwaysOn: attrs.alwaysOn,
           overlayConfig: attrs.overlayConfig,
         });
       }
@@ -278,6 +279,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       imgSrc: '',
       priority: 50,
       overlay: false,
+      alwaysOn: false,
     });
     this.render();
   }
@@ -430,6 +432,7 @@ export default class ActiveEffectConfigList extends FormApplication {
             priority: mapping.priority,
             config: mapping.config,
             overlay: mapping.overlay,
+            alwaysOn: mapping.alwaysOn,
             overlayConfig: mapping.overlayConfig || {},
           };
           effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
@@ -486,6 +489,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       m2.priority = m1.priority;
       m2.effectName = m1.effectName;
       m2.overlay = m1.overlay;
+      m2.alwaysOn = m1.alwaysOn;
     }
   }
 }

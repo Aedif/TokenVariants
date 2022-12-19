@@ -63,6 +63,7 @@ export default class TVAActiveEffectConfig extends FormApplication {
       imgName: mapping.imgName,
       priority: mapping.priority || 50,
       overlay: mapping.overlay,
+      alwaysOn: mapping.alwaysOn,
       config: this.config,
       hasConfig: this.config ? !isEmpty(this.config) : false,
       hasTokenConfig: hasTokenConfig > 0,

@@ -32,6 +32,7 @@ import {
   isVideo,
   isImage,
   applyHealthEffects,
+  getAllEffectMappings,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -83,11 +84,8 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
   const hadActiveHUD = token.hasActiveHUD;
   const toggleStatus =
     canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
-  const mappings = mergeObject(
-    TVA_CONFIG.globalMappings,
-    token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
-    { inplace: false }
-  );
+
+  const mappings = getAllEffectMappings(token);
 
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
@@ -311,11 +309,7 @@ async function initialize() {
     const token = combatant._token || canvas.tokens.get(combatant.tokenId);
     if (!token || !token.actor) return;
 
-    const mappings = mergeObject(
-      TVA_CONFIG.globalMappings,
-      token.actor.getFlag('token-variants', 'effectMappings'),
-      { inplace: false }
-    );
+    const mappings = getAllEffectMappings(token);
     if (!('token-variants-combat' in mappings)) return;
 
     const effects = getTokenEffects(token, ['token-variants-combat']);
@@ -330,11 +324,7 @@ async function initialize() {
     const token = combatant._token || canvas.tokens.get(combatant.tokenId);
     if (!token || !token.actor) return;
 
-    const mappings = mergeObject(
-      TVA_CONFIG.globalMappings,
-      token.actor.getFlag('token-variants', 'effectMappings'),
-      { inplace: false }
-    );
+    const mappings = getAllEffectMappings(token);
     if (!('token-variants-combat' in mappings)) return;
 
     const effects = getTokenEffects(token, ['token-variants-combat']);
@@ -360,11 +350,7 @@ async function initialize() {
   //
 
   let updateImageOnEffectChange = async function (effectName, actor, added = true) {
-    const mappings = mergeObject(
-      TVA_CONFIG.globalMappings,
-      actor.getFlag('token-variants', 'effectMappings'),
-      { inplace: false }
-    );
+    const mappings = getAllEffectMappings({ actor });
     if (effectName in mappings) {
       const tokens = actor.token
         ? [actor.token]
@@ -381,11 +367,7 @@ async function initialize() {
 
   let updateImageOnMultiEffectChange = async function (actor, added = [], removed = []) {
     if (!actor) return;
-    const mappings = mergeObject(
-      TVA_CONFIG.globalMappings,
-      actor.getFlag('token-variants', 'effectMappings'),
-      { inplace: false }
-    );
+    const mappings = getAllEffectMappings({ actor });
     if (
       added.filter((ef) => ef in mappings).length ||
       removed.filter((ef) => ef in mappings).length
@@ -624,11 +606,9 @@ async function initialize() {
 
           let restrictedEffects = TVA_CONFIG.filterIconList;
           if (TVA_CONFIG.filterCustomEffectIcons) {
-            const mappings = mergeObject(
-              TVA_CONFIG.globalMappings,
-              (this.actor ? this.actor : this.document).getFlag('token-variants', 'effectMappings'),
-              { inplace: false }
-            );
+            const mappings = getAllEffectMappings({
+              actor: this.actor ? this.actor : this.document,
+            });
             if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
           }
 
@@ -825,10 +805,13 @@ async function initialize() {
   Hooks.on('renderTokenConfig', modTokenConfig);
   Hooks.on('renderTileConfig', modTileConfig);
   Hooks.on('renderMeasuredTemplateConfig', modTemplateConfig);
-  Hooks.on('renderActorSheet', modActorSheet);
-  Hooks.on('renderItemSheet', modItemSheet);
-  Hooks.on('renderItemActionSheet', modItemSheet);
-  Hooks.on('renderJournalSheet', modJournalSheet);
+
+  if (TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
+    Hooks.on('renderActorSheet', modActorSheet);
+    Hooks.on('renderItemSheet', modItemSheet);
+    Hooks.on('renderItemActionSheet', modItemSheet);
+    Hooks.on('renderJournalSheet', modJournalSheet);
+  }
 
   Hooks.on('renderTokenHUD', renderHud);
   Hooks.on('renderTileHUD', renderTileHUD);

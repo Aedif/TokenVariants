@@ -371,7 +371,7 @@ ol.token-variant-table .table-header {
 /* Active Effect Config List                */
 /* ---------------------------------------- */
 ol.token-variant-table .table-row .effect-priority {
-  flex: 0.15;
+  flex: 0.26;
 }
 
 ol.token-variant-table .table-row .effect-image {
@@ -396,6 +396,11 @@ ol.token-variant-table .table-row .effect-overlay > input {
 
 ol.token-variant-table .table-row .effect-overlay > a {
   vertical-align: middle;
+}
+
+ol.token-variant-table .table-row .effect-alwaysOn {
+  flex: 0 0 80px;
+  text-align: center;
 }
 
 ol.token-variant-table .table-row .effect-config i.active {

@@ -1,3 +1,8 @@
+# 4.16.0
+
+- Item and Journal icon right-click pop-up can now be disabled via permissions
+- Effect Mappings can now be set to always be on regardless of whether the effect with that name is applied or not
+
 # 4.15.1
 
 - Fix to prevent wildcard images from being re-randomized when toggling unrelated active effects

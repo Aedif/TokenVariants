@@ -1,6 +1,6 @@
 <form>
   <section>
-    <ol class="token-variant-table">
+    <ol class="token-variant-table" style="overflow-x: hidden;">
       <li class="table-row table-header flexrow">
         <div class="effect-controls">
           <a class="create-mapping" title="Add new mapping"><i class="fas fa-plus"></i></a>
@@ -10,6 +10,7 @@
         <div class="effect-image"><label>Image</label></div>
         <div class="effect-config"><label>Config</label></div>
         <div class="effect-overlay"><label>Overlay</label></div>
+        <div class="effect-alwaysOn"><label>Always On</label></div>
       </li>
 
       {{#each mappings as |mapping index|}}
@@ -68,6 +69,9 @@
         <div class="effect-overlay">
           <input type="checkbox" name="mappings.{{index}}.overlay" {{#if mapping.overlay}}checked{{/if}}/>
           <a><i class="fas fa-cog fa-lg overlay-config"></i></a>
+        </div>
+        <div class="effect-alwaysOn">
+          <input type="checkbox" name="mappings.{{index}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}}/>
         </div>
       </li>
       {{/each}}
