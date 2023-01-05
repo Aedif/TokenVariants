@@ -1,3 +1,9 @@
+# 4.18.0
+
+- New setting available under **Active Effects**
+  - Name: Disable image updates on manually changed tokens
+  - Active Effect changes will not update images on tokens that have an image not corresponding to the prototype or any configurations.
+
 # 4.17.0
 
 - New setting available under **Active Effects**

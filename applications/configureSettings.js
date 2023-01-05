@@ -57,8 +57,6 @@ export default class ConfigureSettings extends FormApplication {
 
     data.enabledTabs = this.enabledTabs;
 
-    data.dnd5e = game.system.id === 'dnd5e';
-
     // === Search Paths ===
     const paths = settings.searchPaths.map((path) => {
       const r = {};
@@ -154,9 +152,11 @@ export default class ConfigureSettings extends FormApplication {
     data.playVideoOnHover = settings.playVideoOnHover;
     data.pauseVideoOnHoverOut = settings.pauseVideoOnHoverOut;
     data.disableImageChangeOnPolymorphed = settings.disableImageChangeOnPolymorphed;
+    data.disableImageUpdateOnNonPrototype = settings.disableImageUpdateOnNonPrototype;
 
     // Controls
     data.pathfinder = ['pf1e', 'pf2e'].includes(game.system.id);
+    data.dnd5e = game.system.id === 'dnd5e';
 
     return data;
   }
@@ -563,6 +563,7 @@ export default class ConfigureSettings extends FormApplication {
       playVideoOnHover: formData.playVideoOnHover,
       pauseVideoOnHoverOut: formData.pauseVideoOnHoverOut,
       disableImageChangeOnPolymorphed: formData.disableImageChangeOnPolymorphed,
+      disableImageUpdateOnNonPrototype: formData.disableImageUpdateOnNonPrototype,
     });
 
     // Save Settings

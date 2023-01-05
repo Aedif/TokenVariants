@@ -527,6 +527,14 @@
           {{/if}}
 
           <div class="form-group">
+            <label>Disable image updates on manually changed tokens</label>
+            <div class="form-fields">
+              <input type="checkbox" name="disableImageUpdateOnNonPrototype" data-dtype="Boolean" {{#if disableImageUpdateOnNonPrototype}}checked{{/if}}>
+            </div>
+            <p class="notes">Active Effect changes will not update images on tokens that have an image not corresponding to the prototype or any configurations.</p>
+          </div>
+
+          <div class="form-group">
             <label>Global Effect Configurations</label>
             <button class="token-variants-global-mapping" type="button">
                 <i class="fas fa-angle-double-right"></i>

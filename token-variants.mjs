@@ -82,9 +82,6 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
     (token.document ?? token).getFlag('token-variants', 'name') ||
     getFileName(token.document.texture.src);
   let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
-  if (TVA_CONFIG.disableImageChangeOnPolymorphed && token.actor?.isPolymorphed) {
-    tokenDefaultImg = '';
-  }
   const tokenUpdateObj = {};
   const hadActiveHUD = token.hasActiveHUD;
   const toggleStatus =
@@ -119,13 +116,33 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
     .map((ef) => mappings[ef])
     .sort((ef1, ef2) => ef1.priority - ef2.priority);
 
+  // Check if image update should be prevented based on module settings
+  let disableImageUpdate = false;
+  if (TVA_CONFIG.disableImageChangeOnPolymorphed && token.actor?.isPolymorphed) {
+    disableImageUpdate = true;
+  } else if (
+    TVA_CONFIG.disableImageUpdateOnNonPrototype &&
+    token.actor?.prototypeToken?.texture?.src !== token.document.texture.src
+  ) {
+    disableImageUpdate = true;
+    const tknImg = token.document.texture.src;
+    for (const m of Object.values(mappings)) {
+      if (!m.overlay && m.imgSrc === tknImg) {
+        disableImageUpdate = false;
+        break;
+      }
+    }
+  }
+
+  if (disableImageUpdate) {
+    tokenDefaultImg = '';
+  }
+
   if (effects.length > 0) {
     // Some effect mappings may not have images, find a mapping with one if it exists
     const newImg = { imgSrc: '', imgName: '' };
 
-    if (TVA_CONFIG.disableImageChangeOnPolymorphed && token.actor?.isPolymorphed) {
-      // do not perform image change on polymorphed tokens
-    } else {
+    if (!disableImageUpdate) {
       for (let i = effects.length - 1; i >= 0; i--) {
         if (effects[i].imgSrc && !effects[i].overlay) {
           let iSrc = effects[i].imgSrc;
