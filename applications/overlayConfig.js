@@ -671,6 +671,19 @@ export const FILTERS = {
     ],
     argType: 'options',
   },
+  DisplacementFilter: {
+    defaultValues: {
+      sprite: '',
+      textureScale: 1,
+      displacementScale: 1,
+    },
+    controls: [
+      { type: 'text', name: 'sprite' },
+      { type: 'range', name: 'textureScale', min: 0, max: 100, step: 0.1 },
+      { type: 'range', name: 'displacementScale', min: 0, max: 100, step: 0.1 },
+    ],
+    argType: 'options',
+  },
   'Token Magic FX': {
     defaultValues: {
       params: [],
@@ -789,6 +802,15 @@ function genControl(control, values) {
     }
     control += `</div>`;
     return control;
+  } else if (type === 'text') {
+    return `
+<div class="form-group">
+  <label>${label}</label>
+  <div class="form-fields">
+      <input type="text" name="filterOptions.${name}" value="${val}">
+  </div>
+</div>
+`;
   }
 }
 

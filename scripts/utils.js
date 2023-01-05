@@ -808,7 +808,7 @@ function _modMergeUpdate(
   }
 }
 
-export function tv_executeScript(script, { actor, token } = {}) {
+export async function tv_executeScript(script, { actor, token } = {}) {
   // Add variables to the evaluation scope
   const speaker = ChatMessage.getSpeaker();
   const character = game.user.character;
@@ -816,10 +816,10 @@ export function tv_executeScript(script, { actor, token } = {}) {
   token = token || (canvas.ready ? canvas.tokens.get(speaker.token) : null);
 
   // Attempt script execution
-  const body = `(async () => {${script}})()`;
-  const fn = Function('speaker', 'actor', 'token', 'character', body);
+  const AsyncFunction = async function () {}.constructor;
   try {
-    fn.call(null, speaker, actor, token, character);
+    const fn = AsyncFunction('speaker', 'actor', 'token', 'character', `${script}`);
+    await fn.call(null, speaker, actor, token, character);
   } catch (err) {
     ui.notifications.error(
       `There was an error in your script syntax. See the console (F12) for details`
@@ -1015,6 +1015,13 @@ export function getTokenEffects(token, ignore = []) {
 
   if (data.inCombat) {
     effects.unshift('token-variants-combat');
+  }
+  if (game.combat?.started) {
+    if (game.combat?.combatant?.token?.id === token.id) {
+      effects.unshift('current-combatant');
+    } else if (game.combat?.nextCombatant?.token?.id === token.id) {
+      effects.unshift('next-combatant');
+    }
   }
   if (data.hidden) {
     effects.unshift('token-variants-visibility');

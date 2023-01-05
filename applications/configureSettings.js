@@ -45,7 +45,7 @@ export default class ConfigureSettings extends FormApplication {
       resizable: false,
       minimizable: false,
       title: 'Configure Settings',
-      width: 600,
+      width: 700,
       height: 'auto',
       tabs: [{ navSelector: '.sheet-tabs', contentSelector: '.content', initial: 'searchPaths' }],
     });
@@ -56,6 +56,8 @@ export default class ConfigureSettings extends FormApplication {
     const settings = this.settings;
 
     data.enabledTabs = this.enabledTabs;
+
+    data.dnd5e = game.system.id === 'dnd5e';
 
     // === Search Paths ===
     const paths = settings.searchPaths.map((path) => {
@@ -151,6 +153,7 @@ export default class ConfigureSettings extends FormApplication {
     data.updateTokenProto = settings.updateTokenProto;
     data.playVideoOnHover = settings.playVideoOnHover;
     data.pauseVideoOnHoverOut = settings.pauseVideoOnHoverOut;
+    data.disableImageChangeOnPolymorphed = settings.disableImageChangeOnPolymorphed;
 
     // Controls
     data.pathfinder = ['pf1e', 'pf2e'].includes(game.system.id);
@@ -559,6 +562,7 @@ export default class ConfigureSettings extends FormApplication {
       updateTokenProto: formData.updateTokenProto,
       playVideoOnHover: formData.playVideoOnHover,
       pauseVideoOnHoverOut: formData.pauseVideoOnHoverOut,
+      disableImageChangeOnPolymorphed: formData.disableImageChangeOnPolymorphed,
     });
 
     // Save Settings

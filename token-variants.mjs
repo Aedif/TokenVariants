@@ -66,12 +66,14 @@ function disablePopupForType(actor) {
   return TVA_CONFIG.popup[`${actor.type}Disable`] ?? false;
 }
 
-function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {
+async function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {
   if (hadActiveHUD) {
     canvas.tokens.hud.bind(token);
     if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
   }
-  scripts.forEach((scr) => tv_executeScript(scr.script, { token: scr.token }));
+  for (const scr of scripts) {
+    await tv_executeScript(scr.script, { token: scr.token });
+  }
 }
 
 export async function updateWithEffectMapping(token, effects, { added = [], removed = [] } = {}) {
@@ -79,7 +81,10 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
   const tokenImgName =
     (token.document ?? token).getFlag('token-variants', 'name') ||
     getFileName(token.document.texture.src);
-  const tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+  let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+  if (TVA_CONFIG.disableImageChangeOnPolymorphed && token.actor?.isPolymorphed) {
+    tokenDefaultImg = '';
+  }
   const tokenUpdateObj = {};
   const hadActiveHUD = token.hasActiveHUD;
   const toggleStatus =
@@ -117,20 +122,25 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
   if (effects.length > 0) {
     // Some effect mappings may not have images, find a mapping with one if it exists
     const newImg = { imgSrc: '', imgName: '' };
-    for (let i = effects.length - 1; i >= 0; i--) {
-      if (effects[i].imgSrc && !effects[i].overlay) {
-        let iSrc = effects[i].imgSrc;
-        if (iSrc.includes('*') || (iSrc.includes('{') && iSrc.includes('}'))) {
-          // wildcard image, if this effect hasn't been newly applied we do not want to randomize the image again
-          if (!added.includes(effects[i].overlayConfig?.effect)) {
-            newImg.imgSrc = token.document.texture.src;
-            newImg.imgName = getFileName(newImg.imgSrc);
-            break;
+
+    if (TVA_CONFIG.disableImageChangeOnPolymorphed && token.actor?.isPolymorphed) {
+      // do not perform image change on polymorphed tokens
+    } else {
+      for (let i = effects.length - 1; i >= 0; i--) {
+        if (effects[i].imgSrc && !effects[i].overlay) {
+          let iSrc = effects[i].imgSrc;
+          if (iSrc.includes('*') || (iSrc.includes('{') && iSrc.includes('}'))) {
+            // wildcard image, if this effect hasn't been newly applied we do not want to randomize the image again
+            if (!added.includes(effects[i].overlayConfig?.effect)) {
+              newImg.imgSrc = token.document.texture.src;
+              newImg.imgName = getFileName(newImg.imgSrc);
+              break;
+            }
           }
+          newImg.imgSrc = effects[i].imgSrc;
+          newImg.imgName = effects[i].imgName;
+          break;
         }
-        newImg.imgSrc = effects[i].imgSrc;
-        newImg.imgName = effects[i].imgName;
-        break;
       }
     }
 
@@ -303,6 +313,108 @@ async function initialize() {
       if (defaultImg) tokenDocument.updateSource({ 'texture.src': defaultImg });
     }
   });
+
+  /**
+   * Current and Next combatant tracking logic
+   */
+
+  // function preCombatUpdateCheck(options, userId) {
+  //   if (game.userId !== userId || !game.combat?.started) return;
+
+  //   const track = {
+  //     current: game.combat?.combatant?.token?.id,
+  //     next: game.combat?.nextCombatant?.token?.id,
+  //   };
+  //   options['token-variants'] = track;
+  // }
+
+  // function postCombatUpdateCheck(options, userId) {
+  //   if (game.userId !== userId || !game.combat?.started) return;
+
+  //   const track = options['token-variants'] ?? {};
+
+  //   const tokenUpdates = {};
+
+  //   const current = game.combat?.combatant?.token?.id;
+  //   if (current && current !== track.current) {
+  //     const token = canvas.tokens.get(current);
+  //     if (token) {
+  //       const effects = getTokenEffects(token, ['current-combatant']);
+
+  //       effects.push('current-combatant');
+
+  //       if (!tokenUpdates[token.id]) tokenUpdates[token.id] = {};
+  //       tokenUpdates[token.id].added = ['current-combatant'];
+  //       tokenUpdates[token.id].effects = effects;
+  //       tokenUpdates[token.id].token = token;
+  //     }
+
+  //     if (track.current) {
+  //       const previousCombatant = canvas.tokens.get(track.current);
+  //       if (previousCombatant) {
+  //         const effects = getTokenEffects(previousCombatant, ['current-combatant']);
+
+  //         effects.push('current-combatant');
+  //         if (!tokenUpdates[previousCombatant.id]) tokenUpdates[previousCombatant.id] = {};
+  //         tokenUpdates[previousCombatant.id].removed = ['current-combatant'];
+  //         tokenUpdates[previousCombatant.id].effects = effects;
+  //         tokenUpdates[previousCombatant.id].token = previousCombatant;
+  //       }
+  //     }
+  //   }
+
+  //   const next = game.combat?.nextCombatant?.token?.id;
+  //   if (next && next !== track.next) {
+  //     const token = canvas.tokens.get(next);
+  //     if (token) {
+  //       const effects = getTokenEffects(token, ['next-combatant']);
+
+  //       effects.push('next-combatant');
+  //       if (!tokenUpdates[token.id]) tokenUpdates[token.id] = {};
+  //       tokenUpdates[token.id].added = ['next-combatant'];
+  //       tokenUpdates[token.id].effects = effects;
+  //       tokenUpdates[token.id].token = token;
+  //     }
+
+  //     if (track.next) {
+  //       const previousCombatant = canvas.tokens.get(track.next);
+  //       if (previousCombatant) {
+  //         const effects = getTokenEffects(previousCombatant, ['next-combatant']);
+
+  //         effects.push('next-combatant');
+  //         if (!tokenUpdates[previousCombatant.id]) tokenUpdates[previousCombatant.id] = {};
+  //         tokenUpdates[previousCombatant.id].removed = ['next-combatant'];
+  //         tokenUpdates[previousCombatant.id].effects = effects;
+  //         tokenUpdates[previousCombatant.id].token = previousCombatant;
+  //       }
+  //     }
+  //   }
+
+  //   if (!isEmpty(tokenUpdates)) {
+  //     for (const update of Object.values(tokenUpdates)) {
+  //       updateWithEffectMapping(update.token, update.effects, {
+  //         added: update.added || [],
+  //         removed: update.removed || [],
+  //       });
+  //     }
+  //   }
+  // }
+
+  // Hooks.on('preUpdateCombat', (combat, diff, options, userId) => {
+  //   preCombatUpdateCheck(options, userId);
+  // });
+
+  // Hooks.on('updateCombat', (combat, diff, options, userId) => {
+  //   postCombatUpdateCheck(options, userId);
+  // });
+
+  // Hooks.on('preUpdateCombatant', (combatant, diff, options, userId) => {
+  //   preCombatUpdateCheck(options, userId);
+  // });
+
+  // Hooks.on('updateCombatant', (combatant, diff, options, userId) => {
+  //   postCombatUpdateCheck(options, userId);
+  // });
 
   Hooks.on('createCombatant', (combatant, options, userId) => {
     if (game.userId !== userId) return;
@@ -737,6 +849,15 @@ async function initialize() {
     }
   });
 
+  Hooks.on('preUpdateToken', function (token, change, options, userId) {
+    if (game.user.id !== userId) return;
+    if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
+      options['token-variants'] = {
+        wasPolymorphed: true,
+      };
+    }
+  });
+
   Hooks.on('updateToken', async function (token, change, options, userId) {
     if (game.user.id !== userId) return;
 
@@ -748,6 +869,8 @@ async function initialize() {
     }
 
     if ('actorLink' in change || containsHPUpdate) {
+      updateWithEffectMapping(token, getTokenEffects(token));
+    } else if (options['token-variants']?.wasPolymorphed && !token.actor?.isPolymorphed) {
       updateWithEffectMapping(token, getTokenEffects(token));
     }
 

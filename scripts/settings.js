@@ -130,6 +130,7 @@ export const TVA_CONFIG = {
   updateTokenProto: false,
   playVideoOnHover: true,
   pauseVideoOnHoverOut: false,
+  disableImageChangeOnPolymorphed: false,
 };
 
 export async function registerSettings() {

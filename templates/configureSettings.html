@@ -513,6 +513,19 @@
             <p class="notes">Active Effect custom configurations will stack on top of one another instead of overriding each other.</p>
           </div>
 
+          {{#if dnd5e}}
+          <fieldset>
+            <legend>DnD5e</legend>
+            <div class="form-group">
+              <label>Disable image updates on Polymorphed</label>
+              <div class="form-fields">
+                <input type="checkbox" name="disableImageChangeOnPolymorphed" data-dtype="Boolean" {{#if disableImageChangeOnPolymorphed}}checked{{/if}}>
+              </div>
+              <p class="notes">Active Effect changes will not update images on tokens with polymorphed or wild shaped actors.</p>
+            </div>
+          </fieldset>
+          {{/if}}
+
           <div class="form-group">
             <label>Global Effect Configurations</label>
             <button class="token-variants-global-mapping" type="button">

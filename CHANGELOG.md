@@ -1,3 +1,9 @@
+# 4.17.0
+
+- New setting available under **Active Effects**
+  - Name: Disable image updates on Polymorphed
+  - Active Effect configurations will not update images on tokens with polymorphed or wild shaped actors
+
 # 4.16.0
 
 - Item and Journal icon right-click pop-up can now be disabled via permissions
