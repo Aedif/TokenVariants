@@ -1297,7 +1297,7 @@ function modActorSheet(actorSheet, html, options) {
 
 function modItemSheet(itemSheet, html, options) {
   $(html)
-    .find('img.profile')
+    .find('img.profile, .profile-img')
     .on('contextmenu', () => {
       const item = itemSheet.object;
       if (!item) return;
