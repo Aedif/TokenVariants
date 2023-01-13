@@ -797,6 +797,8 @@ async function initialize() {
     let containsHPUpdate = false;
     if (game.system.id === 'cyberpunk-red-core') {
       containsHPUpdate = change.system?.derivedStats?.hp;
+    } else if (game.system.id === 'lfg') {
+      containsHPUpdate = change.system?.health;
     } else {
       containsHPUpdate = change.system?.attributes?.hp;
     }
@@ -835,6 +837,8 @@ async function initialize() {
     let containsHPUpdate = false;
     if (game.system.id === 'cyberpunk-red-core') {
       containsHPUpdate = change.system?.derivedStats?.hp;
+    } else if (game.system.id === 'lfg') {
+      containsHPUpdate = change.system?.health;
     } else {
       containsHPUpdate = change.system?.attributes?.hp;
     }
@@ -881,6 +885,8 @@ async function initialize() {
     let containsHPUpdate = false;
     if (game.system.id === 'cyberpunk-red-core') {
       containsHPUpdate = change.actorData?.system?.derivedStats?.hp;
+    } else if (game.system.id === 'lfg') {
+      containsHPUpdate = change.actorData?.system?.health;
     } else {
       containsHPUpdate = change.actorData?.system?.attributes?.hp;
     }

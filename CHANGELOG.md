@@ -1,3 +1,7 @@
+# 4.18.2
+
+- Fixed HP comparitors for the `Low Fantasy Gaming` system
+
 # 4.18.1
 
 - Fixed Item icon Right-click pop-up for the `Low Fantasy Gaming` system
