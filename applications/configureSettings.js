@@ -153,6 +153,7 @@ export default class ConfigureSettings extends FormApplication {
     data.pauseVideoOnHoverOut = settings.pauseVideoOnHoverOut;
     data.disableImageChangeOnPolymorphed = settings.disableImageChangeOnPolymorphed;
     data.disableImageUpdateOnNonPrototype = settings.disableImageUpdateOnNonPrototype;
+    data.disableTokenUpdateAnimation = settings.disableTokenUpdateAnimation;
 
     // Controls
     data.pathfinder = ['pf1e', 'pf2e'].includes(game.system.id);
@@ -564,6 +565,7 @@ export default class ConfigureSettings extends FormApplication {
       pauseVideoOnHoverOut: formData.pauseVideoOnHoverOut,
       disableImageChangeOnPolymorphed: formData.disableImageChangeOnPolymorphed,
       disableImageUpdateOnNonPrototype: formData.disableImageUpdateOnNonPrototype,
+      disableTokenUpdateAnimation: formData.disableTokenUpdateAnimation,
     });
 
     // Save Settings

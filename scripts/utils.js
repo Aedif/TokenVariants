@@ -35,6 +35,7 @@ export const PRESSED_KEYS = {
 const BATCH_UPDATES = {
   TOKEN: [],
   TOKEN_CALLBACKS: [],
+  TOKEN_CONTEXT: { animate: true },
   ACTOR: [],
   ACTOR_CONTEXT: null,
 };
@@ -42,12 +43,14 @@ const BATCH_UPDATES = {
 export function startBatchUpdater() {
   canvas.app.ticker.add(() => {
     if (BATCH_UPDATES.TOKEN.length) {
-      canvas.scene.updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN).then(() => {
-        for (const cb of BATCH_UPDATES.TOKEN_CALLBACKS) {
-          cb();
-        }
-        BATCH_UPDATES.TOKEN_CALLBACKS = [];
-      });
+      canvas.scene
+        .updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN, BATCH_UPDATES.TOKEN_CONTEXT)
+        .then(() => {
+          for (const cb of BATCH_UPDATES.TOKEN_CALLBACKS) {
+            cb();
+          }
+          BATCH_UPDATES.TOKEN_CALLBACKS = [];
+        });
       BATCH_UPDATES.TOKEN = [];
     }
     if (BATCH_UPDATES.ACTOR.length !== 0) {
@@ -60,9 +63,10 @@ export function startBatchUpdater() {
   });
 }
 
-export function queueTokenUpdate(id, update, callback = null) {
+export function queueTokenUpdate(id, update, callback = null, animate = true) {
   update._id = id;
   BATCH_UPDATES.TOKEN.push(update);
+  BATCH_UPDATES.TOKEN_CONTEXT = { animate };
   if (callback) BATCH_UPDATES.TOKEN_CALLBACKS.push(callback);
 }
 
@@ -96,6 +100,7 @@ export async function updateTokenImage(
     pack = '',
     callback = null,
     config = undefined,
+    animate = true,
   } = {}
 ) {
   if (!(token || actor)) {
@@ -218,7 +223,7 @@ export async function updateTokenImage(
         // this is a low priority update so it should be Ok to do
         setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
       }
-      queueTokenUpdate(token.id, tokenUpdateObj, callback);
+      queueTokenUpdate(token.id, tokenUpdateObj, callback, animate);
     }
   }
 }

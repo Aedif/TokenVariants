@@ -1,3 +1,8 @@
+# 4.19.0
+
+- New setting: `Active Effects` > `Disable Token Animation`
+  - Active Effect changes affecting Token appearance will not trigger core Foundry's Token animation.
+
 # 4.18.2
 
 - Fixed HP comparitors for the `Low Fantasy Gaming` system

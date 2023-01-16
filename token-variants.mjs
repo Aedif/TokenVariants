@@ -82,6 +82,7 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
     (token.document ?? token).getFlag('token-variants', 'name') ||
     getFileName(token.document.texture.src);
   let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+  const animate = !TVA_CONFIG.disableTokenUpdateAnimation;
   const tokenUpdateObj = {};
   const hadActiveHUD = token.hasActiveHUD;
   const toggleStatus =
@@ -202,6 +203,7 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
         executeOnCallback
       ),
       config: config,
+      animate,
     });
   }
 
@@ -222,6 +224,7 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
         toggleStatus,
         executeOnCallback
       ),
+      animate,
     });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
     // clear it
@@ -240,6 +243,7 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
         toggleStatus,
         executeOnCallback
       ),
+      animate,
     });
   }
 }

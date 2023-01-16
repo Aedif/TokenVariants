@@ -535,6 +535,14 @@
           </div>
 
           <div class="form-group">
+            <label>Disable Token Animation</label>
+            <div class="form-fields">
+              <input type="checkbox" name="disableTokenUpdateAnimation" data-dtype="Boolean" {{#if disableTokenUpdateAnimation}}checked{{/if}}>
+            </div>
+            <p class="notes">Active Effect changes affecting Token appearance will not trigger core Foundry's Token animation.</p>
+          </div>
+
+          <div class="form-group">
             <label>Global Effect Configurations</label>
             <button class="token-variants-global-mapping" type="button">
                 <i class="fas fa-angle-double-right"></i>
