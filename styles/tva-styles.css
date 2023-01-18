@@ -341,20 +341,24 @@ ol.token-variant-table .table-row .path-share {
 }
 ol.token-variant-table .table-row .path-controls,
 ol.token-variant-table .table-row .effect-controls,
-ol.token-variant-table .table-row .imgur-control {
+ol.token-variant-table .table-row .imgur-control,
+ol.token-variant-table .table-row .json-control {
   flex: 0 0 40px;
   margin: 0;
   text-align: center;
 }
-ol.token-variant-table .table-row .imgur-control {
+ol.token-variant-table .table-row .imgur-control,
+ol.token-variant-table .table-row .json-control {
   display: none;
 }
-ol.token-variant-table .table-row .imgur-control.active {
+ol.token-variant-table .table-row .imgur-control.active,
+ol.token-variant-table .table-row .json-control.active {
   display: block;
 }
 ol.token-variant-table .table-row .path-controls i,
 ol.token-variant-table .table-row .effect-controls i,
-ol.token-variant-table .table-row .imgur-control i {
+ol.token-variant-table .table-row .imgur-control i,
+ol.token-variant-table .table-row .json-control i {
   width: 20px;
 }
 ol.token-variant-table .table-header {

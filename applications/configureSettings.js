@@ -169,6 +169,7 @@ export default class ConfigureSettings extends FormApplication {
     html.on('input', '.searchSource', this._onSearchSourceTextChange.bind(this));
     $(html).on('click', 'a.delete-path', this._onDeletePath.bind(this));
     $(html).on('click', 'a.convert-imgur', this._onConvertImgurPath.bind(this));
+    $(html).on('click', 'a.convert-json', this._onConvertJsonPath.bind(this));
     $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
     $(html).on('click', 'a.select-category', showPathSelectCategoryDialog.bind(this));
 
@@ -368,6 +369,64 @@ export default class ConfigureSettings extends FormApplication {
             name: data.title,
             description:
               'Token Variant Art auto generated RollTable: https://imgur.com/gallery/' + albumHash,
+            results: resultsArray,
+            replacement: true,
+            displayRoll: true,
+            img: 'modules/token-variants/img/token-images.svg',
+          });
+
+          pathInput.val(data.title);
+          sourceInput.val('rolltable').trigger('input');
+        }.bind(this)
+      )
+      .catch((error) => console.log('Token Variant Art | ', error));
+  }
+
+  /**
+   * Converts Json path to a rolltable
+   */
+   async _onConvertJsonPath(event) {
+    event.preventDefault();
+
+    const pathInput = $(event.target).closest('.table-row').find('.path-text input');
+    const sourceInput = $(event.target).closest('.table-row').find('.path-source input');
+
+    const jsonPath = pathInput.val();
+
+    fetch(jsonPath, {
+      headers: {
+        Accept: 'application/json',
+      },
+    })
+      .then((response) => response.json())
+      .then(
+        async function (result) {
+          if (!result.success && location.hostname === 'localhost') {
+            ui.notifications.warn(
+              game.i18n.format('token-variants.notifications.warn.json-localhost')
+            );
+            return;
+          }
+
+          const data = result.data;
+
+          let resultsArray = [];
+          data.forEach((img, i) => {
+            resultsArray.push({
+              type: 0,
+              text: img.name ?? '',
+              weight: 1,
+              range: [i + 1, i + 1],
+              collection: 'Text',
+              drawn: false,
+              img: img.path,
+            });
+          });
+
+          await RollTable.create({
+            name: data.title,
+            description:
+              'Token Variant Art auto generated RollTable: Json' + jsonPath,
             results: resultsArray,
             replacement: true,
             displayRoll: true,

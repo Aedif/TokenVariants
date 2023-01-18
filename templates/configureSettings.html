@@ -29,7 +29,7 @@
                   <div class="path-cache"><label>Cache</label></div>
                   <div class="path-controls"></div>
                 </li>
-          
+
                 {{#each searchPaths as |path index|}}
                 <li class="table-row flexrow">
                   <div class="path-image source-icon">
@@ -43,6 +43,11 @@
                   </div>
                   <div class="imgur-control {{#if (eq path.source 'imgur')}}active{{/if}}">
                     <a class="convert-imgur" title="Convert to Rolltable">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                  </div>
+                  <div class="json-control {{#if (eq path.source 'json')}}active{{/if}}">
+                    <a class="convert-json" title="Convert to Rolltable">
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                   </div>
@@ -134,14 +139,14 @@
             <input type="checkbox" name="algorithm.exact" data-dtype="Boolean" {{#if algorithm.exact}}checked{{/if}}>
             <p class="notes">{{localize "token-variants.settings.algorithm.window.exact-hint"}}</p>
           </div>
-        
+
           <h2>{{localize "token-variants.common.fuzzy"}}</h2>
           <div class="form-group">
             <label>{{localize "token-variants.common.enable"}}</label>
             <input type="checkbox" name="algorithm.fuzzy" data-dtype="Boolean" {{#if algorithm.fuzzy}}checked{{/if}}>
             <p class="notes">{{localize "token-variants.settings.algorithm.window.fuzzy-hint"}}</p>
           </div>
-        
+
           <div class="form-group">
             <label>{{localize "token-variants.settings.algorithm.window.percentage-match.Name"}}</label>
             <input
@@ -158,7 +163,7 @@
               {{localize "token-variants.settings.algorithm.window.percentage-match.Hint"}}
             </p>
           </div>
-        
+
           <div class="form-group">
             <label>{{localize "token-variants.settings.algorithm.window.art-select-slider.Name"}}</label>
             <input type="checkbox" name="algorithm.fuzzyArtSelectPercentSlider" data-dtype="Boolean" {{#if
@@ -167,7 +172,7 @@
               {{localize "token-variants.settings.algorithm.window.art-select-slider.Hint"}}
             </p>
           </div>
-        
+
           <div class="form-group">
             <label>{{localize "token-variants.common.limit"}}</label>
             <input
@@ -193,52 +198,52 @@
               </label>
               <input type="checkbox" name="randomizer.actorCreate" data-dtype="Boolean" {{#if randomizer.actorCreate}}checked{{/if}}>
             </div>
-          
+
             <hr />
-          
+
             <div class="form-group">
               <label>
                 {{localize "token-variants.settings.randomizer.window.token-image-on-token-create"}}
               </label>
               <input type="checkbox" name="randomizer.tokenCreate" data-dtype="Boolean" {{#if randomizer.tokenCreate}}checked{{/if}}>
             </div>
-          
+
             <div class="form-group">
               <label>
                 {{localize "token-variants.settings.randomizer.window.token-image-on-token-copy-paste"}}
               </label>
               <input type="checkbox" name="randomizer.tokenCopyPaste" data-dtype="Boolean" {{#if randomizer.tokenCopyPaste}}checked{{/if}}>
             </div>
-          
+
             <div class="form-group">
               <label>&nbsp;&nbsp;&nbsp;&nbsp; {{localize "token-variants.settings.randomizer.window.token-to-portrait"}}</label>
               <input type="checkbox" name="randomizer.tokenToPortrait" data-dtype="Boolean" {{#if randomizer.tokenToPortrait}}checked{{/if}} {{#if randomizer.tokenToPortraitDisabled}}disabled{{/if}}>
             </div>
-          
+
             <hr />
-          
+
             <div class="form-group">
               <label>{{localize "token-variants.settings.randomizer.window.different-images"}}</label>
               <input type="checkbox" name="randomizer.diffImages" data-dtype="Boolean" {{#if randomizer.diffImages}}checked{{/if}}>
             </div>
-          
+
             <div class="form-group">
               <label>&nbsp;&nbsp;&nbsp;&nbsp; {{localize "token-variants.settings.randomizer.window.sync-images"}}</label>
               <input type="checkbox" name="randomizer.syncImages" data-dtype="Boolean" {{#if randomizer.syncImages}}checked{{/if}} {{#unless randomizer.diffImages}}disabled{{/unless}}>
             </div>
-          
+
             <h2>{{localize "token-variants.settings.randomizer.window.search-types-heading"}}</h2>
-          
+
             <div class="form-group">
               <label>{{localize "token-variants.common.name"}}</label>
               <input type="checkbox" name="randomizer.tokenName" data-dtype="Boolean" {{#if randomizer.tokenName}}checked{{/if}}>
             </div>
-          
+
             <div class="form-group">
               <label>{{localize "token-variants.common.keywords"}}</label>
               <input type="checkbox" name="randomizer.keywords" data-dtype="Boolean" {{#if randomizer.keywords}}checked{{/if}}>
             </div>
-          
+
             <div class="form-group">
               <label>{{localize "token-variants.common.shared"}} <i class="fas fa-share"></i></label>
               <input type="checkbox" name="randomizer.shared" data-dtype="Boolean" {{#if randomizer.shared}}checked{{/if}}>
@@ -248,32 +253,32 @@
               <label>Wildcard *</label>
               <input type="checkbox" name="randomizer.wildcard" data-dtype="Boolean" {{#if randomizer.wildcard}}checked{{/if}}>
             </div>
-          
+
             <h2>{{localize "token-variants.settings.randomizer.window.disable-for"}}</h2>
-          
+
             <div class="form-group">
               <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.tokens-with-represented-actor"}}</label>
               <input type="checkbox" name="randomizer.representedActorDisable" data-dtype="Boolean" {{#if randomizer.representedActorDisable}}checked{{/if}}>
             </div>
-          
+
             <div class="form-group">
               <label>&nbsp;&nbsp;&nbsp;&nbsp;{{localize "token-variants.settings.randomizer.window.tokens-with-linked-actor-data"}}</label>
               <input type="checkbox" name="randomizer.linkedActorDisable" data-dtype="Boolean" {{#if randomizer.linkedActorDisable}}checked{{/if}}>
             </div>
-          
+
             <hr />
-          
+
             <h3>Actor Types</h3>
-          
+
             {{#each randomizer.actorTypes}}
             <div class="form-group">
               <label>&nbsp;&nbsp;&nbsp;&nbsp;{{this.label}}</label>
               <input type="checkbox" name="randomizer.{{@key}}Disable" data-dtype="Boolean" {{#if this.disable}}checked{{/if}}>
             </div>
             {{/each}}
-          
+
             <hr />
-          
+
             <div class="form-group">
               <h4>{{localize "token-variants.settings.randomizer.window.pop-up-if-randomization-disabled"}}</h4>
               <input type="checkbox" name="randomizer.popupOnDisable" data-dtype="Boolean" {{#if randomizer.popupOnDisable}}checked{{/if}}>
@@ -289,17 +294,17 @@
             <input type="checkbox" name="popup.twoPopups" data-dtype="Boolean" {{#if popup.twoPopups}}checked{{/if}}>
             <p class="notes">{{localize "token-variants.settings.pop-up.window.two-pop-ups.Hint"}}</p>
           </div>
-        
+
           <div class="form-group">
             <label>{{localize "token-variants.settings.pop-up.window.no-dialog.Name"}}</label>
             <input type="checkbox" name="popup.twoPopupsNoDialog" data-dtype="Boolean" {{#if popup.twoPopupsNoDialog}}checked{{/if}}>
             <p class="notes">{{localize "token-variants.settings.pop-up.window.no-dialog.Hint"}}</p>
           </div>
-        
+
           <div class="form-group">
             <label>{{localize "token-variants.settings.pop-up.window.disable-automatic-pop-ups-for"}}</label>
           </div>
-        
+
           {{#each popup.actorTypes}}
           <header class="table-header flexrow">
             {{#each this}}
@@ -315,7 +320,7 @@
             </li>
           </ul>
           {{/each}}
-        
+
           <header class="table-header flexrow">
             <label class="index">{{localize "token-variants.settings.pop-up.window.on-actor-create"}}</label>
             <label>{{localize "token-variants.settings.pop-up.window.on-token-create"}}</label>
@@ -345,7 +350,7 @@
             <label>Assistant GM</label>
             <label>Game Master</label>
           </header>
-        
+
           <ul class="permissions-list">
             <li class="permission form-group">
               <label class="index">Automatic Pop-ups</label>
@@ -357,7 +362,7 @@
               </div>
               <p class="hint">Allow players with this role to be shown automatic Art Select pop-ups.</p>
             </li>
-        
+
             <li class="permission form-group">
               <label class="index">Portrait Right-click</label>
               <div class="form-fields">
@@ -368,7 +373,7 @@
               </div>
               <p class="hint">Allow players with this role to open the Art Select from the Actor sheet.</p>
             </li>
-        
+
             <li class="permission form-group">
               <label class="index">Token Configuration Art Select</label>
               <div class="form-fields">
@@ -379,7 +384,7 @@
               </div>
               <p class="hint">Allow players with this role to open the Art Select from token configuration window.</p>
             </li>
-        
+
             <li class="permission form-group">
               <label class="index">Token HUD button</label>
               <div class="form-fields">
@@ -390,7 +395,7 @@
               </div>
               <p class="hint">Allow players with this role access to the Token HUD button (Shared and Wildcard art only)</p>
             </li>
-        
+
             <li class="permission form-group">
               <label class="index">Token HUD button FULL ACCESS</label>
               <div class="form-fields">
@@ -433,7 +438,7 @@
               {{localize "token-variants.settings.token-hud.window.display-shared-only.Hint"}}
             </p>
           </div>
-        
+
           <div class="form-group">
             <label> {{localize "token-variants.settings.compendium-mapper.window.include-keywords"}}</label>
             <div class="form-fields">
@@ -460,9 +465,9 @@
               When hovering over images instead of the file name full file path will be shown.
             </p>
           </div>
-        
+
           <hr/>
-        
+
           <div class="form-group">
             <label>{{localize "token-variants.settings.token-hud.window.update-actor-image.Name"}}</label>
             <div class="form-fields">
@@ -472,7 +477,7 @@
               {{localize "token-variants.settings.token-hud.window.update-actor-image.Hint"}}
             </p>
           </div>
-        
+
           <div class="form-group">
             <label>Use a similarly named file</label>
             <div class="form-fields">
@@ -482,13 +487,13 @@
               Instead of using the same image for the portrait the module will perform a Portrait image search and attempt to find a similarly named image.
             </p>
           </div>
-        
+
           <hr/>
-        
+
           {{#if worldHud.tokenHUDWildcardActive}}
-        
+
           <h2><b>Token HUD Wildcard</b></h2>
-        
+
           <div class="form-group">
             <label>{{localize "token-variants.settings.token-hud.window.disable-if-token-hud-wildcard-active.Name"}}</label>
             <div class="form-fields">
@@ -596,7 +601,7 @@
                 <label>Cache Images</label>
             </button>
           </div>
-          
+
           <hr>
 
           <div class="form-group">

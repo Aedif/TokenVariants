@@ -202,8 +202,10 @@
         "profile-image-not-found": "Token-Variant-Art: Unable to find profile image to assign right-click listener.",
         "path-not-found": "Unable to find path:",
         "invalid-table": "The table \"{rollTableName}\" could not be found",
+        "invalid-json": "The json file \"{jsonName}\" could not be found",
         "update-image-no-token-actor": "Calling 'updateImage' with no valid Token or Actor as update target.",
-        "imgur-localhost": "Imgur galleries cannot be accessed through clients running on 'localhost'"
+        "imgur-localhost": "Imgur galleries cannot be accessed through clients running on 'localhost'",
+        "json-localhost": "Json file cannot be accessed through clients running on 'localhost'"
       },
       "info": {
         "caching-started": "Token Variant Art: Caching Started",
