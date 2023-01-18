@@ -1,4 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { getFileName } from '../scripts/utils.js';
 import { cacheImages } from '../token-variants.mjs';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { showPathSelectCategoryDialog } from './dialogs.js';
@@ -401,14 +402,15 @@ export default class ConfigureSettings extends FormApplication {
       .then((response) => response.json())
       .then(
         async function (result) {
-          if (!result.success && location.hostname === 'localhost') {
+          if (!result.length > 0) {
             ui.notifications.warn(
               game.i18n.format('token-variants.notifications.warn.json-localhost')
             );
             return;
           }
 
-          const data = result.data;
+          const data = result;
+          data.title = getFileName(jsonPath);
 
           let resultsArray = [];
           data.forEach((img, i) => {
@@ -426,7 +428,7 @@ export default class ConfigureSettings extends FormApplication {
           await RollTable.create({
             name: data.title,
             description:
-              'Token Variant Art auto generated RollTable: Json' + jsonPath,
+              'Token Variant Art auto generated RollTable: ' + jsonPath,
             results: resultsArray,
             replacement: true,
             displayRoll: true,

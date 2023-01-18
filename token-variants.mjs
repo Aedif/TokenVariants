@@ -1414,10 +1414,10 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
           })
             .then((response) => response.json())
             .then(async function (result) {
-              if (!result.success) {
+              if (!result.length > 0) {
                 return;
               }
-              result.data.forEach((img) => {
+              result.forEach((img) => {
                 const rtName = img.name ?? getFileName(img.path);
                 addToFound({ path: img.path, name: rtName }, typeKey, found_images);
               });
