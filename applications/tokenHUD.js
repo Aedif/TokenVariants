@@ -100,6 +100,7 @@ function _onButtonRightClick(event, hud, html, token) {
         <input class="token-variants-side-search" type="text" />
         <button class="flags" type="button"><i class="fab fa-font-awesome-flag"></i><label>Flags</label></button>
         <button class="file-picker" type="button"><i class="fas fa-file-import fa-fw"></i><label>FilePicker</label></button>
+        <button class="effectConfig" type="button"><i class="fas fa-sun"></i><label>Effect Config</label></button>
       </div>
     </div>
       `);
@@ -139,6 +140,9 @@ function _onButtonRightClick(event, hud, html, token) {
           }
         },
       }).render(true);
+    });
+    contextMenu.find('.effectConfig').click((event) => {
+      new ActiveEffectConfigList(token).render(true);
     });
   }
 }

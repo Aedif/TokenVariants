@@ -1,3 +1,8 @@
+# 4.20.0
+
+- `Preset` option added for TMFX overlay filter
+  - Enables importing of preset parameters
+
 # 4.19.0
 
 - New setting: `Active Effects` > `Disable Token Animation`

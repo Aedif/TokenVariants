@@ -302,6 +302,15 @@ export default class ActiveEffectConfigList extends FormApplication {
       icon: 'fas fa-globe',
       onclick: (ev) => this._copyGlobalEffect(ev),
     });
+    buttons.unshift({
+      label: 'Open Global',
+      class: 'token-variants-open-global',
+      icon: 'fas fa-globe',
+      onclick: async (ev) => {
+        await this.close();
+        new ActiveEffectConfigList(this.token, true).render(true);
+      },
+    });
     return buttons;
   }
 

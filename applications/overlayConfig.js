@@ -38,6 +38,20 @@ export default class OverlayConfig extends FormApplication {
       this.activateListeners(filterOptions);
     });
 
+    html.find('.presetImport').on('click', (event) => {
+      const presetName = $(event.target).closest('.form-group').find('.tmfxPreset').val();
+      if (presetName) {
+        const preset = TokenMagic.getPreset(presetName);
+        if (preset) {
+          $(event.target)
+            .closest('.form-group')
+            .find('textarea')
+            .val(JSON.stringify(preset, null, 2))
+            .trigger('input');
+        }
+      }
+    });
+
     // Controls for locking scale sliders together
     let scaleState = { locked: true };
     const lockButtons = $(html).find('.scaleLock > a');
@@ -688,7 +702,10 @@ export const FILTERS = {
     defaultValues: {
       params: [],
     },
-    controls: [{ type: 'json', name: 'params' }],
+    controls: [
+      { type: 'tmfxPreset', name: 'tmfxPreset' },
+      { type: 'json', name: 'params' },
+    ],
   },
 };
 
@@ -811,7 +828,21 @@ function genControl(control, values) {
   </div>
 </div>
 `;
+  } else if (type === 'tmfxPreset' && game.modules.get('tokenmagic')?.active) {
+    let content = '<datalist id="tmfxPresets">';
+    TokenMagic.getPresets().forEach((p) => (content += `<option value="${p.name}">`));
+    content += `</datalist><input list="tmfxPresets" class="tmfxPreset">`;
+
+    return `
+      <div class="form-group">
+        <label>Preset <span class="units">(TMFX)</span></label>
+        <div class="form-fields">
+          ${content}
+          <button type="button" class="presetImport"><i class="fas fa-download"></i></button>
+        </div>
+      `;
   }
+  return '';
 }
 
 async function promptParamChoice(params) {
