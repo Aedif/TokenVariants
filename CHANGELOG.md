@@ -1,3 +1,7 @@
+# 4.21.0
+
+- Added a TMFX preset field to the Active Effect script configuration form
+
 # 4.20.0
 
 - `Preset` option added for TMFX overlay filter

@@ -26,6 +26,12 @@ export default class EditScriptConfig extends FormApplication {
     data.onApply = script.onApply;
     data.onRemove = script.onRemove;
 
+    data.tmfxPreset = script.tmfxPreset;
+    data.tmfxActive = game.modules.get('tokenmagic')?.active;
+    if (data.tmfxActive) {
+      data.tmfxPresets = TokenMagic.getPresets().map((p) => p.name);
+    }
+
     return data;
   }
 
@@ -61,10 +67,15 @@ export default class EditScriptConfig extends FormApplication {
   async _updateObject(event, formData) {
     formData.onApply = formData.onApply.trim();
     formData.onRemove = formData.onRemove.trim();
-    if (!formData.onApply && !formData.onRemove) {
+    if (!formData.onApply && !formData.onRemove && !formData.tmfxPreset) {
       if (this.callback) this.callback(null);
     } else {
-      if (this.callback) this.callback({ onApply: formData.onApply, onRemove: formData.onRemove });
+      if (this.callback)
+        this.callback({
+          onApply: formData.onApply,
+          onRemove: formData.onRemove,
+          tmfxPreset: formData.tmfxPreset,
+        });
     }
   }
 }

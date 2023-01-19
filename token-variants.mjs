@@ -33,6 +33,7 @@ import {
   isImage,
   applyHealthEffects,
   getAllEffectMappings,
+  applyTMFXPreset,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -72,7 +73,11 @@ async function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scri
     if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
   }
   for (const scr of scripts) {
-    await tv_executeScript(scr.script, { token: scr.token });
+    if (scr.script) {
+      await tv_executeScript(scr.script, { token: scr.token });
+    } else if (scr.tmfxPreset) {
+      await applyTMFXPreset(scr.token, scr.tmfxPreset, scr.action);
+    }
   }
 }
 
@@ -95,10 +100,14 @@ export async function updateWithEffectMapping(token, effects, { added = [], remo
   for (const ef of added) {
     const onApply = mappings[ef]?.config?.tv_script?.onApply;
     if (onApply) executeOnCallback.push({ script: onApply, token: token });
+    const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
+    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
   }
   for (const ef of removed) {
     const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
     if (onRemove) executeOnCallback.push({ script: onRemove, token: token });
+    const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
+    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
   }
 
   // Need to broadcast to other users to re-draw the overlay

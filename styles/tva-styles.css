@@ -709,3 +709,15 @@ ol.token-variant-table .table-row .effect-config-script.active {
 .token-variants-randomImgDefault.active {
   display: block;
 }
+
+/* ---------------------------------------- */
+/* Active Effect Scripts                    */
+/* ---------------------------------------- */
+
+.token-variants-macro {
+  flex: 10;
+}
+
+.token-variants-macro > .form-group {
+  height: 50%;
+}

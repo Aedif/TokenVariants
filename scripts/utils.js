@@ -833,6 +833,21 @@ export async function tv_executeScript(script, { actor, token } = {}) {
   }
 }
 
+export async function applyTMFXPreset(token, presetName, action = 'apply') {
+  if (game.modules.get('tokenmagic')?.active) {
+    const preset = TokenMagic.getPreset(presetName);
+    if (preset) {
+      if (action === 'apply') {
+        await TokenMagic.addUpdateFilters(token, preset);
+      } else if (action === 'remove') {
+        for (const filter of preset) {
+          if (filter?.filterId) await TokenMagic.deleteFilters(token, filter.filterId);
+        }
+      }
+    }
+  }
+}
+
 async function _drawEffectOverlay(token, conf) {
   let img = conf.img;
   if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
