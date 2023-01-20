@@ -3,8 +3,8 @@ import {
   SEARCH_TYPE,
   getFileName,
   isVideo,
-  getTokenEffects,
   setGlobalEffectMappings,
+  fixEffectMappings,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -14,7 +14,7 @@ import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog } from './dialogs.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
-  constructor(token, globalMappings = false, callback = null) {
+  constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
     super({}, { title: (globalMappings ? 'GLOBAL ' : '') + 'Effect Config' });
 
     this.token = token;
@@ -23,6 +23,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     }
     if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
     this.callback = callback;
+    this.createMapping = createMapping;
   }
 
   static get defaultOptions() {
@@ -35,7 +36,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       closeOnSubmit: false,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      width: 520,
+      width: 570,
     });
   }
 
@@ -49,6 +50,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       const effectMappings = this.globalMappings
         ? this.globalMappings
         : this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
+      fixEffectMappings(effectMappings);
       for (const [effectName, attrs] of Object.entries(effectMappings)) {
         if (!attrs.config) attrs.config = {};
         let hasTokenConfig = Object.keys(attrs.config).length;
@@ -70,6 +72,18 @@ export default class ActiveEffectConfigList extends FormApplication {
           overlayConfig: attrs.overlayConfig,
         });
       }
+
+      if (this.createMapping && !(this.createMapping in effectMappings)) {
+        mappings.push({
+          effectName: this.createMapping,
+          imgName: '',
+          imgSrc: '',
+          priority: 50,
+          overlay: false,
+          alwaysOn: false,
+        });
+      }
+      this.createMapping = null;
     }
 
     this.object.mappings = mappings;
@@ -88,6 +102,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.save-mappings').click(this._onSaveMappings.bind(this));
     if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
       html.find('.effect-image img').click(this._onImageClick.bind(this));
+      html.find('.effect-image img').mousedown(this._onImageMouseDown.bind(this));
       html.find('.effect-image video').click(this._onImageClick.bind(this));
     }
     html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
@@ -201,6 +216,18 @@ export default class ActiveEffectConfigList extends FormApplication {
     ).render(true);
   }
 
+  async _onImageMouseDown(event) {
+    if (event.which === 2) {
+      const vid = $(event.target).closest('.effect-image').find('video');
+      const img = $(event.target).closest('.effect-image').find('img');
+      vid.add(img).attr('src', '').attr('title', '');
+      vid.hide();
+      img.show();
+      $(event.target).siblings('.imgSrc').val('');
+      $(event.target).siblings('.imgName').val('');
+    }
+  }
+
   async _onImageClick(event) {
     let search = this.token.name;
     if (search === 'Unknown') {
@@ -308,7 +335,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       icon: 'fas fa-globe',
       onclick: async (ev) => {
         await this.close();
-        new ActiveEffectConfigList(this.token, true).render(true);
+        new ActiveEffectConfigList(this.token, { globalMappings: true }).render(true);
       },
     });
     return buttons;
@@ -420,11 +447,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       // First filter out empty mappings
       let mappings = this.object.mappings;
       mappings = mappings.filter(function (mapping) {
-        if (!mapping.effectName) return false;
-        if (mapping.config && Object.keys(mapping.config).filter((k) => mapping.config[k]).length)
-          return true;
-        if (mapping.imgSrc && mapping.imgName) return true;
-        return false;
+        return Boolean(mapping.effectName?.trim());
       });
 
       // Make sure a priority is assigned
@@ -468,7 +491,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           if (TVA_CONFIG.filterEffectIcons) {
             await tkn.drawEffects();
           }
-          updateWithEffectMapping(tkn, getTokenEffects(tkn));
+          updateWithEffectMapping(tkn);
           // Instruct users on other scenes to refresh the overlays
           const message = {
             handlerName: 'drawOverlays',

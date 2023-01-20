@@ -1,3 +1,6 @@
+import { fixEffectMappings, SEARCH_TYPE } from '../scripts/utils.js';
+import { showArtSelect } from '../token-variants.mjs';
+
 export default class OverlayConfig extends FormApplication {
   constructor(config, callback, effectName, token) {
     super({}, {});
@@ -36,6 +39,16 @@ export default class OverlayConfig extends FormApplication {
       html.find('.filterOptions').append(filterOptions);
       this.setPosition({ height: 'auto' });
       this.activateListeners(filterOptions);
+    });
+
+    html.find('.token-variants-image-select-button').click((event) => {
+      showArtSelect(this.token?.name ?? 'overlay', {
+        searchType: SEARCH_TYPE.TOKEN,
+        callback: (imgSrc, imgName) => {
+          if (imgSrc)
+            $(event.target).closest('.form-group').find('input').val(imgSrc).trigger('change');
+        },
+      });
     });
 
     html.find('.presetImport').on('click', (event) => {
@@ -151,9 +164,11 @@ export default class OverlayConfig extends FormApplication {
             if (this.token) {
               previewIcons.push(c);
             } else if (
-              !(tkn.actor ? tkn.actor.getFlag('token-variants', 'effectMappings') || {} : {})[
-                this.config.effect
-              ]
+              !(
+                tkn.actor
+                  ? fixEffectMappings(tkn.actor.getFlag('token-variants', 'effectMappings') || {})
+                  : {}
+              )[this.config.effect]
             ) {
               previewIcons.push(c);
             }
@@ -214,6 +229,7 @@ export default class OverlayConfig extends FormApplication {
         limitToUser: false,
         limitedUsers: [],
         alwaysVisible: false,
+        img: '',
       },
       this.config || {}
     );

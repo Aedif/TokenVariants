@@ -8,7 +8,6 @@ import {
   updateTokenImage,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import TVAActiveEffectConfig from './activeEffectConfig.js';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
@@ -601,11 +600,9 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new TVAActiveEffectConfig(
-            token,
-            event.target.getAttribute('src'),
-            'token-variants-visibility'
-          ).render(true);
+          new ActiveEffectConfigList(token, { createMapping: 'token-variants-visibility' }).render(
+            true
+          );
         }
       });
 
@@ -615,11 +612,9 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new TVAActiveEffectConfig(
-            token,
-            event.target.getAttribute('src'),
-            'token-variants-combat'
-          ).render(true);
+          new ActiveEffectConfigList(token, { createMapping: 'token-variants-combat' }).render(
+            true
+          );
         }
       });
 
@@ -634,9 +629,7 @@ function activateStatusEffectListeners(token) {
           if (game.system.id === 'pf2e') {
             effectName = $(event.target).closest('picture').attr('title');
           }
-          new TVAActiveEffectConfig(token, event.target.getAttribute('src'), effectName).render(
-            true
-          );
+          new ActiveEffectConfigList(token, { createMapping: effectName }).render(true);
         }
       });
   }

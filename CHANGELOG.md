@@ -1,3 +1,18 @@
+# 4.22.0
+
+Active Effect Configuration
+
+- Restrictions have been lifted on the data required for the config to be saved
+  - Configs now only require the **Effect Name** to be filled out allowing global configs to be effectively disabled for a specific actor by just filling out an empty config
+- Support added for composite active effect configs
+  - **Effect Name** fields can now be filled out with a list of effects that all need to be active for the config to be applied
+  - Effects are separated using `&&`
+  - e.g. "Shocked && Frozen"
+- New Overlay option added: **Appearance** > **Image Path**
+  - Token image and overlay image can now be configured independently of each other
+  - To not impact previously setup configurations, overlay **Image Path** will by default inherit the token image
+  - Token image can now also be removed by clicking the middle mouse button
+
 # 4.21.0
 
 - Added a TMFX preset field to the Active Effect script configuration form

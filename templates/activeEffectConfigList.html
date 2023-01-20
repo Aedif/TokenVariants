@@ -7,7 +7,7 @@
         </div>
         <div class="effect-name"><label>Effect Name</label></div>
         <div class="effect-priority"><label>Priority</label></div>
-        <div class="effect-image"><label>Image</label></div>
+        <div class="effect-image"><label>Token Image</label></div>
         <div class="effect-config"><label>Config</label></div>
         <div class="effect-overlay"><label>Overlay</label></div>
         <div class="effect-alwaysOn"><label>Always On</label></div>
@@ -25,6 +25,7 @@
             name="mappings.{{index}}.effectName"
             value="{{mapping.effectName}}"
             placeholder="effect name"
+            title="e.g. Flying&#013;Composite effect: Dead && Burning&#013;HP comparison: hp<=50%"
           />
         </div>
         <div class="effect-priority">
@@ -71,7 +72,7 @@
           <a><i class="fas fa-cog fa-lg overlay-config"></i></a>
         </div>
         <div class="effect-alwaysOn">
-          <input type="checkbox" name="mappings.{{index}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}}/>
+          <input type="checkbox" name="mappings.{{index}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>
         </div>
       </li>
       {{/each}}

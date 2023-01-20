@@ -6,6 +6,8 @@ import CompendiumMapConfig from '../applications/compendiumMap.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
+export const COMPOSITE_EFFECT_SEPARATOR = '&&';
+
 // Types of searches
 export const SEARCH_TYPE = {
   PORTRAIT: 'Portrait',
@@ -402,7 +404,7 @@ export function registerKeybinds() {
       const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
       const data = new foundry.data.PrototypeToken(setting);
       const token = new TokenDocument(data, { actor: null });
-      new ActiveEffectConfigList(token, true).render(true);
+      new ActiveEffectConfigList(token, { globalMappings: true }).render(true);
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
@@ -871,14 +873,13 @@ export async function drawOverlays(token) {
   token.tva_drawing_overlays = true;
 
   const mappings = getAllEffectMappings(token);
-  let filteredOverlays = getTokenEffects(token);
+  let filteredOverlays = getTokenEffects(token, true);
 
   filteredOverlays = filteredOverlays
     .filter((ef) => ef in mappings && mappings[ef].overlay)
     .sort((ef1, ef2) => mappings[ef1].priority - mappings[ef2].priority)
     .map((ef) => {
       const overlayConfig = mappings[ef].overlayConfig ?? {};
-      overlayConfig.img = mappings[ef].imgSrc;
       overlayConfig.effect = ef;
       return overlayConfig;
     });
@@ -1009,7 +1010,7 @@ export function getEffectsFromActor(actor) {
   return effects;
 }
 
-export function getTokenEffects(token, ignore = []) {
+export function getTokenEffects(token, generateCompositeEffects = false) {
   const data = token.document ? token.document : token;
   let effects = [];
 
@@ -1055,8 +1056,24 @@ export function getTokenEffects(token, ignore = []) {
 
   applyHealthEffects(token, effects);
 
-  if (ignore.length) return effects.filter((ef) => !ignore.includes(ef));
-  else return effects;
+  // Include composite-effects if need be
+  if (generateCompositeEffects) {
+    for (const ef of Object.keys(mappings)) {
+      const efs = ef.split(COMPOSITE_EFFECT_SEPARATOR).map((ef) => ef.trim());
+      if (efs.length > 1) {
+        let allIncluded = true;
+        for (const e of efs) {
+          if (!effects.includes(e)) {
+            allIncluded = false;
+            break;
+          }
+        }
+        if (allIncluded && !effects.includes(ef)) effects.unshift(ef);
+      }
+    }
+  }
+
+  return effects;
 }
 
 export class TokenDataAdapter {
@@ -1203,13 +1220,33 @@ export async function wildcardImageSearch(imgSrc) {
 }
 
 export function getAllEffectMappings(token = null) {
+  let allMappings;
+
   if (token) {
-    return mergeObject(
+    allMappings = mergeObject(
       TVA_CONFIG.globalMappings,
       token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
       { inplace: false, recursive: false }
     );
   } else {
-    return TVA_CONFIG.globalMappings;
+    allMappings = TVA_CONFIG.globalMappings;
   }
+
+  fixEffectMappings(allMappings);
+
+  return allMappings;
+}
+
+// 19/01/2023
+// The same mapping can now apply both an image change as well as an overlay
+// We need to adjust old configs to account for this
+export function fixEffectMappings(mappings) {
+  for (const v of Object.values(mappings)) {
+    if (v.overlay && !v.overlayConfig.img) {
+      v.overlayConfig.img = v.imgSrc;
+      v.imgSrc = null;
+      v.imgName = null;
+    }
+  }
+  return mappings;
 }

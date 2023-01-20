@@ -239,11 +239,10 @@ export default class ConfigureSettings extends FormApplication {
       const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
       const data = new foundry.data.PrototypeToken(setting);
       const token = new TokenDocument(data, { actor: null });
-      new ActiveEffectConfigList(
-        token,
-        true,
-        () => (this.settings.globalMappings = TVA_CONFIG.globalMappings)
-      ).render(true);
+      new ActiveEffectConfigList(token, {
+        globalMappings: true,
+        callback: () => (this.settings.globalMappings = TVA_CONFIG.globalMappings),
+      }).render(true);
     });
   }
 
