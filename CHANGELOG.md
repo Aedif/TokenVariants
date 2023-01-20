@@ -1,3 +1,8 @@
+# 4.22.2
+
+- Fixed hp comparators not working in composite effects containing regular effect names
+  - e.g. hp<=50% && Shocked
+
 # 4.22.1
 
 - Fixed hp comparators not working as composite effects

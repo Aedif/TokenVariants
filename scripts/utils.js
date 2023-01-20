@@ -1159,20 +1159,21 @@ export function applyHealthEffects(token, effects = []) {
     const hpPercent = (currHP / maxHP) * 100;
 
     const matched = {};
+    let compositePriority = 10000;
 
     for (const key of Object.keys(mappings)) {
       const expressions = key.split(COMPOSITE_EFFECT_SEPARATOR).map((exp) => exp.trim());
-      let passed = false;
-      for (const exp of expressions) {
+      for (let i = 0; i < expressions.length; i++) {
+        const exp = expressions[i];
         const match = exp.match(re);
         if (match) {
-          const mapping = match[0];
           const sign = match[1];
           const val = match[2];
           const isPercentage = Boolean(match[3]);
 
           const toCompare = isPercentage ? hpPercent : currHP;
 
+          let passed = false;
           if (sign === '=') {
             passed = toCompare == val;
           } else if (sign === '>') {
@@ -1184,16 +1185,25 @@ export function applyHealthEffects(token, effects = []) {
           } else if (sign === '<=') {
             passed = toCompare <= val;
           }
-          if (!passed) break;
+          if (passed) {
+            if (expressions.length > 1) {
+              compositePriority++;
+              matched[compositePriority] = exp;
+            } else {
+              matched[mappings[key].priority] = exp;
+            }
+          }
         }
-      }
-      if (passed) {
-        matched[mappings[key].priority] = key;
       }
     }
 
+    // Remove duplicate expressions and insert into effects
+    const tempSet = new Set();
     for (const [k, v] of Object.entries(matched)) {
-      effects.unshift(v);
+      if (!tempSet.has(v)) {
+        effects.unshift(v);
+        tempSet.add(v);
+      }
     }
   }
 
