@@ -1161,31 +1161,34 @@ export function applyHealthEffects(token, effects = []) {
     const matched = {};
 
     for (const key of Object.keys(mappings)) {
-      const match = key.match(re);
-      if (match) {
-        const mapping = match[0];
-        const sign = match[1];
-        const val = match[2];
-        const isPercentage = Boolean(match[3]);
+      const expressions = key.split(COMPOSITE_EFFECT_SEPARATOR).map((exp) => exp.trim());
+      let passed = false;
+      for (const exp of expressions) {
+        const match = exp.match(re);
+        if (match) {
+          const mapping = match[0];
+          const sign = match[1];
+          const val = match[2];
+          const isPercentage = Boolean(match[3]);
 
-        const toCompare = isPercentage ? hpPercent : currHP;
+          const toCompare = isPercentage ? hpPercent : currHP;
 
-        let passed = false;
-        if (sign === '=') {
-          passed = toCompare == val;
-        } else if (sign === '>') {
-          passed = toCompare > val;
-        } else if (sign === '<') {
-          passed = toCompare < val;
-        } else if (sign === '>=') {
-          passed = toCompare >= val;
-        } else if (sign === '<=') {
-          passed = toCompare <= val;
+          if (sign === '=') {
+            passed = toCompare == val;
+          } else if (sign === '>') {
+            passed = toCompare > val;
+          } else if (sign === '<') {
+            passed = toCompare < val;
+          } else if (sign === '>=') {
+            passed = toCompare >= val;
+          } else if (sign === '<=') {
+            passed = toCompare <= val;
+          }
+          if (!passed) break;
         }
-
-        if (passed) {
-          matched[mappings[key].priority] = mapping;
-        }
+      }
+      if (passed) {
+        matched[mappings[key].priority] = key;
       }
     }
 

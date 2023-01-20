@@ -1,3 +1,8 @@
+# 4.22.1
+
+- Fixed hp comparators not working as composite effects
+  - e.g. hp>0 && hp<=50%
+
 # 4.22.0
 
 Active Effect Configuration
