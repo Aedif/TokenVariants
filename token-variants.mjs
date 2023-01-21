@@ -1777,6 +1777,24 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
         }
       }
       return;
+    } else if (path.source.startsWith('json')) {
+      await fetch(path.text, {
+          headers: {
+            Accept: 'application/json',
+          },
+        })
+          .then((response) => response.json())
+          .then(async function (result) {
+            if (!result.length > 0) {
+              return;
+            }
+            result.forEach((img) => {
+              const rtName = img.name ?? getFileName(img.path);
+              addToFound({ path: img.path, name: rtName }, typeKey, found_images);
+            });
+          })
+          .catch((error) => console.log('Token Variant Art: ', error));
+      return;
     } else {
       files = await FilePicker.browse(path.source, path.text);
     }

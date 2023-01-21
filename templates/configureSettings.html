@@ -46,6 +46,11 @@
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                   </div>
+                  <div class="json-control {{#if (eq path.source 'json')}}active{{/if}}">
+                    <a class="convert-json" title="Convert to Rolltable">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                  </div>
                   <div class="path-category">
                     <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
                     <input type="hidden" name="searchPaths.{{index}}.types" value="{{path.types}}">
