@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Alchemy",
+    "path": "trade_alchemy"
+  },
+  {
+    "name": "Blacksmithing",
+    "path": "trade_blacksmithing"
+  },
+  {
+    "name": "Cooking",
+    "path": "inv_misc_food_15"
+  },
+  {
+    "name": "Enchanting",
+    "path": "trade_engraving"
+  },
+  {
+    "name": "Engineering",
+    "path": "trade_engineering"
+  },
+  {
+    "name": "Herbalism",
+    "path": "spell_nature_naturetouchgrow"
+  },
+  {
+    "name": "First Aid",
+    "path": "spell_holy_sealofsacrifice"
+  },
+  {
+    "name": "Fishing",
+    "path": "trade_fishing"
+  },
+  {
+    "name": "Mining",
+    "path": "trade_mining"
+  },
+  {
+    "name": "Leatherworking",
+    "path": "inv_misc_armorkit_17"
+  },
+  {
+    "name": "Skinning",
+    "path": "inv_misc_pelt_wolf_01"
+  },
+  {
+    "name": "Tailoring",
+    "path": "trade_tailoring"
+  },
+  {
+    "name": "Jewelcrafting",
+    "path": "inv_misc_gem_01"
+  },
+  {
+    "name": "Inscription",
+    "path": "inv_inscription_tradeskill01"
+  }
+]

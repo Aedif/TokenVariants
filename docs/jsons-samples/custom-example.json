@@ -1,0 +1,17 @@
+[
+	{
+		"name": "This is my item name",
+		"path": "this/is/the/image/I/will/use.png",
+		"tags": []
+	},
+	{
+		"name": "You can reference icons beneath the Icon directory (see Iconizer's module settings)",
+		"path": "this/is/under/the/iconizer/directory.png",
+		"tags": []
+	},
+	{
+		"name": "Or you can reference absolute paths",
+		"path": "/this/path/does/not/include/icon/directory.png",
+		"tags": []
+	}
+]
