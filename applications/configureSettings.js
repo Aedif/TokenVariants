@@ -311,19 +311,30 @@ export default class ConfigureSettings extends FormApplication {
       return;
     }
 
-    new FilePicker({
-      type: 'folder',
-      activeSource: activeSource,
-      current: current,
-      callback: (path, fp) => {
-        pathInput.val(fp.result.target);
-        if (fp.activeSource === 's3') {
-          sourceInput.val(`s3:${fp.result.bucket}`);
-        } else {
-          sourceInput.val(fp.activeSource);
-        }
-      },
-    }).render(true);
+    if (activeSource === 'json') {
+      new FilePicker({
+        type: 'text',
+        activeSource: 'data',
+        current: current,
+        callback: (path, fp) => {
+          pathInput.val(path);
+        },
+      }).render(true);
+    } else {
+      new FilePicker({
+        type: 'folder',
+        activeSource: activeSource,
+        current: current,
+        callback: (path, fp) => {
+          pathInput.val(fp.result.target);
+          if (fp.activeSource === 's3') {
+            sourceInput.val(`s3:${fp.result.bucket}`);
+          } else {
+            sourceInput.val(fp.activeSource);
+          }
+        },
+      }).render(true);
+    }
   }
 
   /**
@@ -431,8 +442,7 @@ export default class ConfigureSettings extends FormApplication {
 
           await RollTable.create({
             name: data.title,
-            description:
-              'Token Variant Art auto generated RollTable: ' + jsonPath,
+            description: 'Token Variant Art auto generated RollTable: ' + jsonPath,
             results: resultsArray,
             replacement: true,
             displayRoll: true,
@@ -465,6 +475,9 @@ export default class ConfigureSettings extends FormApplication {
         </div>
         <div class="imgur-control">
             <a class="convert-imgur" title="Convert to Rolltable"><i class="fas fa-angle-double-left"></i></a>
+        </div>
+        <div class="json-control">
+          <a class="convert-json" title="Convert to Rolltable"><i class="fas fa-angle-double-left"></i></a>
         </div>
         <div class="path-category">
             <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
@@ -529,10 +542,15 @@ export default class ConfigureSettings extends FormApplication {
   async _onSearchSourceTextChange(event) {
     const image = this._pathIcon(event.target.value);
     const imgur = image === 'fas fa-info';
+    const json = image === 'fas fa-brackets-curly';
 
     const imgurControl = $(event.currentTarget).closest('.table-row').find('.imgur-control');
     if (imgur) imgurControl.addClass('active');
     else imgurControl.removeClass('active');
+
+    const jsonControl = $(event.currentTarget).closest('.table-row').find('.json-control');
+    if (json) jsonControl.addClass('active');
+    else jsonControl.removeClass('active');
 
     $(event.currentTarget).closest('.table-row').find('.path-image i').attr('class', image);
   }
@@ -547,6 +565,8 @@ export default class ConfigureSettings extends FormApplication {
       return 'fas fa-hammer';
     } else if (source.startsWith('imgur')) {
       return 'fas fa-info';
+    } else if (source.startsWith('json')) {
+      return 'fas fa-brackets-curly';
     }
 
     return 'fas fa-folder';

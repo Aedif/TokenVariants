@@ -1,3 +1,32 @@
+# 4.23.0
+
+**Active Effect Configuration**
+
+- Effect names now accept any logical expression
+  - Operators: `\(`, `\)`, `\!`, `&&`, `||`
+  - e.g. `\(` Flying `&&` `\!` Prone `\)` `||` Levitating
+  - These operators as well as `hp` comparators will be highlighted in the Effect Name textbox
+- Global Configurations can now be set to apply on specific actor types
+
+**Search Paths**
+
+- JSON files can now be provided as **Search Path**
+  - Credit goes to `p4535992`
+  - Accepted format:
+
+```
+ {
+   "name": "Alchemist's Fire",
+   "path": "icons/consumables/potions/bottle-round-corked-yellow.webp",
+   "tags": ["consumable", "alchemist", "fire"]
+ },
+ {
+   "name": "Alchemist's supplies",
+   "path": "icons/containers/bags/pouch-leather-green.webp",
+   "tags": ["tool", "alchemist"]
+ }
+```
+
 # 4.22.2
 
 - Fixed hp comparators not working in composite effects containing regular effect names

@@ -1419,7 +1419,9 @@ export async function saveCache(cacheFile) {
   for (const c of caches) {
     if (!(c in data)) data[c] = [];
     for (const img of CACHED_IMAGES[c]) {
-      if (getFileName(img.path) === img.name) {
+      if (img.tags) {
+        data[c].push([img.path, img.name, img.tags]);
+      } else if (getFileName(img.path) === img.name) {
         data[c].push(img.path);
       } else {
         data[c].push([img.path, img.name]);
@@ -1438,20 +1440,15 @@ async function _readCacheFromFile(fileName) {
   try {
     await jQuery.getJSON(fileName, (json) => {
       for (let category in json) {
-        // Old version cache support
-        if (category === 'tokenImages') {
-          category = 'Portrait,Token,PortraitAndToken';
-          json[category] = json.tokenImages;
-        } else if (category === 'tileImages') {
-          category = 'Tile';
-          json[category] = json.tileImages;
-        }
-
         CACHED_IMAGES[category] = [];
 
         for (const img of json[category]) {
           if (Array.isArray(img)) {
-            CACHED_IMAGES[category].push({ path: img[0], name: img[1] });
+            if (img.length === 3) {
+              CACHED_IMAGES[category].push({ path: img[0], name: img[1], tags: img[2] });
+            } else {
+              CACHED_IMAGES[category].push({ path: img[0], name: img[1] });
+            }
           } else {
             CACHED_IMAGES[category].push({ path: img, name: getFileName(img) });
           }
@@ -1754,21 +1751,21 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
       return;
     } else if (path.source.startsWith('json')) {
       await fetch(path.text, {
-          headers: {
-            Accept: 'application/json',
-          },
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+        .then((response) => response.json())
+        .then(async function (result) {
+          if (!result.length > 0) {
+            return;
+          }
+          result.forEach((img) => {
+            const rtName = img.name ?? getFileName(img.path);
+            addToFound({ path: img.path, name: rtName, tags: img.tags }, typeKey, found_images);
+          });
         })
-          .then((response) => response.json())
-          .then(async function (result) {
-            if (!result.length > 0) {
-              return;
-            }
-            result.forEach((img) => {
-              const rtName = img.name ?? getFileName(img.path);
-              addToFound({ path: img.path, name: rtName, tags: img.tags }, typeKey, found_images);
-            });
-          })
-          .catch((error) => console.log('Token Variant Art: ', error));
+        .catch((error) => console.log('Token Variant Art: ', error));
       return;
     } else {
       files = await FilePicker.browse(path.source, path.text);

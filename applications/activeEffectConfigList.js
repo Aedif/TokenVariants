@@ -519,7 +519,6 @@ export default class ActiveEffectConfigList extends FormApplication {
               }
             });
             mapping.targetActors = targetActors;
-            console.log(mapping.targetActors);
           },
         },
       },
