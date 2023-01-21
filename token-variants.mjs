@@ -34,7 +34,7 @@ import {
   applyHealthEffects,
   getAllEffectMappings,
   applyTMFXPreset,
-  COMPOSITE_EFFECT_SEPARATOR,
+  evaluateEffectAsExpression,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -82,24 +82,6 @@ async function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scri
   }
 }
 
-function processMultiEffectMappings(mappings, effects, added, removed) {}
-
-/**
- * Searches array for a given string and places it at the end of it whether
- * it already exists in the array or not.
- * @param {*} string
- * @param {*} arr
- */
-function findAndStack(string, arr) {
-  const i = arr.findIndex((s) => s === string);
-  if (i === -1) {
-    arr.push(string);
-  } else if (i < arr.length - 1) {
-    arr.splice(i, 1);
-    arr.push(string);
-  }
-}
-
 export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
   token = token._object ? token._object : token;
   const tokenImgName =
@@ -135,34 +117,27 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
 
   const mappings = getAllEffectMappings(token);
 
-  // 3. Configurations may contain effect lists; two or more effects that combine into a composite effect
-  //    We need to insert these and make them part of `added` and `removed` arrays
+  // 3. Configurations may contain effect names in a form of a logical expression
+  //    We need to evaluate them and insert them into effects/added/removed if needed
   for (const key of Object.keys(mappings)) {
-    const arr = key.split(COMPOSITE_EFFECT_SEPARATOR).map((ef) => ef.trim());
-    if (arr.length > 1) {
-      let allIncluded = true;
-      for (const mef of arr) {
-        if (!effects.includes(mef)) {
-          allIncluded = false;
+    const [evaluation, identifiedEffects] = evaluateEffectAsExpression(key, effects);
+    if (identifiedEffects == null) continue;
+    if (evaluation) {
+      let containsAdded = false;
+      for (const ef of identifiedEffects) {
+        if (added.includes(ef) || removed.includes(ef)) {
+          containsAdded = true;
+          added.push(key);
           break;
         }
       }
-      if (allIncluded) {
-        let hasBeenAdded = false;
-        for (const mef of arr) {
-          if (added.includes(mef)) {
-            added.push(key);
-            hasBeenAdded = true;
-            break;
-          }
-        }
-        if (hasBeenAdded) effects.push(key);
-        else effects.unshift(key);
-      } else {
-        for (const mef of arr) {
-          if (removed.includes(mef)) {
-            removed.push(key);
-          }
+      if (containsAdded) effects.push(key);
+      else effects.unshift(key);
+    } else {
+      for (const ef of identifiedEffects) {
+        if (removed.includes(ef) || added.includes(ef)) {
+          removed.push(key);
+          break;
         }
       }
     }

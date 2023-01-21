@@ -5,6 +5,7 @@ import {
   isVideo,
   setGlobalEffectMappings,
   fixEffectMappings,
+  EXPRESSION_OPERATORS,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -36,7 +37,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       closeOnSubmit: false,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      width: 570,
+      width: 600,
     });
   }
 
@@ -59,6 +60,7 @@ export default class ActiveEffectConfigList extends FormApplication {
 
         mappings.push({
           effectName: effectName,
+          highlightedEffectName: highlightOperators(effectName),
           imgName: attrs.imgName,
           imgSrc: attrs.imgSrc,
           isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
@@ -117,6 +119,35 @@ export default class ActiveEffectConfigList extends FormApplication {
       this._onOverlayConfigRightClick.bind(this)
     );
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
+    html.find('.div-input').on('input paste', this._onEffectNameChange);
+  }
+
+  async _onEffectNameChange(event) {
+    var el = event.target;
+
+    // Update the hidden input field so that the text entered in the div will be submitted via the form
+    $(el).siblings('input').val(event.target.innerText);
+
+    // The rest of the function is to handle operator highlighting and management of the caret position
+
+    if (!el.childNodes.length) return;
+
+    // Calculate the true/total caret offset within the div
+    const sel = window.getSelection();
+    const focusNode = sel.focusNode;
+    let offset = sel.focusOffset;
+
+    for (const ch of el.childNodes) {
+      if (ch === focusNode || ch.childNodes[0] === focusNode) break;
+      offset += ch.nodeName === 'SPAN' ? ch.innerText.length : ch.length;
+    }
+
+    // Highlight the operators and update the div
+    let text = highlightOperators(event.target.innerText);
+    $(event.target).html(text);
+
+    // Set the new caret position with the div
+    setCaretPosition(el, offset);
   }
 
   async _onOverlayChange(event) {
@@ -440,6 +471,8 @@ export default class ActiveEffectConfigList extends FormApplication {
     }).render(true);
   }
 
+  _configureApplicableActors(event) {}
+
   // TODO fix this spaghetti code related to globalMappings...
   async _onSaveMappings(event) {
     await this._onSubmit(event);
@@ -524,4 +557,38 @@ export default class ActiveEffectConfigList extends FormApplication {
       m2.alwaysOn = m1.alwaysOn;
     }
   }
+}
+
+// Insert <span/> around operators
+function highlightOperators(text) {
+  for (const op of EXPRESSION_OPERATORS) {
+    text = text.replace(op, `<span>${op}</span>`);
+  }
+  return text;
+}
+
+// Move caret to a specific point in a DOM element
+function setCaretPosition(el, pos) {
+  for (var node of el.childNodes) {
+    // Check if it's a text node
+    if (node.nodeType == 3) {
+      if (node.length >= pos) {
+        var range = document.createRange(),
+          sel = window.getSelection();
+        range.setStart(node, pos);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        return -1; // We are done
+      } else {
+        pos -= node.length;
+      }
+    } else {
+      pos = setCaretPosition(node, pos);
+      if (pos == -1) {
+        return -1; // No need to finish the for loop
+      }
+    }
+  }
+  return pos;
 }

@@ -11,6 +11,7 @@
         <div class="effect-config"><label>Config</label></div>
         <div class="effect-overlay"><label>Overlay</label></div>
         <div class="effect-alwaysOn"><label>Always On</label></div>
+        <div class="effect-target"><i class="fas fa-users"></i></div>
       </li>
 
       {{#each mappings as |mapping index|}}
@@ -20,13 +21,14 @@
           <a class="delete-mapping" title="Delete mapping"><i class="fas fa-trash"></i></a>
         </div>
         <div class="effect-name">
+          <div class="div-input" contenteditable="true" title="e.g. Flying&#013;Composite effect: Dead && Burning&#013;HP comparison: hp<=50%">{{{mapping.highlightedEffectName}}}</div>
           <input
             type="text"
             name="mappings.{{index}}.effectName"
             value="{{mapping.effectName}}"
             placeholder="effect name"
             title="e.g. Flying&#013;Composite effect: Dead && Burning&#013;HP comparison: hp<=50%"
-          />
+            hidden/>
         </div>
         <div class="effect-priority">
           <input
@@ -73,6 +75,9 @@
         </div>
         <div class="effect-alwaysOn">
           <input type="checkbox" name="mappings.{{index}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>
+        </div>
+        <div class="effect-target" title="Configure applicable Actors">
+          <a><i class="fas fa-users"></i></a>
         </div>
       </li>
       {{/each}}

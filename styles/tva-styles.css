@@ -374,6 +374,11 @@ ol.token-variant-table .table-row .effect-priority {
   flex: 0.26;
 }
 
+ol.token-variant-table .table-row .effect-target {
+  flex: 0.2;
+  text-align: center;
+}
+
 ol.token-variant-table .table-row .effect-image {
   flex: 0 0 80px;
   text-align: center;
@@ -417,6 +422,49 @@ ol.token-variant-table .table-row .effect-config-edit.active {
 
 ol.token-variant-table .table-row .effect-config-script.active {
   color: orange;
+}
+
+ol.token-variant-table .table-row .effect-name {
+  margin-top: 5px;
+}
+
+ol.token-variant-table .table-row .effect-name .div-input span {
+  color: green;
+}
+
+/* Copied from input[type="text"] */
+ol.token-variant-table .table-row .effect-name .div-input {
+  white-space: nowrap;
+  overflow: hidden;
+  width: 150px;
+
+  writing-mode: horizontal-tb !important;
+  text-rendering: auto;
+  letter-spacing: normal;
+  word-spacing: normal;
+  text-transform: none;
+  text-indent: 0px;
+  text-shadow: none;
+  appearance: auto;
+  -webkit-rtl-ordering: logical;
+  cursor: text;
+  border-width: 2px;
+  border-style: inset;
+  border-image: initial;
+
+  min-width: 20px;
+  height: var(--form-field-height);
+  background: rgba(0, 0, 0, 0.05);
+  padding: 3px 3px;
+  margin: 0;
+  color: var(--color-text-dark-primary);
+  line-height: normal;
+  border: 1px solid var(--color-border-light-tertiary);
+  border-radius: 3px;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 /* ---------------------------------------- */

@@ -6,7 +6,8 @@ import CompendiumMapConfig from '../applications/compendiumMap.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
-export const COMPOSITE_EFFECT_SEPARATOR = '&&';
+export const EXPRESSION_OPERATORS = ['\\(', '\\)', '&&', '||', '\\!'];
+const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 
 // Types of searches
 export const SEARCH_TYPE = {
@@ -1010,7 +1011,7 @@ export function getEffectsFromActor(actor) {
   return effects;
 }
 
-export function getTokenEffects(token, generateCompositeEffects = false) {
+export function getTokenEffects(token, includeExpressions = false) {
   const data = token.document ? token.document : token;
   let effects = [];
 
@@ -1048,28 +1049,16 @@ export function getTokenEffects(token, generateCompositeEffects = false) {
     effects.unshift('token-variants-visibility');
   }
 
+  applyHealthEffects(token, effects);
+
   // Include mappings marked as always applicable
+  // as well as the ones defined as logical expressions if needed
   const mappings = getAllEffectMappings(token);
   for (const [k, m] of Object.entries(mappings)) {
     if (m.alwaysOn) effects.unshift(k);
-  }
-
-  applyHealthEffects(token, effects);
-
-  // Include composite-effects if need be
-  if (generateCompositeEffects) {
-    for (const ef of Object.keys(mappings)) {
-      const efs = ef.split(COMPOSITE_EFFECT_SEPARATOR).map((ef) => ef.trim());
-      if (efs.length > 1) {
-        let allIncluded = true;
-        for (const e of efs) {
-          if (!effects.includes(e)) {
-            allIncluded = false;
-            break;
-          }
-        }
-        if (allIncluded && !effects.includes(ef)) effects.unshift(ef);
-      }
+    else if (includeExpressions) {
+      const [evaluation, identifiedEffects] = evaluateEffectAsExpression(k, effects);
+      if (evaluation && identifiedEffects !== null) effects.unshift(k);
     }
   }
 
@@ -1162,7 +1151,11 @@ export function applyHealthEffects(token, effects = []) {
     let compositePriority = 10000;
 
     for (const key of Object.keys(mappings)) {
-      const expressions = key.split(COMPOSITE_EFFECT_SEPARATOR).map((exp) => exp.trim());
+      const expressions = key
+        .split(EXPRESSION_MATCH_RE)
+        .filter(Boolean)
+        .map((exp) => exp.trim())
+        .filter(Boolean);
       for (let i = 0; i < expressions.length; i++) {
         const exp = expressions[i];
         const match = exp.match(re);
@@ -1262,4 +1255,39 @@ export function fixEffectMappings(mappings) {
     }
   }
   return mappings;
+}
+
+export function evaluateEffectAsExpression(effect, effects) {
+  let arrExpression = effect
+    .split(EXPRESSION_MATCH_RE)
+    .filter(Boolean)
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  // Not an expression, return as false
+  if (arrExpression.length < 2) {
+    return [false, null];
+  }
+
+  let temp = '';
+  let foundEffects = [];
+  for (const exp of arrExpression) {
+    if (EXPRESSION_OPERATORS.includes(exp)) {
+      temp += exp.replace('\\', '');
+    } else if (effects.includes(exp)) {
+      foundEffects.push(exp);
+      temp += 'true';
+    } else {
+      foundEffects.push(exp);
+      temp += 'false';
+    }
+  }
+
+  let evaluation = false;
+  try {
+    evaluation = eval(temp);
+  } catch (e) {
+    return [false, null];
+  }
+  return [evaluation, foundEffects];
 }
