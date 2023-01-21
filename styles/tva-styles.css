@@ -440,7 +440,7 @@ ol.token-variant-table .table-row .effect-name .div-input span.hp-expression {
 ol.token-variant-table .table-row .effect-name .div-input {
   white-space: nowrap;
   overflow: hidden;
-  width: 150px;
+  width: 240px;
 
   writing-mode: horizontal-tb !important;
   text-rendering: auto;

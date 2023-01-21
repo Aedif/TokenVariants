@@ -1229,14 +1229,27 @@ export async function wildcardImageSearch(imgSrc) {
 export function getAllEffectMappings(token = null) {
   let allMappings;
 
+  // Sort out global mappings that do not apply to this actor
+  const applicableGlobal = {};
+  if (token?.actor?.type) {
+    const actorType = token.actor.type;
+    for (const [k, v] of Object.entries(TVA_CONFIG.globalMappings)) {
+      if (!v.targetActors || v.targetActors.includes(actorType)) {
+        applicableGlobal[k] = v;
+      }
+    }
+  } else {
+    applicableGlobal = TVA_CONFIG.globalMappings;
+  }
+
   if (token) {
     allMappings = mergeObject(
-      TVA_CONFIG.globalMappings,
+      applicableGlobal,
       token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
       { inplace: false, recursive: false }
     );
   } else {
-    allMappings = TVA_CONFIG.globalMappings;
+    allMappings = applicableGlobal;
   }
 
   fixEffectMappings(allMappings);

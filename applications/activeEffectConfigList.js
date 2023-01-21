@@ -6,7 +6,6 @@ import {
   setGlobalEffectMappings,
   fixEffectMappings,
   EXPRESSION_OPERATORS,
-  HP_EXPRESSION_RE,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -38,7 +37,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       closeOnSubmit: false,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      width: 600,
+      width: 700,
     });
   }
 
@@ -73,6 +72,7 @@ export default class ActiveEffectConfigList extends FormApplication {
           overlay: attrs.overlay,
           alwaysOn: attrs.alwaysOn,
           overlayConfig: attrs.overlayConfig,
+          targetActors: attrs.targetActors,
         });
       }
 
@@ -91,6 +91,7 @@ export default class ActiveEffectConfigList extends FormApplication {
 
     this.object.mappings = mappings;
     data.mappings = mappings;
+    data.global = Boolean(this.globalMappings);
     return data;
   }
 
@@ -107,6 +108,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       html.find('.effect-image img').click(this._onImageClick.bind(this));
       html.find('.effect-image img').mousedown(this._onImageMouseDown.bind(this));
       html.find('.effect-image video').click(this._onImageClick.bind(this));
+      html.find('.effect-target').click(this._onConfigureApplicableActors.bind(this));
     }
     html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
     html.find('.effect-image video').contextmenu(this._onImageRightClick.bind(this));
@@ -446,6 +448,7 @@ export default class ActiveEffectConfigList extends FormApplication {
             html.find('input[type="checkbox"]').each(function () {
               if (this.checked && mappings[this.name]) {
                 toCopy[this.name] = deepClone(mappings[this.name]);
+                delete toCopy[this.name].targetActors;
               }
             });
             if (!isEmpty(toCopy)) {
@@ -472,7 +475,61 @@ export default class ActiveEffectConfigList extends FormApplication {
     }).render(true);
   }
 
-  _configureApplicableActors(event) {}
+  _onConfigureApplicableActors(event) {
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+
+    let actorTypes = (game.system.entityTypes ?? game.system.documentTypes)['Actor'];
+    let actors = [];
+    for (const t of actorTypes) {
+      const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
+      actors.push({
+        id: t,
+        label: game.i18n.has(label) ? game.i18n.localize(label) : t,
+        enabled: !mapping.targetActors || mapping.targetActors.includes(t),
+      });
+    }
+
+    let content = '<form style="overflow-y: scroll; height:250x;">';
+    for (const act of actors) {
+      content += `
+      <div class="form-group">
+        <label>${act.label}</label>
+        <div class="form-fields">
+            <input type="checkbox" name="${act.id}" data-dtype="Boolean" ${
+        act.enabled ? 'checked' : ''
+      }>
+        </div>
+      </div>
+      `;
+    }
+    content += `</form><div class="form-group"><button type="button" class="select-all">Select all</div>`;
+
+    new Dialog({
+      title: `Configure Applicable Actors`,
+      content: content,
+      buttons: {
+        Ok: {
+          label: `Save`,
+          callback: async (html) => {
+            let targetActors = [];
+            html.find('input[type="checkbox"]').each(function () {
+              if (this.checked) {
+                targetActors.push(this.name);
+              }
+            });
+            mapping.targetActors = targetActors;
+            console.log(mapping.targetActors);
+          },
+        },
+      },
+      render: (html) => {
+        html.find('.select-all').click(() => {
+          html.find('input[type="checkbox"]').prop('checked', true);
+        });
+      },
+    }).render(true);
+  }
 
   // TODO fix this spaghetti code related to globalMappings...
   async _onSaveMappings(event) {
@@ -500,6 +557,7 @@ export default class ActiveEffectConfigList extends FormApplication {
             overlay: mapping.overlay,
             alwaysOn: mapping.alwaysOn,
             overlayConfig: mapping.overlayConfig || {},
+            targetActors: mapping.targetActors,
           };
           effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
         }

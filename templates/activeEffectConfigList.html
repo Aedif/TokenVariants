@@ -5,13 +5,15 @@
         <div class="effect-controls">
           <a class="create-mapping" title="Add new mapping"> <i class="fas fa-plus"></i></a>
         </div>
-        <div class="effect-name"><label>Effect Name</label>&nbsp;&nbsp;<i class="fas fa-question-circle" title="Accepted Operators:&#013;• && ( logical AND)&#013;• || (logical OR)&#013;• \! (escaped logical NOT)&#013;• \( (escaped open bracket to group expressions)&#013;• \) (escaped closed bracket to group expressions)&#013;&#013;Accepted HP Comparators:&#013;• = (equal)&#013;• < (less than)&#013;• > (greater than)&#013;• <= (less than or equal)&#013;• >= (greater than or equal)&#013;&#013;Examples of valid expression:&#013;• Flying&#013;• Dead && Burning&#013;• Flying && \! \( Prone || Dead \)&#013;• hp<=50%&#013;• hp=1"></i></div>
+        <div class="effect-name"><label>Effect Name</label>&nbsp;&nbsp;<i class="fas fa-question-circle" title="Accepted Operators:&#013;• && ( logical AND)&#013;• || (logical OR)&#013;• \! (escaped logical NOT)&#013;• \( (escaped open bracket to group expressions)&#013;• \) (escaped closed bracket to group expressions)&#013;&#013;Accepted HP Comparators:&#013;• = (equal)&#013;• < (less than)&#013;• > (greater than)&#013;• <= (less than or equal)&#013;• >= (greater than or equal)&#013;&#013;Examples of valid expressions:&#013;• Flying&#013;• Dead && Burning&#013;• Flying && \! \( Prone || Dead \)&#013;• hp<=50%&#013;• hp=1"></i></div>
         <div class="effect-priority"><label>Priority</label></div>
         <div class="effect-image"><label>Token Image</label></div>
         <div class="effect-config"><label>Config</label></div>
         <div class="effect-overlay"><label>Overlay</label></div>
         <div class="effect-alwaysOn"><label>Always On</label></div>
-        <div class="effect-target"><i class="fas fa-users"></i></div>
+        {{#if global}}
+        <div class="effect-target"><i class="fas fa-users" title="Configure Applicable actors"></i></div>
+        {{/if}}
       </li>
 
       {{#each mappings as |mapping index|}}
@@ -74,9 +76,11 @@
         <div class="effect-alwaysOn">
           <input type="checkbox" name="mappings.{{index}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>
         </div>
-        <div class="effect-target" title="Configure applicable Actors">
+        {{#if ../global}}
+        <div class="effect-target" title="Configure Applicable Actors">
           <a><i class="fas fa-users"></i></a>
         </div>
+        {{/if}}
       </li>
       {{/each}}
     </ol>
