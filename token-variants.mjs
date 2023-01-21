@@ -1633,7 +1633,7 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
   const filters = getFilters(searchType, searchOptions.searchFilters);
 
   const fuse = new Fuse([], {
-    keys: [!forceSearchName && searchOptions.runSearchOnPath ? 'path' : 'name'],
+    keys: [!forceSearchName && searchOptions.runSearchOnPath ? 'path' : 'name', 'tags'],
     includeScore: true,
     includeMatches: true,
     minMatchCharLength: 1,
@@ -1790,7 +1790,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
             }
             result.forEach((img) => {
               const rtName = img.name ?? getFileName(img.path);
-              addToFound({ path: img.path, name: rtName }, typeKey, found_images);
+              addToFound({ path: img.path, name: rtName, tags: img.tags }, typeKey, found_images);
             });
           })
           .catch((error) => console.log('Token Variant Art: ', error));
