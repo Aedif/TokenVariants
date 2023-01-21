@@ -432,6 +432,10 @@ ol.token-variant-table .table-row .effect-name .div-input span {
   color: green;
 }
 
+ol.token-variant-table .table-row .effect-name .div-input span.hp-expression {
+  color: blue;
+}
+
 /* Copied from input[type="text"] */
 ol.token-variant-table .table-row .effect-name .div-input {
   white-space: nowrap;

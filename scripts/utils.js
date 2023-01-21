@@ -6,6 +6,7 @@ import CompendiumMapConfig from '../applications/compendiumMap.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
+export const HP_EXPRESSION_RE = /hp([><=]+)(\d+)(%{0,1})/;
 export const EXPRESSION_OPERATORS = ['\\(', '\\)', '&&', '||', '\\!'];
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 
@@ -1143,7 +1144,7 @@ export function applyHealthEffects(token, effects = []) {
   if (!isNaN(currHP) && !isNaN(maxHP)) {
     const mappings = getAllEffectMappings(token);
 
-    const re = new RegExp(/hp([><=]+)(\d+)(%{0,1})/);
+    const re = new RegExp(HP_EXPRESSION_RE);
 
     const hpPercent = (currHP / maxHP) * 100;
 

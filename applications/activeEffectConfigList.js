@@ -6,6 +6,7 @@ import {
   setGlobalEffectMappings,
   fixEffectMappings,
   EXPRESSION_OPERATORS,
+  HP_EXPRESSION_RE,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -564,6 +565,11 @@ function highlightOperators(text) {
   for (const op of EXPRESSION_OPERATORS) {
     text = text.replace(op, `<span>${op}</span>`);
   }
+
+  text = text.replace(/hp(<|>|=|<=|>=)(\d+)(%{0,1})/gi, function replace(match) {
+    return '<span class="hp-expression">' + match + '</span>';
+  });
+
   return text;
 }
 

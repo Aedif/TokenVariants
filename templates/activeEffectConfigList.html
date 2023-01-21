@@ -3,9 +3,9 @@
     <ol class="token-variant-table" style="overflow-x: hidden;">
       <li class="table-row table-header flexrow">
         <div class="effect-controls">
-          <a class="create-mapping" title="Add new mapping"><i class="fas fa-plus"></i></a>
+          <a class="create-mapping" title="Add new mapping"> <i class="fas fa-plus"></i></a>
         </div>
-        <div class="effect-name"><label>Effect Name</label></div>
+        <div class="effect-name"><label>Effect Name</label>&nbsp;&nbsp;<i class="fas fa-question-circle" title="Accepted Operators:&#013;• && ( logical AND)&#013;• || (logical OR)&#013;• \! (escaped logical NOT)&#013;• \( (escaped open bracket to group expressions)&#013;• \) (escaped closed bracket to group expressions)&#013;&#013;Accepted HP Comparators:&#013;• = (equal)&#013;• < (less than)&#013;• > (greater than)&#013;• <= (less than or equal)&#013;• >= (greater than or equal)&#013;&#013;Examples of valid expression:&#013;• Flying&#013;• Dead && Burning&#013;• Flying && \! \( Prone || Dead \)&#013;• hp<=50%&#013;• hp=1"></i></div>
         <div class="effect-priority"><label>Priority</label></div>
         <div class="effect-image"><label>Token Image</label></div>
         <div class="effect-config"><label>Config</label></div>
@@ -21,13 +21,11 @@
           <a class="delete-mapping" title="Delete mapping"><i class="fas fa-trash"></i></a>
         </div>
         <div class="effect-name">
-          <div class="div-input" contenteditable="true" title="e.g. Flying&#013;Composite effect: Dead && Burning&#013;HP comparison: hp<=50%">{{{mapping.highlightedEffectName}}}</div>
+          <div class="div-input" contenteditable="true">{{{mapping.highlightedEffectName}}}</div>
           <input
             type="text"
             name="mappings.{{index}}.effectName"
             value="{{mapping.effectName}}"
-            placeholder="effect name"
-            title="e.g. Flying&#013;Composite effect: Dead && Burning&#013;HP comparison: hp<=50%"
             hidden/>
         </div>
         <div class="effect-priority">
