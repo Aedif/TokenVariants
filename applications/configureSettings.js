@@ -1,4 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { getFileName } from '../scripts/utils.js';
 import { cacheImages } from '../token-variants.mjs';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { showPathSelectCategoryDialog } from './dialogs.js';
