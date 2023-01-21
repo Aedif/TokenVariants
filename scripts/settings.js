@@ -307,6 +307,9 @@ export async function registerSettings() {
       } else if (p.text.startsWith('rolltable:')) {
         p.text = p.text.split(':')[1];
         p.source = 'rolltable';
+      } else if (p.text.startsWith('json:')) {
+        p.text = p.text.split(':')[1];
+        p.source = 'json';
       } else if (p.text.startsWith('forgevtt:')) {
         p.text = p.text.split(':')[1];
         p.source = 'forgevtt';
@@ -403,6 +406,9 @@ export async function importSettingsFromJSON(json) {
         } else if (p.text.startsWith('rolltable:')) {
           p.text = p.text.split(':')[1];
           p.source = 'rolltable';
+        } else if (p.text.startsWith('json:')) {
+          p.text = p.text.split(':')[1];
+          p.source = 'json';
         } else if (p.text.startsWith('forgevtt:')) {
           p.text = p.text.split(':')[1];
           p.source = 'forgevtt';

@@ -1,0 +1,207 @@
+[
+  {
+    "name": "Affliction",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_shadow_deathcoil.jpg",
+    "tags": []
+  },
+  {
+    "name": "Arcane",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_holy_magicalsentry.jpg",
+    "tags": []
+  },
+  {
+    "name": "Arms",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_warrior_savageblow.jpg",
+    "tags": []
+  },
+  {
+    "name": "Assassination",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_rogue_eviscerate.jpg",
+    "tags": []
+  },
+  {
+    "name": "Balance",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_nature_starfall.jpg",
+    "tags": []
+  },
+  {
+    "name": "Bear",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_racial_bearform.jpg",
+    "tags": []
+  },
+  {
+    "name": "Beast Mastery",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_bestialdiscipline.jpg",
+    "tags": []
+  },
+  {
+    "name": "Blood",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_deathknight_bloodpresence.jpg",
+    "tags": []
+  },
+  {
+    "name": "Combat",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_backstab.jpg",
+    "tags": []
+  },
+  {
+    "name": "Death Knight",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/class_deathknight.jpg",
+    "tags": []
+  },
+  {
+    "name": "Demonology",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_shadow_metamorphosis.jpg",
+    "tags": []
+  },
+  {
+    "name": "Destruction",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_shadow_rainoffire.jpg",
+    "tags": []
+  },
+  {
+    "name": "Discipline",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_holy_powerwordshield.jpg",
+    "tags": []
+  },
+  {
+    "name": "Druid",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_druid.jpg",
+    "tags": []
+  },
+  {
+    "name": "Elemental",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_nature_lightning.jpg",
+    "tags": []
+  },
+  {
+    "name": "Enhancement",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_shaman_improvedstormstrike.jpg",
+    "tags": []
+  },
+  {
+    "name": "Feral",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_druid_catform.jpg",
+    "tags": []
+  },
+  {
+    "name": "Fire",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_fire_firebolt02.jpg",
+    "tags": []
+  },
+  {
+    "name": "Frost",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_deathknight_frostpresence.jpg",
+    "tags": []
+  },
+  {
+    "name": "Frost",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_frost_frostbolt02.jpg",
+    "tags": []
+  },
+  {
+    "name": "Fury",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_warrior_innerrage.jpg",
+    "tags": []
+  },
+  {
+    "name": "Holy",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_holy_holybolt.jpg",
+    "tags": []
+  },
+  {
+    "name": "Holy",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_holy_guardianspirit.jpg",
+    "tags": []
+  },
+  {
+    "name": "Hunter",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_hunter.jpg",
+    "tags": []
+  },
+  {
+    "name": "Mage",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_mage.jpg",
+    "tags": []
+  },
+  {
+    "name": "Marksmanship",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_focusedaim.jpg",
+    "tags": []
+  },
+  {
+    "name": "Paladin",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_paladin.jpg",
+    "tags": []
+  },
+  {
+    "name": "Priest",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_priest.jpg",
+    "tags": []
+  },
+  {
+    "name": "Protection",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_paladin_shieldofthetemplar.jpg",
+    "tags": []
+  },
+  {
+    "name": "Protection",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_warrior_defensivestance.jpg",
+    "tags": []
+  },
+  {
+    "name": "Restoration",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_nature_healingtouch.jpg",
+    "tags": []
+  },
+  {
+    "name": "Restoration",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_nature_magicimmunity.jpg",
+    "tags": []
+  },
+  {
+    "name": "Retribution",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_holy_auraoflight.jpg",
+    "tags": []
+  },
+  {
+    "name": "Rogue",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_rogue.jpg",
+    "tags": []
+  },
+  {
+    "name": "Shadow",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_shadow_shadowwordpain.jpg",
+    "tags": []
+  },
+  {
+    "name": "Shaman",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_shaman.jpg",
+    "tags": []
+  },
+  {
+    "name": "Subtlety",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_stealth.jpg",
+    "tags": []
+  },
+  {
+    "name": "Survival",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/ability_hunter_camouflage.jpg",
+    "tags": []
+  },
+  {
+    "name": "Unholy",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/spell_deathknight_unholypresence.jpg",
+    "tags": []
+  },
+  {
+    "name": "Warlock",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_warlock.jpg",
+    "tags": []
+  },
+  {
+    "name": "Warrior",
+    "path": "https://wow.zamimg.com/images/wow/icons/large/classicon_warrior.jpg",
+    "tags": []
+  }
+]

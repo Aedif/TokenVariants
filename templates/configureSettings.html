@@ -46,6 +46,11 @@
                         <i class="fas fa-angle-double-left"></i>
                     </a>
                   </div>
+                  <div class="json-control {{#if (eq path.source 'json')}}active{{/if}}">
+                    <a class="convert-json" title="Convert to Rolltable">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                  </div>
                   <div class="path-category">
                     <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
                     <input type="hidden" name="searchPaths.{{index}}.types" value="{{path.types}}">
@@ -62,9 +67,11 @@
 
               <p class="notes">
                 <b>Formats:</b><br />
+                <span>Note: the path start from the 'data' folder of Foundry by default<span><br />
                 data | path/to/folder<br />
                 s3:my_bucket | token/art/folder/<br />
                 rolltable | rolltableName<br />
+                json | path/to/folder/data.json<br />
                 imgur | galleryId
               </p>
         </div>
