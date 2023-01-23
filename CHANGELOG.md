@@ -1,3 +1,7 @@
+# 4.23.1
+
+- Changing the manifest to point to master branch
+
 # 4.23.0
 
 **Active Effect Configuration**
