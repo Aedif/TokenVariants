@@ -1,24 +1,6 @@
-# 4.6.0
+# 3.10.4
 
-Overlays
-
-- New options: Animation
-  - Rotate : enables overlay rotation animation
-  - Duration (ms) : time in milliseconds for the overlay to complete a full 360 rotation
-  - Clockwise : if enabled rotation will be clockwise, if disabled it will be anti-clockwise
-- New options: Filter -> OutlineOverlayFilter
-  - Draws an outline around the overlay
-- New options: Filter Options
-  - Will be shown if OutlineOverlayFilter is selected
-  - Color: Outline color
-  - Thickness: Outline thickness
-  - Oscillate: when enabled outline thickness will increase and decrease overtime
-
-# 4.5.2
-
-- Fixed Token HUD button appearing to players only when the token has attached 'Shared' images
-- When 'Randomize Wildcard Images' is enabled under the Prototype Token the module will now use Foundry's default getTokenImages() implementation
-  - Will allow images to be retrieved for player even without 'Use File Browser' permissions
+- Changing manifest link to point to a v9 branch
 
 # 3.10.3
 
