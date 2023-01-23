@@ -1,5 +1,6 @@
 ![GitHub Latest Version](https://img.shields.io/github/v/release/Aedif/TokenVariants?sort=semver)
 ![GitHub Latest Release](https://img.shields.io/github/downloads/Aedif/TokenVariants/latest/token-variants.zip)
+![GitHub v9 Release](https://img.shields.io/github/downloads/Aedif/TokenVariants/3.10.4/token-variants.zip)
 ![GitHub All Releases](https://img.shields.io/github/downloads/Aedif/TokenVariants/token-variants.zip)
 [![Forge Installs](https://img.shields.io/badge/dynamic/json?label=Forge%20Installs&query=package.installs&suffix=%25&url=https%3A%2F%2Fforge-vtt.com%2Fapi%2Fbazaar%2Fpackage%2Ftoken-variants)](https://forge-vtt.com/bazaar#package=token-variants)
 
@@ -24,17 +25,17 @@ Main features include:
 
 For the comprehensive list of settings and features checkout the module's [wiki](https://github.com/Aedif/TokenVariants/wiki).
 
+Watch a short feature showcase on YouTube:
+
+[![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
+
 You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to helping me to continue working on FoundryVTT modules you will be granted access to a selection of pre-configured animated overlays to be used along with this module:
 
 !["Animated Overlays"](./docs/animated_overlays.gif)
 
-Higher tiers will also grant you condition rings:
+Higher tiers will also grant you condition rings (v10 exclusive):
 
 !["Condition Ring Overlays"](./docs/condition_rings.gif)
-
-Watch a short feature showcase on YouTube:
-
-[![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
 
 ## Image to User mappings
 
@@ -48,13 +49,22 @@ By Shift+Left-clicking the Token HUD button you are able to override certain mod
 
 !["Setting Override"](./docs/override.png)
 
-### Status Config
+## Status Config
 
 Allows to map images to Visibility/Combat status and Active Effects.
 
 !["Status Configuration"](./docs/status_config.png)
 
 The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
+
+### HP Based Effects
+
+Instead of effect names the module also allows to enter hp comparisons into these fields allowing you to apply images and configuration based on the current health of the token:
+
+![HP Effects](https://user-images.githubusercontent.com/7693704/202446190-3ed56f37-3ad8-438d-a700-b3b18f25d2c6.png)
+
+- Accepts both percentages and exact values (e.g. `hp<=15`, `hp=100%`)
+- Accepted signs: `<, >, =, <=, >=`
 
 ## Installation
 
