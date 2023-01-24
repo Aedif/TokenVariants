@@ -6,6 +6,7 @@ import {
   setGlobalEffectMappings,
   fixEffectMappings,
   EXPRESSION_OPERATORS,
+  SUPPORTED_COMP_ATTRIBUTES,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -79,6 +80,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       if (this.createMapping && !(this.createMapping in effectMappings)) {
         mappings.push({
           effectName: this.createMapping,
+          highlightedEffectName: highlightOperators(this.createMapping),
           imgName: '',
           imgSrc: '',
           priority: 50,
@@ -210,7 +212,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
 
-    new EditScriptConfig(mapping.config?.tv_script, (script) => {
+    new EditScriptConfig(mapping.config?.tv_script, mapping.imgSrc, (script) => {
       if (!mapping.config) mapping.config = {};
       if (script) mapping.config.tv_script = script;
       else delete mapping.config.tv_script;
@@ -623,9 +625,12 @@ function highlightOperators(text) {
     text = text.replace(op, `<span>${op}</span>`);
   }
 
-  text = text.replace(/hp(<|>|=|<=|>=)(\d+)(%{0,1})/gi, function replace(match) {
-    return '<span class="hp-expression">' + match + '</span>';
-  });
+  for (const att of SUPPORTED_COMP_ATTRIBUTES.concat('hp')) {
+    const re = new RegExp(att + '(<|>|=|<=|>=)(\\d+)(%{0,1})', 'gi');
+    text = text.replace(re, function replace(match) {
+      return '<span class="hp-expression">' + match + '</span>';
+    });
+  }
 
   return text;
 }

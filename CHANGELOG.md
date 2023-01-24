@@ -1,3 +1,11 @@
+# 4.24.0
+
+- Added support for 'rotation' and 'elevation' attributes within the Effect Configs
+  - e.g. `rotation>=180`
+  - e.g. `elevation>0`
+- Secret Feature still in development
+  - Guess the key combination to unlock ;)
+
 # 4.23.1
 
 - Changing the manifest to point to master branch

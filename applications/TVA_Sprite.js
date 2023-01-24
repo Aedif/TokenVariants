@@ -354,14 +354,22 @@ async function constructTMFXFilters(paramsArray, sprite) {
       params.enabled = true;
     }
 
-    // params.placeableId = token.id;
     params.filterInternalId = randomID();
-    params.filterOwner = game.data.userId;
+
+    const gms = game.users.filter((user) => user.isGM);
+    params.filterOwner = gms.length ? gms[0].id : game.data.userId;
     // params.placeableType = placeable._TMFXgetPlaceableType();
     params.updateId = randomID();
 
     const filterClass = await getTMFXFilter(params.filterType);
     if (filterClass) {
+      filterClass.prototype.assignPlaceable = function () {
+        this.targetPlaceable = sprite.object;
+        this.placeableImg = sprite;
+      };
+
+      filterClass.prototype._TMFXsetAnimeFlag = async function () {};
+
       const filter = new filterClass(params);
       if (filter) {
         // Patch fixes

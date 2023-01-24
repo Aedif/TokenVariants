@@ -210,6 +210,13 @@ export async function registerSettings() {
     onChange: (val) => (TVA_CONFIG.debug = val),
   });
 
+  game.settings.register('token-variants', 'secretCode', {
+    scope: 'world',
+    config: false,
+    type: Boolean,
+    default: false,
+  });
+
   if (typeof ForgeAPI !== 'undefined') {
     game.settings.registerMenu('token-variants', 'forgeSearchPaths', {
       name: game.i18n.localize('token-variants.settings.forge-search-paths.Name'),

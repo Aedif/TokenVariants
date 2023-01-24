@@ -94,7 +94,9 @@ export default class OverlayConfig extends FormApplication {
       let params;
       try {
         params = eval(textarea.val());
-      } catch (e) {}
+      } catch (e) {
+        console.log(e);
+      }
 
       if (params) {
         let param;

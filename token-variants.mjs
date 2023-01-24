@@ -31,10 +31,12 @@ import {
   getTokenEffects,
   isVideo,
   isImage,
-  applyHealthEffects,
   getAllEffectMappings,
   applyTMFXPreset,
   evaluateEffectAsExpression,
+  drawMorphOverlay,
+  evaluateComparatorEffects,
+  SUPPORTED_COMP_ATTRIBUTES,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -117,7 +119,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
 
   const mappings = getAllEffectMappings(token);
 
-  // 3. Configurations may contain effect names in a form of a logical expression
+  // 3. Configurations may contain effect names in a form of a logical expressions
   //    We need to evaluate them and insert them into effects/added/removed if needed
   for (const key of Object.keys(mappings)) {
     const [evaluation, identifiedEffects] = evaluateEffectAsExpression(key, effects);
@@ -145,17 +147,22 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
 
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
-  for (const ef of added) {
-    const onApply = mappings[ef]?.config?.tv_script?.onApply;
-    if (onApply) executeOnCallback.push({ script: onApply, token: token });
-    const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
-    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
-  }
+  let tmfxMorph;
   for (const ef of removed) {
     const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
     if (onRemove) executeOnCallback.push({ script: onRemove, token: token });
     const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
     if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
+    const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
+    if (morph) tmfxMorph = morph;
+  }
+  for (const ef of added) {
+    const onApply = mappings[ef]?.config?.tv_script?.onApply;
+    if (onApply) executeOnCallback.push({ script: onApply, token: token });
+    const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
+    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
+    const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
+    if (morph) tmfxMorph = morph;
   }
 
   // Need to broadcast to other users to re-draw the overlay
@@ -261,6 +268,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
       ),
       config: config,
       animate,
+      tmfxMorph,
     });
   }
 
@@ -282,6 +290,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
         executeOnCallback
       ),
       animate,
+      tmfxMorph,
     });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
     // clear it
@@ -301,6 +310,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
         executeOnCallback
       ),
       animate,
+      tmfxMorph,
     });
   }
 }
@@ -676,46 +686,6 @@ async function initialize() {
   });
 
   if (typeof libWrapper === 'function') {
-    // TODO: Testing Image change transitions
-    // libWrapper.register(
-    //   'token-variants',
-    //   'Token.prototype._onUpdateAppearance',
-    //   async function (wrapped, ...args) {
-    //     const data = args[0];
-    //     const changed = args[1];
-    //     console.log('Token.prototype._onUpdateAppearance', changed);
-    //     if (changed && changed.has('texture.src')) {
-    //       await TokenMagic.addUpdateFilters(this, [
-    //         {
-    //           filterType: 'polymorph',
-    //           filterId: 'tvaMorph',
-    //           type: 4,
-    //           padding: 70,
-    //           magnify: 1,
-    //           imagePath: data.texture.src,
-    //           animated: {
-    //             progress: {
-    //               active: true,
-    //               animType: 'halfCosOscillation',
-    //               val1: 0,
-    //               val2: 100,
-    //               loops: 1,
-    //               loopDuration: 1000,
-    //             },
-    //           },
-    //         },
-    //       ]);
-    //       await new Promise((resolve) => setTimeout(resolve, 1100));
-    //       let result = await wrapped(...args);
-    //       TokenMagic.deleteFilters(this, 'tvaMorph');
-    //       return result;
-    //     }
-    //     let result = await wrapped(...args);
-    //     return result;
-    //   },
-    //   'WRAPPER'
-    // );
-
     // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
     libWrapper.register(
       'token-variants',
@@ -755,7 +725,19 @@ async function initialize() {
       'token-variants',
       'Token.prototype.draw',
       async function (wrapped, ...args) {
+        let startMorph;
+        if (this.tvaMorph && !this.tva_morphing) {
+          startMorph = await drawMorphOverlay(this, this.tvaMorph);
+        } else if (this.tva_morphing) {
+          this.tvaMorph = null;
+        }
+
         let result = await wrapped(...args);
+
+        if (startMorph) {
+          startMorph(this.document.alpha);
+        }
+
         // drawOverlays(this);
         checkAndDisplayUserSpecificImage(this);
         return result;
@@ -764,6 +746,9 @@ async function initialize() {
     );
 
     Hooks.on('refreshToken', (token) => {
+      if (token.tva_morphing) {
+        token.mesh.alpha = 0;
+      }
       if (token.tva_sprites)
         for (const child of token.tva_sprites) {
           if (child instanceof TVA_Sprite) {
@@ -895,7 +880,7 @@ async function initialize() {
       const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
       for (const tkn of tokens) {
         const hpEffects = [];
-        applyHealthEffects(tkn, hpEffects);
+        evaluateComparatorEffects('hp', tkn, hpEffects);
         if (hpEffects.length) {
           if (!options['token-variants']) options['token-variants'] = {};
           options['token-variants'][tkn.id] = { hpEffects };
@@ -938,7 +923,7 @@ async function initialize() {
         const newHPEffects = [];
         const added = [];
         const removed = [];
-        applyHealthEffects(tkn, newHPEffects);
+        evaluateComparatorEffects('hp', tkn, newHPEffects);
         const oldEffects = options['token-variants']?.[tkn.id]?.hpEffects || [];
 
         for (const ef of newHPEffects) {
@@ -958,7 +943,39 @@ async function initialize() {
   });
 
   Hooks.on('preUpdateToken', function (token, change, options, userId) {
+    // Handle a morph request
+    if (options.tvaMorph && change.texture?.src) {
+      let morph = Array.isArray(options.tvaMorph) ? options.tvaMorph[0] : options.tvaMorph;
+      morph.filterId = 'tvaMorph';
+      morph.imagePath = change.texture.src;
+
+      const message = {
+        handlerName: 'drawMorphOverlay',
+        args: {
+          tokenId: token.id,
+          morph: [morph],
+        },
+        type: 'UPDATE',
+      };
+      game.socket?.emit('module.token-variants', message);
+      token.object.tvaMorph = [morph];
+
+      options.animate = false;
+    }
+
     if (game.user.id !== userId) return;
+
+    for (const att of SUPPORTED_COMP_ATTRIBUTES) {
+      if (att in change) {
+        const effects = [];
+        evaluateComparatorEffects(att, token, effects);
+        if (effects.length) {
+          if (!options['token-variants']) options['token-variants'] = {};
+          options['token-variants'][att] = effects;
+        }
+      }
+    }
+
     if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
       options['token-variants'] = {
         wasPolymorphed: true,
@@ -969,6 +986,32 @@ async function initialize() {
   Hooks.on('updateToken', async function (token, change, options, userId) {
     if (game.user.id !== userId) return;
 
+    const addedEffects = [];
+    const removedEffects = [];
+    for (const att of SUPPORTED_COMP_ATTRIBUTES) {
+      if (att in change) {
+        // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
+        const newEffects = [];
+        evaluateComparatorEffects(att, token, newEffects);
+        const oldEffects = options['token-variants']?.[att] || [];
+
+        for (const ef of newEffects) {
+          if (!oldEffects.includes(ef)) {
+            addedEffects.push(ef);
+          }
+        }
+        for (const ef of oldEffects) {
+          if (!newEffects.includes(ef)) {
+            removedEffects.push(ef);
+          }
+        }
+      }
+    }
+
+    if (addedEffects.length || removedEffects.length)
+      updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
+
+    // HP Effects
     let containsHPUpdate = false;
     if (game.system.id === 'cyberpunk-red-core') {
       containsHPUpdate = change.actorData?.system?.derivedStats?.hp;
@@ -997,6 +1040,11 @@ async function initialize() {
   });
 
   game.socket?.on(`module.token-variants`, (message) => {
+    if (message.handlerName === 'drawMorphOverlay') {
+      const token = canvas.tokens.get(message.args.tokenId);
+      if (token) token.tvaMorph = message.args.morph;
+    }
+
     // Workaround for forgeSearchPaths setting to be updated by non-GM clients
     if (message.handlerName === 'forgeSearchPaths' && message.type === 'UPDATE') {
       if (!game.user.isGM) return;
@@ -2140,7 +2188,6 @@ Hooks.on('init', function () {
     updateTokenImage,
     exportSettingsToJSON,
     TVA_CONFIG,
-    applyHealthEffects,
   };
 });
 

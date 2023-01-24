@@ -6,9 +6,24 @@ import CompendiumMapConfig from '../applications/compendiumMap.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
-export const HP_EXPRESSION_RE = /hp([><=]+)(\d+)(%{0,1})/;
+export const SUPPORTED_COMP_ATTRIBUTES = ['rotation', 'elevation'];
 export const EXPRESSION_OPERATORS = ['\\(', '\\)', '&&', '||', '\\!'];
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
+
+// Record Code
+let K_CODE = [];
+const ACCEPTED_CODE = [
+  'ArrowUp',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ArrowLeft',
+  'ArrowRight',
+  'KeyB',
+  'KeyA',
+];
 
 // Types of searches
 export const SEARCH_TYPE = {
@@ -67,10 +82,13 @@ export function startBatchUpdater() {
   });
 }
 
-export function queueTokenUpdate(id, update, callback = null, animate = true) {
+export function queueTokenUpdate(id, update, callback = null, animate = true, tmfxMorph = null) {
   update._id = id;
   BATCH_UPDATES.TOKEN.push(update);
-  BATCH_UPDATES.TOKEN_CONTEXT = { animate };
+  BATCH_UPDATES.TOKEN_CONTEXT = { animate, tvaMorph: tmfxMorph };
+  if (tmfxMorph) {
+    BATCH_UPDATES.TOKEN_CONTEXT.tvaMorphUserId = game.user.id;
+  }
   if (callback) BATCH_UPDATES.TOKEN_CALLBACKS.push(callback);
 }
 
@@ -105,6 +123,7 @@ export async function updateTokenImage(
     callback = null,
     config = undefined,
     animate = true,
+    tmfxMorph = null,
   } = {}
 ) {
   if (!(token || actor)) {
@@ -227,7 +246,7 @@ export async function updateTokenImage(
         // this is a low priority update so it should be Ok to do
         setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
       }
-      queueTokenUpdate(token.id, tokenUpdateObj, callback, animate);
+      queueTokenUpdate(token.id, tokenUpdateObj, callback, animate, tmfxMorph);
     }
   }
 }
@@ -426,6 +445,48 @@ export function registerKeybinds() {
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+
+  game.keybindings.register('token-variants', 'secretCode', {
+    name: 'Super Secret Code',
+    hint: 'TOP SECRET.',
+    uneditable: [
+      {
+        key: 'ArrowUp',
+      },
+      {
+        key: 'ArrowDown',
+      },
+      {
+        key: 'ArrowLeft',
+      },
+      {
+        key: 'ArrowRight',
+      },
+      {
+        key: 'KeyA',
+      },
+      {
+        key: 'KeyB',
+      },
+    ],
+    restricted: true,
+    onDown: (event) => {
+      if (!game.settings.get('token-variants', 'secretCode')) {
+        if (event.key === ACCEPTED_CODE[K_CODE.length]) {
+          K_CODE.push(event.key);
+        } else {
+          K_CODE = [];
+        }
+
+        if (K_CODE.length === 10) {
+          game.settings.set('token-variants', 'secretCode', true);
+          ui.notifications.info(
+            'Token Variant Art :: TMFX Morph Transitions Unlocked :: Effect Config -> Scripts'
+          );
+        }
+      }
+    },
   });
 }
 
@@ -852,7 +913,7 @@ export async function applyTMFXPreset(token, presetName, action = 'apply') {
   }
 }
 
-async function _drawEffectOverlay(token, conf) {
+export async function _drawEffectOverlay(token, conf) {
   let img = conf.img;
   if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
     const images = await wildcardImageSearch(conf.img);
@@ -1050,7 +1111,9 @@ export function getTokenEffects(token, includeExpressions = false) {
     effects.unshift('token-variants-visibility');
   }
 
-  applyHealthEffects(token, effects);
+  for (const att of SUPPORTED_COMP_ATTRIBUTES.concat('hp')) {
+    evaluateComparatorEffects(att, token, effects);
+  }
 
   // Include mappings marked as always applicable
   // as well as the ones defined as logical expressions if needed
@@ -1092,11 +1155,7 @@ export class TokenDataAdapter {
   }
 }
 
-export function applyHealthEffects(token, effects = []) {
-  if (!token.actor) return;
-
-  token = token.document ?? token;
-
+function getTokenHP(token) {
   let attributes = {};
 
   if (game.system.id === 'cyberpunk-red-core') {
@@ -1129,7 +1188,7 @@ export function applyHealthEffects(token, effects = []) {
       attributes = token.actor.system?.attributes;
     } else {
       attributes = mergeObject(
-        token.actor.system?.attributes || {},
+        token.actor?.system?.attributes || {},
         token.actorData?.system?.attributes || {},
         {
           inplace: false,
@@ -1137,16 +1196,31 @@ export function applyHealthEffects(token, effects = []) {
       );
     }
   }
+  return [attributes?.hp?.value, attributes?.hp?.max];
+}
 
-  const maxHP = attributes?.hp?.max;
-  const currHP = attributes?.hp?.value;
+export function evaluateComparatorEffects(att, token, effects) {
+  token = token.document ? token.document : token;
+  let currVal;
+  let maxVal;
+  if (att === 'hp') {
+    [currVal, maxVal] = getTokenHP(token);
+  } else if (att === 'rotation') {
+    currVal = token.rotation;
+    maxVal = 360;
+  } else if (att === 'elevation') {
+    currVal = token.elevation;
+    maxVal = 999999999;
+  } else {
+    throw 'Invalid Attribute: ' + att;
+  }
 
-  if (!isNaN(currHP) && !isNaN(maxHP)) {
+  if (!isNaN(currVal) && !isNaN(maxVal)) {
     const mappings = getAllEffectMappings(token);
 
-    const re = new RegExp(HP_EXPRESSION_RE);
+    const re = new RegExp(att + '([><=]+)(\\d+)(%{0,1})');
 
-    const hpPercent = (currHP / maxHP) * 100;
+    const valPercent = (currVal / maxVal) * 100;
 
     const matched = {};
     let compositePriority = 10000;
@@ -1162,10 +1236,10 @@ export function applyHealthEffects(token, effects = []) {
         const match = exp.match(re);
         if (match) {
           const sign = match[1];
-          const val = match[2];
+          const val = Number(match[2]);
           const isPercentage = Boolean(match[3]);
 
-          const toCompare = isPercentage ? hpPercent : currHP;
+          const toCompare = isPercentage ? valPercent : currVal;
 
           let passed = false;
           if (sign === '=') {
@@ -1200,7 +1274,6 @@ export function applyHealthEffects(token, effects = []) {
       }
     }
   }
-
   return effects;
 }
 
@@ -1230,7 +1303,7 @@ export function getAllEffectMappings(token = null) {
   let allMappings;
 
   // Sort out global mappings that do not apply to this actor
-  const applicableGlobal = {};
+  let applicableGlobal = {};
   if (token?.actor?.type) {
     const actorType = token.actor.type;
     for (const [k, v] of Object.entries(TVA_CONFIG.globalMappings)) {
@@ -1304,4 +1377,53 @@ export function evaluateEffectAsExpression(effect, effects) {
     return [false, null];
   }
   return [evaluation, foundEffects];
+}
+
+export async function drawMorphOverlay(token, morph) {
+  if (token && !token.tva_morphing) {
+    token.tvaMorph = null;
+
+    let sprite = new TVA_Sprite(token.texture, token, {
+      alpha: token.document.alpha,
+      inheritTint: true,
+      linkRotation: true,
+      linkMirror: true,
+      linkOpacity: false,
+    });
+    sprite.tempTVASprite = true;
+
+    token.tva_sprites = token.tva_sprites ?? [];
+    sprite = canvas.primary.addChild(sprite);
+    token.tva_sprites.push(sprite);
+    sprite.overlaySort = -1;
+
+    return (alpha) => {
+      token.mesh.alpha = 0;
+      token.tva_morphing = true;
+      sprite.refresh({
+        filter: 'Token Magic FX',
+        filterOptions: {
+          params: morph,
+        },
+      });
+
+      let duration = morph[0].animated.progress.loopDuration + 100;
+      setTimeout(async () => {
+        const ovs = [];
+        for (const ov of token.tva_sprites) {
+          if (ov.tempTVASprite) {
+            ov.alpha = 0;
+            canvas.primary.removeChild(ov)?.destroy();
+          } else {
+            ovs.push(ov);
+          }
+        }
+        token.tva_sprites = ovs;
+
+        token.tva_morphing = false;
+        token.mesh.alpha = alpha;
+        // token.refresh();
+      }, duration);
+    };
+  }
 }
