@@ -57,14 +57,33 @@ Allows to map images to Visibility/Combat status and Active Effects.
 
 The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
 
-### HP Based Effects
+### HP/Rotation/Elevation Based Effects
 
-Instead of effect names the module also allows to enter hp comparisons into these fields allowing you to apply images and configuration based on the current health of the token:
+Instead of effect names the module also allows to enter hp, rotation, and elevation comparisons into these fields allowing you to apply images and configuration based on the current health of the token:
 
 ![HP Effects](https://user-images.githubusercontent.com/7693704/202446190-3ed56f37-3ad8-438d-a700-b3b18f25d2c6.png)
 
 - Accepts both percentages and exact values (e.g. `hp<=15`, `hp=100%`)
 - Accepted signs: `<, >, =, <=, >=`
+
+### Logical Expression Based Effects
+
+On top of comparators effect configs also support logical expressions.
+
+Accepted Operators:
+
+- `&&` ( logical AND)
+- `||` (logical OR)
+- `\!` (escaped logical NOT)
+- `\(` (escaped open bracket to group expressions)
+- `\)` (escaped closed bracket to group expressions)
+
+Examples:
+
+- Flying `&&` `\!` Prone
+  - Config will be applied if the token has the effect `Flying` and does not have `Prone`
+- Raging || Burning
+  - Config will be applied of the token has either the effect `Raging` or `Burning` or both.
 
 ## Installation
 
