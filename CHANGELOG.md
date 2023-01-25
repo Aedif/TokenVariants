@@ -1,3 +1,8 @@
+# 4.25.0
+
+- `Import` and `Export` header buttons have been added to Active Effect Configs
+  - It is now possible to import and export both Global and Actor specific configs
+
 # 4.24.0
 
 - Added support for 'rotation' and 'elevation' attributes within the Effect Configs

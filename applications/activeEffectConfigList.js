@@ -9,7 +9,7 @@ import {
   SUPPORTED_COMP_ATTRIBUTES,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { importSettingsFromJSON, TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
@@ -42,6 +42,30 @@ export default class ActiveEffectConfigList extends FormApplication {
     });
   }
 
+  _processConfig(effectName, attrs) {
+    if (!attrs.config) attrs.config = {};
+    let hasTokenConfig = Object.keys(attrs.config).length;
+    if (attrs.config.flags) hasTokenConfig--;
+    if (attrs.config.tv_script) hasTokenConfig--;
+
+    return {
+      effectName: effectName,
+      highlightedEffectName: highlightOperators(effectName),
+      imgName: attrs.imgName,
+      imgSrc: attrs.imgSrc,
+      isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
+      priority: attrs.priority,
+      hasConfig: attrs.config ? !isEmpty(attrs.config) : false,
+      hasScript: attrs.config && attrs.config.tv_script,
+      hasTokenConfig: hasTokenConfig > 0,
+      config: attrs.config,
+      overlay: attrs.overlay,
+      alwaysOn: attrs.alwaysOn,
+      overlayConfig: attrs.overlayConfig,
+      targetActors: attrs.targetActors,
+    };
+  }
+
   async getData(options) {
     const data = super.getData(options);
 
@@ -54,27 +78,7 @@ export default class ActiveEffectConfigList extends FormApplication {
         : this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
       fixEffectMappings(effectMappings);
       for (const [effectName, attrs] of Object.entries(effectMappings)) {
-        if (!attrs.config) attrs.config = {};
-        let hasTokenConfig = Object.keys(attrs.config).length;
-        if (attrs.config.flags) hasTokenConfig--;
-        if (attrs.config.tv_script) hasTokenConfig--;
-
-        mappings.push({
-          effectName: effectName,
-          highlightedEffectName: highlightOperators(effectName),
-          imgName: attrs.imgName,
-          imgSrc: attrs.imgSrc,
-          isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
-          priority: attrs.priority,
-          hasConfig: attrs.config ? !isEmpty(attrs.config) : false,
-          hasScript: attrs.config && attrs.config.tv_script,
-          hasTokenConfig: hasTokenConfig > 0,
-          config: attrs.config,
-          overlay: attrs.overlay,
-          alwaysOn: attrs.alwaysOn,
-          overlayConfig: attrs.overlayConfig,
-          targetActors: attrs.targetActors,
-        });
+        mappings.push(this._processConfig(effectName, attrs));
       }
 
       if (this.createMapping && !(this.createMapping in effectMappings)) {
@@ -350,20 +354,26 @@ export default class ActiveEffectConfigList extends FormApplication {
   _getHeaderButtons() {
     const buttons = super._getHeaderButtons();
 
-    // buttons.unshift({
-    //   label: 'Import',
-    //   class: 'token-variants-import',
-    //   icon: 'fas fa-globe',
-    //   onclick: (ev) => this._importConfigs(ev),
-    // });
+    buttons.unshift({
+      label: 'Export',
+      class: 'token-variants-export',
+      icon: 'fas fa-file-export',
+      onclick: (ev) => this._exportConfigs(ev),
+    });
+    buttons.unshift({
+      label: 'Import',
+      class: 'token-variants-import',
+      icon: 'fas fa-file-import',
+      onclick: (ev) => this._importConfigs(ev),
+    });
 
     if (this.globalMappings) return buttons;
 
     buttons.unshift({
-      label: 'Copy Global Effect',
+      label: 'Copy Global Config',
       class: 'token-variants-copy-global',
       icon: 'fas fa-globe',
-      onclick: (ev) => this._copyGlobalEffect(ev),
+      onclick: (ev) => this._copyGlobalConfig(ev),
     });
     buttons.unshift({
       label: 'Open Global',
@@ -375,6 +385,29 @@ export default class ActiveEffectConfigList extends FormApplication {
       },
     });
     return buttons;
+  }
+
+  async _exportConfigs(event) {
+    let mappings;
+    let filename = '';
+    if (this.globalMappings) {
+      mappings = { globalMappings: deepClone(TVA_CONFIG.globalMappings) };
+      filename = 'token-variants-global-mappings.json';
+    } else {
+      mappings = {
+        globalMappings: deepClone(
+          this.objectToFlag.getFlag('token-variants', 'effectMappings') || {}
+        ),
+      };
+
+      let actorName = this.objectToFlag.name ?? 'Actor';
+      actorName = actorName.replace(/[/\\?%*:|"<>]/g, '-');
+      filename = 'token-variants-' + actorName + '.json';
+    }
+
+    if (mappings && !isEmpty(mappings)) {
+      saveDataToFile(JSON.stringify(mappings, null, 2), 'text/json', filename);
+    }
   }
 
   async _importConfigs(event) {
@@ -400,7 +433,18 @@ export default class ActiveEffectConfigList extends FormApplication {
                   if (!json || !('globalMappings' in json)) {
                     return ui.notifications?.error('No mappings found within the file!');
                   }
-                  // importSettingsFromJSON(json);
+
+                  const mappings = this.object.mappings;
+                  for (const key of Object.keys(json.globalMappings)) {
+                    const processedMapping = this._processConfig(key, json.globalMappings[key]);
+                    const i = mappings.findIndex((m) => m.effectName === key);
+                    if (i === -1) {
+                      mappings.push(processedMapping);
+                    } else {
+                      mappings[i] = processedMapping;
+                    }
+                  }
+                  this.render();
                   resolve(true);
                 });
               },
@@ -421,7 +465,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     return await dialog;
   }
 
-  _copyGlobalEffect(event) {
+  _copyGlobalConfig(event) {
     const mappings = TVA_CONFIG.globalMappings;
     if (!mappings || isEmpty(mappings)) return;
 

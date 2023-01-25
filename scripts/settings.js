@@ -496,7 +496,7 @@ function _refreshFilters(filters, customCategories, updateTVAConfig = false) {
 }
 
 export async function updateSettings(newSettings) {
-  const settings = mergeObject(deepClone(TVA_CONFIG), newSettings);
+  const settings = mergeObject(deepClone(TVA_CONFIG), newSettings, { insertKeys: false });
   // Custom image categories might have changed, meaning we may have filters that are no longer relevant
   // or need to be added
   if ('customImageCategories' in newSettings) {
