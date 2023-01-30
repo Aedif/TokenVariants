@@ -9,11 +9,12 @@ import {
   SUPPORTED_COMP_ATTRIBUTES,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import { importSettingsFromJSON, TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog } from './dialogs.js';
+import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
@@ -340,14 +341,7 @@ export default class ActiveEffectConfigList extends FormApplication {
   async _onCreate(event) {
     event.preventDefault();
     await this._onSubmit(event);
-    this.object.mappings.push({
-      effectName: '',
-      imgName: '',
-      imgSrc: '',
-      priority: 50,
-      overlay: false,
-      alwaysOn: false,
-    });
+    this.object.mappings.push(deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG));
     this.render();
   }
 

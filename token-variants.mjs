@@ -42,7 +42,7 @@ import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
 import { libWrapper } from './scripts/libWrapper/shim.js';
-import { TVA_Sprite } from './applications/TVA_Sprite.js';
+import { TVA_Sprite } from './scripts/sprite/TVA_Sprite.js';
 
 // Tracks if module has been initialized
 let initialized = false;

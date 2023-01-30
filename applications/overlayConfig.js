@@ -1,3 +1,4 @@
+import { DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 
@@ -203,38 +204,9 @@ export default class OverlayConfig extends FormApplication {
     data.filters.sort();
     if (typeof TokenMagic !== 'undefined') data.filters.unshift('Token Magic FX');
     data.filters.unshift('NONE');
-    const settings = mergeObject(
-      {
-        alpha: 1,
-        scaleX: 1,
-        scaleY: 1,
-        offsetX: 0,
-        offsetY: 0,
-        angle: 0,
-        filter: 'NONE',
-        filterOptions: {},
-        inheritTint: false,
-        underlay: false,
-        linkRotation: true,
-        linkMirror: true,
-        linkOpacity: false,
-        tint: '',
-        loop: true,
-        playOnce: false,
-        effect: null,
-        animation: {
-          rotate: false,
-          duration: 5000,
-          clockwise: true,
-          relative: false,
-        },
-        limitToUser: false,
-        limitedUsers: [],
-        alwaysVisible: false,
-        img: '',
-      },
-      this.config || {}
-    );
+    const settings = mergeObject(DEFAULT_OVERLAY_CONFIG, this.config || {}, {
+      inplace: false,
+    });
 
     if (settings.filter !== 'NONE') {
       const filterOptions = genFilterOptionControls(settings.filter, settings.filterOptions);

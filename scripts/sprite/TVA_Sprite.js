@@ -1,4 +1,5 @@
-import { FILTERS } from './overlayConfig.js';
+import { FILTERS } from '../../applications/overlayConfig.js';
+import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
 
 class OutlineFilter extends OutlineOverlayFilter {
   /** @inheritdoc */
@@ -62,37 +63,7 @@ export class TVA_Sprite extends TokenMesh {
 
     this.texture = texture;
 
-    this.tvaOverlayConfig = mergeObject(
-      {
-        alpha: 1,
-        scaleX: 1,
-        scaleY: 1,
-        offsetX: 0,
-        offsetY: 0,
-        angle: 0,
-        filter: 'NONE',
-        filterOptions: {},
-        inheritTint: false,
-        underlay: false,
-        linkRotation: true,
-        linkMirror: true,
-        linkOpacity: false,
-        mirror: false,
-        tint: null,
-        loop: true,
-        playOnce: false,
-        animation: {
-          rotate: false,
-          duration: 5000,
-          clockwise: true,
-          relative: false,
-        },
-        limitToUser: false,
-        limitedUsers: [],
-        alwaysVisible: false,
-      },
-      config
-    );
+    this.tvaOverlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
     this._tvaPlay().then(() => this.refresh());
   }
 
@@ -251,34 +222,6 @@ export class TVA_Sprite extends TokenMesh {
     } else if (filterName === 'Token Magic FX') {
       this.filters = await constructTMFXFilters(options.params || [], this);
       return;
-    } else if (filterName === 'FilterFire') {
-      let fxModule = await import('../../tokenmagic/fx/filters/FilterFire.js');
-
-      options.animated = {
-        time: {
-          active: true,
-          speed: -0.0024,
-          animType: 'move',
-        },
-        intensity: {
-          active: true,
-          loopDuration: 15000,
-          val1: 0.8,
-          val2: 2,
-          animType: 'syncCosOscillation',
-        },
-        amplitude: {
-          active: true,
-          loopDuration: 4400,
-          val1: 1,
-          val2: 1.4,
-          animType: 'syncCosOscillation',
-        },
-      };
-
-      filter = new fxModule.FilterFire({ dummy: false, ...options });
-      filter.placeableImg = this;
-      filter.targetPlaceable = this.object;
     }
 
     if (filter) {
@@ -389,7 +332,7 @@ async function getTMFXFilter(id) {
     else {
       try {
         const className = TMFXFilterTypes[id];
-        let fxModule = await import(`../../tokenmagic/fx/filters/${className}.js`);
+        let fxModule = await import(`../../../tokenmagic/fx/filters/${className}.js`);
         if (fxModule && fxModule[className]) {
           LOADED_TMFXFilters[id] = fxModule[className];
           return fxModule[className];
