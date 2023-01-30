@@ -37,6 +37,7 @@ import {
   drawMorphOverlay,
   evaluateComparatorEffects,
   SUPPORTED_COMP_ATTRIBUTES,
+  nameForgeRandomize,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -1108,66 +1109,78 @@ async function createToken(token, options, userId) {
   updateWithEffectMapping(token);
 
   // Check if random search is enabled and if so perform it
-  const randSettings = TVA_CONFIG.randomizer;
+  const actorRandSettings = game.actors
+    .get(token.actorId)
+    ?.getFlag('token-variants', 'randomizerSettings');
+  const randSettings = mergeObject(TVA_CONFIG.randomizer, actorRandSettings ?? {}, {
+    inplace: false,
+    recursive: false,
+  });
+
   let vDown = keyPressed('v');
   const flagTarget = token.actor ? game.actors.get(token.actor.id) : token.document ?? token;
-  const randFlag = flagTarget.getFlag('token-variants', 'randomize');
   const popupFlag = flagTarget.getFlag('token-variants', 'popups');
 
-  if (randFlag == null || randFlag) {
-    if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
-      let performRandomSearch = true;
-      if (randFlag == null) {
-        if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
-        if (randSettings.linkedActorDisable && token.actorLink) performRandomSearch = false;
-        if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
-      } else {
-        performRandomSearch = randFlag;
+  if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
+    let performRandomSearch = true;
+    if (!actorRandSettings) {
+      if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
+      if (randSettings.linkedActorDisable && token.actorLink) performRandomSearch = false;
+      if (disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
+    } else {
+      performRandomSearch = Boolean(actorRandSettings);
+    }
+
+    if (performRandomSearch) {
+      // Randomize Token Name if need be
+      const randomName = await nameForgeRandomize(randSettings);
+      if (randomName) {
+        token.update({ name: randomName });
       }
 
-      if (performRandomSearch) {
-        const img = await doRandomSearch(token.name, {
-          searchType: SEARCH_TYPE.TOKEN,
+      const img = await doRandomSearch(token.name, {
+        searchType: SEARCH_TYPE.TOKEN,
+        actor: token.actor,
+        randomizerOptions: randSettings,
+      });
+      if (img) {
+        await updateTokenImage(img[0], {
+          token: token,
           actor: token.actor,
+          imgName: img[1],
         });
-        if (img) {
-          await updateTokenImage(img[0], {
-            token: token,
+      }
+
+      if (!img) return;
+
+      if (randSettings.diffImages) {
+        let imgPortrait;
+        if (randSettings.syncImages) {
+          imgPortrait = await doSyncSearch(token.name, img[1], {
             actor: token.actor,
-            imgName: img[1],
+            searchType: SEARCH_TYPE.PORTRAIT,
+          });
+        } else {
+          imgPortrait = await doRandomSearch(token.name, {
+            searchType: SEARCH_TYPE.PORTRAIT,
+            actor: token.actor,
+            randomizerOptions: randSettings,
           });
         }
 
-        if (!img) return;
-
-        if (randSettings.diffImages) {
-          let imgPortrait;
-          if (randSettings.syncImages) {
-            imgPortrait = await doSyncSearch(token.name, img[1], {
-              actor: token.actor,
-              searchType: SEARCH_TYPE.PORTRAIT,
-            });
-          } else {
-            imgPortrait = await doRandomSearch(token.name, {
-              searchType: SEARCH_TYPE.PORTRAIT,
-              actor: token.actor,
-            });
-          }
-
-          if (imgPortrait) {
-            await updateActorImage(token.actor, imgPortrait[0]);
-          }
-        } else if (randSettings.tokenToPortrait) {
-          await updateActorImage(token.actor, img[0]);
+        if (imgPortrait) {
+          await updateActorImage(token.actor, imgPortrait[0]);
         }
-        return;
+      } else if (randSettings.tokenToPortrait) {
+        await updateActorImage(token.actor, img[0]);
       }
-      if (popupFlag == null && !randSettings.popupOnDisable) {
-        return;
-      }
-    } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste) {
       return;
     }
+    if (popupFlag == null && !randSettings.popupOnDisable) {
+      return;
+    }
+  } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste) {
+    return;
   }
 
   // Check if pop-up is enabled and if so open it
@@ -1922,6 +1935,7 @@ async function _randSearchUtil(
   if (
     !(
       randSettings.tokenName ||
+      randSettings.actorName ||
       randSettings.keywords ||
       randSettings.shared ||
       randSettings.wildcard
@@ -1932,16 +1946,21 @@ async function _randSearchUtil(
   // Randomizer settings take precedence
   searchOptions.keywordSearch = randSettings.keywords;
 
+  // Swap search to the actor name if need be
+  if (randSettings.actorName && actor) {
+    search = actor.name;
+  }
+
   // Gather all images
   let results =
-    randSettings.tokenName || randSettings.keywords
+    randSettings.actorName || randSettings.tokenName || randSettings.keywords
       ? await doImageSearch(search, {
           searchType: searchType,
           searchOptions: searchOptions,
         })
       : new Map();
 
-  if (!randSettings.tokenName) {
+  if (!randSettings.tokenName && !randSettings.actorName) {
     results.delete(search);
   }
   if (randSettings.shared && actor) {

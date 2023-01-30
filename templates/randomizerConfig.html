@@ -1,0 +1,79 @@
+<form>
+    <h2>{{localize "token-variants.common.randomize"}}</h2>
+
+    <div class="form-group">
+        <label>On Token Create</label>
+        <input type="checkbox" name="randomizer.tokenCreate" data-dtype="Boolean" {{#if randomizer.tokenCreate}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>On Token Copy+Paste</label>
+        <input type="checkbox" name="randomizer.tokenCopyPaste" data-dtype="Boolean" {{#if randomizer.tokenCopyPaste}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>&nbsp;&nbsp;&nbsp;&nbsp; {{localize "token-variants.settings.randomizer.window.token-to-portrait"}}</label>
+        <input type="checkbox" name="randomizer.tokenToPortrait" data-dtype="Boolean" {{#if randomizer.tokenToPortrait}}checked{{/if}}>
+    </div>
+
+    <hr />
+
+    <div class="form-group">
+        <label>{{localize "token-variants.settings.randomizer.window.different-images"}}</label>
+        <input type="checkbox" name="randomizer.diffImages" data-dtype="Boolean" {{#if randomizer.diffImages}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>&nbsp;&nbsp;&nbsp;&nbsp; {{localize "token-variants.settings.randomizer.window.sync-images"}}</label>
+        <input type="checkbox" name="randomizer.syncImages" data-dtype="Boolean" {{#if randomizer.syncImages}}checked{{/if}}>
+    </div>
+
+    <h2>Searches to include in image Randomization</h2>
+
+    <div class="form-group">
+        <label>Token Name</label>
+        <input type="checkbox" name="randomizer.tokenName" data-dtype="Boolean" {{#if randomizer.tokenName}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>Actor Name</label>
+        <input type="checkbox" name="randomizer.actorName" data-dtype="Boolean" {{#if randomizer.actorName}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>{{localize "token-variants.common.keywords"}}</label>
+        <input type="checkbox" name="randomizer.keywords" data-dtype="Boolean" {{#if randomizer.keywords}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>{{localize "token-variants.common.shared"}} <i class="fas fa-share"></i></label>
+        <input type="checkbox" name="randomizer.shared" data-dtype="Boolean" {{#if randomizer.shared}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>Wildcard *</label>
+        <input type="checkbox" name="randomizer.wildcard" data-dtype="Boolean" {{#if randomizer.wildcard}}checked{{/if}}>
+    </div>
+
+    {{#if nameForgeActive}}
+    <h2>Module: Name Forge</h2>
+
+    <div class="form-group">
+        <label>Randomize Token Name</label>
+        <input type="checkbox" name="randomizer.nameForge.randomize" data-dtype="Boolean" {{#if randomizer.nameForge.randomize}}checked{{/if}}>
+    </div>
+
+    <div class="form-group">
+        <label>Models</label>
+        <button type="button" class="selectNameForgeModels">Select</button>
+        <input type="text" name="randomizer.nameForge.models" value="{{randomizer.nameForge.models}}" hidden>
+    </div>
+    {{/if}}
+
+    <footer class="sheet-footer flexrow">
+        <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
+        {{#if hasSettings}}
+        <button type="submit" value="remove"><i class="fas fa-trash"></i>{{localize "token-variants.common.remove"}}</button>
+        {{/if}}
+    </footer>
+</form>

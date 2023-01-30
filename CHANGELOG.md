@@ -1,3 +1,11 @@
+# 4.26.0
+
+- Token image randomization can now be configured per Actor
+  - New button addon to the Token HUD side menu: **Randomizer**
+  - When **Name Forge** module is active additional randomization options will be added:
+    - Randomize Token Name
+    - Models
+
 # 4.25.0
 
 - `Import` and `Export` header buttons have been added to Active Effect Configs

@@ -23,14 +23,11 @@ export default class FlagsConfig extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    const randomize = this.objectToFlag.getFlag('token-variants', 'randomize');
     const popups = this.objectToFlag.getFlag('token-variants', 'popups');
     const disableNameSearch = this.objectToFlag.getFlag('token-variants', 'disableNameSearch');
     const directory = this.objectToFlag.getFlag('token-variants', 'directory') || {};
 
     return mergeObject(data, {
-      randomize: randomize,
-      randomizeSetFlag: randomize != null,
       popups: popups,
       popupsSetFlag: popups != null,
       disableNameSearch: disableNameSearch,
@@ -79,7 +76,7 @@ export default class FlagsConfig extends FormApplication {
       formData.directory = { path: formData.directory, source: formData.directorySource };
     }
 
-    ['randomize', 'popups', 'disableNameSearch', 'directory'].forEach((flag) => {
+    ['popups', 'disableNameSearch', 'directory'].forEach((flag) => {
       if (flag in formData) {
         this.objectToFlag.setFlag('token-variants', flag, formData[flag]);
       } else {

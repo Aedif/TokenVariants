@@ -1427,3 +1427,30 @@ export async function drawMorphOverlay(token, morph) {
     };
   }
 }
+
+/**
+ * Returns a random name generated using Name Forge module
+ * @param {*} randomizerSettings
+ * @returns
+ */
+export async function nameForgeRandomize(randomizerSettings) {
+  const nameForgeSettings = randomizerSettings.nameForge;
+  if (nameForgeSettings?.randomize && nameForgeSettings?.models) {
+    const nameForge = game.modules.get('nameforge');
+    if (nameForge?.active) {
+      const randomNames = [];
+      for (const modelKey of nameForgeSettings.models) {
+        const modelProp = getProperty(nameForge.models, modelKey);
+        if (modelProp) {
+          const model = await nameForge.api.createModel(modelProp);
+          if (model) {
+            randomNames.push(nameForge.api.generateName(model)[0]);
+          }
+        }
+      }
+      return randomNames[Math.floor(Math.random() * randomNames.length)];
+    }
+  }
+
+  return null;
+}

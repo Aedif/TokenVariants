@@ -13,6 +13,7 @@ import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import FlagsConfig from './flagsConfig.js';
+import RandomizerConfig from './randomizerConfig.js';
 
 export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
   activateStatusEffectListeners(token);
@@ -100,6 +101,7 @@ function _onButtonRightClick(event, hud, html, token) {
         <button class="flags" type="button"><i class="fab fa-font-awesome-flag"></i><label>Flags</label></button>
         <button class="file-picker" type="button"><i class="fas fa-file-import fa-fw"></i><label>FilePicker</label></button>
         <button class="effectConfig" type="button"><i class="fas fa-sun"></i><label>Effect Config</label></button>
+        <button class="randomizerConfig" type="button"><i class="fas fa-dice"></i><label>Randomizer</label></button>
       </div>
     </div>
       `);
@@ -142,6 +144,9 @@ function _onButtonRightClick(event, hud, html, token) {
     });
     contextMenu.find('.effectConfig').click((event) => {
       new ActiveEffectConfigList(token).render(true);
+    });
+    contextMenu.find('.randomizerConfig').click((event) => {
+      new RandomizerConfig(token).render(true);
     });
   }
 }

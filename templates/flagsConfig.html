@@ -10,15 +10,6 @@
     <ul class="permissions-list">
       {{#unless tile}}
       <li class="permission form-group">
-        <label class="index">Randomize</label>
-        <div class="form-fields">
-          <input class="flag" type="checkbox" name="randomize" {{#if randomize}}checked{{/if}} {{#unless randomizeSetFlag}}disabled{{/unless}}/>
-          <input class="controlFlag" type="checkbox" {{#if randomizeSetFlag}}checked{{/if}} />
-        </div>
-        <p class="hint">Enable or disable randomization for this actor/token.</p>
-      </li>
-  
-      <li class="permission form-group">
         <label class="index">Pop-ups</label>
         <div class="form-fields">
           <input class="flag" type="checkbox" name="popups" {{#if popups}}checked{{/if}} {{#unless popupsSetFlag}}disabled{{/unless}}/>
