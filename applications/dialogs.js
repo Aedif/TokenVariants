@@ -1,5 +1,5 @@
 import { TVA_CONFIG } from '../scripts/settings.js';
-import { BASE_IMAGE_CATEGORIES } from '../scripts/utils.js';
+import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
 
 // Edit overlay configuration as a json string
 export function showOverlayJsonConfigDialog(overlayConfig, callback) {
@@ -95,6 +95,77 @@ export async function showPathSelectCategoryDialog(event) {
           typesInput.val(types.join(','));
         },
       },
+    },
+    default: 'yes',
+  }).render(true);
+}
+
+export async function showTokenCaptureDialog(token) {
+  if (!token) return;
+  let content = `<form>
+<div class="form-group">
+  <label>Image Name</label>
+  <input type="text" name="name" value="${token.name}">
+</div>
+<div class="form-group">
+  <label>Image Path</label>
+    <div class="form-fields">
+      <input type="text" name="path" value="modules/token-variants/">
+      <button type="button" class="file-picker" data-type="folder" data-target="path" title="Browse Folders" tabindex="-1">
+        <i class="fas fa-file-import fa-fw"></i>
+      </button>
+    </div>
+</div>
+<div class="form-group slim">
+  <label>Width <span class="units">(pixels)</span></label>
+  <div class="form-fields">
+      <input type="number" step="1" name="width" value="${token.mesh.texture.width}">
+  </div>
+</div>
+<div class="form-group slim">
+  <label>Height <span class="units">(pixels)</span></label>
+  <div class="form-fields">
+      <input type="number" step="1" name="height" value="${token.mesh.texture.height}">
+  </div>
+</div>
+<div class="form-group slim">
+  <label>Scale</label>
+  <div class="form-fields">
+    <input type="number" step="any" name="scale" value="3">
+  </div>
+</div>
+</form>`;
+
+  new Dialog({
+    title: `Save Token/Overlay Image`,
+    content: content,
+    buttons: {
+      yes: {
+        icon: "<i class='fas fa-save'></i>",
+        label: 'Save',
+        callback: (html) => {
+          const options = {};
+          $(html)
+            .find('[name]')
+            .each(function () {
+              let val = parseFloat(this.value);
+              if (isNaN(val)) val = this.value;
+              options[this.name] = val;
+            });
+          uploadTokenImage(token, options);
+        },
+      },
+    },
+    render: (html) => {
+      html.find('.file-picker').click(() => {
+        new FilePicker({
+          type: 'folder',
+          current: html.find('[name="path"]').val(),
+          callback: (path) => {
+            html.find('[name="path"]').val(path);
+          },
+        }).render();
+      });
     },
     default: 'yes',
   }).render(true);

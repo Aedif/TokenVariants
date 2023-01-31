@@ -1454,3 +1454,72 @@ export async function nameForgeRandomize(randomizerSettings) {
 
   return null;
 }
+
+/**
+ * Upload Token and associated overlays as a single image
+ */
+export async function uploadTokenImage(token, options) {
+  let renderTexture = captureToken(token, options);
+  if (renderTexture) {
+    const b64 = canvas.app.renderer.extract.base64(renderTexture, 'image/webp', 1);
+    let res = await fetch(b64);
+    let blob = await res.blob();
+    const filename = options.name + `.webp`;
+    let file = new File([blob], filename, { type: 'image/webp' });
+    await FilePicker.upload('data', options.path, file, {});
+  }
+}
+
+/**
+ * Modified version of 'dev7355608' captureCanvas function. Captures combined Token and Overlay image
+ */
+function captureToken(token, { scale = 3, width = null, height = null } = {}) {
+  if (!canvas.ready || !token) {
+    return;
+  }
+
+  width = width ?? token.texture.width;
+  height = height ?? token.texture.height;
+
+  scale = scale * Math.min(width / token.texture.width, height / token.texture.height);
+
+  const renderer = canvas.app.renderer;
+  const viewPosition = { ...canvas.scene._viewPosition };
+
+  renderer.resize(width ?? renderer.screen.width, height ?? renderer.screen.height);
+
+  width = canvas.screenDimensions[0] = renderer.screen.width;
+  height = canvas.screenDimensions[1] = renderer.screen.height;
+
+  canvas.stage.position.set(width / 2, height / 2);
+
+  canvas.pan({
+    x: token.center.x,
+    y: token.center.y,
+    scale,
+  });
+
+  const renderTexture = PIXI.RenderTexture.create({
+    width,
+    height,
+    resolution: token.texture.resolution,
+  });
+
+  const cacheParent = canvas.stage.enableTempParent();
+
+  canvas.stage.updateTransform();
+  canvas.stage.disableTempParent(cacheParent);
+
+  let spritesToRender = [token.mesh];
+  if (token.tva_sprites) spritesToRender = spritesToRender.concat(token.tva_sprites);
+  spritesToRender.sort((sprite) => sprite.sort);
+
+  for (const sprite of spritesToRender) {
+    renderer.render(sprite, { renderTexture, skipUpdateTransform: true, clear: false });
+  }
+
+  canvas._onResize();
+  canvas.pan(viewPosition);
+
+  return renderTexture;
+}

@@ -13,7 +13,7 @@ import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
-import { showOverlayJsonConfigDialog } from './dialogs.js';
+import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
@@ -377,6 +377,13 @@ export default class ActiveEffectConfigList extends FormApplication {
         await this.close();
         new ActiveEffectConfigList(this.token, { globalMappings: true }).render(true);
       },
+    });
+
+    buttons.unshift({
+      label: '',
+      class: 'token-variants-print-token',
+      icon: 'fa fa-print',
+      onclick: () => showTokenCaptureDialog(canvas.tokens.get(this.token._id)),
     });
     return buttons;
   }

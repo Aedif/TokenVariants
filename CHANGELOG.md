@@ -1,3 +1,7 @@
+# 4.27.0
+
+- New header button added to `Effect Config` window which allows saving of composite token and overlay image
+
 # 4.26.1
 
 - Randomizer sync image fix
