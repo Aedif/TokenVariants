@@ -1159,6 +1159,7 @@ async function createToken(token, options, userId) {
           imgPortrait = await doSyncSearch(token.name, img[1], {
             actor: token.actor,
             searchType: SEARCH_TYPE.PORTRAIT,
+            randomizerOptions: randSettings,
           });
         } else {
           imgPortrait = await doRandomSearch(token.name, {
@@ -2015,11 +2016,15 @@ async function _randSearchUtil(
   return results;
 }
 
-async function doSyncSearch(search, target, { searchType = SEARCH_TYPE.TOKEN, actor = null } = {}) {
+async function doSyncSearch(
+  search,
+  target,
+  { searchType = SEARCH_TYPE.TOKEN, actor = null, randomizerOptions = {} } = {}
+) {
   if (caching) return null;
 
   const results = flattenSearchResults(
-    await _randSearchUtil(search, { searchType: searchType, actor: actor })
+    await _randSearchUtil(search, { searchType, actor, randomizerOptions })
   );
 
   // Find the image with the most similar name

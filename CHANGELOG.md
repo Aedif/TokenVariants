@@ -1,3 +1,7 @@
+# 4.26.1
+
+- Randomizer sync image fix
+
 # 4.26.0
 
 - Token image randomization can now be configured per Actor
