@@ -194,7 +194,24 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
   };
 
   if (!fp_files) {
+    // Insert current token image
+    if (token.texture?.src && token.texture?.src !== CONST.DEFAULT_TOKEN) {
+      pushImage({
+        path: token.texture.src,
+        name: token.flags?.['token-variants']?.name ?? getFileName(token.texture.src),
+      });
+    }
+
     if (tokenActor) {
+      // Insert default token image
+      const defaultImg =
+        tokenActor.prototypeToken?.flags['token-variants']?.['randomImgDefault'] ||
+        tokenActor.prototypeToken?.flags['token-hud-wildcard']?.['default'] ||
+        '';
+      if (defaultImg) {
+        pushImage({ path: defaultImg, name: getFileName(defaultImg) });
+      }
+
       if (!searchText) {
         if (FULL_ACCESS || PARTIAL_ACCESS) {
           actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];

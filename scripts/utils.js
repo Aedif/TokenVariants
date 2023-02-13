@@ -878,7 +878,7 @@ function _modMergeUpdate(
   }
 }
 
-export async function tv_executeScript(script, { actor, token } = {}) {
+export async function tv_executeScript(script, { actor, token, tvaUpdate } = {}) {
   // Add variables to the evaluation scope
   const speaker = ChatMessage.getSpeaker();
   const character = game.user.character;
@@ -888,8 +888,8 @@ export async function tv_executeScript(script, { actor, token } = {}) {
   // Attempt script execution
   const AsyncFunction = async function () {}.constructor;
   try {
-    const fn = AsyncFunction('speaker', 'actor', 'token', 'character', `${script}`);
-    await fn.call(null, speaker, actor, token, character);
+    const fn = AsyncFunction('speaker', 'actor', 'token', 'character', 'tvaUpdate', `${script}`);
+    await fn.call(null, speaker, actor, token, character, tvaUpdate);
   } catch (err) {
     ui.notifications.error(
       `There was an error in your script syntax. See the console (F12) for details`

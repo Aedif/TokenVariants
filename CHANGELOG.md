@@ -1,3 +1,21 @@
+# 4.28.0
+
+- Current Token and Default Wildcard images will now always be displayed in the Token HUD side menu
+- Active Effect config scripts will now have **tvaUpdate** function exposed to them
+  - When this function is used in the script TVA will defer the update to the script allowing you to execute the update after performing some other set of actions
+  - An example use-case would be when combined with the `Sequencer` module:
+
+```
+new Sequence()
+    .effect()
+    .file("modules/JB2A_DnD5e/Library/Generic/Portals/Portal_Bright_Yellow_H_400x400.webm")
+    .atLocation(token)
+    .scaleToObject(4)
+    .wait(1000)
+    .thenDo(tvaUpdate)
+    .play()
+```
+
 # 4.27.0
 
 - New header button added to `Effect Config` window which allows saving of composite token and overlay image

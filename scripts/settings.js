@@ -81,6 +81,7 @@ export const TVA_CONFIG = {
     overrideCategory: false,
     category: 'Token',
     missingImages: [{ document: 'all', image: CONST.DEFAULT_TOKEN }],
+    searchOptions: {},
   },
   permissions: {
     popups: {

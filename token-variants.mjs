@@ -148,10 +148,14 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
 
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
+  let deferredUpdateScripts = [];
   let tmfxMorph;
   for (const ef of removed) {
     const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
-    if (onRemove) executeOnCallback.push({ script: onRemove, token: token });
+    if (onRemove) {
+      if (onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(onRemove);
+      else executeOnCallback.push({ script: onRemove, token: token });
+    }
     const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
     if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
     const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
@@ -159,21 +163,15 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
   }
   for (const ef of added) {
     const onApply = mappings[ef]?.config?.tv_script?.onApply;
-    if (onApply) executeOnCallback.push({ script: onApply, token: token });
+    if (onApply) {
+      if (onApply.includes('tvaUpdate')) deferredUpdateScripts.push(onApply);
+      else executeOnCallback.push({ script: onApply, token: token });
+    }
     const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
     if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
     const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
     if (morph) tmfxMorph = morph;
   }
-
-  // Need to broadcast to other users to re-draw the overlay
-  drawOverlays(token);
-  const message = {
-    handlerName: 'drawOverlays',
-    args: { tokenId: token.id },
-    type: 'UPDATE',
-  };
-  game.socket?.emit('module.token-variants', message);
 
   // Next we're going to determine what configs need to be applied and in what order
   // Filter effects that do not have a mapping and sort based on priority
@@ -203,6 +201,8 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
   if (disableImageUpdate) {
     tokenDefaultImg = '';
   }
+
+  let updateCall;
 
   if (effects.length > 0) {
     // Some effect mappings may not have images, find a mapping with one if it exists
@@ -256,21 +256,22 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
       };
     }
 
-    await updateTokenImage(newImg.imgSrc ?? null, {
-      token: token,
-      imgName: newImg.imgName ? newImg.imgName : tokenImgName,
-      tokenUpdate: tokenUpdateObj,
-      callback: postTokenUpdateProcessing.bind(
-        null,
-        token,
-        hadActiveHUD,
-        toggleStatus,
-        executeOnCallback
-      ),
-      config: config,
-      animate,
-      tmfxMorph,
-    });
+    updateCall = () =>
+      updateTokenImage(newImg.imgSrc ?? null, {
+        token: token,
+        imgName: newImg.imgName ? newImg.imgName : tokenImgName,
+        tokenUpdate: tokenUpdateObj,
+        callback: postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
+        config: config,
+        animate,
+        tmfxMorph,
+      });
   }
 
   // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
@@ -279,41 +280,77 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
     delete tokenUpdateObj['flags.token-variants.defaultImg'];
     tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
 
-    await updateTokenImage(tokenDefaultImg.imgSrc, {
-      token: token,
-      imgName: tokenDefaultImg.imgName,
-      tokenUpdate: tokenUpdateObj,
-      callback: postTokenUpdateProcessing.bind(
-        null,
-        token,
-        hadActiveHUD,
-        toggleStatus,
-        executeOnCallback
-      ),
-      animate,
-      tmfxMorph,
-    });
+    updateCall = () =>
+      updateTokenImage(tokenDefaultImg.imgSrc, {
+        token: token,
+        imgName: tokenDefaultImg.imgName,
+        tokenUpdate: tokenUpdateObj,
+        callback: postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
+        animate,
+        tmfxMorph,
+      });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
     // clear it
   } else if (
     effects.length === 0 &&
     (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')
   ) {
-    await updateTokenImage(token.document.texture.src, {
-      token: token,
-      imgName: tokenImgName,
-      tokenUpdate: tokenUpdateObj,
-      callback: postTokenUpdateProcessing.bind(
-        null,
-        token,
-        hadActiveHUD,
-        toggleStatus,
-        executeOnCallback
-      ),
-      animate,
-      tmfxMorph,
-    });
+    updateCall = () =>
+      updateTokenImage(token.document.texture.src, {
+        token: token,
+        imgName: tokenImgName,
+        tokenUpdate: tokenUpdateObj,
+        callback: postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
+        animate,
+        tmfxMorph,
+      });
   }
+
+  if (updateCall) {
+    if (deferredUpdateScripts.length) {
+      for (let i = 0; i < deferredUpdateScripts.length; i++) {
+        if (i === deferredUpdateScripts.length - 1) {
+          await tv_executeScript(deferredUpdateScripts[i], {
+            token,
+            tvaUpdate: () => {
+              broadcastOverlayRedraw(token);
+              updateCall();
+            },
+          });
+        } else {
+          await tv_executeScript(deferredUpdateScripts[i], { token, tvaUpdate: () => {} });
+        }
+      }
+    } else {
+      broadcastOverlayRedraw(token);
+      updateCall();
+    }
+  } else {
+    broadcastOverlayRedraw(token);
+  }
+}
+
+function broadcastOverlayRedraw(token) {
+  // Need to broadcast to other users to re-draw the overlay
+  drawOverlays(token);
+  const message = {
+    handlerName: 'drawOverlays',
+    args: { tokenId: token.id },
+    type: 'UPDATE',
+  };
+  game.socket?.emit('module.token-variants', message);
 }
 
 /**
