@@ -339,7 +339,7 @@ export function registerKeybinds() {
     ],
     onDown: () => {
       for (const token of canvas.tokens.controlled) {
-        const actor = game.actors.get(token.document.actorId);
+        const actor = token.actor;
         if (!actor) continue;
         showArtSelect(actor.name, {
           callback: async function (imgSrc, name) {
@@ -393,7 +393,7 @@ export function registerKeybinds() {
     ],
     onDown: () => {
       for (const token of canvas.tokens.controlled) {
-        const actor = game.actors.get(token.document.actorId);
+        const actor = token.actor;
         showArtSelect(token.name, {
           callback: async function (imgSrc, imgName) {
             if (actor) await updateActorImage(actor, imgSrc);
@@ -698,6 +698,33 @@ async function _overrideIcon(token, img) {
   mesh.anchor.set(0.5, 0.5);
   canvas.primary.tokens.set(token.sourceId, mesh);
   if (mesh.isVideo) canvas.primary.videoMeshes.add(mesh);
+
+  // If this is an image flagged as invisible, we need to override visibility check for this client
+  if (
+    (decodeURI(token.tva_iconOverride) === TVA_CONFIG.invisibleImage ||
+      token.tva_customVisibility) &&
+    decodeURI(img) !== TVA_CONFIG.invisibleImage
+  ) {
+    Object.defineProperty(
+      token,
+      'isVisible',
+      Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible')
+    );
+    token.visible = token.isVisible;
+    delete token.tva_customVisibility;
+  } else if (decodeURI(img) === TVA_CONFIG.invisibleImage) {
+    const originalIsVisible = Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible').get;
+    Object.defineProperty(token, 'isVisible', {
+      get: function () {
+        const isVisible = originalIsVisible.call(this);
+        if (isVisible && !game.user.isGM) return false;
+        return isVisible;
+      },
+      configurable: true,
+    });
+    token.visible = token.isVisible;
+    token.tva_customVisibility = true;
+  }
 
   token.tva_iconOverride = img;
   token.refresh();

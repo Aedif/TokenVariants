@@ -1,3 +1,9 @@
+# 4.29.0
+
+- Fixed keybindings `Shift+1` and `Shift+3` not updating the Actor portrait
+- Added a new setting to `User to Image` form: `Invisible Image`
+  - Will render the token invisible for the non-gm users that have this image assigned to them
+
 # 4.28.0
 
 - Current Token and Default Wildcard images will now always be displayed in the Token HUD side menu

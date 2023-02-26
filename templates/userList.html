@@ -23,6 +23,14 @@
         {{/each}}
       </ol>
     </section>
+    <div class="form-group">
+      <label>Invisible Image</label>
+      <div class="form-fields">
+        <Input type="text" name="invisibleImage" value="{{invisibleImage}}"/>
+        <button type="button" class="file-picker" data-type="image" data-target="invisibleImage" title="Browse Files" tabindex="-1"><i class="fas fa-file-import fa-fw"></i></button>
+       </div>
+      <p class="notes">Token will be rendered invisible for non-gm users that have this image assigned to them.</p>
+    </div>
     <footer class="sheet-footer flexrow">
       <button type="submit">
         <i class="far fa-save"></i>{{localize "token-variants.common.apply"}}

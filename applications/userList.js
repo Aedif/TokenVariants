@@ -1,3 +1,4 @@
+import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { checkAndDisplayUserSpecificImage } from '../scripts/utils.js';
 
 export default class UserList extends FormApplication {
@@ -16,7 +17,7 @@ export default class UserList extends FormApplication {
       resizable: false,
       minimizable: false,
       title: 'User To Image',
-      width: 260,
+      width: 300,
     });
   }
 
@@ -34,12 +35,18 @@ export default class UserList extends FormApplication {
       });
     });
     data.users = users;
+    data.invisibleImage = TVA_CONFIG.invisibleImage;
     return data;
   }
 
   async _updateObject(event, formData) {
     const mappings = this.token.document.getFlag('token-variants', 'userMappings') || {};
     let newMappings = {};
+
+    if (formData.invisibleImage !== TVA_CONFIG.invisibleImage) {
+      updateSettings({ invisibleImage: decodeURI(formData.invisibleImage) });
+    }
+    delete formData.invisibleImage;
 
     const affectedImages = [this.img];
     const affectedUsers = [];

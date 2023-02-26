@@ -134,6 +134,7 @@ export const TVA_CONFIG = {
   disableImageChangeOnPolymorphed: false,
   disableImageUpdateOnNonPrototype: false,
   disableTokenUpdateAnimation: false,
+  invisibleImage: '',
 };
 
 export async function registerSettings() {
