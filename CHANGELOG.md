@@ -1,3 +1,31 @@
+# 4.29.1
+
+- Adjusted `User To Image` feature logic to allow control of the image displayed to the user via the setting of a flag
+
+```js
+// Apply
+token.document.setFlag('token-variants', 'userMappings', {
+  user_id: 'image/file/path',
+});
+// Remove
+token.document.setFlag('token-variants', 'userMappings', {
+  '-=user_id': null,
+});
+```
+
+e.g.
+
+```js
+// Apply
+token.document.setFlag('token-variants', 'userMappings', {
+  WHYKBy6W458lqeFE: 'TrickyImages/transparent.png',
+});
+// Remove
+token.document.setFlag('token-variants', 'userMappings', {
+  '-=WHYKBy6W458lqeFE': null,
+});
+```
+
 # 4.29.0
 
 - Fixed keybindings `Shift+1` and `Shift+3` not updating the Actor portrait

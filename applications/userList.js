@@ -41,7 +41,6 @@ export default class UserList extends FormApplication {
 
   async _updateObject(event, formData) {
     const mappings = this.token.document.getFlag('token-variants', 'userMappings') || {};
-    let newMappings = {};
 
     if (formData.invisibleImage !== TVA_CONFIG.invisibleImage) {
       updateSettings({ invisibleImage: decodeURI(formData.invisibleImage) });
@@ -49,44 +48,26 @@ export default class UserList extends FormApplication {
     delete formData.invisibleImage;
 
     const affectedImages = [this.img];
-    const affectedUsers = [];
 
     for (const [userId, apply] of Object.entries(formData)) {
       if (apply) {
-        newMappings[userId] = this.img;
-
-        if (mappings[userId] && mappings[userId] !== this.img) {
+        if (mappings[userId] && mappings[userId] !== this.img)
           affectedImages.push(mappings[userId]);
-          affectedUsers.push(userId);
-        } else if (!mappings[userId]) {
-          affectedUsers.push(userId);
-        }
+        mappings[userId] = this.img;
       } else if (mappings[userId] === this.img) {
         delete mappings[userId];
-        affectedUsers.push(userId);
+        mappings['-=' + userId] = null;
       }
     }
 
-    newMappings = mergeObject(mappings, newMappings);
-
-    if (Object.keys(newMappings).length === 0) {
+    if (Object.keys(mappings).filter((userId) => !userId.startsWith('-=')).length === 0) {
       await this.token.document.unsetFlag('token-variants', 'userMappings');
     } else {
-      await this.token.document.unsetFlag('token-variants', 'userMappings');
-      await this.token.document.setFlag('token-variants', 'userMappings', newMappings);
+      await this.token.document.setFlag('token-variants', 'userMappings', mappings);
     }
 
     for (const img of affectedImages) {
       this.regenStyle(this.token, img);
     }
-
-    if (affectedUsers.includes(game.userId)) checkAndDisplayUserSpecificImage(this.token, true);
-    // Broadcast the update to the user specific image
-    const message = {
-      handlerName: 'userMappingChange',
-      args: { tokenId: this.token.id, users: affectedUsers },
-      type: 'UPDATE',
-    };
-    game.socket?.emit('module.token-variants', message);
   }
 }

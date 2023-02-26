@@ -1022,6 +1022,16 @@ async function initialize() {
   });
 
   Hooks.on('updateToken', async function (token, change, options, userId) {
+    // Update User Specific Image
+    if (change.flags?.['token-variants']) {
+      if (
+        'userMappings' in change.flags['token-variants'] ||
+        '-=userMappings' in change.flags['token-variants']
+      ) {
+        checkAndDisplayUserSpecificImage(token);
+      }
+    }
+
     if (game.user.id !== userId) return;
 
     const addedEffects = [];
@@ -1091,14 +1101,6 @@ async function initialize() {
         .some((other) => other.id < game.user.id);
       if (!isResponsibleGM) return;
       updateSettings({ forgeSearchPaths: message.args });
-    }
-
-    // User specific token image update
-    if (message.handlerName === 'userMappingChange' && message.type === 'UPDATE') {
-      if (message.args.users.includes(game.userId)) {
-        const tkn = canvas.tokens.get(message.args.tokenId);
-        if (tkn) checkAndDisplayUserSpecificImage(tkn, true);
-      }
     }
 
     if (message.handlerName === 'drawOverlays' && message.type === 'UPDATE') {
