@@ -6,7 +6,6 @@ import {
   setGlobalEffectMappings,
   fixEffectMappings,
   EXPRESSION_OPERATORS,
-  SUPPORTED_COMP_ATTRIBUTES,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
@@ -72,7 +71,9 @@ export default class ActiveEffectConfigList extends FormApplication {
 
     let mappings = [];
     if (this.object.mappings) {
-      mappings = this.object.mappings;
+      for (const mapping of this.object.mappings) {
+        mappings.push(this._processConfig(mapping.effectName, mapping));
+      }
     } else {
       const effectMappings = this.globalMappings
         ? this.globalMappings
@@ -667,15 +668,13 @@ export default class ActiveEffectConfigList extends FormApplication {
 // Insert <span/> around operators
 function highlightOperators(text) {
   for (const op of EXPRESSION_OPERATORS) {
-    text = text.replace(op, `<span>${op}</span>`);
+    text = text.replaceAll(op, `<span>${op}</span>`);
   }
 
-  for (const att of SUPPORTED_COMP_ATTRIBUTES.concat('hp')) {
-    const re = new RegExp(att + '(<|>|=|<=|>=)(\\d+)(%{0,1})', 'gi');
-    text = text.replace(re, function replace(match) {
-      return '<span class="hp-expression">' + match + '</span>';
-    });
-  }
+  const re = new RegExp('([a-zA-Z\\.-]+)([><=]+)(".*"|\\d+)(%{0,1})', `gi`);
+  text = text.replace(re, function replace(match) {
+    return '<span class="hp-expression">' + match + '</span>';
+  });
 
   return text;
 }

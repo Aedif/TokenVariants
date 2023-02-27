@@ -1138,9 +1138,8 @@ export function getTokenEffects(token, includeExpressions = false) {
     effects.unshift('token-variants-visibility');
   }
 
-  for (const att of SUPPORTED_COMP_ATTRIBUTES.concat('hp')) {
-    evaluateComparatorEffects(att, token, effects);
-  }
+  evaluateComparatorEffects(token, effects);
+  evaluateStateEffects(token, effects);
 
   // Include mappings marked as always applicable
   // as well as the ones defined as logical expressions if needed
@@ -1226,47 +1225,50 @@ function getTokenHP(token) {
   return [attributes?.hp?.value, attributes?.hp?.max];
 }
 
-export function evaluateComparatorEffects(att, token, effects) {
+export function evaluateTokenStateEffects(token, effects) {}
+
+export function evaluateComparatorEffects(token, effects = []) {
   token = token.document ? token.document : token;
-  let currVal;
-  let maxVal;
-  if (att === 'hp') {
-    [currVal, maxVal] = getTokenHP(token);
-  } else if (att === 'rotation') {
-    currVal = token.rotation;
-    maxVal = 360;
-  } else if (att === 'elevation') {
-    currVal = token.elevation;
-    maxVal = 999999999;
-  } else {
-    throw 'Invalid Attribute: ' + att;
-  }
 
-  if (!isNaN(currVal) && !isNaN(maxVal)) {
-    const mappings = getAllEffectMappings(token);
+  const mappings = getAllEffectMappings(token);
+  const re = new RegExp('([a-zA-Z\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
 
-    const re = new RegExp(att + '([><=]+)(\\d+)(%{0,1})');
+  const matched = {};
+  let compositePriority = 10000;
+  for (const key of Object.keys(mappings)) {
+    const expressions = key
+      .split(EXPRESSION_MATCH_RE)
+      .filter(Boolean)
+      .map((exp) => exp.trim())
+      .filter(Boolean);
+    for (let i = 0; i < expressions.length; i++) {
+      const exp = expressions[i];
+      const match = exp.match(re);
+      if (match) {
+        const property = match[1];
 
-    const valPercent = (currVal / maxVal) * 100;
+        let currVal;
+        let maxVal;
+        if (property === 'hp') {
+          [currVal, maxVal] = getTokenHP(token);
+        } else currVal = getProperty(token, property);
 
-    const matched = {};
-    let compositePriority = 10000;
+        if (currVal != null) {
+          const sign = match[2];
+          let val = Number(match[3]);
+          if (isNaN(val)) {
+            val = match[3].substring(1, match[3].length - 1);
+            if (val === 'true') val = true;
+            if (val === 'false') val = false;
+          }
+          const isPercentage = Boolean(match[4]);
 
-    for (const key of Object.keys(mappings)) {
-      const expressions = key
-        .split(EXPRESSION_MATCH_RE)
-        .filter(Boolean)
-        .map((exp) => exp.trim())
-        .filter(Boolean);
-      for (let i = 0; i < expressions.length; i++) {
-        const exp = expressions[i];
-        const match = exp.match(re);
-        if (match) {
-          const sign = match[1];
-          const val = Number(match[2]);
-          const isPercentage = Boolean(match[3]);
-
-          const toCompare = isPercentage ? valPercent : currVal;
+          if (property === 'rotation') {
+            maxVal = 360;
+          } else if (maxVal == null) {
+            maxVal = 999999;
+          }
+          const toCompare = isPercentage ? (currVal / maxVal) * 100 : currVal;
 
           let passed = false;
           if (sign === '=') {
@@ -1291,17 +1293,38 @@ export function evaluateComparatorEffects(att, token, effects) {
         }
       }
     }
+  }
 
-    // Remove duplicate expressions and insert into effects
-    const tempSet = new Set();
-    for (const [k, v] of Object.entries(matched)) {
-      if (!tempSet.has(v)) {
-        effects.unshift(v);
-        tempSet.add(v);
-      }
+  // Remove duplicate expressions and insert into effects
+  const tempSet = new Set();
+  for (const [k, v] of Object.entries(matched)) {
+    if (!tempSet.has(v)) {
+      effects.unshift(v);
+      tempSet.add(v);
     }
   }
+
   return effects;
+}
+
+export function evaluateStateEffects(token, effects) {
+  if (game.system.id === 'pf2e') {
+    const deathIcon = game.settings.get('pf2e', 'deathIcon');
+    if ((token.document ?? token).overlayEffect === deathIcon) effects.push('Dead');
+  }
+}
+
+export function determineAddedRemovedEffects(addedEffects, removedEffects, newEffects, oldEffects) {
+  for (const ef of newEffects) {
+    if (!oldEffects.includes(ef)) {
+      addedEffects.push(ef);
+    }
+  }
+  for (const ef of oldEffects) {
+    if (!newEffects.includes(ef)) {
+      removedEffects.push(ef);
+    }
+  }
 }
 
 export async function wildcardImageSearch(imgSrc) {

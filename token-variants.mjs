@@ -38,6 +38,8 @@ import {
   evaluateComparatorEffects,
   SUPPORTED_COMP_ATTRIBUTES,
   nameForgeRandomize,
+  evaluateStateEffects,
+  determineAddedRemovedEffects,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
@@ -915,13 +917,13 @@ async function initialize() {
     }
 
     if (containsHPUpdate) {
-      const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
+      const tokens = actor.getActiveTokens();
       for (const tkn of tokens) {
-        const hpEffects = [];
-        evaluateComparatorEffects('hp', tkn, hpEffects);
-        if (hpEffects.length) {
+        if (!tkn.document.actorLink) continue;
+        const preUpdateEffects = evaluateComparatorEffects(tkn);
+        if (preUpdateEffects.length) {
           if (!options['token-variants']) options['token-variants'] = {};
-          options['token-variants'][tkn.id] = { hpEffects };
+          options['token-variants'][tkn.id] = { preUpdateEffects };
         }
       }
     }
@@ -955,26 +957,16 @@ async function initialize() {
     }
 
     if (containsHPUpdate) {
-      const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
+      const tokens = actor.getActiveTokens();
       for (const tkn of tokens) {
+        if (!tkn.document.actorLink) continue;
         // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
-        const newHPEffects = [];
         const added = [];
         const removed = [];
-        evaluateComparatorEffects('hp', tkn, newHPEffects);
-        const oldEffects = options['token-variants']?.[tkn.id]?.hpEffects || [];
+        const postUpdateEffects = evaluateComparatorEffects(tkn);
+        const preUpdateEffects = options['token-variants']?.[tkn.id]?.preUpdateEffects || [];
 
-        for (const ef of newHPEffects) {
-          if (!oldEffects.includes(ef)) {
-            added.push(ef);
-          }
-        }
-        for (const ef of oldEffects) {
-          if (!newHPEffects.includes(ef)) {
-            removed.push(ef);
-          }
-        }
-
+        determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
         if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
       }
     }
@@ -1003,15 +995,18 @@ async function initialize() {
 
     if (game.user.id !== userId) return;
 
-    for (const att of SUPPORTED_COMP_ATTRIBUTES) {
-      if (att in change) {
-        const effects = [];
-        evaluateComparatorEffects(att, token, effects);
-        if (effects.length) {
-          if (!options['token-variants']) options['token-variants'] = {};
-          options['token-variants'][att] = effects;
-        }
-      }
+    const preUpdateEffects = evaluateComparatorEffects(token);
+    if (preUpdateEffects.length) {
+      if (!options['token-variants']) options['token-variants'] = {};
+      options['token-variants'].preUpdateEffects = preUpdateEffects;
+    }
+
+    // System specific effects
+    const stateEffects = [];
+    evaluateStateEffects(token, stateEffects);
+    if (stateEffects.length) {
+      if (!options['token-variants']) options['token-variants'] = {};
+      options['token-variants']['system'] = stateEffects;
     }
 
     if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
@@ -1036,25 +1031,14 @@ async function initialize() {
 
     const addedEffects = [];
     const removedEffects = [];
-    for (const att of SUPPORTED_COMP_ATTRIBUTES) {
-      if (att in change) {
-        // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
-        const newEffects = [];
-        evaluateComparatorEffects(att, token, newEffects);
-        const oldEffects = options['token-variants']?.[att] || [];
+    const postUpdateEffects = evaluateComparatorEffects(token);
+    const preUpdateEffects = options['token-variants']?.preUpdateEffects || [];
+    determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
 
-        for (const ef of newEffects) {
-          if (!oldEffects.includes(ef)) {
-            addedEffects.push(ef);
-          }
-        }
-        for (const ef of oldEffects) {
-          if (!newEffects.includes(ef)) {
-            removedEffects.push(ef);
-          }
-        }
-      }
-    }
+    const newStateEffects = [];
+    evaluateStateEffects(token, newStateEffects);
+    const oldStateEffects = options['token-variants']?.['system'] || [];
+    determineAddedRemovedEffects(addedEffects, removedEffects, newStateEffects, oldStateEffects);
 
     if (addedEffects.length || removedEffects.length)
       updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });

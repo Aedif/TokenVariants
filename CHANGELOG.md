@@ -1,3 +1,13 @@
+# 4.30.0
+
+- Active Effect comparator support added for all Token properties
+  - e.g. name, x, y, width, height, texture.src, etc.
+  - Usage examples:
+    - name="Raging Barbarian"
+    - y<=2200
+    - lockRotation="true"
+- PF2e: Fixed "Dead" Status Effect application not being picked up by the module
+
 # 4.29.1
 
 - Adjusted `User To Image` feature logic to allow control of the image displayed to the user via the setting of a flag
