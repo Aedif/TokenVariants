@@ -1,3 +1,7 @@
+# 4.30.1
+
+- Right-click support on PF2e Item Sheets
+
 # 4.30.0
 
 - Active Effect comparator support added for all Token properties
