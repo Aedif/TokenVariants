@@ -2,12 +2,12 @@ import { libWrapper } from '../libWrapper/shim.js';
 import { TVA_CONFIG } from '../settings.js';
 import { drawMorphOverlay } from '../utils.js';
 import { getAllEffectMappings } from './effects.js';
-import { checkAndDisplayUserSpecificImage } from './userToImage.js';
+import { overrideTokenVisibility } from './userToImage.js';
 
 const registeredWrappers = {};
 
 export function registerTokenWrappers() {
-  _register_onDragLeftStart();
+  //_register_onDragLeftStart();
   _registerDraw();
   _registerDrawEffects();
 }
@@ -32,13 +32,29 @@ function _registerDraw() {
         this.tvaMorph = null;
       }
 
-      let result = await wrapped(...args);
+      let result;
+
+      // If the Token has a UserToImage mappings momentarily set document.texture.src to it
+      // so that it's texture gets loaded instead of the actual Token image
+      const mappings = this.document.getFlag('token-variants', 'userMappings') || {};
+      const img = mappings[game.userId];
+      let previous;
+      if (img) {
+        previous = this.document.texture.src;
+        this.document.texture.src = img;
+        this.tva_iconOverride = img;
+        result = await wrapped(...args);
+        this.document.texture.src = previous;
+        overrideTokenVisibility(this, img);
+      } else {
+        overrideTokenVisibility(this);
+        result = await wrapped(...args);
+      }
 
       if (startMorph) {
         startMorph(this.document.alpha);
       }
 
-      checkAndDisplayUserSpecificImage(this);
       return result;
     },
     'WRAPPER'
@@ -46,10 +62,11 @@ function _registerDraw() {
 }
 
 // A fix to make sure that the "ghost" image of the token during drag reflects UserToImage mapping
+// 10/03 - Not necessary anymore?
 function _register_onDragLeftStart() {
   libWrapper.register(
     'token-variants',
-    'PlaceableObject.prototype._onDragLeftStart',
+    'Token.prototype._onDragLeftStart',
     function (wrapped, ...args) {
       // Change all the controlled tokens' source data if needed before they are cloned and drawn
       const targets = this.layer.options.controllableObjects ? this.layer.controlled : [this];

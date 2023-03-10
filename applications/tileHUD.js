@@ -238,7 +238,8 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
       });
     }
 
-    const [title, style] = genTitleAndStyle({}, imageObj.path, imageObj.name);
+    const userMappings = tile.document.getFlag('token-variants', 'userMappings') || {};
+    const [title, style] = genTitleAndStyle(userMappings, imageObj.path, imageObj.name);
 
     imagesParsed.push({
       route: imageObj.path,

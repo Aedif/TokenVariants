@@ -8,14 +8,14 @@ import {
   userRequiresImageCache,
   waitForTokenTexture,
 } from './scripts/utils.js';
-import { renderTileHUD } from './applications/tileHUD.js';
-import { checkAndDisplayUserSpecificImage } from './scripts/token/userToImage.js';
 import { drawOverlays } from './scripts/token/overlay.js';
 import { updateWithEffectMapping } from './scripts/token/effects.js';
 import { registerTokenHooks } from './scripts/token/hooks.js';
 import { registerTokenWrappers } from './scripts/token/wrappers.js';
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
 import { registerMiscHooks } from './scripts/miscHooks.js';
+import { registerTileWrappers } from './scripts/tile/wrappers.js';
+import { registerTileHooks } from './scripts/tile/hooks.js';
 
 // Tracks if module has been initialized
 let MODULE_INITIALIZED = false;
@@ -64,16 +64,19 @@ async function initialize() {
     });
   });
 
-  await registerSettings();
   if (userRequiresImageCache()) cacheImages();
 
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
   startBatchUpdater();
 
+  // Token
   registerTokenHooks();
-  registerTokenWrappers();
+
+  // Tile
+  registerTileHooks();
+
+  // Misc
   registerMiscHooks();
-  Hooks.on('renderTileHUD', renderTileHUD);
 
   Hooks.on('renderArtSelect', () => {
     showArtSelectExecuting.inProgress = false;
@@ -184,6 +187,10 @@ Hooks.once('ready', initialize);
 
 // Register API and Keybinds
 Hooks.on('init', function () {
+  registerSettings();
+  registerTokenWrappers();
+  registerTileWrappers();
+
   registerKeybinds();
   game.modules.get('token-variants').api = {
     cacheImages,
@@ -198,8 +205,6 @@ Hooks.on('init', function () {
 
 Hooks.on('canvasReady', async function () {
   for (const tkn of canvas.tokens.placeables) {
-    // Once canvas is ready we need to overwrite token images if specific maps exist for the user
-    checkAndDisplayUserSpecificImage(tkn);
     if (MODULE_INITIALIZED) {
       updateWithEffectMapping(tkn);
       drawOverlays(tkn);

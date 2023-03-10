@@ -62,6 +62,7 @@ export class TVASprite extends TokenMesh {
     super(token);
 
     this.texture = texture;
+    this.ready = false;
 
     this.tvaOverlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
     this._tvaPlay().then(() => this.refresh());
@@ -73,6 +74,7 @@ export class TVASprite extends TokenMesh {
 
   get visible() {
     return (
+      this.ready &&
       (this.object.visible || this.tvaOverlayConfig.alwaysVisible) &&
       (!this.tvaOverlayConfig.limitToUser || this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
     );
@@ -191,6 +193,8 @@ export class TVASprite extends TokenMesh {
     // Apply filters
     if (fullRefresh) this._applyFilters(config);
     //if (fullRefresh) this.filters = this._getFilters(config);
+
+    this.ready = true;
   }
 
   async _applyFilters(config) {

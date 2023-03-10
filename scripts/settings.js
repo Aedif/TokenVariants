@@ -137,7 +137,7 @@ export const TVA_CONFIG = {
   invisibleImage: '',
 };
 
-export async function registerSettings() {
+export function registerSettings() {
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',
     hint: 'Configure Token Variant Art settings',
@@ -267,7 +267,7 @@ export async function registerSettings() {
   });
 
   game.settings.registerMenu('token-variants', 'importExport', {
-    name: `${game.i18n.localize('token-variants.common.import')}/${game.i18n.localize('token-variants.common.export')}`,
+    name: `Import/Export`,
     hint: game.i18n.localize('token-variants.settings.import-export.Hint'),
     scope: 'world',
     icon: 'fas fa-toolbox',

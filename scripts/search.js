@@ -117,7 +117,7 @@ export async function doRandomSearch(
   return [results[randImageNum].path, results[randImageNum].name];
 }
 
-async function doSyncSearch(
+export async function doSyncSearch(
   search,
   target,
   { searchType = SEARCH_TYPE.TOKEN, actor = null, randomizerOptions = {} } = {}

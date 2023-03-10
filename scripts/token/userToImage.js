@@ -1,38 +1,31 @@
+import { TVA_CONFIG } from '../settings.js';
 import { drawOverlays } from './overlay.js';
 
 /**
- * Overwrite Token image on the client side if 'userMappings' flag has been set.
- * @param {*} token Token to overwrite the image for
- * @param {*} checks Number of checks/recursive calls to wait for the previous draw() operation to end
- * @returns
+ * If the img is the same as TVA_CONFIG.invisibleImage then we'll override the isVisible
+ * getter to return false of this client if it's not a GM. Reset it to default if not.
+ * @param {*} token token whose isVisible is to be overriden
+ * @param {*} img UserToImage mapping
  */
-export async function checkAndDisplayUserSpecificImage(token, forceDraw = false, checks = 40) {
-  if (!token.document) {
-    token = canvas.tokens.get(token.id);
-  }
-
-  const mappings = token.document.getFlag('token-variants', 'userMappings') || {};
-  const img = mappings[game.userId];
-  if (img && img !== token.document.texture.src) {
-    // This function may be called while the Token is in the middle of loading it's textures.
-    // Attempting to perform a draw() call then would result in multiple overlapped images.
-    // We should wait for the texture to be loaded and change the image after. As a failsafe
-    // give up after a certain number of checks.
-    if (!token.mesh || !token.texture) {
-      checks--;
-      if (checks > 1)
-        new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-          checkAndDisplayUserSpecificImage(token, forceDraw, checks)
-        );
-      return;
-    }
-
-    // Change the image on the client side, without actually updating the token
-    _overrideIcon(token, img);
-  } else if (img) {
-  } else if (token.tva_iconOverride) {
-    await _overrideIcon(token, token.document.texture.src);
-    delete token.tva_iconOverride;
+export function overrideTokenVisibility(token, img) {
+  if (img && decodeURI(img) === TVA_CONFIG.invisibleImage && !token.tva_customVisibility) {
+    console.log('OVERRIDING VISIBLITY');
+    const originalIsVisible = Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible').get;
+    Object.defineProperty(token, 'isVisible', {
+      get: function () {
+        const isVisible = originalIsVisible.call(this);
+        if (isVisible && !game.user.isGM) return false;
+        return isVisible;
+      },
+      configurable: true,
+    });
+    token.visible = token.isVisible;
+    token.tva_customVisibility = true;
+  } else if (token.tva_customVisibility) {
+    console.log('rESETTING VISIBILITY');
+    Object.defineProperty(token, 'isVisible', Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible'));
+    token.visible = token.isVisible;
+    delete token.tva_customVisibility;
   }
 }
 

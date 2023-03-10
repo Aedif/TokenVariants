@@ -1,3 +1,12 @@
+# 4.31.0
+
+- Major code restructuring, please do report any issues you come across
+- Fixed overlays popping in corners before repositioning on the Token
+- User To Image
+  - Fixed momentary flicker of the original Token artwork when re-loading the scene
+  - Tiles are now supported
+    - `Shift-Right click` images in the `TileHUD` to bring up the menu
+
 # 4.30.1
 
 - Right-click support on PF2e Item Sheets

@@ -1,5 +1,5 @@
 import { TVA_CONFIG } from '../settings.js';
-import { applyTMFXPreset, getFileName, tv_executeScript, updateTokenImage } from '../utils.js';
+import { applyTMFXPreset, EXPRESSION_OPERATORS, getFileName, tv_executeScript, updateTokenImage } from '../utils.js';
 import { broadcastOverlayRedraw } from './overlay.js';
 
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;

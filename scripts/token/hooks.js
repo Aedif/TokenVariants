@@ -1,5 +1,6 @@
 import { renderHud } from '../../applications/tokenHUD.js';
 import { showArtSelect } from '../../token-variants.mjs';
+import { doRandomSearch, doSyncSearch } from '../search.js';
 import { TVA_CONFIG } from '../settings.js';
 import { TVASprite } from '../sprite/TVASprite.js';
 import {
@@ -8,6 +9,8 @@ import {
   keyPressed,
   nameForgeRandomize,
   SEARCH_TYPE,
+  updateActorImage,
+  updateTokenImage,
 } from '../utils.js';
 import {
   evaluateComparatorEffects,
@@ -16,7 +19,6 @@ import {
   updateWithEffectMapping,
 } from './effects.js';
 import { drawOverlays } from './overlay.js';
-import { checkAndDisplayUserSpecificImage } from './userToImage.js';
 
 export function registerTokenHooks() {
   Hooks.on('createActor', _createActor);
@@ -252,7 +254,11 @@ export function registerTokenHooks() {
     // Update User Specific Image
     if (change.flags?.['token-variants']) {
       if ('userMappings' in change.flags['token-variants'] || '-=userMappings' in change.flags['token-variants']) {
-        checkAndDisplayUserSpecificImage(token);
+        let p = canvas.tokens.get(token.id);
+        if (p) {
+          await p.draw();
+          p.visible = p.isVisible;
+        }
       }
     }
 
