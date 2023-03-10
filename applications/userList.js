@@ -1,9 +1,9 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 
 export default class UserList extends FormApplication {
-  constructor(token, img, regenStyle) {
+  constructor(object, img, regenStyle) {
     super({}, {});
-    this.token = token;
+    this.object = object;
     this.img = img;
     this.regenStyle = regenStyle;
   }
@@ -22,7 +22,7 @@ export default class UserList extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    const mappings = this.token.document.getFlag('token-variants', 'userMappings') || {};
+    const mappings = this.object.document.getFlag('token-variants', 'userMappings') || {};
     let users = [];
     game.users.forEach((user) => {
       users.push({
@@ -39,7 +39,7 @@ export default class UserList extends FormApplication {
   }
 
   async _updateObject(event, formData) {
-    const mappings = this.token.document.getFlag('token-variants', 'userMappings') || {};
+    const mappings = this.object.document.getFlag('token-variants', 'userMappings') || {};
 
     if (formData.invisibleImage !== TVA_CONFIG.invisibleImage) {
       updateSettings({ invisibleImage: decodeURI(formData.invisibleImage) });
@@ -59,13 +59,13 @@ export default class UserList extends FormApplication {
     }
 
     if (Object.keys(mappings).filter((userId) => !userId.startsWith('-=')).length === 0) {
-      await this.token.document.unsetFlag('token-variants', 'userMappings');
+      await this.object.document.unsetFlag('token-variants', 'userMappings');
     } else {
-      await this.token.document.setFlag('token-variants', 'userMappings', mappings);
+      await this.object.document.setFlag('token-variants', 'userMappings', mappings);
     }
 
     for (const img of affectedImages) {
-      this.regenStyle(this.token, img);
+      this.regenStyle(this.object, img);
     }
   }
 }

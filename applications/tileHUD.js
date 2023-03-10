@@ -2,6 +2,7 @@ import { getFileName, isImage, isVideo, SEARCH_TYPE, keyPressed } from '../scrip
 import { TVA_CONFIG } from '../scripts/settings.js';
 import FlagsConfig from './flagsConfig.js';
 import { doImageSearch } from '../scripts/search.js';
+import UserList from './userList.js';
 
 export async function renderTileHUD(hud, html, tileData, searchText = '', fp_files = null) {
   const tile = hud.object;
@@ -322,6 +323,21 @@ async function _onImageRightClick(event, tile) {
   const name = imgButton.attr('data-filename');
 
   if (!imgSrc || !name) return;
+
+  if (keyPressed('config') && game.user.isGM) {
+    const regenStyle = (tile, img) => {
+      const mappings = tile.document.getFlag('token-variants', 'userMappings') || {};
+      const name = imgButton.attr('data-filename');
+      const [title, style] = genTitleAndStyle(mappings, img, name);
+      imgButton
+        .closest('.token-variants-wrap')
+        .find(`.token-variants-button-select[data-name='${img}']`)
+        .css('box-shadow', style)
+        .prop('title', title);
+    };
+    new UserList(tile, imgSrc, regenStyle).render(true);
+    return;
+  }
 
   let variants = tile.document.getFlag('token-variants', 'variants') || [];
 

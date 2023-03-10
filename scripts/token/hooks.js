@@ -2,7 +2,13 @@ import { renderHud } from '../../applications/tokenHUD.js';
 import { showArtSelect } from '../../token-variants.mjs';
 import { TVA_CONFIG } from '../settings.js';
 import { TVASprite } from '../sprite/TVASprite.js';
-import { determineAddedRemovedEffects, getTokenConfigForUpdate, keyPressed, nameForgeRandomize } from '../utils.js';
+import {
+  determineAddedRemovedEffects,
+  getTokenConfigForUpdate,
+  keyPressed,
+  nameForgeRandomize,
+  SEARCH_TYPE,
+} from '../utils.js';
 import {
   evaluateComparatorEffects,
   evaluateStateEffects,

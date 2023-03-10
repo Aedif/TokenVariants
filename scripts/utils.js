@@ -233,12 +233,8 @@ export async function updateTokenImage(
         if ((token.document ?? token).actorLink) {
           setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
         } else {
-          console.log('DOING THIS ONE');
-          console.log(tokenUpdateObj);
           setTimeout(() => token.actor.update({ token: tokenUpdateObj }), 500);
-          // token.actor.update({ prototypeToken: tokenUpdateObj });
         }
-        // setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
       }
       queueTokenUpdate(token.id, tokenUpdateObj, callback, animate, tmfxMorph);
     }

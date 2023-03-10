@@ -17,6 +17,9 @@ import {
 
 // True if in the middle of caching image paths
 let caching = false;
+export function isCaching() {
+  return caching;
+}
 
 // Cached images
 let CACHED_IMAGES = {};
