@@ -1,4 +1,4 @@
-import { showArtSelect, doImageSearch, cacheImages } from '../token-variants.mjs';
+import { showArtSelect } from '../token-variants.mjs';
 import {
   BASE_IMAGE_CATEGORIES,
   SEARCH_TYPE,
@@ -10,6 +10,7 @@ import { addToQueue, ArtSelect, renderFromQueue } from './artSelect.js';
 import { getSearchOptions, TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import ConfigureSettings from './configureSettings.js';
 import MissingImageConfig from './missingImageConfig.js';
+import { cacheImages, doImageSearch } from '../scripts/search.js';
 
 async function autoApply(actor, image1, image2, formData, typeOverride) {
   let portraitFound = formData.ignorePortrait;
@@ -190,40 +191,25 @@ export default class CompendiumMapConfig extends FormApplication {
    */
   activateListeners(html) {
     super.activateListeners(html);
-    html
-      .find('.token-variants-override-category')
-      .change(this._onCategoryOverride)
-      .trigger('change');
+    html.find('.token-variants-override-category').change(this._onCategoryOverride).trigger('change');
     html.find('.token-variants-auto-apply').change(this._onAutoApply);
     html.find('.token-variants-diff-images').change(this._onDiffImages);
     html.find(`.token-variants-search-options`).on('click', this._onSearchOptions.bind(this));
     html.find(`.token-variants-missing-images`).on('click', this._onMissingImages.bind(this));
 
-    $(html)
-      .find('[name="compendium"]')
-      .change(this._onCompendiumSelect.bind(this))
-      .trigger('change');
+    $(html).find('[name="compendium"]').change(this._onCompendiumSelect.bind(this)).trigger('change');
   }
 
   async _onAutoApply(event) {
-    $(event.target)
-      .closest('form')
-      .find('.token-variants-auto-art-select')
-      .prop('disabled', !event.target.checked);
+    $(event.target).closest('form').find('.token-variants-auto-art-select').prop('disabled', !event.target.checked);
   }
 
   async _onCategoryOverride(event) {
-    $(event.target)
-      .closest('form')
-      .find('.token-variants-category')
-      .prop('disabled', !event.target.checked);
+    $(event.target).closest('form').find('.token-variants-category').prop('disabled', !event.target.checked);
   }
 
   async _onDiffImages(event) {
-    $(event.target)
-      .closest('form')
-      .find('.token-variants-tp-ignore')
-      .prop('disabled', !event.target.checked);
+    $(event.target).closest('form').find('.token-variants-tp-ignore').prop('disabled', !event.target.checked);
   }
 
   async _onCompendiumSelect(event) {
@@ -276,8 +262,7 @@ export default class CompendiumMapConfig extends FormApplication {
         const actor = await compendium.getDocument(item._id);
         if (actor.name === '#[CF_tempEntity]') return; // Compendium Folders module's control entity
 
-        let hasPortrait =
-          actor.img !== CONST.DEFAULT_TOKEN && !missingImageList.includes(actor.img);
+        let hasPortrait = actor.img !== CONST.DEFAULT_TOKEN && !missingImageList.includes(actor.img);
         let hasToken =
           actor.prototypeToken.texture.src !== CONST.DEFAULT_TOKEN &&
           !missingImageList.includes(actor.prototypeToken.texture.src);
@@ -314,8 +299,7 @@ export default class CompendiumMapConfig extends FormApplication {
         if (doc.schema.fields.img || doc.schema.fields.texture) {
           defaultImg = (doc.schema.fields.img ?? doc.schema.fields.texture).initial();
         }
-        const hasImage =
-          doc.img != null && doc.img !== defaultImg && !missingImageList.includes(doc.img);
+        const hasImage = doc.img != null && doc.img !== defaultImg && !missingImageList.includes(doc.img);
 
         let imageFound = false;
         if (formData.missingOnly && hasImage) return;
@@ -355,9 +339,7 @@ export default class CompendiumMapConfig extends FormApplication {
 
     if (formData.autoApply) {
       const starterPromise = Promise.resolve(null);
-      allItems
-        .reduce((p, item) => p.then(() => processItem(item)), starterPromise)
-        .then(() => renderFromQueue());
+      allItems.reduce((p, item) => p.then(() => processItem(item)), starterPromise).then(() => renderFromQueue());
     } else {
       const tasks = allItems.map(processItem);
       Promise.all(tasks).then(() => {

@@ -1,10 +1,11 @@
+import { renderHud } from '../../applications/tokenHUD.js';
+import { showArtSelect } from '../../token-variants.mjs';
 import { TVA_CONFIG } from '../settings.js';
 import { TVASprite } from '../sprite/TVASprite.js';
-import { determineAddedRemovedEffects, drawMorphOverlay } from '../utils.js';
+import { determineAddedRemovedEffects, getTokenConfigForUpdate, keyPressed, nameForgeRandomize } from '../utils.js';
 import {
   evaluateComparatorEffects,
   evaluateStateEffects,
-  getAllEffectMappings,
   registerEffectHooks,
   updateWithEffectMapping,
 } from './effects.js';
@@ -12,6 +13,11 @@ import { drawOverlays } from './overlay.js';
 import { checkAndDisplayUserSpecificImage } from './userToImage.js';
 
 export function registerTokenHooks() {
+  Hooks.on('createActor', _createActor);
+  Hooks.on('createToken', _createToken);
+  Hooks.on('renderTokenConfig', _modTokenConfig);
+  Hooks.on('renderTokenHUD', renderHud);
+
   // Insert default random image field
   Hooks.on('renderTokenConfig', async (config, html) => {
     const checkboxRandomize = html.find('input[name="randomImg"]');
@@ -80,64 +86,9 @@ export function registerTokenHooks() {
 
   registerEffectHooks();
 
-  // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
-  libWrapper.register(
-    'token-variants',
-    'PlaceableObject.prototype._onDragLeftStart',
-    function (wrapped, ...args) {
-      // Change all the controlled tokens' source data if needed before they are cloned and drawn
-      const targets = this.layer.options.controllableObjects ? this.layer.controlled : [this];
-      const toUndo = [];
-      for (const token of targets) {
-        const mappings = token.document?.getFlag('token-variants', 'userMappings') || {};
-        const img = mappings[game.userId];
-        if (img) {
-          toUndo.push([token, token.document._source.img]);
-          token.document._source.img = img;
-          token.document.texture.src = img;
-        }
-      }
-
-      // Call _onDragLeftStart function to draw the new image
-      let result = wrapped(...args);
-
-      // Now that the image is drawn, reset the source data back to the original
-      for (const [token, img] of toUndo) {
-        token.document._source.img = img;
-        token.document.texture.src = img;
-      }
-
-      return result;
-    },
-    'WRAPPER'
-  );
-
   // ========================
   // Overlay related wrappers
   // ========================
-  libWrapper.register(
-    'token-variants',
-    'Token.prototype.draw',
-    async function (wrapped, ...args) {
-      let startMorph;
-      if (this.tvaMorph && !this.tva_morphing) {
-        startMorph = await drawMorphOverlay(this, this.tvaMorph);
-      } else if (this.tva_morphing) {
-        this.tvaMorph = null;
-      }
-
-      let result = await wrapped(...args);
-
-      if (startMorph) {
-        startMorph(this.document.alpha);
-      }
-
-      // drawOverlays(this);
-      checkAndDisplayUserSpecificImage(this);
-      return result;
-    },
-    'WRAPPER'
-  );
 
   Hooks.on('refreshToken', (token) => {
     if (token.tva_morphing) {
@@ -157,85 +108,6 @@ export function registerTokenHooks() {
         canvas.primary.removeChild(child)?.destroy();
       }
   });
-
-  if (TVA_CONFIG.disableEffectIcons) {
-    libWrapper.register(
-      'token-variants',
-      'Token.prototype.drawEffects',
-      async function (...args) {
-        this.effects.removeChildren().forEach((c) => c.destroy());
-        this.effects.bg = this.effects.addChild(new PIXI.Graphics());
-        this.effects.overlay = null;
-      },
-      'OVERRIDE'
-    );
-  } else if (TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
-    libWrapper.register(
-      'token-variants',
-      'Token.prototype.drawEffects',
-      async function (wrapped, ...args) {
-        if (this.effects && TVA_CONFIG.displayEffectIconsOnHover) {
-          this.effects.visible = false;
-        }
-        // Temporarily removing token and actor effects based on module settings
-        // after the effect icons have been drawn, they will be reset to originals
-        const tokenEffects = this.document.effects;
-        const actorEffects = this.actor?.effects;
-
-        let restrictedEffects = TVA_CONFIG.filterIconList;
-        if (TVA_CONFIG.filterCustomEffectIcons) {
-          const mappings = getAllEffectMappings({
-            actor: this.actor ? this.actor : this.document,
-          });
-          if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
-        }
-
-        let removed = [];
-        if (restrictedEffects.length) {
-          if (tokenEffects.length) {
-            this.document.effects = tokenEffects.filter(
-              // check if it's a string here
-              // for tokens without representing actors effects are just stored as paths to icons
-              (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.label)
-            );
-          }
-          if (this.actor && actorEffects.size) {
-            removed = actorEffects.filter((ef) => restrictedEffects.includes(ef.label));
-            for (const r of removed) {
-              actorEffects.delete(r.id);
-            }
-          }
-        }
-
-        const result = await wrapped(...args);
-
-        if (restrictedEffects.length) {
-          if (tokenEffects.length) {
-            this.document.effects = tokenEffects;
-          }
-          if (removed.length) {
-            for (const r of removed) {
-              actorEffects.set(r.id, r);
-            }
-          }
-        }
-        return result;
-      },
-      'WRAPPER'
-    );
-  } else if (TVA_CONFIG.displayEffectIconsOnHover) {
-    libWrapper.register(
-      'token-variants',
-      'Token.prototype.drawEffects',
-      async function (wrapped, ...args) {
-        if (this.effects && TVA_CONFIG.displayEffectIconsOnHover) {
-          this.effects.visible = false;
-        }
-        return wrapped(...args);
-      },
-      'WRAPPER'
-    );
-  }
 
   // OnHover settings specific hooks
   Hooks.on('hoverToken', (token, hoverIn) => {
@@ -425,4 +297,301 @@ async function _deleteCombatant(combatant) {
   await updateWithEffectMapping(token, {
     removed: ['token-variants-combat'],
   });
+}
+
+async function _createToken(token, options, userId) {
+  drawOverlays(token._object);
+  if (userId && game.user.id != userId) return;
+  updateWithEffectMapping(token);
+
+  // Check if random search is enabled and if so perform it
+  const actorRandSettings = game.actors.get(token.actorId)?.getFlag('token-variants', 'randomizerSettings');
+  const randSettings = mergeObject(TVA_CONFIG.randomizer, actorRandSettings ?? {}, {
+    inplace: false,
+    recursive: false,
+  });
+
+  let vDown = keyPressed('v');
+  const flagTarget = token.actor ? game.actors.get(token.actor.id) : token.document ?? token;
+  const popupFlag = flagTarget.getFlag('token-variants', 'popups');
+
+  if ((vDown && randSettings.tokenCopyPaste) || (!vDown && randSettings.tokenCreate)) {
+    let performRandomSearch = true;
+    if (!actorRandSettings) {
+      if (randSettings.representedActorDisable && token.actor) performRandomSearch = false;
+      if (randSettings.linkedActorDisable && token.actorLink) performRandomSearch = false;
+      if (_disableRandomSearchForType(randSettings, token.actor)) performRandomSearch = false;
+    } else {
+      performRandomSearch = Boolean(actorRandSettings);
+    }
+
+    if (performRandomSearch) {
+      // Randomize Token Name if need be
+      const randomName = await nameForgeRandomize(randSettings);
+      if (randomName) {
+        token.update({ name: randomName });
+      }
+
+      const img = await doRandomSearch(token.name, {
+        searchType: SEARCH_TYPE.TOKEN,
+        actor: token.actor,
+        randomizerOptions: randSettings,
+      });
+      if (img) {
+        await updateTokenImage(img[0], {
+          token: token,
+          actor: token.actor,
+          imgName: img[1],
+        });
+      }
+
+      if (!img) return;
+
+      if (randSettings.diffImages) {
+        let imgPortrait;
+        if (randSettings.syncImages) {
+          imgPortrait = await doSyncSearch(token.name, img[1], {
+            actor: token.actor,
+            searchType: SEARCH_TYPE.PORTRAIT,
+            randomizerOptions: randSettings,
+          });
+        } else {
+          imgPortrait = await doRandomSearch(token.name, {
+            searchType: SEARCH_TYPE.PORTRAIT,
+            actor: token.actor,
+            randomizerOptions: randSettings,
+          });
+        }
+
+        if (imgPortrait) {
+          await updateActorImage(token.actor, imgPortrait[0]);
+        }
+      } else if (randSettings.tokenToPortrait) {
+        await updateActorImage(token.actor, img[0]);
+      }
+      return;
+    }
+    if (popupFlag == null && !randSettings.popupOnDisable) {
+      return;
+    }
+  } else if (randSettings.tokenCreate || randSettings.tokenCopyPaste) {
+    return;
+  }
+
+  // Check if pop-up is enabled and if so open it
+  if (!TVA_CONFIG.permissions.popups[game.user.role]) {
+    return;
+  }
+
+  let dirKeyDown = keyPressed('popupOverride');
+
+  if (vDown && TVA_CONFIG.popup.disableAutoPopupOnTokenCopyPaste) {
+    return;
+  }
+
+  if (!dirKeyDown || (dirKeyDown && vDown)) {
+    if (TVA_CONFIG.popup.disableAutoPopupOnTokenCreate && !vDown) {
+      return;
+    } else if (popupFlag == null && _disablePopupForType(token.actor)) {
+      return;
+    } else if (popupFlag != null && !popupFlag) {
+      return;
+    }
+  }
+
+  showArtSelect(token.name, {
+    callback: async function (imgSrc, imgName) {
+      if (TVA_CONFIG.popup.twoPopups) {
+        await updateActorImage(token.actor, imgSrc);
+        _twoPopupPrompt(token.actor, imgSrc, imgName, token);
+      } else {
+        updateTokenImage(imgSrc, {
+          actor: token.actor,
+          imgName: imgName,
+          token: token,
+        });
+      }
+    },
+    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.TOKEN,
+    object: token,
+    preventClose: TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog,
+  });
+}
+
+async function _createActor(actor, options, userId) {
+  if (userId && game.user.id != userId) return;
+
+  // Check if random search is enabled and if so perform it
+  const randSettings = TVA_CONFIG.randomizer;
+  if (randSettings.actorCreate) {
+    let performRandomSearch = true;
+    if (randSettings.linkedActorDisable && actor.prototypeToken.actorLink) performRandomSearch = false;
+    if (_disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
+
+    if (performRandomSearch) {
+      const img = await doRandomSearch(actor.name, {
+        searchType: SEARCH_TYPE.PORTRAIT,
+        actor: actor,
+      });
+      if (img) {
+        await updateActorImage(actor, img[0]);
+      }
+
+      if (!img) return;
+
+      if (randSettings.diffImages) {
+        let imgToken;
+        if (randSettings.syncImages) {
+          imgToken = await doSyncSearch(actor.name, img[1], { actor: actor });
+        } else {
+          imgToken = await doRandomSearch(actor.name, {
+            searchType: SEARCH_TYPE.TOKEN,
+            actor: actor,
+          });
+        }
+
+        if (imgToken) {
+          await updateTokenImage(imgToken[0], { actor: actor, imgName: imgToken[1] });
+        }
+      }
+      return;
+    }
+    if (!randSettings.popupOnDisable) {
+      return;
+    }
+  }
+
+  // Check if pop-up is enabled and if so open it
+  if (!TVA_CONFIG.permissions.popups[game.user.role]) {
+    return;
+  }
+
+  if (TVA_CONFIG.popup.disableAutoPopupOnActorCreate && !keyPressed('popupOverride')) {
+    return;
+  } else if (_disablePopupForType(actor)) {
+    return;
+  }
+
+  showArtSelect(actor.name, {
+    callback: async function (imgSrc, name) {
+      const actTokens = actor.getActiveTokens();
+      const token = actTokens.length === 1 ? actTokens[0] : null;
+      await updateActorImage(actor, imgSrc);
+      if (TVA_CONFIG.popup.twoPopups) _twoPopupPrompt(actor, imgSrc, name, token);
+      else {
+        updateTokenImage(imgSrc, {
+          actor: actor,
+          imgName: name,
+          token: token,
+        });
+      }
+    },
+    searchType: TVA_CONFIG.popup.twoPopups ? SEARCH_TYPE.PORTRAIT : SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+    object: actor,
+    preventClose: TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog,
+  });
+}
+
+/**
+ * Adds a button to 'Token Configuration' window's 'Image' tab which opens
+ * ArtSelect using the token's name.
+ */
+function _modTokenConfig(tokenConfig, html, _) {
+  if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
+    let fields = html[0].getElementsByClassName('image');
+    for (let field of fields) {
+      if (field.getAttribute('name') == 'texture.src') {
+        let el = document.createElement('button');
+        el.type = 'button';
+        el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
+        el.className = 'token-variants-image-select-button';
+        el.innerHTML = '<i class="fas fa-images"></i>';
+        el.tabIndex = -1;
+        el.setAttribute('data-type', 'imagevideo');
+        el.setAttribute('data-target', 'texture.src');
+        el.onclick = async () => {
+          showArtSelect(tokenConfig.object.name, {
+            callback: (imgSrc, name) => {
+              field.value = imgSrc;
+              const tokenConfig = getTokenConfigForUpdate(imgSrc, name);
+              if (tokenConfig) {
+                for (var key in tokenConfig) {
+                  $(html).find(`[name="${key}"]`).val(tokenConfig[key]);
+                }
+              }
+            },
+            searchType: SEARCH_TYPE.TOKEN,
+            object: tokenConfig.object,
+          });
+        };
+        field.parentNode.append(el);
+        return;
+      }
+    }
+  }
+}
+
+function _disableRandomSearchForType(randSettings, actor) {
+  if (!actor) return false;
+  return randSettings[`${actor.type}Disable`] ?? false;
+}
+
+function _disablePopupForType(actor) {
+  if (!actor) return false;
+  return TVA_CONFIG.popup[`${actor.type}Disable`] ?? false;
+}
+
+function _twoPopupPrompt(actor, imgSrc, imgName, token) {
+  if (TVA_CONFIG.popup.twoPopups && TVA_CONFIG.popup.twoPopupsNoDialog) {
+    showArtSelect((token ?? actor.prototypeToken).name, {
+      callback: (imgSrc, name) =>
+        updateTokenImage(imgSrc, {
+          actor: actor,
+          imgName: name,
+          token: token,
+        }),
+      searchType: SEARCH_TYPE.TOKEN,
+      object: token ? token : actor,
+      force: true,
+    });
+  } else if (TVA_CONFIG.popup.twoPopups) {
+    let d = new Dialog({
+      title: 'Portrait -> Token',
+      content: `<p>${game.i18n.localize('token-variants.windows.art-select.apply-same-art')}</p>`,
+      buttons: {
+        one: {
+          icon: '<i class="fas fa-check"></i>',
+          callback: () => {
+            updateTokenImage(imgSrc, {
+              actor: actor,
+              imgName: imgName,
+              token: token,
+            });
+            const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
+            for (const app of artSelects) {
+              app.close();
+            }
+          },
+        },
+        two: {
+          icon: '<i class="fas fa-times"></i>',
+          callback: () => {
+            showArtSelect((token ?? actor.prototypeToken).name, {
+              callback: (imgSrc, name) =>
+                updateTokenImage(imgSrc, {
+                  actor: actor,
+                  imgName: name,
+                  token: token,
+                }),
+              searchType: SEARCH_TYPE.TOKEN,
+              object: token ? token : actor,
+              force: true,
+            });
+          },
+        },
+      },
+      default: 'one',
+    });
+    d.render(true);
+  }
 }

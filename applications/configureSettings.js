@@ -1,6 +1,6 @@
+import { cacheImages } from '../scripts/search.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { getFileName } from '../scripts/utils.js';
-import { cacheImages } from '../token-variants.mjs';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
 import { showPathSelectCategoryDialog } from './dialogs.js';
 
@@ -94,8 +94,7 @@ export default class ConfigureSettings extends FormApplication {
     }, {});
 
     data.randomizer.tokenToPortraitDisabled =
-      !(settings.randomizer.tokenCreate || settings.randomizer.tokenCopyPaste) ||
-      data.randomizer.diffImages;
+      !(settings.randomizer.tokenCreate || settings.randomizer.tokenCopyPaste) || data.randomizer.diffImages;
 
     // === Pop-up ===
     data.popup = deepClone(settings.popup);
@@ -185,16 +184,10 @@ export default class ConfigureSettings extends FormApplication {
     // Algorithm
     const algorithmTab = $(html).find('div[data-tab="searchAlgorithm"]');
     algorithmTab.find(`input[name="algorithm.exact"]`).change((e) => {
-      $(e.target)
-        .closest('form')
-        .find('input[name="algorithm.fuzzy"]')
-        .prop('checked', !e.target.checked);
+      $(e.target).closest('form').find('input[name="algorithm.fuzzy"]').prop('checked', !e.target.checked);
     });
     algorithmTab.find(`input[name="algorithm.fuzzy"]`).change((e) => {
-      $(e.target)
-        .closest('form')
-        .find('input[name="algorithm.exact"]')
-        .prop('checked', !e.target.checked);
+      $(e.target).closest('form').find('input[name="algorithm.exact"]').prop('checked', !e.target.checked);
     });
     algorithmTab.find('input[name="algorithm.fuzzyThreshold"]').change((e) => {
       $(e.target).siblings('.token-variants-range-value').html(`${e.target.value}%`);
@@ -205,10 +198,7 @@ export default class ConfigureSettings extends FormApplication {
     const tokenCopyPaste = html.find('input[name="randomizer.tokenCopyPaste"]');
     const tokenToPortrait = html.find('input[name="randomizer.tokenToPortrait"]');
     const _toggle = () => {
-      tokenToPortrait.prop(
-        'disabled',
-        !(tokenCreate.is(':checked') || tokenCopyPaste.is(':checked'))
-      );
+      tokenToPortrait.prop('disabled', !(tokenCreate.is(':checked') || tokenCopyPaste.is(':checked')));
     };
     tokenCreate.change(_toggle);
     tokenCopyPaste.change(_toggle);
@@ -347,8 +337,7 @@ export default class ConfigureSettings extends FormApplication {
     const sourceInput = $(event.target).closest('.table-row').find('.path-source input');
 
     const albumHash = pathInput.val();
-    const imgurClientId =
-      TVA_CONFIG.imgurClientId === '' ? 'df9d991443bb222' : TVA_CONFIG.imgurClientId;
+    const imgurClientId = TVA_CONFIG.imgurClientId === '' ? 'df9d991443bb222' : TVA_CONFIG.imgurClientId;
 
     fetch('https://api.imgur.com/3/gallery/album/' + albumHash, {
       headers: {
@@ -360,9 +349,7 @@ export default class ConfigureSettings extends FormApplication {
       .then(
         async function (result) {
           if (!result.success && location.hostname === 'localhost') {
-            ui.notifications.warn(
-              game.i18n.format('token-variants.notifications.warn.imgur-localhost')
-            );
+            ui.notifications.warn(game.i18n.format('token-variants.notifications.warn.imgur-localhost'));
             return;
           }
 
@@ -383,8 +370,7 @@ export default class ConfigureSettings extends FormApplication {
 
           await RollTable.create({
             name: data.title,
-            description:
-              'Token Variant Art auto generated RollTable: https://imgur.com/gallery/' + albumHash,
+            description: 'Token Variant Art auto generated RollTable: https://imgur.com/gallery/' + albumHash,
             results: resultsArray,
             replacement: true,
             displayRoll: true,
@@ -418,9 +404,7 @@ export default class ConfigureSettings extends FormApplication {
       .then(
         async function (result) {
           if (!result.length > 0) {
-            ui.notifications.warn(
-              game.i18n.format('token-variants.notifications.warn.json-localhost')
-            );
+            ui.notifications.warn(game.i18n.format('token-variants.notifications.warn.json-localhost'));
             return;
           }
 
@@ -581,9 +565,7 @@ export default class ConfigureSettings extends FormApplication {
     formData = expandObject(formData);
 
     // Search Paths
-    settings.searchPaths = formData.hasOwnProperty('searchPaths')
-      ? Object.values(formData.searchPaths)
-      : [];
+    settings.searchPaths = formData.hasOwnProperty('searchPaths') ? Object.values(formData.searchPaths) : [];
     settings.searchPaths.forEach((path) => {
       if (!path.source) path.source = 'data';
       if (path.types) path.types = path.types.split(',');
@@ -592,15 +574,13 @@ export default class ConfigureSettings extends FormApplication {
 
     // Search Filters
     for (const filter in formData.searchFilters) {
-      if (!this._validRegex(formData.searchFilters[filter].regex))
-        formData.searchFilters[filter].regex = '';
+      if (!this._validRegex(formData.searchFilters[filter].regex)) formData.searchFilters[filter].regex = '';
     }
     mergeObject(settings.searchFilters, formData.searchFilters);
 
     // Algorithm
     formData.algorithm.fuzzyLimit = parseInt(formData.algorithm.fuzzyLimit);
-    if (isNaN(formData.algorithm.fuzzyLimit) || formData.algorithm.fuzzyLimit < 1)
-      formData.algorithm.fuzzyLimit = 50;
+    if (isNaN(formData.algorithm.fuzzyLimit) || formData.algorithm.fuzzyLimit < 1) formData.algorithm.fuzzyLimit = 50;
     formData.algorithm.fuzzyThreshold = (100 - formData.algorithm.fuzzyThreshold) / 100;
     mergeObject(settings.algorithm, formData.algorithm);
 
@@ -713,13 +693,7 @@ function _mergeInsertFix(original, k, v, { insertKeys, insertValues } = {}, _d) 
   if (canInsert) original[k] = v;
 }
 
-function _mergeUpdate(
-  original,
-  k,
-  v,
-  { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {},
-  _d
-) {
+function _mergeUpdate(original, k, v, { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {}, _d) {
   const x = original[k];
   const tv = getType(v);
   const tx = getType(x);

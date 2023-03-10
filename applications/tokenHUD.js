@@ -9,11 +9,11 @@ import {
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import ActiveEffectConfigList from './activeEffectConfigList.js';
-import { doImageSearch, findImagesFuzzy } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import FlagsConfig from './flagsConfig.js';
 import RandomizerConfig from './randomizerConfig.js';
+import { doImageSearch, findImagesFuzzy } from '../scripts/search.js';
 
 export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
   activateStatusEffectListeners(token);
@@ -307,10 +307,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
       if (searchText) {
         search = searchText.length > 2 ? searchText : null;
       } else {
-        if (
-          worldHudSettings.displayOnlySharedImages ||
-          tokenActor?.getFlag('token-variants', 'disableNameSearch')
-        ) {
+        if (worldHudSettings.displayOnlySharedImages || tokenActor?.getFlag('token-variants', 'disableNameSearch')) {
           // No search
         } else if (token.name.length > 2) {
           search = token.name;
@@ -355,9 +352,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
     const vid = isVideo(imageObj.path);
 
     const hasConfig = Boolean(
-      tokenConfigs.find(
-        (config) => config.tvImgSrc === imageObj.path && config.tvImgName === imageObj.name
-      )
+      tokenConfigs.find((config) => config.tvImgSrc === imageObj.path && config.tvImgName === imageObj.name)
     );
     let shared = false;
     if (TVA_CONFIG.permissions.hudFullAccess[game.user.role]) {
@@ -415,14 +410,10 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
       }
     }
   );
-  sideSelect
-    .find('.token-variants-button-select')
-    .click((event) => _onImageClick(event, token._id));
+  sideSelect.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));
 
   if (FULL_ACCESS) {
-    sideSelect
-      .find('.token-variants-button-select')
-      .on('contextmenu', (event) => _onImageRightClick(event, token._id));
+    sideSelect.find('.token-variants-button-select').on('contextmenu', (event) => _onImageRightClick(event, token._id));
   }
 
   return sideSelect;
@@ -601,11 +592,7 @@ async function updateActorWithSimilarName(imgSrc, imgName, actor) {
 }
 
 function activateStatusEffectListeners(token) {
-  if (
-    TVA_CONFIG.permissions.statusConfig[game.user.role] &&
-    token.actorId &&
-    game.actors.get(token.actorId)
-  ) {
+  if (TVA_CONFIG.permissions.statusConfig[game.user.role] && token.actorId && game.actors.get(token.actorId)) {
     $('.control-icon[data-action="effects"]')
       .find('img:first')
       .click((event) => {
@@ -622,9 +609,7 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new ActiveEffectConfigList(token, { createMapping: 'token-variants-visibility' }).render(
-            true
-          );
+          new ActiveEffectConfigList(token, { createMapping: 'token-variants-visibility' }).render(true);
         }
       });
 
@@ -634,9 +619,7 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new ActiveEffectConfigList(token, { createMapping: 'token-variants-combat' }).render(
-            true
-          );
+          new ActiveEffectConfigList(token, { createMapping: 'token-variants-combat' }).render(true);
         }
       });
 

@@ -1,7 +1,7 @@
 import { getFileName, isImage, isVideo, SEARCH_TYPE, keyPressed } from '../scripts/utils.js';
-import { doImageSearch } from '../token-variants.mjs';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import FlagsConfig from './flagsConfig.js';
+import { doImageSearch } from '../scripts/search.js';
 
 export async function renderTileHUD(hud, html, tileData, searchText = '', fp_files = null) {
   const tile = hud.object;
@@ -287,9 +287,7 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
   sideSelect.find('.token-variants-button-select').click((event) => _onImageClick(event, tile));
 
   if (FULL_ACCESS) {
-    sideSelect
-      .find('.token-variants-button-select')
-      .on('contextmenu', (event) => _onImageRightClick(event, tile));
+    sideSelect.find('.token-variants-button-select').on('contextmenu', (event) => _onImageRightClick(event, tile));
   }
 
   return sideSelect;
