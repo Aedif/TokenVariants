@@ -57,7 +57,7 @@ class OutlineFilter extends OutlineOverlayFilter {
   }
 }
 
-export class TVA_Sprite extends TokenMesh {
+export class TVASprite extends TokenMesh {
   constructor(texture, token, config) {
     super(token);
 
@@ -74,8 +74,7 @@ export class TVA_Sprite extends TokenMesh {
   get visible() {
     return (
       (this.object.visible || this.tvaOverlayConfig.alwaysVisible) &&
-      (!this.tvaOverlayConfig.limitToUser ||
-        this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
+      (!this.tvaOverlayConfig.limitToUser || this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
     );
   }
   set visible(visible) {}
@@ -160,10 +159,7 @@ export class TVA_Sprite extends TokenMesh {
         this.object.document.y + this.object.h / 2 - config.offsetY * this.width
       );
     } else {
-      this.position.set(
-        this.object.document.x + this.object.w / 2,
-        this.object.document.y + this.object.h / 2
-      );
+      this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
     }
 
     // Set alpha but only if playOnce is disabled and the video hasn't
@@ -277,10 +273,7 @@ async function constructTMFXFilters(paramsArray, sprite) {
 
   let filters = [];
   for (const params of paramsArray) {
-    if (
-      !params.hasOwnProperty('filterType') ||
-      !TMFXFilterTypes.hasOwnProperty(params.filterType)
-    ) {
+    if (!params.hasOwnProperty('filterType') || !TMFXFilterTypes.hasOwnProperty(params.filterType)) {
       // one invalid ? all rejected.
       return [];
     }

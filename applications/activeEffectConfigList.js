@@ -1,12 +1,5 @@
-import { showArtSelect, updateWithEffectMapping } from '../token-variants.mjs';
-import {
-  SEARCH_TYPE,
-  getFileName,
-  isVideo,
-  setGlobalEffectMappings,
-  fixEffectMappings,
-  EXPRESSION_OPERATORS,
-} from '../scripts/utils.js';
+import { showArtSelect } from '../token-variants.mjs';
+import { SEARCH_TYPE, getFileName, isVideo, EXPRESSION_OPERATORS } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -14,6 +7,7 @@ import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
+import { fixEffectMappings, updateWithEffectMapping } from '../scripts/token/effects.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
@@ -124,11 +118,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
     html.find('.effect-config i.config-script').click(this._onConfigScriptClick.bind(this));
     html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
-    html.on(
-      'contextmenu',
-      '.effect-overlay i.overlay-config',
-      this._onOverlayConfigRightClick.bind(this)
-    );
+    html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
     html.find('.div-input').on('input paste', this._onEffectNameChange);
   }
@@ -186,10 +176,7 @@ export default class ActiveEffectConfigList extends FormApplication {
   async _onOverlayConfigRightClick(event) {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
-    showOverlayJsonConfigDialog(
-      mapping.overlayConfig,
-      (config) => (mapping.overlayConfig = config)
-    );
+    showOverlayJsonConfigDialog(mapping.overlayConfig, (config) => (mapping.overlayConfig = config));
   }
 
   async _toggleActiveControls(event) {
@@ -206,8 +193,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     if (hasTokenConfig) tokenConfig.addClass('active');
     else tokenConfig.removeClass('active');
 
-    if (Object.keys(mapping.config).filter((k) => mapping.config[k]).length)
-      configEdit.addClass('active');
+    if (Object.keys(mapping.config).filter((k) => mapping.config[k]).length) configEdit.addClass('active');
     else configEdit.removeClass('active');
 
     if (mapping.config.tv_script) scriptEdit.addClass('active');
@@ -397,9 +383,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       filename = 'token-variants-global-mappings.json';
     } else {
       mappings = {
-        globalMappings: deepClone(
-          this.objectToFlag.getFlag('token-variants', 'effectMappings') || {}
-        ),
+        globalMappings: deepClone(this.objectToFlag.getFlag('token-variants', 'effectMappings') || {}),
       };
 
       let actorName = this.objectToFlag.name ?? 'Actor';
@@ -428,8 +412,7 @@ export default class ActiveEffectConfigList extends FormApplication {
               label: game.i18n.localize('token-variants.common.import'),
               callback: (html) => {
                 const form = html.find('form')[0];
-                if (!form.data.files.length)
-                  return ui.notifications?.error('You did not upload a data file!');
+                if (!form.data.files.length) return ui.notifications?.error('You did not upload a data file!');
                 readTextFromFile(form.data.files[0]).then((json) => {
                   json = JSON.parse(json);
                   if (!json || !('globalMappings' in json)) {
@@ -471,8 +454,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     const mappings = TVA_CONFIG.globalMappings;
     if (!mappings || isEmpty(mappings)) return;
 
-    let content =
-      '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
+    let content = '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
     for (const key of Object.keys(mappings)) {
       content += `
       <div class="form-group">
@@ -544,9 +526,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       <div class="form-group">
         <label>${act.label}</label>
         <div class="form-fields">
-            <input type="checkbox" name="${act.id}" data-dtype="Boolean" ${
-        act.enabled ? 'checked' : ''
-      }>
+            <input type="checkbox" name="${act.id}" data-dtype="Boolean" ${act.enabled ? 'checked' : ''}>
         </div>
       </div>
       `;
@@ -609,17 +589,14 @@ export default class ActiveEffectConfigList extends FormApplication {
           effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
         }
         if (this.globalMappings) {
-          setGlobalEffectMappings(effectMappings);
+          _setGlobalEffectMappings(effectMappings);
           updateSettings({ globalMappings: effectMappings });
         } else {
           await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
-          setTimeout(
-            () => this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings),
-            500
-          );
+          setTimeout(() => this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings), 500);
         }
       } else if (this.globalMappings) {
-        setGlobalEffectMappings(null);
+        _setGlobalEffectMappings(null);
         updateSettings({ globalMappings: {} });
       } else {
         this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
@@ -703,4 +680,21 @@ function setCaretPosition(el, pos) {
     }
   }
   return pos;
+}
+
+async function _setGlobalEffectMappings(mappings) {
+  if (!mappings) {
+    for (const k of Object.keys(TVA_CONFIG.globalMappings)) {
+      delete TVA_CONFIG.globalMappings[k];
+    }
+    return;
+  }
+
+  const keys = Object.keys(TVA_CONFIG.globalMappings);
+  for (const key of keys) {
+    if (!(key in mappings)) {
+      delete TVA_CONFIG.globalMappings[key];
+    }
+  }
+  mergeObject(TVA_CONFIG.globalMappings, mappings);
 }

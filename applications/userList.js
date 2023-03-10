@@ -1,5 +1,4 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
-import { checkAndDisplayUserSpecificImage } from '../scripts/utils.js';
 
 export default class UserList extends FormApplication {
   constructor(token, img, regenStyle) {
@@ -51,8 +50,7 @@ export default class UserList extends FormApplication {
 
     for (const [userId, apply] of Object.entries(formData)) {
       if (apply) {
-        if (mappings[userId] && mappings[userId] !== this.img)
-          affectedImages.push(mappings[userId]);
+        if (mappings[userId] && mappings[userId] !== this.img) affectedImages.push(mappings[userId]);
         mappings[userId] = this.img;
       } else if (mappings[userId] === this.img) {
         delete mappings[userId];

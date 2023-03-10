@@ -21,31 +21,21 @@ import {
   updateTokenImage,
   startBatchUpdater,
   userRequiresImageCache,
-  checkAndDisplayUserSpecificImage,
   flattenSearchResults,
   parseKeywords,
-  tv_executeScript,
-  drawOverlays,
   getFilePath,
-  waitForTexture,
-  getTokenEffects,
+  waitForTokenTexture,
   isVideo,
   isImage,
-  getAllEffectMappings,
-  applyTMFXPreset,
-  evaluateEffectAsExpression,
-  drawMorphOverlay,
-  evaluateComparatorEffects,
-  SUPPORTED_COMP_ATTRIBUTES,
   nameForgeRandomize,
-  evaluateStateEffects,
-  determineAddedRemovedEffects,
 } from './scripts/utils.js';
 import { renderHud } from './applications/tokenHUD.js';
 import { renderTileHUD } from './applications/tileHUD.js';
 import { Fuse } from './scripts/fuse/fuse.js';
-import { libWrapper } from './scripts/libWrapper/shim.js';
-import { TVA_Sprite } from './scripts/sprite/TVA_Sprite.js';
+import { checkAndDisplayUserSpecificImage } from './scripts/token/userToImage.js';
+import { drawOverlays } from './scripts/token/overlay.js';
+import { updateWithEffectMapping } from './scripts/token/effects.js';
+import { registerTokenHooks } from './scripts/token/hooks.js';
 
 // Tracks if module has been initialized
 let initialized = false;
@@ -73,288 +63,6 @@ function disablePopupForType(actor) {
   return TVA_CONFIG.popup[`${actor.type}Disable`] ?? false;
 }
 
-async function postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {
-  if (hadActiveHUD) {
-    canvas.tokens.hud.bind(token);
-    if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
-  }
-  for (const scr of scripts) {
-    if (scr.script) {
-      await tv_executeScript(scr.script, { token: scr.token });
-    } else if (scr.tmfxPreset) {
-      await applyTMFXPreset(scr.token, scr.tmfxPreset, scr.action);
-    }
-  }
-}
-
-export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
-  token = token._object ? token._object : token;
-  const tokenImgName =
-    (token.document ?? token).getFlag('token-variants', 'name') ||
-    getFileName(token.document.texture.src);
-  let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
-  const animate = !TVA_CONFIG.disableTokenUpdateAnimation;
-  const tokenUpdateObj = {};
-  const hadActiveHUD = token.hasActiveHUD;
-  const toggleStatus =
-    canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
-
-  let effects = getTokenEffects(token);
-
-  // If effect is included in `added` or `removed` we need to:
-  // 1. Insert it into `effects` if it's not there in case of 'added' and place it on top of the list
-  // 2. Remove it in case of 'removed'
-  for (const ef of added) {
-    const i = effects.findIndex((s) => s === ef);
-    if (i === -1) {
-      effects.push(ef);
-    } else if (i < effects.length - 1) {
-      effects.splice(i, 1);
-      effects.push(ef);
-    }
-  }
-  for (const ef of removed) {
-    const i = effects.findIndex((s) => s === ef);
-    if (i !== -1) {
-      effects.splice(i, 1);
-    }
-  }
-
-  const mappings = getAllEffectMappings(token);
-
-  // 3. Configurations may contain effect names in a form of a logical expressions
-  //    We need to evaluate them and insert them into effects/added/removed if needed
-  for (const key of Object.keys(mappings)) {
-    const [evaluation, identifiedEffects] = evaluateEffectAsExpression(key, effects);
-    if (identifiedEffects == null) continue;
-    if (evaluation) {
-      let containsAdded = false;
-      for (const ef of identifiedEffects) {
-        if (added.includes(ef) || removed.includes(ef)) {
-          containsAdded = true;
-          added.push(key);
-          break;
-        }
-      }
-      if (containsAdded) effects.push(key);
-      else effects.unshift(key);
-    } else {
-      for (const ef of identifiedEffects) {
-        if (removed.includes(ef) || added.includes(ef)) {
-          removed.push(key);
-          break;
-        }
-      }
-    }
-  }
-
-  // Accumulate all scripts that will need to be run after the update
-  const executeOnCallback = [];
-  let deferredUpdateScripts = [];
-  let tmfxMorph;
-  for (const ef of removed) {
-    const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
-    if (onRemove) {
-      if (onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(onRemove);
-      else executeOnCallback.push({ script: onRemove, token: token });
-    }
-    const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
-    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
-    const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
-    if (morph) tmfxMorph = morph;
-  }
-  for (const ef of added) {
-    const onApply = mappings[ef]?.config?.tv_script?.onApply;
-    if (onApply) {
-      if (onApply.includes('tvaUpdate')) deferredUpdateScripts.push(onApply);
-      else executeOnCallback.push({ script: onApply, token: token });
-    }
-    const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
-    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
-    const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
-    if (morph) tmfxMorph = morph;
-  }
-
-  // Next we're going to determine what configs need to be applied and in what order
-  // Filter effects that do not have a mapping and sort based on priority
-  effects = effects
-    .filter((ef) => ef in mappings)
-    .map((ef) => mappings[ef])
-    .sort((ef1, ef2) => ef1.priority - ef2.priority);
-
-  // Check if image update should be prevented based on module settings
-  let disableImageUpdate = false;
-  if (TVA_CONFIG.disableImageChangeOnPolymorphed && token.actor?.isPolymorphed) {
-    disableImageUpdate = true;
-  } else if (
-    TVA_CONFIG.disableImageUpdateOnNonPrototype &&
-    token.actor?.prototypeToken?.texture?.src !== token.document.texture.src
-  ) {
-    disableImageUpdate = true;
-    const tknImg = token.document.texture.src;
-    for (const m of Object.values(mappings)) {
-      if (m.imgSrc === tknImg) {
-        disableImageUpdate = false;
-        break;
-      }
-    }
-  }
-
-  if (disableImageUpdate) {
-    tokenDefaultImg = '';
-  }
-
-  let updateCall;
-
-  if (effects.length > 0) {
-    // Some effect mappings may not have images, find a mapping with one if it exists
-    const newImg = { imgSrc: '', imgName: '' };
-
-    if (!disableImageUpdate) {
-      for (let i = effects.length - 1; i >= 0; i--) {
-        if (effects[i].imgSrc) {
-          let iSrc = effects[i].imgSrc;
-          if (iSrc.includes('*') || (iSrc.includes('{') && iSrc.includes('}'))) {
-            // wildcard image, if this effect hasn't been newly applied we do not want to randomize the image again
-            if (!added.includes(effects[i].overlayConfig?.effect)) {
-              newImg.imgSrc = token.document.texture.src;
-              newImg.imgName = getFileName(newImg.imgSrc);
-              break;
-            }
-          }
-          newImg.imgSrc = effects[i].imgSrc;
-          newImg.imgName = effects[i].imgName;
-          break;
-        }
-      }
-    }
-
-    // Collect custom configs to be applied to the token
-    let config;
-    if (TVA_CONFIG.stackStatusConfig) {
-      config = {};
-      for (const ef of effects) {
-        config = mergeObject(config, ef.config);
-      }
-    } else {
-      for (let i = effects.length - 1; i >= 0; i--) {
-        if (effects[i].config && Object.keys(effects[i].config).length !== 0) {
-          config = effects[i].config;
-          break;
-        }
-      }
-    }
-
-    // Use or update the default (original) token image
-    if (!newImg.imgSrc && tokenDefaultImg) {
-      delete tokenUpdateObj['flags.token-variants.defaultImg'];
-      tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
-      newImg.imgSrc = tokenDefaultImg.imgSrc;
-      newImg.imgName = tokenDefaultImg.imgName;
-    } else if (!tokenDefaultImg && newImg.imgSrc) {
-      tokenUpdateObj['flags.token-variants.defaultImg'] = {
-        imgSrc: token.document.texture.src,
-        imgName: tokenImgName,
-      };
-    }
-
-    updateCall = () =>
-      updateTokenImage(newImg.imgSrc ?? null, {
-        token: token,
-        imgName: newImg.imgName ? newImg.imgName : tokenImgName,
-        tokenUpdate: tokenUpdateObj,
-        callback: postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
-        config: config,
-        animate,
-        tmfxMorph,
-      });
-  }
-
-  // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
-  // reset the token image back to default
-  if (effects.length === 0 && tokenDefaultImg) {
-    delete tokenUpdateObj['flags.token-variants.defaultImg'];
-    tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
-
-    updateCall = () =>
-      updateTokenImage(tokenDefaultImg.imgSrc, {
-        token: token,
-        imgName: tokenDefaultImg.imgName,
-        tokenUpdate: tokenUpdateObj,
-        callback: postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
-        animate,
-        tmfxMorph,
-      });
-    // If no default image exists but a custom effect is applied, we still want to perform an update to
-    // clear it
-  } else if (
-    effects.length === 0 &&
-    (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')
-  ) {
-    updateCall = () =>
-      updateTokenImage(token.document.texture.src, {
-        token: token,
-        imgName: tokenImgName,
-        tokenUpdate: tokenUpdateObj,
-        callback: postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
-        animate,
-        tmfxMorph,
-      });
-  }
-
-  if (updateCall) {
-    if (deferredUpdateScripts.length) {
-      for (let i = 0; i < deferredUpdateScripts.length; i++) {
-        if (i === deferredUpdateScripts.length - 1) {
-          await tv_executeScript(deferredUpdateScripts[i], {
-            token,
-            tvaUpdate: () => {
-              broadcastOverlayRedraw(token);
-              updateCall();
-            },
-          });
-        } else {
-          await tv_executeScript(deferredUpdateScripts[i], { token, tvaUpdate: () => {} });
-        }
-      }
-    } else {
-      broadcastOverlayRedraw(token);
-      updateCall();
-    }
-  } else {
-    broadcastOverlayRedraw(token);
-  }
-}
-
-function broadcastOverlayRedraw(token) {
-  // Need to broadcast to other users to re-draw the overlay
-  drawOverlays(token);
-  const message = {
-    handlerName: 'drawOverlays',
-    args: { tokenId: token.id },
-    type: 'UPDATE',
-  };
-  game.socket?.emit('module.token-variants', message);
-}
-
 /**
  * Initialize the Token Variants module on Foundry VTT init
  */
@@ -375,13 +83,13 @@ async function initialize() {
 
         // Disable effect icons
         if (TVA_CONFIG.disableEffectIcons) {
-          waitForTexture(tkn, (token) => {
+          waitForTokenTexture(tkn, (token) => {
             token.effects.removeChildren().forEach((c) => c.destroy());
             token.effects.bg = token.effects.addChild(new PIXI.Graphics());
             token.effects.overlay = null;
           });
         } else if (TVA_CONFIG.filterEffectIcons) {
-          waitForTexture(tkn, (token) => {
+          waitForTokenTexture(tkn, (token) => {
             token.drawEffects();
           });
         }
@@ -398,674 +106,7 @@ async function initialize() {
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
   startBatchUpdater();
 
-  // Insert default random image field
-  Hooks.on('renderTokenConfig', async (config, html) => {
-    const checkboxRandomize = html.find('input[name="randomImg"]');
-    if (checkboxRandomize.length && !html.find('.token-variants-randomImgDefault').length) {
-      const defaultImg =
-        config.actor?.prototypeToken?.flags['token-variants']?.['randomImgDefault'] ||
-        config.actor?.prototypeToken?.flags['token-hud-wildcard']?.['default'] ||
-        '';
-
-      const field = await renderTemplate(
-        '/modules/token-variants/templates/randomImgDefault.html',
-        { defaultImg, active: checkboxRandomize.is(':checked') }
-      );
-      checkboxRandomize.closest('.form-group').after(field);
-
-      const tvaRngField = html.find('.token-variants-randomImgDefault');
-
-      tvaRngField.find('button').click((event) => {
-        event.preventDefault();
-        const input = tvaRngField.find('input');
-        new FilePicker({ current: input.val(), field: input[0] }).browse(defaultImg);
-      });
-
-      checkboxRandomize.click((event) => {
-        if (event.target.checked) {
-          tvaRngField.addClass('active');
-        } else {
-          tvaRngField.removeClass('active');
-        }
-      });
-    }
-  });
-
-  // Set Default Wildcard images if needed
-  Hooks.on('preCreateToken', (tokenDocument, data, options, userId) => {
-    if (game.user.id === userId && tokenDocument.actor?.prototypeToken?.randomImg) {
-      const defaultImg =
-        tokenDocument.actor?.prototypeToken?.flags['token-variants']?.['randomImgDefault'] ||
-        tokenDocument.actor?.prototypeToken?.flags['token-hud-wildcard']?.['default'] ||
-        '';
-      if (defaultImg) tokenDocument.updateSource({ 'texture.src': defaultImg });
-    }
-  });
-
-  /**
-   * Current and Next combatant tracking logic
-   */
-
-  // function preCombatUpdateCheck(options, userId) {
-  //   if (game.userId !== userId || !game.combat?.started) return;
-
-  //   const track = {
-  //     current: game.combat?.combatant?.token?.id,
-  //     next: game.combat?.nextCombatant?.token?.id,
-  //   };
-  //   options['token-variants'] = track;
-  // }
-
-  // function postCombatUpdateCheck(options, userId) {
-  //   if (game.userId !== userId || !game.combat?.started) return;
-
-  //   const track = options['token-variants'] ?? {};
-
-  //   const tokenUpdates = {};
-
-  //   const current = game.combat?.combatant?.token?.id;
-  //   if (current && current !== track.current) {
-  //     const token = canvas.tokens.get(current);
-  //     if (token) {
-  //       const effects = getTokenEffects(token, ['current-combatant']);
-
-  //       effects.push('current-combatant');
-
-  //       if (!tokenUpdates[token.id]) tokenUpdates[token.id] = {};
-  //       tokenUpdates[token.id].added = ['current-combatant'];
-  //       tokenUpdates[token.id].effects = effects;
-  //       tokenUpdates[token.id].token = token;
-  //     }
-
-  //     if (track.current) {
-  //       const previousCombatant = canvas.tokens.get(track.current);
-  //       if (previousCombatant) {
-  //         const effects = getTokenEffects(previousCombatant, ['current-combatant']);
-
-  //         effects.push('current-combatant');
-  //         if (!tokenUpdates[previousCombatant.id]) tokenUpdates[previousCombatant.id] = {};
-  //         tokenUpdates[previousCombatant.id].removed = ['current-combatant'];
-  //         tokenUpdates[previousCombatant.id].effects = effects;
-  //         tokenUpdates[previousCombatant.id].token = previousCombatant;
-  //       }
-  //     }
-  //   }
-
-  //   const next = game.combat?.nextCombatant?.token?.id;
-  //   if (next && next !== track.next) {
-  //     const token = canvas.tokens.get(next);
-  //     if (token) {
-  //       const effects = getTokenEffects(token, ['next-combatant']);
-
-  //       effects.push('next-combatant');
-  //       if (!tokenUpdates[token.id]) tokenUpdates[token.id] = {};
-  //       tokenUpdates[token.id].added = ['next-combatant'];
-  //       tokenUpdates[token.id].effects = effects;
-  //       tokenUpdates[token.id].token = token;
-  //     }
-
-  //     if (track.next) {
-  //       const previousCombatant = canvas.tokens.get(track.next);
-  //       if (previousCombatant) {
-  //         const effects = getTokenEffects(previousCombatant, ['next-combatant']);
-
-  //         effects.push('next-combatant');
-  //         if (!tokenUpdates[previousCombatant.id]) tokenUpdates[previousCombatant.id] = {};
-  //         tokenUpdates[previousCombatant.id].removed = ['next-combatant'];
-  //         tokenUpdates[previousCombatant.id].effects = effects;
-  //         tokenUpdates[previousCombatant.id].token = previousCombatant;
-  //       }
-  //     }
-  //   }
-
-  //   if (!isEmpty(tokenUpdates)) {
-  //     for (const update of Object.values(tokenUpdates)) {
-  //       updateWithEffectMapping(update.token, update.effects, {
-  //         added: update.added || [],
-  //         removed: update.removed || [],
-  //       });
-  //     }
-  //   }
-  // }
-
-  // Hooks.on('preUpdateCombat', (combat, diff, options, userId) => {
-  //   preCombatUpdateCheck(options, userId);
-  // });
-
-  // Hooks.on('updateCombat', (combat, diff, options, userId) => {
-  //   postCombatUpdateCheck(options, userId);
-  // });
-
-  // Hooks.on('preUpdateCombatant', (combatant, diff, options, userId) => {
-  //   preCombatUpdateCheck(options, userId);
-  // });
-
-  // Hooks.on('updateCombatant', (combatant, diff, options, userId) => {
-  //   postCombatUpdateCheck(options, userId);
-  // });
-
-  Hooks.on('createCombatant', (combatant, options, userId) => {
-    if (game.userId !== userId) return;
-    const token = combatant._token || canvas.tokens.get(combatant.tokenId);
-    if (!token || !token.actor) return;
-
-    updateWithEffectMapping(token, {
-      added: ['token-variants-combat'],
-    });
-  });
-
-  const deleteCombatant = async function (combatant) {
-    const token = combatant._token || canvas.tokens.get(combatant.tokenId);
-    if (!token || !token.actor) return;
-    await updateWithEffectMapping(token, {
-      removed: ['token-variants-combat'],
-    });
-  };
-
-  Hooks.on('deleteCombatant', (combatant, options, userId) => {
-    if (game.userId !== userId) return;
-    deleteCombatant(combatant);
-  });
-
-  Hooks.on('deleteCombat', (combat, options, userId) => {
-    if (game.userId !== userId) return;
-    combat.combatants.forEach((combatant) => {
-      deleteCombatant(combatant);
-    });
-  });
-
-  //
-  // Handle image updates for Active Effects applied to Tokens WITH Linked Actors
-  //
-
-  let updateImageOnEffectChange = async function (effectName, actor, added = true) {
-    const mappings = getAllEffectMappings({ actor });
-    if (effectName in mappings) {
-      const tokens = actor.token
-        ? [actor.token]
-        : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
-      for (const token of tokens) {
-        await updateWithEffectMapping(token, {
-          added: added ? [effectName] : [],
-          removed: !added ? [effectName] : [],
-        });
-      }
-    }
-  };
-
-  let updateImageOnMultiEffectChange = async function (actor, added = [], removed = []) {
-    if (!actor) return;
-    const mappings = getAllEffectMappings({ actor });
-    if (
-      added.filter((ef) => ef in mappings).length ||
-      removed.filter((ef) => ef in mappings).length
-    ) {
-      const tokens = actor.token
-        ? [actor.token]
-        : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
-      for (const token of tokens) {
-        await updateWithEffectMapping(token, {
-          added: added,
-          removed: removed,
-        });
-      }
-    }
-  };
-
-  Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
-    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
-    updateImageOnEffectChange(effectName, activeEffect.parent, true);
-  });
-
-  Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
-    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
-    updateImageOnEffectChange(effectName, activeEffect.parent, false);
-  });
-
-  Hooks.on('preUpdateActiveEffect', (activeEffect, change, options, userId) => {
-    if (!activeEffect.parent || game.userId !== userId) return;
-
-    if ('label' in change) {
-      options['token-variants-old-name'] = activeEffect.label;
-    }
-  });
-
-  Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
-    if (!activeEffect.parent || game.userId !== userId) return;
-
-    const added = [];
-    const removed = [];
-
-    if ('disabled' in change) {
-      if (change.disabled) removed.push(activeEffect.label);
-      else added.push(activeEffect.label);
-    }
-    if ('label' in change) {
-      removed.push(options['token-variants-old-name']);
-      added.push(change.label);
-    }
-
-    if (added.length || removed.length) {
-      updateImageOnMultiEffectChange(activeEffect.parent, added, removed);
-    }
-  });
-
-  // Want to track condition/effect previous name so that the config can be reverted for it
-  Hooks.on('preUpdateItem', (item, change, options, userId) => {
-    if (
-      game.user.id === userId &&
-      game.system.id === 'pf2e' &&
-      ['condition', 'effect'].includes(item.type) &&
-      'name' in change
-    ) {
-      options['token-variants-old-name'] = item.name;
-    }
-  });
-
-  Hooks.on('updateItem', (item, change, options, userId) => {
-    if (game.user.id !== userId) return;
-    // Handle condition/effect name change
-    if (
-      game.system.id === 'pf2e' &&
-      ['condition', 'effect'].includes(item.type) &&
-      'name' in change
-    ) {
-      updateImageOnMultiEffectChange(
-        item.parent,
-        [change.name],
-        [options['token-variants-old-name']]
-      );
-    }
-
-    // Status Effects can be applied "stealthily" on item equip/un-equip
-    if (
-      item.parent &&
-      change.system &&
-      'equipped' in change.system &&
-      item.effects &&
-      item.effects.size
-    ) {
-      const added = [];
-      const removed = [];
-      item.effects.forEach((effect) => {
-        if (!effect.disabled) {
-          if (change.system.equipped) added.push(effect.label);
-          else removed.push(effect.label);
-        }
-      });
-
-      if (added.length || removed.length) {
-        updateImageOnMultiEffectChange(item.parent, added, removed);
-      }
-    }
-  });
-
-  //
-  // PF2e hooks
-  //
-
-  Hooks.on('createItem', (item, options, userId) => {
-    if (game.userId !== userId) return;
-    if (game.system.id !== 'pf2e' || !['condition', 'effect'].includes(item.type) || !item.parent)
-      return;
-    updateImageOnEffectChange(item.name, item.parent, true);
-  });
-
-  Hooks.on('deleteItem', (item, options, userId) => {
-    if (
-      game.system.id !== 'pf2e' ||
-      !['condition', 'effect'].includes(item.type) ||
-      !item.parent ||
-      item.disabled ||
-      game.userId !== userId
-    )
-      return;
-    updateImageOnEffectChange(item.name, item.parent, false);
-  });
-
-  if (typeof libWrapper === 'function') {
-    // A fix to make sure that the "ghost" image of the token during drag reflects assigned user mappings
-    libWrapper.register(
-      'token-variants',
-      'PlaceableObject.prototype._onDragLeftStart',
-      function (wrapped, ...args) {
-        // Change all the controlled tokens' source data if needed before they are cloned and drawn
-        const targets = this.layer.options.controllableObjects ? this.layer.controlled : [this];
-        const toUndo = [];
-        for (const token of targets) {
-          const mappings = token.document?.getFlag('token-variants', 'userMappings') || {};
-          const img = mappings[game.userId];
-          if (img) {
-            toUndo.push([token, token.document._source.img]);
-            token.document._source.img = img;
-            token.document.texture.src = img;
-          }
-        }
-
-        // Call _onDragLeftStart function to draw the new image
-        let result = wrapped(...args);
-
-        // Now that the image is drawn, reset the source data back to the original
-        for (const [token, img] of toUndo) {
-          token.document._source.img = img;
-          token.document.texture.src = img;
-        }
-
-        return result;
-      },
-      'WRAPPER'
-    );
-
-    //
-    // Overlay related wrappers
-    //
-    libWrapper.register(
-      'token-variants',
-      'Token.prototype.draw',
-      async function (wrapped, ...args) {
-        let startMorph;
-        if (this.tvaMorph && !this.tva_morphing) {
-          startMorph = await drawMorphOverlay(this, this.tvaMorph);
-        } else if (this.tva_morphing) {
-          this.tvaMorph = null;
-        }
-
-        let result = await wrapped(...args);
-
-        if (startMorph) {
-          startMorph(this.document.alpha);
-        }
-
-        // drawOverlays(this);
-        checkAndDisplayUserSpecificImage(this);
-        return result;
-      },
-      'WRAPPER'
-    );
-
-    Hooks.on('refreshToken', (token) => {
-      if (token.tva_morphing) {
-        token.mesh.alpha = 0;
-      }
-      if (token.tva_sprites)
-        for (const child of token.tva_sprites) {
-          if (child instanceof TVA_Sprite) {
-            child.refresh(null, false, false);
-          }
-        }
-    });
-
-    Hooks.on('destroyToken', (token) => {
-      if (token.tva_sprites)
-        for (const child of token.tva_sprites) {
-          canvas.primary.removeChild(child)?.destroy();
-        }
-    });
-
-    Hooks.on('hoverToken', (token, hoverIn) => {
-      if (TVA_CONFIG.displayEffectIconsOnHover) {
-        if (token.effects) {
-          token.effects.visible = hoverIn;
-        }
-      }
-    });
-
-    Hooks.on('highlightObjects', () => {
-      if (TVA_CONFIG.displayEffectIconsOnHover && canvas.tokens.active) {
-        for (const tkn of canvas.tokens.placeables) {
-          if (tkn.effects) {
-            tkn.effects.visible = tkn.hover;
-          }
-        }
-      }
-    });
-
-    if (TVA_CONFIG.disableEffectIcons) {
-      libWrapper.register(
-        'token-variants',
-        'Token.prototype.drawEffects',
-        async function (...args) {
-          this.effects.removeChildren().forEach((c) => c.destroy());
-          this.effects.bg = this.effects.addChild(new PIXI.Graphics());
-          this.effects.overlay = null;
-        },
-        'OVERRIDE'
-      );
-    } else if (TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
-      libWrapper.register(
-        'token-variants',
-        'Token.prototype.drawEffects',
-        async function (wrapped, ...args) {
-          if (this.effects && TVA_CONFIG.displayEffectIconsOnHover) {
-            this.effects.visible = false;
-          }
-          // Temporarily removing token and actor effects based on module settings
-          // after the effect icons have been drawn, they will be reset to originals
-          const tokenEffects = this.document.effects;
-          const actorEffects = this.actor?.effects;
-
-          let restrictedEffects = TVA_CONFIG.filterIconList;
-          if (TVA_CONFIG.filterCustomEffectIcons) {
-            const mappings = getAllEffectMappings({
-              actor: this.actor ? this.actor : this.document,
-            });
-            if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
-          }
-
-          let removed = [];
-          if (restrictedEffects.length) {
-            if (tokenEffects.length) {
-              this.document.effects = tokenEffects.filter(
-                // check if it's a string here
-                // for tokens without representing actors effects are just stored as paths to icons
-                (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.label)
-              );
-            }
-            if (this.actor && actorEffects.size) {
-              removed = actorEffects.filter((ef) => restrictedEffects.includes(ef.label));
-              for (const r of removed) {
-                actorEffects.delete(r.id);
-              }
-            }
-          }
-
-          const result = await wrapped(...args);
-
-          if (restrictedEffects.length) {
-            if (tokenEffects.length) {
-              this.document.effects = tokenEffects;
-            }
-            if (removed.length) {
-              for (const r of removed) {
-                actorEffects.set(r.id, r);
-              }
-            }
-          }
-          return result;
-        },
-        'WRAPPER'
-      );
-    } else if (TVA_CONFIG.displayEffectIconsOnHover) {
-      libWrapper.register(
-        'token-variants',
-        'Token.prototype.drawEffects',
-        async function (wrapped, ...args) {
-          if (this.effects && TVA_CONFIG.displayEffectIconsOnHover) {
-            this.effects.visible = false;
-          }
-          return wrapped(...args);
-        },
-        'WRAPPER'
-      );
-    }
-  }
-
-  Hooks.on('preUpdateActor', function (actor, change, options, userId) {
-    if (game.user.id !== userId) return;
-
-    // If this is an HP update we need to determine what the current HP effects would be
-    // so that they can be compared against in 'updateActor' hook
-    let containsHPUpdate = false;
-    if (game.system.id === 'cyberpunk-red-core') {
-      containsHPUpdate = change.system?.derivedStats?.hp;
-    } else if (game.system.id === 'lfg') {
-      containsHPUpdate = change.system?.health;
-    } else {
-      containsHPUpdate = change.system?.attributes?.hp;
-    }
-
-    if (containsHPUpdate) {
-      const tokens = actor.getActiveTokens();
-      for (const tkn of tokens) {
-        if (!tkn.document.actorLink) continue;
-        const preUpdateEffects = evaluateComparatorEffects(tkn);
-        if (preUpdateEffects.length) {
-          if (!options['token-variants']) options['token-variants'] = {};
-          options['token-variants'][tkn.id] = { preUpdateEffects };
-        }
-      }
-    }
-  });
-
-  Hooks.on('updateActor', async function (actor, change, options, userId) {
-    if (game.user.id !== userId) return;
-
-    if ('flags' in change && 'token-variants' in change.flags) {
-      const tokenVariantFlags = change.flags['token-variants'];
-      if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
-        const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
-        for (const tkn of tokens) {
-          if (TVA_CONFIG.filterEffectIcons) {
-            await tkn.drawEffects();
-          }
-
-          if (game.user.id === userId) updateWithEffectMapping(tkn);
-          else drawOverlays(tkn);
-        }
-      }
-    }
-
-    let containsHPUpdate = false;
-    if (game.system.id === 'cyberpunk-red-core') {
-      containsHPUpdate = change.system?.derivedStats?.hp;
-    } else if (game.system.id === 'lfg') {
-      containsHPUpdate = change.system?.health;
-    } else {
-      containsHPUpdate = change.system?.attributes?.hp;
-    }
-
-    if (containsHPUpdate) {
-      const tokens = actor.getActiveTokens();
-      for (const tkn of tokens) {
-        if (!tkn.document.actorLink) continue;
-        // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
-        const added = [];
-        const removed = [];
-        const postUpdateEffects = evaluateComparatorEffects(tkn);
-        const preUpdateEffects = options['token-variants']?.[tkn.id]?.preUpdateEffects || [];
-
-        determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
-        if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
-      }
-    }
-  });
-
-  Hooks.on('preUpdateToken', function (token, change, options, userId) {
-    // Handle a morph request
-    if (options.tvaMorph && change.texture?.src) {
-      let morph = Array.isArray(options.tvaMorph) ? options.tvaMorph[0] : options.tvaMorph;
-      morph.filterId = 'tvaMorph';
-      morph.imagePath = change.texture.src;
-
-      const message = {
-        handlerName: 'drawMorphOverlay',
-        args: {
-          tokenId: token.id,
-          morph: [morph],
-        },
-        type: 'UPDATE',
-      };
-      game.socket?.emit('module.token-variants', message);
-      token.object.tvaMorph = [morph];
-
-      options.animate = false;
-    }
-
-    if (game.user.id !== userId) return;
-
-    const preUpdateEffects = evaluateComparatorEffects(token);
-    if (preUpdateEffects.length) {
-      if (!options['token-variants']) options['token-variants'] = {};
-      options['token-variants'].preUpdateEffects = preUpdateEffects;
-    }
-
-    // System specific effects
-    const stateEffects = [];
-    evaluateStateEffects(token, stateEffects);
-    if (stateEffects.length) {
-      if (!options['token-variants']) options['token-variants'] = {};
-      options['token-variants']['system'] = stateEffects;
-    }
-
-    if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
-      options['token-variants'] = {
-        wasPolymorphed: true,
-      };
-    }
-  });
-
-  Hooks.on('updateToken', async function (token, change, options, userId) {
-    // Update User Specific Image
-    if (change.flags?.['token-variants']) {
-      if (
-        'userMappings' in change.flags['token-variants'] ||
-        '-=userMappings' in change.flags['token-variants']
-      ) {
-        checkAndDisplayUserSpecificImage(token);
-      }
-    }
-
-    if (game.user.id !== userId) return;
-
-    const addedEffects = [];
-    const removedEffects = [];
-    const postUpdateEffects = evaluateComparatorEffects(token);
-    const preUpdateEffects = options['token-variants']?.preUpdateEffects || [];
-    determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
-
-    const newStateEffects = [];
-    evaluateStateEffects(token, newStateEffects);
-    const oldStateEffects = options['token-variants']?.['system'] || [];
-    determineAddedRemovedEffects(addedEffects, removedEffects, newStateEffects, oldStateEffects);
-
-    if (addedEffects.length || removedEffects.length)
-      updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
-
-    // HP Effects
-    let containsHPUpdate = false;
-    if (game.system.id === 'cyberpunk-red-core') {
-      containsHPUpdate = change.actorData?.system?.derivedStats?.hp;
-    } else if (game.system.id === 'lfg') {
-      containsHPUpdate = change.actorData?.system?.health;
-    } else {
-      containsHPUpdate = change.actorData?.system?.attributes?.hp;
-    }
-
-    if ('actorLink' in change || containsHPUpdate) {
-      updateWithEffectMapping(token);
-    } else if (options['token-variants']?.wasPolymorphed && !token.actor?.isPolymorphed) {
-      updateWithEffectMapping(token);
-    }
-
-    if (game.userId === userId && 'hidden' in change) {
-      updateWithEffectMapping(token, {
-        added: change.hidden ? ['token-variants-visibility'] : [],
-        removed: !change.hidden ? ['token-variants-visibility'] : [],
-      });
-    }
-  });
+  registerTokenHooks();
 
   Hooks.on('renderArtSelect', () => {
     showArtSelectExecuting.inProgress = false;
@@ -1132,9 +173,7 @@ async function createToken(token, options, userId) {
   updateWithEffectMapping(token);
 
   // Check if random search is enabled and if so perform it
-  const actorRandSettings = game.actors
-    .get(token.actorId)
-    ?.getFlag('token-variants', 'randomizerSettings');
+  const actorRandSettings = game.actors.get(token.actorId)?.getFlag('token-variants', 'randomizerSettings');
   const randSettings = mergeObject(TVA_CONFIG.randomizer, actorRandSettings ?? {}, {
     inplace: false,
     recursive: false,
@@ -1254,8 +293,7 @@ async function createActor(actor, options, userId) {
   const randSettings = TVA_CONFIG.randomizer;
   if (randSettings.actorCreate) {
     let performRandomSearch = true;
-    if (randSettings.linkedActorDisable && actor.prototypeToken.actorLink)
-      performRandomSearch = false;
+    if (randSettings.linkedActorDisable && actor.prototypeToken.actorLink) performRandomSearch = false;
     if (disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
 
     if (performRandomSearch) {
@@ -1380,9 +418,7 @@ function modTileConfig(tileConfig, html, _) {
         el.setAttribute('data-target', 'img');
         el.onclick = async () => {
           const tileName =
-            tileConfig.object.getFlag('token-variants', 'tileName') ||
-            tileConfig.object.id ||
-            'new tile';
+            tileConfig.object.getFlag('token-variants', 'tileName') || tileConfig.object.id || 'new tile';
           showArtSelect(tileName, {
             callback: (imgSrc, name) => {
               field.value = imgSrc;
@@ -1585,10 +621,7 @@ export async function cacheImages({
   if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(
       game.i18n.format('token-variants.notifications.info.caching-finished', {
-        imageCount: Object.keys(CACHED_IMAGES).reduce(
-          (count, types) => count + CACHED_IMAGES[types].length,
-          0
-        ),
+        imageCount: Object.keys(CACHED_IMAGES).reduce((count, types) => count + CACHED_IMAGES[types].length, 0),
       })
     );
 
@@ -1648,8 +681,7 @@ async function findImages(name, searchType = '', searchOptions = {}) {
 }
 
 async function findImagesExact(name, searchType, searchOptions) {
-  if (TVA_CONFIG.debug)
-    console.log('STARTING: Exact Image Search', name, searchType, searchOptions);
+  if (TVA_CONFIG.debug) console.log('STARTING: Exact Image Search', name, searchType, searchOptions);
 
   const found_images = await walkAllPaths(searchType);
 
@@ -1663,15 +695,7 @@ async function findImagesExact(name, searchType, searchOptions) {
       const types = typeKey.split(',');
       if (types.includes(searchType)) {
         for (const imgOBj of container[typeKey]) {
-          if (
-            exactSearchMatchesImage(
-              simpleName,
-              imgOBj.path,
-              imgOBj.name,
-              filters,
-              searchOptions.runSearchOnPath
-            )
-          ) {
+          if (exactSearchMatchesImage(simpleName, imgOBj.path, imgOBj.name, filters, searchOptions.runSearchOnPath)) {
             matchedImages.push(imgOBj);
           }
         }
@@ -1684,8 +708,7 @@ async function findImagesExact(name, searchType, searchOptions) {
 }
 
 export async function findImagesFuzzy(name, searchType, searchOptions, forceSearchName = false) {
-  if (TVA_CONFIG.debug)
-    console.log('STARTING: Fuzzy Image Search', name, searchType, searchOptions, forceSearchName);
+  if (TVA_CONFIG.debug) console.log('STARTING: Fuzzy Image Search', name, searchType, searchOptions, forceSearchName);
 
   const filters = getFilters(searchType, searchOptions.searchFilters);
 
@@ -1740,8 +763,7 @@ async function walkAllPaths(searchType) {
   const paths = filterPathsByType(TVA_CONFIG.searchPaths, searchType);
 
   for (const path of paths) {
-    if ((path.cache && caching) || (!path.cache && !caching))
-      await walkFindImages(path, {}, found_images);
+    if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path, {}, found_images);
   }
 
   // ForgeVTT specific path handling
@@ -1751,8 +773,7 @@ async function walkAllPaths(searchType) {
     const paths = filterPathsByType(TVA_CONFIG.forgeSearchPaths[uid].paths, searchType);
     if (uid === userId) {
       for (const path of paths) {
-        if ((path.cache && caching) || (!path.cache && !caching))
-          await walkFindImages(path, {}, found_images);
+        if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path, {}, found_images);
       }
     } else if (apiKey) {
       for (const path of paths) {
@@ -1799,9 +820,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
     } else if (path.source.startsWith('imgur')) {
       await fetch('https://api.imgur.com/3/gallery/album/' + path.text, {
         headers: {
-          Authorization:
-            'Client-ID ' +
-            (TVA_CONFIG.imgurClientId ? TVA_CONFIG.imgurClientId : 'df9d991443bb222'),
+          Authorization: 'Client-ID ' + (TVA_CONFIG.imgurClientId ? TVA_CONFIG.imgurClientId : 'df9d991443bb222'),
           Accept: 'application/json',
         },
       })
@@ -1857,9 +876,9 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
     }
   } catch (err) {
     console.log(
-      `Token Variant Art | ${game.i18n.localize(
-        'token-variants.notifications.warn.path-not-found'
-      )} ${path.source}:${path.text}`
+      `Token Variant Art | ${game.i18n.localize('token-variants.notifications.warn.path-not-found')} ${path.source}:${
+        path.text
+      }`
     );
     return;
   }
@@ -1875,11 +894,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
   if (path.source.startsWith('forgevtt') || path.source.startsWith('forge-bazaar')) return;
 
   for (let f_dir of files.dirs) {
-    await walkFindImages(
-      { text: f_dir, source: path.source, types: path.types },
-      { apiKey: apiKey },
-      found_images
-    );
+    await walkFindImages({ text: f_dir, source: path.source, types: path.types }, { apiKey: apiKey }, found_images);
   }
 }
 
@@ -1948,12 +963,7 @@ export async function showArtSelect(
 
 async function _randSearchUtil(
   search,
-  {
-    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
-    actor = null,
-    randomizerOptions = {},
-    searchOptions = {},
-  } = {}
+  { searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN, actor = null, randomizerOptions = {}, searchOptions = {} } = {}
 ) {
   const randSettings = mergeObject(randomizerOptions, TVA_CONFIG.randomizer, { overwrite: false });
   if (
@@ -2046,9 +1056,7 @@ async function doSyncSearch(
 ) {
   if (caching) return null;
 
-  const results = flattenSearchResults(
-    await _randSearchUtil(search, { searchType, actor, randomizerOptions })
-  );
+  const results = flattenSearchResults(await _randSearchUtil(search, { searchType, actor, randomizerOptions }));
 
   // Find the image with the most similar name
   const fuse = new Fuse(results, {
@@ -2116,12 +1124,7 @@ async function doRandomSearch(
  */
 export async function doImageSearch(
   search,
-  {
-    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
-    simpleResults = false,
-    callback = null,
-    searchOptions = {},
-  } = {}
+  { searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN, simpleResults = false, callback = null, searchOptions = {} } = {}
 ) {
   if (caching) return;
 
@@ -2247,16 +1250,4 @@ Hooks.on('canvasReady', async function () {
       drawOverlays(tkn);
     }
   }
-
-  // // Effect Mappings may have changed while on a different scene, re-apply them
-  // const refreshMappings = () => {
-  //   for (const tkn of canvas.tokens.placeables) {
-  //     updateWithEffectMapping(tkn, getTokenEffects(tkn));
-  //   }
-  // };
-  // if (initialized) {
-  //   refreshMappings();
-  // } else {
-  //   onInit.push(refreshMappings);
-  // }
 });

@@ -5,3 +5,4 @@ jsconfig.json
 docs/TokenVariantArtSceneBG.png
 docs/TokenVariantArtSceneBG.xcf
 token-variants-cache.json
+token.js

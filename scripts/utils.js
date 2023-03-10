@@ -1,14 +1,13 @@
 import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js';
 import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
-import { TVA_Sprite } from './sprite/TVA_Sprite.js';
+import { TVASprite } from './sprite/TVASprite.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
 export const SUPPORTED_COMP_ATTRIBUTES = ['rotation', 'elevation'];
 export const EXPRESSION_OPERATORS = ['\\(', '\\)', '&&', '||', '\\!'];
-const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 
 // Record Code
 let K_CODE = [];
@@ -62,19 +61,16 @@ const BATCH_UPDATES = {
 export function startBatchUpdater() {
   canvas.app.ticker.add(() => {
     if (BATCH_UPDATES.TOKEN.length) {
-      canvas.scene
-        .updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN, BATCH_UPDATES.TOKEN_CONTEXT)
-        .then(() => {
-          for (const cb of BATCH_UPDATES.TOKEN_CALLBACKS) {
-            cb();
-          }
-          BATCH_UPDATES.TOKEN_CALLBACKS = [];
-        });
+      canvas.scene.updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN, BATCH_UPDATES.TOKEN_CONTEXT).then(() => {
+        for (const cb of BATCH_UPDATES.TOKEN_CALLBACKS) {
+          cb();
+        }
+        BATCH_UPDATES.TOKEN_CALLBACKS = [];
+      });
       BATCH_UPDATES.TOKEN = [];
     }
     if (BATCH_UPDATES.ACTOR.length !== 0) {
-      if (BATCH_UPDATES.ACTOR_CONTEXT)
-        Actor.updateDocuments(BATCH_UPDATES.ACTOR, BATCH_UPDATES.ACTOR_CONTEXT);
+      if (BATCH_UPDATES.ACTOR_CONTEXT) Actor.updateDocuments(BATCH_UPDATES.ACTOR, BATCH_UPDATES.ACTOR_CONTEXT);
       else Actor.updateDocuments(BATCH_UPDATES.ACTOR);
       BATCH_UPDATES.ACTOR = [];
       BATCH_UPDATES.ACTOR_CONTEXT = null;
@@ -127,9 +123,7 @@ export async function updateTokenImage(
   } = {}
 ) {
   if (!(token || actor)) {
-    console.warn(
-      game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor')
-    );
+    console.warn(game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor'));
     return;
   }
 
@@ -150,8 +144,7 @@ export async function updateTokenImage(
   const getDefaultConfig = (token, actor) => {
     let configEntries = [];
     if (token)
-      configEntries =
-        (token.document ? token.document : token).getFlag('token-variants', 'defaultConfig') || [];
+      configEntries = (token.document ? token.document : token).getFlag('token-variants', 'defaultConfig') || [];
     else if (actor) {
       const tokenData = actor.prototypeToken;
       if ('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
@@ -188,8 +181,7 @@ export async function updateTokenImage(
 
   const tokenCustomConfig = config || getTokenConfigForUpdate(imgSrc, imgName);
   const usingCustomConfig =
-    token &&
-    (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
+    token && (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
   const defaultConfig = getDefaultConfig(token);
   if (tokenCustomConfig || usingCustomConfig) {
     tokenUpdateObj = modMergeObject(tokenUpdateObj, defaultConfig);
@@ -200,17 +192,11 @@ export async function updateTokenImage(
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
       const tokenData = token.document ? token.document.toObject() : deepClone(token);
 
-      const defConf = constructDefaultConfig(
-        mergeObject(tokenData, defaultConfig),
-        tokenCustomConfig
-      );
+      const defConf = constructDefaultConfig(mergeObject(tokenData, defaultConfig), tokenCustomConfig);
       tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
     } else if (actor && !token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
-      const tokenData =
-        actor.prototypeToken instanceof Object
-          ? actor.prototypeToken
-          : actor.prototypeToken.toObject();
+      const tokenData = actor.prototypeToken instanceof Object ? actor.prototypeToken : actor.prototypeToken.toObject();
       const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
       tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
     }
@@ -244,7 +230,15 @@ export async function updateTokenImage(
       if (TVA_CONFIG.updateTokenProto && token.actor) {
         // Timeout to prevent race conditions with other modules namely MidiQOL
         // this is a low priority update so it should be Ok to do
-        setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
+        if ((token.document ?? token).actorLink) {
+          setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
+        } else {
+          console.log('DOING THIS ONE');
+          console.log(tokenUpdateObj);
+          setTimeout(() => token.actor.update({ token: tokenUpdateObj }), 500);
+          // token.actor.update({ prototypeToken: tokenUpdateObj });
+        }
+        // setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
       }
       queueTokenUpdate(token.id, tokenUpdateObj, callback, animate, tmfxMorph);
     }
@@ -481,9 +475,7 @@ export function registerKeybinds() {
 
         if (K_CODE.length === 10) {
           game.settings.set('token-variants', 'secretCode', true);
-          ui.notifications.info(
-            'Token Variant Art :: TMFX Morph Transitions Unlocked :: Effect Config -> Scripts'
-          );
+          ui.notifications.info('Token Variant Art :: TMFX Morph Transitions Unlocked :: Effect Config -> Scripts');
         }
       }
     },
@@ -524,9 +516,7 @@ export function getTokenConfigForUpdate(imgSrc, imgName) {
  */
 export function setTokenConfig(imgSrc, imgName, tokenConfig) {
   const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
-  const tcIndex = tokenConfigs.findIndex(
-    (config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName
-  );
+  const tcIndex = tokenConfigs.findIndex((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
 
   let deleteConfig = !tokenConfig || Object.keys(tokenConfig).length === 0;
   if (!deleteConfig) {
@@ -677,111 +667,17 @@ export function userRequiresImageCache(perm) {
   );
 }
 
-async function _loadTexture(img) {
-  // Load token texture
-  let texture = await loadTexture(img, { fallback: CONST.DEFAULT_TOKEN });
-
-  // Manage video playback
-  let video = game.video.getVideoSource(texture);
-  if (video) {
-    const playOptions = { volume: 0 };
-    game.video.play(video, playOptions);
-  }
-  return texture;
-}
-
-async function _overrideIcon(token, img) {
-  let mesh = canvas.primary.tokens.get(token.sourceId);
-  if (!mesh) mesh = canvas.primary.addChild(new TokenMesh(token));
-  else mesh.object = token;
-  mesh.texture = await _loadTexture(img);
-  mesh.anchor.set(0.5, 0.5);
-  canvas.primary.tokens.set(token.sourceId, mesh);
-  if (mesh.isVideo) canvas.primary.videoMeshes.add(mesh);
-
-  // If this is an image flagged as invisible, we need to override visibility check for this client
-  if (
-    (decodeURI(token.tva_iconOverride) === TVA_CONFIG.invisibleImage ||
-      token.tva_customVisibility) &&
-    decodeURI(img) !== TVA_CONFIG.invisibleImage
-  ) {
-    Object.defineProperty(
-      token,
-      'isVisible',
-      Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible')
-    );
-    token.visible = token.isVisible;
-    delete token.tva_customVisibility;
-  } else if (decodeURI(img) === TVA_CONFIG.invisibleImage) {
-    const originalIsVisible = Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible').get;
-    Object.defineProperty(token, 'isVisible', {
-      get: function () {
-        const isVisible = originalIsVisible.call(this);
-        if (isVisible && !game.user.isGM) return false;
-        return isVisible;
-      },
-      configurable: true,
-    });
-    token.visible = token.isVisible;
-    token.tva_customVisibility = true;
-  }
-
-  token.tva_iconOverride = img;
-  token.refresh();
-  drawOverlays(token);
-
-  return mesh;
-}
-
-export async function waitForTexture(token, callback, checks = 40) {
+export async function waitForTokenTexture(token, callback, checks = 40) {
   // v10/v9 compatibility
 
   if (!token.mesh || !token.mesh.texture) {
     checks--;
     if (checks > 1)
-      new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-        waitForTexture(token, callback, checks)
-      );
+      new Promise((resolve) => setTimeout(resolve, 1)).then(() => waitForTokenTexture(token, callback, checks));
     return;
   }
 
   callback(token);
-}
-
-/**
- * Overwrite Token image on the client side if 'userMappings' flag has been set.
- * @param {*} token Token to overwrite the image for
- * @param {*} checks Number of checks/recursive calls to wait for the previous draw() operation to end
- * @returns
- */
-export async function checkAndDisplayUserSpecificImage(token, forceDraw = false, checks = 40) {
-  if (!token.document) {
-    token = canvas.tokens.get(token.id);
-  }
-
-  const mappings = token.document.getFlag('token-variants', 'userMappings') || {};
-  const img = mappings[game.userId];
-  if (img && img !== token.document.texture.src) {
-    // This function may be called while the Token is in the middle of loading it's textures.
-    // Attempting to perform a draw() call then would result in multiple overlapped images.
-    // We should wait for the texture to be loaded and change the image after. As a failsafe
-    // give up after a certain number of checks.
-    if (!token.mesh || !token.texture) {
-      checks--;
-      if (checks > 1)
-        new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-          checkAndDisplayUserSpecificImage(token, forceDraw, checks)
-        );
-      return;
-    }
-
-    // Change the image on the client side, without actually updating the token
-    _overrideIcon(token, img);
-  } else if (img) {
-  } else if (token.tva_iconOverride) {
-    await _overrideIcon(token, token.document.texture.src);
-    delete token.tva_iconOverride;
-  }
 }
 
 export function flattenSearchResults(results) {
@@ -869,13 +765,7 @@ function _modMergeInsert(original, k, v, { insertKeys, insertValues } = {}, _d) 
  * A helper function for merging objects when the target key exists in the original
  * @private
  */
-function _modMergeUpdate(
-  original,
-  k,
-  v,
-  { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {},
-  _d
-) {
+function _modMergeUpdate(original, k, v, { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {}, _d) {
   const x = original[k];
   const tv = getType(v);
   const tx = getType(x);
@@ -918,9 +808,7 @@ export async function tv_executeScript(script, { actor, token, tvaUpdate } = {})
     const fn = AsyncFunction('speaker', 'actor', 'token', 'character', 'tvaUpdate', `${script}`);
     await fn.call(null, speaker, actor, token, character, tvaUpdate);
   } catch (err) {
-    ui.notifications.error(
-      `There was an error in your script syntax. See the console (F12) for details`
-    );
+    ui.notifications.error(`There was an error in your script syntax. See the console (F12) for details`);
     console.error(err);
   }
 }
@@ -938,221 +826,6 @@ export async function applyTMFXPreset(token, presetName, action = 'apply') {
       }
     }
   }
-}
-
-export async function _drawEffectOverlay(token, conf) {
-  let img = conf.img;
-  if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
-    const images = await wildcardImageSearch(conf.img);
-    if (images.length) {
-      if (images.length) {
-        img = images[Math.floor(Math.random() * images.length)];
-      }
-    }
-  }
-
-  const texture = await loadTexture(img, {
-    fallback: 'modules/token-variants/img/token-images.svg',
-  });
-  const sprite = new TVA_Sprite(texture, token, conf);
-  return sprite;
-}
-
-export async function drawOverlays(token) {
-  if (token.tva_drawing_overlays) return;
-  token.tva_drawing_overlays = true;
-
-  const mappings = getAllEffectMappings(token);
-  let filteredOverlays = getTokenEffects(token, true);
-
-  filteredOverlays = filteredOverlays
-    .filter((ef) => ef in mappings && mappings[ef].overlay)
-    .sort((ef1, ef2) => mappings[ef1].priority - mappings[ef2].priority)
-    .map((ef) => {
-      const overlayConfig = mappings[ef].overlayConfig ?? {};
-      overlayConfig.effect = ef;
-      return overlayConfig;
-    });
-
-  // See if the whole stack or just top of the stack should be used according to settings
-  let overlays = [];
-  if (filteredOverlays.length) {
-    overlays = TVA_CONFIG.stackStatusConfig
-      ? filteredOverlays
-      : [filteredOverlays[filteredOverlays.length - 1]];
-  }
-
-  if (overlays.length) {
-    waitForTexture(token, async (token) => {
-      if (!token.tva_sprites) token.tva_sprites = [];
-      // Temporarily mark every overlay for removal.
-      // We'll only keep overlays that are still applicable to the token
-      markAllOverlaysForRemoval(token);
-
-      // To keep track of the overlay order
-      let sort = (token.document.sort || 0) + 1;
-      for (const ov of overlays) {
-        let sprite = findTVASprite(ov.effect, token);
-        if (sprite) {
-          if (!isEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
-            if (ov.img.includes('*') || (ov.img.includes('{') && ov.img.includes('}'))) {
-              sprite.refresh(ov);
-            } else if (sprite.tvaOverlayConfig.img !== ov.img) {
-              canvas.primary.removeChild(sprite)?.destroy();
-              sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
-              token.tva_sprites.push(sprite);
-            } else {
-              sprite.refresh(ov);
-            }
-          }
-        } else {
-          sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
-          token.tva_sprites.push(sprite);
-        }
-        sprite.tvaRemove = false; // Sprite in use, do not remove
-
-        // Assign order to the overlay
-        if (sprite.tvaOverlayConfig.underlay) {
-          sprite.overlaySort = sort - 100;
-        } else {
-          sprite.overlaySort = sort;
-        }
-        sort += 1;
-      }
-
-      removeMarkedOverlays(token);
-      token.tva_drawing_overlays = false;
-    });
-  } else {
-    removeAllOverlays(token);
-    token.tva_drawing_overlays = false;
-  }
-}
-
-function markAllOverlaysForRemoval(token) {
-  for (const child of token.tva_sprites) {
-    if (child instanceof TVA_Sprite) {
-      child.tvaRemove = true;
-    }
-  }
-}
-
-function removeMarkedOverlays(token) {
-  const sprites = [];
-  for (const child of token.tva_sprites) {
-    if (child.tvaRemove) {
-      canvas.primary.removeChild(child)?.destroy();
-    } else {
-      sprites.push(child);
-    }
-  }
-  token.tva_sprites = sprites;
-}
-
-function findTVASprite(effect, token) {
-  for (const child of token.tva_sprites) {
-    if (child.tvaOverlayConfig?.effect === effect) {
-      return child;
-    }
-  }
-  return null;
-}
-
-function removeAllOverlays(token) {
-  if (token.tva_sprites)
-    for (const child of token.tva_sprites) {
-      canvas.primary.removeChild(child)?.destroy();
-    }
-  token.tva_sprites = null;
-}
-
-export async function setGlobalEffectMappings(mappings) {
-  if (!mappings) {
-    for (const k of Object.keys(TVA_CONFIG.globalMappings)) {
-      delete TVA_CONFIG.globalMappings[k];
-    }
-    return;
-  }
-
-  const keys = Object.keys(TVA_CONFIG.globalMappings);
-  for (const key of keys) {
-    if (!(key in mappings)) {
-      delete TVA_CONFIG.globalMappings[key];
-    }
-  }
-  mergeObject(TVA_CONFIG.globalMappings, mappings);
-}
-
-export function getEffectsFromActor(actor) {
-  let effects = [];
-  if (!actor) return effects;
-
-  if (game.system.id === 'pf2e') {
-    (actor.items || []).forEach((item, id) => {
-      if (item.type === 'condition' && item.isActive) effects.push(item.name);
-    });
-  } else {
-    (actor.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.label);
-    });
-  }
-
-  return effects;
-}
-
-export function getTokenEffects(token, includeExpressions = false) {
-  const data = token.document ? token.document : token;
-  let effects = [];
-
-  if (game.system.id === 'pf2e') {
-    if (data.actorLink) {
-      effects = getEffectsFromActor(token.actor);
-    } else {
-      effects = (data.actorData?.items || [])
-        .filter((item) => item.type === 'condition')
-        .map((item) => item.name);
-    }
-  } else {
-    if (data.actorLink && token.actor) {
-      effects = getEffectsFromActor(token.actor);
-    } else {
-      const actorEffects = getEffectsFromActor(token.actor);
-      effects = (data.effects || [])
-        .filter((ef) => !ef.disabled && !ef.isSuppressed)
-        .map((ef) => ef.label)
-        .concat(actorEffects);
-    }
-  }
-
-  if (data.inCombat) {
-    effects.unshift('token-variants-combat');
-  }
-  if (game.combat?.started) {
-    if (game.combat?.combatant?.token?.id === token.id) {
-      effects.unshift('current-combatant');
-    } else if (game.combat?.nextCombatant?.token?.id === token.id) {
-      effects.unshift('next-combatant');
-    }
-  }
-  if (data.hidden) {
-    effects.unshift('token-variants-visibility');
-  }
-
-  evaluateComparatorEffects(token, effects);
-  evaluateStateEffects(token, effects);
-
-  // Include mappings marked as always applicable
-  // as well as the ones defined as logical expressions if needed
-  const mappings = getAllEffectMappings(token);
-  for (const [k, m] of Object.entries(mappings)) {
-    if (m.alwaysOn) effects.unshift(k);
-    else if (includeExpressions) {
-      const [evaluation, identifiedEffects] = evaluateEffectAsExpression(k, effects);
-      if (evaluation && identifiedEffects !== null) effects.unshift(k);
-    }
-  }
-
-  return effects;
 }
 
 export class TokenDataAdapter {
@@ -1178,139 +851,6 @@ export class TokenDataAdapter {
       formData['texture.scaleY'] = formData.scale * (formData.mirrorY ? -1 : 1);
       ['scale', 'mirrorX', 'mirrorY'].forEach((k) => delete formData[k]);
     }
-  }
-}
-
-function getTokenHP(token) {
-  let attributes = {};
-
-  if (game.system.id === 'cyberpunk-red-core') {
-    if (token.actorLink) {
-      attributes = token.actor.system?.derivedStats;
-    } else {
-      attributes = mergeObject(
-        token.actor.system?.derivedStats || {},
-        token.actorData?.system?.derivedStats || {},
-        {
-          inplace: false,
-        }
-      );
-    }
-  } else if (game.system.id === 'lfg') {
-    if (token.actorLink) {
-      attributes = token.actor.system?.health;
-    } else {
-      attributes = mergeObject(
-        token.actor.system?.health || {},
-        token.actorData?.system?.health || {},
-        {
-          inplace: false,
-        }
-      );
-    }
-    attributes = { hp: attributes };
-  } else {
-    if (token.actorLink) {
-      attributes = token.actor.system?.attributes;
-    } else {
-      attributes = mergeObject(
-        token.actor?.system?.attributes || {},
-        token.actorData?.system?.attributes || {},
-        {
-          inplace: false,
-        }
-      );
-    }
-  }
-  return [attributes?.hp?.value, attributes?.hp?.max];
-}
-
-export function evaluateTokenStateEffects(token, effects) {}
-
-export function evaluateComparatorEffects(token, effects = []) {
-  token = token.document ? token.document : token;
-
-  const mappings = getAllEffectMappings(token);
-  const re = new RegExp('([a-zA-Z\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
-
-  const matched = {};
-  let compositePriority = 10000;
-  for (const key of Object.keys(mappings)) {
-    const expressions = key
-      .split(EXPRESSION_MATCH_RE)
-      .filter(Boolean)
-      .map((exp) => exp.trim())
-      .filter(Boolean);
-    for (let i = 0; i < expressions.length; i++) {
-      const exp = expressions[i];
-      const match = exp.match(re);
-      if (match) {
-        const property = match[1];
-
-        let currVal;
-        let maxVal;
-        if (property === 'hp') {
-          [currVal, maxVal] = getTokenHP(token);
-        } else currVal = getProperty(token, property);
-
-        if (currVal != null) {
-          const sign = match[2];
-          let val = Number(match[3]);
-          if (isNaN(val)) {
-            val = match[3].substring(1, match[3].length - 1);
-            if (val === 'true') val = true;
-            if (val === 'false') val = false;
-          }
-          const isPercentage = Boolean(match[4]);
-
-          if (property === 'rotation') {
-            maxVal = 360;
-          } else if (maxVal == null) {
-            maxVal = 999999;
-          }
-          const toCompare = isPercentage ? (currVal / maxVal) * 100 : currVal;
-
-          let passed = false;
-          if (sign === '=') {
-            passed = toCompare == val;
-          } else if (sign === '>') {
-            passed = toCompare > val;
-          } else if (sign === '<') {
-            passed = toCompare < val;
-          } else if (sign === '>=') {
-            passed = toCompare >= val;
-          } else if (sign === '<=') {
-            passed = toCompare <= val;
-          }
-          if (passed) {
-            if (expressions.length > 1) {
-              compositePriority++;
-              matched[compositePriority] = exp;
-            } else {
-              matched[mappings[key].priority] = exp;
-            }
-          }
-        }
-      }
-    }
-  }
-
-  // Remove duplicate expressions and insert into effects
-  const tempSet = new Set();
-  for (const [k, v] of Object.entries(matched)) {
-    if (!tempSet.has(v)) {
-      effects.unshift(v);
-      tempSet.add(v);
-    }
-  }
-
-  return effects;
-}
-
-export function evaluateStateEffects(token, effects) {
-  if (game.system.id === 'pf2e') {
-    const deathIcon = game.settings.get('pf2e', 'deathIcon');
-    if ((token.document ?? token).overlayEffect === deathIcon) effects.push('Dead');
   }
 }
 
@@ -1349,91 +889,11 @@ export async function wildcardImageSearch(imgSrc) {
   return [];
 }
 
-export function getAllEffectMappings(token = null) {
-  let allMappings;
-
-  // Sort out global mappings that do not apply to this actor
-  let applicableGlobal = {};
-  if (token?.actor?.type) {
-    const actorType = token.actor.type;
-    for (const [k, v] of Object.entries(TVA_CONFIG.globalMappings)) {
-      if (!v.targetActors || v.targetActors.includes(actorType)) {
-        applicableGlobal[k] = v;
-      }
-    }
-  } else {
-    applicableGlobal = TVA_CONFIG.globalMappings;
-  }
-
-  if (token) {
-    allMappings = mergeObject(
-      applicableGlobal,
-      token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
-      { inplace: false, recursive: false }
-    );
-  } else {
-    allMappings = applicableGlobal;
-  }
-
-  fixEffectMappings(allMappings);
-
-  return allMappings;
-}
-
-// 19/01/2023
-// The same mapping can now apply both an image change as well as an overlay
-// We need to adjust old configs to account for this
-export function fixEffectMappings(mappings) {
-  for (const v of Object.values(mappings)) {
-    if (v.overlay && !v.overlayConfig.img) {
-      v.overlayConfig.img = v.imgSrc;
-      v.imgSrc = null;
-      v.imgName = null;
-    }
-  }
-  return mappings;
-}
-
-export function evaluateEffectAsExpression(effect, effects) {
-  let arrExpression = effect
-    .split(EXPRESSION_MATCH_RE)
-    .filter(Boolean)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  // Not an expression, return as false
-  if (arrExpression.length < 2) {
-    return [false, null];
-  }
-
-  let temp = '';
-  let foundEffects = [];
-  for (const exp of arrExpression) {
-    if (EXPRESSION_OPERATORS.includes(exp)) {
-      temp += exp.replace('\\', '');
-    } else if (effects.includes(exp)) {
-      foundEffects.push(exp);
-      temp += 'true';
-    } else {
-      foundEffects.push(exp);
-      temp += 'false';
-    }
-  }
-
-  let evaluation = false;
-  try {
-    evaluation = eval(temp);
-  } catch (e) {
-    return [false, null];
-  }
-  return [evaluation, foundEffects];
-}
-
 export async function drawMorphOverlay(token, morph) {
   if (token && !token.tva_morphing) {
     token.tvaMorph = null;
 
-    let sprite = new TVA_Sprite(token.texture, token, {
+    let sprite = new TVASprite(token.texture, token, {
       alpha: token.document.alpha,
       inheritTint: true,
       linkRotation: true,

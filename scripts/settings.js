@@ -1,5 +1,5 @@
 import { cacheImages, saveCache } from '../token-variants.mjs';
-import { BASE_IMAGE_CATEGORIES, userRequiresImageCache, waitForTexture } from './utils.js';
+import { BASE_IMAGE_CATEGORIES, userRequiresImageCache, waitForTokenTexture } from './utils.js';
 import { ForgeSearchPaths } from '../applications/forgeSearchPaths.js';
 import TokenHUDClientSettings from '../applications/tokenHUDClientSettings.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
@@ -160,22 +160,16 @@ export async function registerSettings() {
       // Check image re-cache required due to permission changes
       let requiresImageCache = false;
       if ('permissions' in diff) {
-        if (
-          !userRequiresImageCache(TVA_CONFIG.permissions) &&
-          userRequiresImageCache(val.permissions)
-        )
+        if (!userRequiresImageCache(TVA_CONFIG.permissions) && userRequiresImageCache(val.permissions))
           requiresImageCache = true;
       }
 
       // Update live settings
       mergeObject(TVA_CONFIG, val);
 
-      if (
-        TVA_CONFIG.filterEffectIcons &&
-        ('filterCustomEffectIcons' in diff || 'filterIconList' in diff)
-      ) {
+      if (TVA_CONFIG.filterEffectIcons && ('filterCustomEffectIcons' in diff || 'filterIconList' in diff)) {
         for (const tkn of canvas.tokens.placeables) {
-          waitForTexture(tkn, (token) => {
+          waitForTokenTexture(tkn, (token) => {
             token.drawEffects();
           });
         }
@@ -273,9 +267,7 @@ export async function registerSettings() {
   });
 
   game.settings.registerMenu('token-variants', 'importExport', {
-    name: `${game.i18n.localize('token-variants.common.import')}/${game.i18n.localize(
-      'token-variants.common.export'
-    )}`,
+    name: `${game.i18n.localize('token-variants.common.import')}/${game.i18n.localize('token-variants.common.export')}`,
     hint: game.i18n.localize('token-variants.settings.import-export.Hint'),
     scope: 'world',
     icon: 'fas fa-toolbox',
@@ -477,9 +469,7 @@ export async function importSettingsFromJSON(json) {
 }
 
 function _refreshFilters(filters, customCategories, updateTVAConfig = false) {
-  const categories = BASE_IMAGE_CATEGORIES.concat(
-    customCategories ?? TVA_CONFIG.customImageCategories
-  );
+  const categories = BASE_IMAGE_CATEGORIES.concat(customCategories ?? TVA_CONFIG.customImageCategories);
   for (const filter in filters) {
     if (!categories.includes(filter)) {
       delete filters[filter];
@@ -504,12 +494,8 @@ export async function updateSettings(newSettings) {
   if ('customImageCategories' in newSettings) {
     _refreshFilters(settings.searchFilters, newSettings.customImageCategories, true);
     if (settings.compendiumMapper?.searchOptions?.searchFilters != null) {
-      _refreshFilters(
-        settings.compendiumMapper.searchOptions.searchFilters,
-        newSettings.customImageCategories
-      );
-      TVA_CONFIG.compendiumMapper.searchOptions.searchFilters =
-        settings.compendiumMapper.searchOptions.searchFilters;
+      _refreshFilters(settings.compendiumMapper.searchOptions.searchFilters, newSettings.customImageCategories);
+      TVA_CONFIG.compendiumMapper.searchOptions.searchFilters = settings.compendiumMapper.searchOptions.searchFilters;
     }
   }
 

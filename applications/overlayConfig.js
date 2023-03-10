@@ -1,5 +1,6 @@
 import { DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
-import { fixEffectMappings, SEARCH_TYPE } from '../scripts/utils.js';
+import { fixEffectMappings } from '../scripts/token/effects.js';
+import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 
 export default class OverlayConfig extends FormApplication {
@@ -46,8 +47,7 @@ export default class OverlayConfig extends FormApplication {
       showArtSelect(this.token?.name ?? 'overlay', {
         searchType: SEARCH_TYPE.TOKEN,
         callback: (imgSrc, imgName) => {
-          if (imgSrc)
-            $(event.target).closest('.form-group').find('input').val(imgSrc).trigger('change');
+          if (imgSrc) $(event.target).closest('.form-group').find('input').val(imgSrc).trigger('change');
         },
       });
     });
@@ -57,11 +57,7 @@ export default class OverlayConfig extends FormApplication {
       if (presetName) {
         const preset = TokenMagic.getPreset(presetName);
         if (preset) {
-          $(event.target)
-            .closest('.form-group')
-            .find('textarea')
-            .val(JSON.stringify(preset, null, 2))
-            .trigger('input');
+          $(event.target).closest('.form-group').find('textarea').val(JSON.stringify(preset, null, 2)).trigger('input');
         }
       }
     });
@@ -74,9 +70,7 @@ export default class OverlayConfig extends FormApplication {
 
     lockButtons.on('click', function () {
       scaleState.locked = !scaleState.locked;
-      lockButtons.html(
-        scaleState.locked ? '<i class="fas fa-link"></i>' : '<i class="fas fa-unlink"></i>'
-      );
+      lockButtons.html(scaleState.locked ? '<i class="fas fa-link"></i>' : '<i class="fas fa-unlink"></i>');
     });
 
     sliderScaleWidth.on('change', function () {
@@ -113,14 +107,12 @@ export default class OverlayConfig extends FormApplication {
         }
 
         if (param)
-          game.modules
-            .get('multi-token-edit')
-            .api.showGenericForm(param, param.filterType ?? 'TMFX', {
-              inputChangeCallback: (selected) => {
-                mergeObject(param, selected, { inplace: true });
-                textarea.val(JSON.stringify(params, null, 2)).trigger('input');
-              },
-            });
+          game.modules.get('multi-token-edit').api.showGenericForm(param, param.filterType ?? 'TMFX', {
+            inputChangeCallback: (selected) => {
+              mergeObject(param, selected, { inplace: true });
+              textarea.val(JSON.stringify(params, null, 2)).trigger('input');
+            },
+          });
       }
     });
   }
@@ -167,11 +159,9 @@ export default class OverlayConfig extends FormApplication {
             if (this.token) {
               previewIcons.push(c);
             } else if (
-              !(
-                tkn.actor
-                  ? fixEffectMappings(tkn.actor.getFlag('token-variants', 'effectMappings') || {})
-                  : {}
-              )[this.config.effect]
+              !(tkn.actor ? fixEffectMappings(tkn.actor.getFlag('token-variants', 'effectMappings') || {}) : {})[
+                this.config.effect
+              ]
             ) {
               previewIcons.push(c);
             }
@@ -234,21 +224,13 @@ export default class OverlayConfig extends FormApplication {
   _getSubmitData() {
     const formData = super._getSubmitData();
     if (formData.filter === 'OutlineOverlayFilter' && 'filterOptions.outlineColor' in formData) {
-      formData['filterOptions.outlineColor'] = this._convertColor(
-        formData['filterOptions.outlineColor']
-      );
+      formData['filterOptions.outlineColor'] = this._convertColor(formData['filterOptions.outlineColor']);
     } else if (formData.filter === 'BevelFilter') {
       if ('filterOptions.lightColor' in formData)
-        formData['filterOptions.lightColor'] = Number(
-          Color.fromString(formData['filterOptions.lightColor'])
-        );
+        formData['filterOptions.lightColor'] = Number(Color.fromString(formData['filterOptions.lightColor']));
       if ('filterOptions.shadowColor' in formData)
-        formData['filterOptions.shadowColor'] = Number(
-          Color.fromString(formData['filterOptions.shadowColor'])
-        );
-    } else if (
-      ['DropShadowFilter', 'GlowFilter', 'OutlineFilter', 'FilterFire'].includes(formData.filter)
-    ) {
+        formData['filterOptions.shadowColor'] = Number(Color.fromString(formData['filterOptions.shadowColor']));
+    } else if (['DropShadowFilter', 'GlowFilter', 'OutlineFilter', 'FilterFire'].includes(formData.filter)) {
       if ('filterOptions.color' in formData)
         formData['filterOptions.color'] = Number(Color.fromString(formData['filterOptions.color']));
     }
@@ -757,9 +739,7 @@ function genControl(control, values) {
 <div class="form-group">
   <label>${label}</label>
   <div class="form-fields">
-      <input type="checkbox" name="filterOptions.${name}" data-dtype="Boolean" value="${val}" ${
-      val ? 'checked' : ''
-    }>
+      <input type="checkbox" name="filterOptions.${name}" data-dtype="Boolean" value="${val}" ${val ? 'checked' : ''}>
   </div>
 </div>
     `;
@@ -772,9 +752,7 @@ function genControl(control, values) {
 `;
 
     for (const opt of control.options) {
-      select += `<option value="${opt.value}" ${val === opt.value ? 'selected="selected"' : ''}>${
-        opt.label
-      }</option>`;
+      select += `<option value="${opt.value}" ${val === opt.value ? 'selected="selected"' : ''}>${opt.label}</option>`;
     }
 
     select += `</select></div></div>`;
