@@ -195,6 +195,7 @@ export function registerSettings() {
           if (tkn.effects) tkn.effects.visible = !diff.displayEffectIconsOnHover;
         }
       }
+      TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
     },
   });
 
@@ -498,7 +499,6 @@ export async function updateSettings(newSettings) {
       TVA_CONFIG.compendiumMapper.searchOptions.searchFilters = settings.compendiumMapper.searchOptions.searchFilters;
     }
   }
-
   game.settings.set('token-variants', 'settings', settings);
 }
 

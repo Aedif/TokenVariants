@@ -1,3 +1,7 @@
+# 4.31.1
+
+- Fixed GM HUD Client settings merging with other players
+
 # 4.31.0
 
 - Major code restructuring, please do report any issues you come across
