@@ -242,6 +242,10 @@ export default class OverlayConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
+    if (formData.limitedUsers) {
+      formData.limitedUsers = formData.limitedUsers.filter((uid) => uid);
+    }
+    console.log(formData);
     if (this.callback) this.callback(expandObject(formData));
   }
 }

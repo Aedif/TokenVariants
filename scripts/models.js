@@ -1,15 +1,3 @@
-export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
-  effectName: '',
-  imgName: '',
-  imgSrc: '',
-  priority: 50,
-  config: null,
-  overlay: false,
-  alwaysOn: false,
-  overlayConfig: null,
-  targetActors: null,
-};
-
 export const DEFAULT_OVERLAY_CONFIG = {
   img: '',
   alpha: 1,
@@ -38,4 +26,16 @@ export const DEFAULT_OVERLAY_CONFIG = {
   limitToUser: false,
   limitedUsers: [],
   alwaysVisible: false,
+};
+
+export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
+  effectName: '',
+  imgName: '',
+  imgSrc: '',
+  priority: 50,
+  config: {},
+  overlay: false,
+  alwaysOn: false,
+  overlayConfig: DEFAULT_OVERLAY_CONFIG,
+  targetActors: null,
 };

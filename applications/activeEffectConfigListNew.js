@@ -1,15 +1,11 @@
-import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, EXPRESSION_OPERATORS } from '../scripts/utils.js';
-import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
-import EditJsonConfig from './configJsonEdit.js';
-import EditScriptConfig from './configScriptEdit.js';
-import OverlayConfig from './overlayConfig.js';
-import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
+import { showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/token/effects.js';
+import TVAActiveEffectConfig from './activeEffectConfig.js';
+import { EXPRESSION_OPERATORS } from '../scripts/utils.js';
 
-export default class ActiveEffectConfigList extends FormApplication {
+export default class ActiveEffectConfigListNew extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
     super({}, { title: (globalMappings ? 'GLOBAL ' : '') + 'Effect Config' });
 
@@ -24,9 +20,9 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
-      id: 'token-variants-active-effect-config',
+      id: 'token-variants-active-effect-config-list',
       classes: ['sheet'],
-      template: 'modules/token-variants/templates/activeEffectConfigList.html',
+      template: 'modules/token-variants/templates/activeEffectConfigListNew.html',
       resizable: false,
       minimizable: false,
       closeOnSubmit: false,
@@ -38,26 +34,13 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   _processConfig(effectName, attrs) {
     if (!attrs.config) attrs.config = {};
-    let hasTokenConfig = Object.keys(attrs.config).length;
-    if (attrs.config.flags) hasTokenConfig--;
-    if (attrs.config.tv_script) hasTokenConfig--;
 
-    return {
-      effectName: effectName,
-      highlightedEffectName: highlightOperators(effectName),
-      imgName: attrs.imgName,
-      imgSrc: attrs.imgSrc,
-      isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
-      priority: attrs.priority,
-      hasConfig: attrs.config ? !isEmpty(attrs.config) : false,
-      hasScript: attrs.config && attrs.config.tv_script,
-      hasTokenConfig: hasTokenConfig > 0,
-      config: attrs.config,
-      overlay: attrs.overlay,
-      alwaysOn: attrs.alwaysOn,
-      overlayConfig: attrs.overlayConfig,
-      targetActors: attrs.targetActors,
-    };
+    //DEFAULT_ACTIVE_EFFECT_CONFIG
+    let mapping = deepClone(attrs);
+    mapping.effectName = effectName;
+    mapping.highlightedEffectName = highlightOperators(effectName);
+
+    return mapping;
   }
 
   async getData(options) {
@@ -78,22 +61,13 @@ export default class ActiveEffectConfigList extends FormApplication {
       }
 
       if (this.createMapping && !(this.createMapping in effectMappings)) {
-        mappings.push({
-          effectName: this.createMapping,
-          highlightedEffectName: highlightOperators(this.createMapping),
-          imgName: '',
-          imgSrc: '',
-          priority: 50,
-          overlay: false,
-          alwaysOn: false,
-        });
+        mappings.push(this._processConfig(this.createMapping, DEFAULT_ACTIVE_EFFECT_CONFIG));
       }
       this.createMapping = null;
     }
 
     this.object.mappings = mappings;
     data.mappings = mappings;
-    data.global = Boolean(this.globalMappings);
     return data;
   }
 
@@ -106,20 +80,8 @@ export default class ActiveEffectConfigList extends FormApplication {
     html.find('.clone-mapping').click(this._onClone.bind(this));
     html.find('.create-mapping').click(this._onCreate.bind(this));
     html.find('.save-mappings').click(this._onSaveMappings.bind(this));
-    if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
-      html.find('.effect-image img').click(this._onImageClick.bind(this));
-      html.find('.effect-image img').mousedown(this._onImageMouseDown.bind(this));
-      html.find('.effect-image video').click(this._onImageClick.bind(this));
-      html.find('.effect-target').click(this._onConfigureApplicableActors.bind(this));
-    }
-    html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
-    html.find('.effect-image video').contextmenu(this._onImageRightClick.bind(this));
+
     html.find('.effect-config i.config').click(this._onConfigClick.bind(this));
-    html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
-    html.find('.effect-config i.config-script').click(this._onConfigScriptClick.bind(this));
-    html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
-    html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
-    html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
     html.find('.div-input').on('input paste', this._onEffectNameChange);
   }
 
@@ -151,166 +113,12 @@ export default class ActiveEffectConfigList extends FormApplication {
     setCaretPosition(el, offset);
   }
 
-  async _onOverlayChange(event) {
-    if (event.target.checked) {
-      $(event.target).siblings('a').show();
-    } else {
-      $(event.target).siblings('a').hide();
-    }
-  }
-
-  async _onOverlayConfigClick(event) {
-    const li = event.currentTarget.closest('.table-row');
-    const mapping = this.object.mappings[li.dataset.index];
-
-    new OverlayConfig(
-      mapping.overlayConfig,
-      (config) => {
-        mapping.overlayConfig = config;
-      },
-      mapping.effectName,
-      this.token
-    ).render(true);
-  }
-
-  async _onOverlayConfigRightClick(event) {
-    const li = event.currentTarget.closest('.table-row');
-    const mapping = this.object.mappings[li.dataset.index];
-    showOverlayJsonConfigDialog(mapping.overlayConfig, (config) => (mapping.overlayConfig = config));
-  }
-
-  async _toggleActiveControls(event) {
-    const li = event.currentTarget.closest('.table-row');
-    const mapping = this.object.mappings[li.dataset.index];
-    const tokenConfig = $(event.target).closest('.effect-config').find('.config');
-    const configEdit = $(event.target).closest('.effect-config').find('.config-edit');
-    const scriptEdit = $(event.target).closest('.effect-config').find('.config-script');
-
-    let hasTokenConfig = Object.keys(mapping.config).filter((k) => mapping.config[k]).length;
-    if (mapping.config.flags) hasTokenConfig--;
-    if (mapping.config.tv_script) hasTokenConfig--;
-
-    if (hasTokenConfig) tokenConfig.addClass('active');
-    else tokenConfig.removeClass('active');
-
-    if (Object.keys(mapping.config).filter((k) => mapping.config[k]).length) configEdit.addClass('active');
-    else configEdit.removeClass('active');
-
-    if (mapping.config.tv_script) scriptEdit.addClass('active');
-    else scriptEdit.removeClass('active');
-  }
-
-  async _onConfigScriptClick(event) {
-    const li = event.currentTarget.closest('.table-row');
-    const mapping = this.object.mappings[li.dataset.index];
-
-    new EditScriptConfig(mapping.config?.tv_script, mapping.imgSrc, (script) => {
-      if (!mapping.config) mapping.config = {};
-      if (script) mapping.config.tv_script = script;
-      else delete mapping.config.tv_script;
-      this._toggleActiveControls(event);
-    }).render(true);
-  }
-
-  async _onConfigEditClick(event) {
-    const li = event.currentTarget.closest('.table-row');
-    const mapping = this.object.mappings[li.dataset.index];
-
-    new EditJsonConfig(mapping.config, (config) => {
-      mapping.config = config;
-      this._toggleActiveControls(event);
-    }).render(true);
-  }
-
   async _onConfigClick(event) {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
-    const callback = (config) => {
-      if (!config || isEmpty(config)) {
-        config = {};
-        config.tv_script = mapping.config.tv_script;
-        config.flags = mapping.config.flags;
-      }
-
-      mapping.config = config;
-      this._toggleActiveControls(event);
-    };
-
-    let massEdit = game.modules.get('multi-token-edit');
-    if (massEdit?.active && isNewerVersion(massEdit.version, '1.37.2"')) {
-      let meForm = massEdit.api.showMassEdit(this.token, 'Token', { simplified: true, callback });
-      console.log('Applying preset', mapping.config ?? {});
-
-      setTimeout(() => {
-        meForm._applyPreset(flattenObject(mapping.config ?? {}));
-      }, 500);
-      console.log(meForm);
-    } else {
-      new TokenCustomConfig(this.token, {}, null, null, callback, mapping.config ? mapping.config : {}).render(true);
-    }
-  }
-
-  async _onImageMouseDown(event) {
-    if (event.which === 2) {
-      const vid = $(event.target).closest('.effect-image').find('video');
-      const img = $(event.target).closest('.effect-image').find('img');
-      vid.add(img).attr('src', '').attr('title', '');
-      vid.hide();
-      img.show();
-      $(event.target).siblings('.imgSrc').val('');
-      $(event.target).siblings('.imgName').val('');
-    }
-  }
-
-  async _onImageClick(event) {
-    let search = this.token.name;
-    if (search === 'Unknown') {
-      const li = event.currentTarget.closest('.table-row');
-      const mapping = this.object.mappings[li.dataset.index];
-      search = mapping.effectName;
-    }
-
-    showArtSelect(search, {
-      searchType: SEARCH_TYPE.TOKEN,
-      callback: (imgSrc, imgName) => {
-        const vid = $(event.target).closest('.effect-image').find('video');
-        const img = $(event.target).closest('.effect-image').find('img');
-        vid.add(img).attr('src', imgSrc).attr('title', imgName);
-        if (isVideo(imgSrc)) {
-          vid.show();
-          img.hide();
-        } else {
-          vid.hide();
-          img.show();
-        }
-        $(event.target).siblings('.imgSrc').val(imgSrc);
-        $(event.target).siblings('.imgName').val(imgName);
-      },
-    });
-  }
-
-  async _onImageRightClick(event) {
-    const li = event.currentTarget.closest('.table-row');
-    const mapping = this.object.mappings[li.dataset.index];
-
-    new FilePicker({
-      type: 'imagevideo',
-      current: mapping.imgSrc,
-      callback: (path) => {
-        const vid = $(event.target).closest('.effect-image').find('video');
-        const img = $(event.target).closest('.effect-image').find('img');
-        vid.add(img).attr('src', path).attr('title', getFileName(path));
-        if (isVideo(path)) {
-          vid.show();
-          img.hide();
-        } else {
-          vid.hide();
-          img.show();
-        }
-        $(event.target).siblings('.imgSrc').val(path);
-        $(event.target).siblings('.imgName').val(getFileName(path));
-      },
-    }).render();
+    new TVAActiveEffectConfig(this.token, mapping, (nMapping) => {
+      mergeObject(mapping, nMapping ?? {});
+    }).render(true);
   }
 
   async _onRemove(event) {
@@ -528,59 +336,6 @@ export default class ActiveEffectConfigList extends FormApplication {
     }).render(true);
   }
 
-  _onConfigureApplicableActors(event) {
-    const li = event.currentTarget.closest('.table-row');
-    const mapping = this.object.mappings[li.dataset.index];
-
-    let actorTypes = (game.system.entityTypes ?? game.system.documentTypes)['Actor'];
-    let actors = [];
-    for (const t of actorTypes) {
-      const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
-      actors.push({
-        id: t,
-        label: game.i18n.has(label) ? game.i18n.localize(label) : t,
-        enabled: !mapping.targetActors || mapping.targetActors.includes(t),
-      });
-    }
-
-    let content = '<form style="overflow-y: scroll; height:250x;">';
-    for (const act of actors) {
-      content += `
-      <div class="form-group">
-        <label>${act.label}</label>
-        <div class="form-fields">
-            <input type="checkbox" name="${act.id}" data-dtype="Boolean" ${act.enabled ? 'checked' : ''}>
-        </div>
-      </div>
-      `;
-    }
-    content += `</form><div class="form-group"><button type="button" class="select-all">Select all</div>`;
-
-    new Dialog({
-      title: `Configure Applicable Actors`,
-      content: content,
-      buttons: {
-        Ok: {
-          label: `Save`,
-          callback: async (html) => {
-            let targetActors = [];
-            html.find('input[type="checkbox"]').each(function () {
-              if (this.checked) {
-                targetActors.push(this.name);
-              }
-            });
-            mapping.targetActors = targetActors;
-          },
-        },
-      },
-      render: (html) => {
-        html.find('.select-all').click(() => {
-          html.find('input[type="checkbox"]').prop('checked', true);
-        });
-      },
-    }).render(true);
-  }
-
   // TODO fix this spaghetti code related to globalMappings...
   async _onSaveMappings(event) {
     await this._onSubmit(event);
@@ -591,25 +346,14 @@ export default class ActiveEffectConfigList extends FormApplication {
         return Boolean(mapping.effectName?.trim());
       });
 
-      // Make sure a priority is assigned
-      for (const mapping of mappings) {
-        mapping.priority = mapping.priority ? mapping.priority : 50;
-      }
-
       if (mappings.length !== 0) {
         const effectMappings = {};
         for (const mapping of mappings) {
-          effectMappings[mapping.effectName] = {
-            imgName: mapping.imgName,
-            imgSrc: mapping.imgSrc,
-            priority: mapping.priority,
-            config: mapping.config,
-            overlay: mapping.overlay,
-            alwaysOn: mapping.alwaysOn,
-            overlayConfig: mapping.overlayConfig || {},
-            targetActors: mapping.targetActors,
-          };
-          effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
+          mapping.overlayConfig.effect = mapping.effectName;
+          delete mapping.highlightedEffectName;
+          delete mapping.effectName;
+
+          effectMappings[mapping.effectName] = mapping;
         }
         if (this.globalMappings) {
           _setGlobalEffectMappings(effectMappings);
@@ -653,14 +397,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     const expanded = expandObject(formData);
     const mappings = expanded.hasOwnProperty('mappings') ? Object.values(expanded.mappings) : [];
     for (let i = 0; i < mappings.length; i++) {
-      const m1 = mappings[i];
-      const m2 = this.object.mappings[i];
-      m2.imgSrc = m1.imgSrc;
-      m2.imgName = m1.imgName;
-      m2.priority = m1.priority;
-      m2.effectName = m1.effectName;
-      m2.overlay = m1.overlay;
-      m2.alwaysOn = m1.alwaysOn;
+      this.object.mappings[i].effectName = mappings[i].effectName;
     }
   }
 }

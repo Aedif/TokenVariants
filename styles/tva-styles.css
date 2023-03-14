@@ -444,7 +444,6 @@ ol.token-variant-table .table-row .effect-name .div-input span.hp-expression {
 ol.token-variant-table .table-row .effect-name .div-input {
   white-space: nowrap;
   overflow: hidden;
-  width: 240px;
 
   writing-mode: horizontal-tb !important;
   text-rendering: auto;
@@ -776,4 +775,12 @@ ol.token-variant-table .table-row .effect-name .div-input {
 
 .token-variants-macro > .form-group {
   height: 50%;
+}
+
+/* ---------------------------------------- */
+/* Active Effect Config                     */
+/* ---------------------------------------- */
+
+textarea.tva-token-config {
+  height: 300px;
 }

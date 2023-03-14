@@ -3,6 +3,7 @@ import { showArtSelect } from '../token-variants.mjs';
 import ActiveEffectConfigList from '../applications/activeEffectConfigList.js';
 import { TVASprite } from './sprite/TVASprite.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
+import ActiveEffectConfigListNew from '../applications/activeEffectConfigListNew.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -415,7 +416,7 @@ export function registerKeybinds() {
       const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
       const data = new foundry.data.PrototypeToken(setting);
       const token = new TokenDocument(data, { actor: null });
-      new ActiveEffectConfigList(token, { globalMappings: true }).render(true);
+      new ActiveEffectConfigListNew(token, { globalMappings: true }).render(true);
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,

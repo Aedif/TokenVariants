@@ -1,0 +1,110 @@
+<form>
+
+<section class="content">
+
+    <nav class="sheet-tabs tabs" data-group="main" aria-role="Form Tab Navigation">
+        <a class="item active" data-tab="main"><i class="fas fa-wrench"></i> Main</a>
+        <a class="item" data-tab="config"><i class="fas fa-expand"></i> Config & Script</a>
+        <a class="item" data-tab="overlay"><i class="fas fa-paint-roller"></i> Overlay</a>
+        <a class="item" data-tab="actors"><i class="fas fa-camera-movie"></i> Actors</a>
+    </nav>
+
+    <div class="tab" data-group="main" data-tab="main">
+        <div class="form-group">
+            <label>Token Image</label>
+            <div class="form-fields">
+                <button type="button" class="file-picker" data-type="imagevideo" data-target="img" title="Browse Files" tabindex="-1">
+                    <i class="fas fa-file-import fa-fw"></i>
+                </button>
+                <input class="image" type="text" name="img" placeholder="path/image.png" value="{{img}}">
+                <button type="button" title="Select variant" class="token-variants-image-select-button" tabindex="-1" data-type="imagevideo" data-target="img"><i class="fas fa-images"></i></button></div>
+        </div>
+        <div class="form-group slim">
+            <label>Priority</label>
+            <div class="form-fields">
+                <input type="number" value="{{priority}}" step="1" name="priority" placeholder="50">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Always On</label>
+            <input type="checkbox" name="alwaysOn" {{#if alwaysOn}}checked{{/if}}>
+        </div>
+    </div>
+
+    
+    <div class="tab" data-group="main" data-tab="config">
+        <nav class="tabs sheet-tabs secondary-tabs" data-group="config" aria-role="Sight Configuration Tabs">
+            <a class="item active" data-tab="token-configuration" data-group="config"><i class="fa-solid fa-eye"></i> Token Configuration</a>
+            <a class="item" data-tab="script" data-group="config"><i class="fa-solid fa-radar"></i> Script</a>
+        </nav>
+
+        <div class="tab active" data-group="config" data-tab="token-configuration">
+
+            <div class="form-group">
+                <label>Select Token Fields:</label>
+                <button type="button" title="Token Config" class="tva-token-config">Token Config</button>
+            </div>
+
+            <div class="form-group stacked command">
+                <label>Data</label>
+                <textarea class="tva-token-config" name="config">{{tokenConfig}}</textarea>
+            </div>
+        </div>
+
+        <div class="tab" data-group="config" data-tab="script">
+            <fieldset class="token-variants-macro">
+                <legend>Scripts</legend>
+        
+                <div class="form-group stacked command">
+                    <label>Run On Apply</label>
+                    <textarea name="config.tv_script.onApply">{{config.tv_script.onApply}}</textarea>
+                </div>
+        
+                <div class="form-group stacked command">
+                    <label>Run On Remove</label>
+                    <textarea name="config.tv_script.onRemove">{{config.tv_script.onRemove}}</textarea>
+                </div>
+            </fieldset>
+        
+            {{#if tmfxActive}}
+            <br>
+            <fieldset>
+                <legend>Token Magic FX</legend>
+                <div class="form-group">
+                    <label>Apply Preset</label>
+                    <div class="form-fields">
+                      <datalist id="tmfxPresets">
+                      {{#each tmfxPresets }}
+                      <option value="{{this}}"></option>
+                      {{/each}}
+                       </datalist>
+                      <input list="tmfxPresets" name="config.tv_script.tmfxPreset" value="{{config.tv_script.tmfxPreset}}">
+                    </div>
+                </div>
+        
+                {{#if hasTokenImage}}
+                <div class="form-group">
+                    <label>Token Image Morph</label>
+                    <div class="form-fields">
+                        <textarea style="width: 450px; height: 200px;" name="config.tv_script.tmfxMorph">{{config.tv_script.tmfxMorph}}</textarea>
+                    </div>
+                </div>
+                <button type="button" class="defaultMorph">Ripple Morph</button>
+                {{/if}}
+            </fieldset>
+            {{/if}}
+        </div>
+    </div>
+    </div>
+    <div class="tab active" data-group="main" data-tab="overlay">
+    </div>
+    <div class="tab active" data-group="main" data-tab="actors">
+    </div>
+</section>
+
+
+<footer class="sheet-footer flexrow">
+    <button type="submit"><i class="far fa-save"></i>{{localize "token-variants.common.apply"}}</button>
+</footer>
+
+</form>

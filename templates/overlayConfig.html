@@ -206,14 +206,17 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Limited to:</label>
-                <select class="limited-user-select" name="limitedUsers" data-dtype="string" multiple="multiple">
-                    {{#each users as |user|}}
-                        <option value="{{user.id}}" {{#if user.selected}}selected{{/if}}>{{user.name}}</option>
-                    {{/each}}
-                </select>
-            </div>
+            <fieldset>
+                <legend>Users</legend>
+                {{#each users as |user|}}
+                <div class="form-group">
+                    <label>{{user.name}}</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="limitedUsers" data-dtype="String" value="{{user.id}}" {{#if user.selected}}checked{{/if}}>
+                    </div>
+                </div>
+                {{/each}}
+            </fieldset>
         </div>
     </section>
 
