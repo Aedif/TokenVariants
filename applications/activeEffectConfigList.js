@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, EXPRESSION_OPERATORS } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo, EXPRESSION_OPERATORS, keyPressed } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -244,19 +244,28 @@ export default class ActiveEffectConfigList extends FormApplication {
     ).render(true);
   }
 
+  _removeImage(event) {
+    const vid = $(event.target).closest('.effect-image').find('video');
+    const img = $(event.target).closest('.effect-image').find('img');
+    vid.add(img).attr('src', '').attr('title', '');
+    vid.hide();
+    img.show();
+    $(event.target).siblings('.imgSrc').val('');
+    $(event.target).siblings('.imgName').val('');
+  }
+
   async _onImageMouseDown(event) {
     if (event.which === 2) {
-      const vid = $(event.target).closest('.effect-image').find('video');
-      const img = $(event.target).closest('.effect-image').find('img');
-      vid.add(img).attr('src', '').attr('title', '');
-      vid.hide();
-      img.show();
-      $(event.target).siblings('.imgSrc').val('');
-      $(event.target).siblings('.imgName').val('');
+      this._removeImage(event);
     }
   }
 
   async _onImageClick(event) {
+    if (keyPressed('config')) {
+      this._removeImage(event);
+      return;
+    }
+
     let search = this.token.name;
     if (search === 'Unknown') {
       const li = event.currentTarget.closest('.table-row');
@@ -284,6 +293,11 @@ export default class ActiveEffectConfigList extends FormApplication {
   }
 
   async _onImageRightClick(event) {
+    if (keyPressed('config')) {
+      this._removeImage(event);
+      return;
+    }
+
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
 

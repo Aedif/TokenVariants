@@ -1,3 +1,7 @@
+# 4.31.2
+
+- Left or Right-clicking the Effect Token Image while holding the "Config" key (Default: Shift) will now remove the image
+
 # 4.31.1
 
 - Fixed GM HUD Client settings merging with other players
