@@ -8,6 +8,7 @@ const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
 export const SUPPORTED_COMP_ATTRIBUTES = ['rotation', 'elevation'];
 export const EXPRESSION_OPERATORS = ['\\(', '\\)', '&&', '||', '\\!'];
+export const FAUX_DOT = '¶';
 
 // Record Code
 let K_CODE = [];

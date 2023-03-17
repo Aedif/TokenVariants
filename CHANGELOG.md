@@ -1,3 +1,8 @@
+# 4.31.4
+
+- Dots are now supported in effect mapping names
+  - e.g. `flags.token-variants.test="true"`
+
 # 4.31.3
 
 - Patch fix for periods not being supported in effect mapping names

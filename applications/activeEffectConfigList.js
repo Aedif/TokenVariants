@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, EXPRESSION_OPERATORS, keyPressed } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo, EXPRESSION_OPERATORS, keyPressed, FAUX_DOT } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -649,7 +649,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       m2.imgSrc = m1.imgSrc;
       m2.imgName = m1.imgName;
       m2.priority = m1.priority;
-      m2.effectName = m1.effectName;
+      m2.effectName = m1.effectName.replaceAll('.', FAUX_DOT);
       m2.overlay = m1.overlay;
       m2.alwaysOn = m1.alwaysOn;
     }
@@ -658,6 +658,8 @@ export default class ActiveEffectConfigList extends FormApplication {
 
 // Insert <span/> around operators
 function highlightOperators(text) {
+  text = text.replaceAll(FAUX_DOT, '.');
+
   for (const op of EXPRESSION_OPERATORS) {
     text = text.replaceAll(op, `<span>${op}</span>`);
   }

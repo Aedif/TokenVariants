@@ -1,5 +1,12 @@
 import { TVA_CONFIG } from '../settings.js';
-import { applyTMFXPreset, EXPRESSION_OPERATORS, getFileName, tv_executeScript, updateTokenImage } from '../utils.js';
+import {
+  applyTMFXPreset,
+  EXPRESSION_OPERATORS,
+  FAUX_DOT,
+  getFileName,
+  tv_executeScript,
+  updateTokenImage,
+} from '../utils.js';
 import { broadcastOverlayRedraw } from './overlay.js';
 
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
@@ -371,7 +378,7 @@ export function evaluateComparatorEffects(token, effects = []) {
   token = token.document ? token.document : token;
 
   const mappings = getAllEffectMappings(token);
-  const re = new RegExp('([a-zA-Z\\-\\|]+)([><=]+)(".*"|\\d+)(%{0,1})');
+  const re = new RegExp('([a-zA-Z\\-\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
 
   const matched = {};
   let compositePriority = 10000;
@@ -382,7 +389,7 @@ export function evaluateComparatorEffects(token, effects = []) {
       .map((exp) => exp.trim())
       .filter(Boolean);
     for (let i = 0; i < expressions.length; i++) {
-      const exp = expressions[i];
+      const exp = expressions[i].replaceAll(FAUX_DOT, '.');
       const match = exp.match(re);
       if (match) {
         const property = match[1];
@@ -391,7 +398,7 @@ export function evaluateComparatorEffects(token, effects = []) {
         let maxVal;
         if (property === 'hp') {
           [currVal, maxVal] = _getTokenHP(token);
-        } else currVal = getProperty(token, property.replaceAll('|', '.'));
+        } else currVal = getProperty(token, property);
 
         if (currVal != null) {
           const sign = match[2];
@@ -425,9 +432,9 @@ export function evaluateComparatorEffects(token, effects = []) {
           if (passed) {
             if (expressions.length > 1) {
               compositePriority++;
-              matched[compositePriority] = exp;
+              matched[compositePriority] = exp.replaceAll('.', FAUX_DOT);
             } else {
-              matched[mappings[key].priority] = exp;
+              matched[mappings[key].priority] = exp.replaceAll('.', FAUX_DOT);
             }
           }
         }
