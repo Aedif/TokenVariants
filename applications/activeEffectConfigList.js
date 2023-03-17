@@ -662,7 +662,7 @@ function highlightOperators(text) {
     text = text.replaceAll(op, `<span>${op}</span>`);
   }
 
-  const re = new RegExp('([a-zA-Z\\.-]+)([><=]+)(".*"|\\d+)(%{0,1})', `gi`);
+  const re = new RegExp('([a-zA-Z\\.\\-\\|]+)([><=]+)(".*"|\\d+)(%{0,1})', `gi`);
   text = text.replace(re, function replace(match) {
     return '<span class="hp-expression">' + match + '</span>';
   });

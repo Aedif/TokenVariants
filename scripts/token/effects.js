@@ -371,7 +371,7 @@ export function evaluateComparatorEffects(token, effects = []) {
   token = token.document ? token.document : token;
 
   const mappings = getAllEffectMappings(token);
-  const re = new RegExp('([a-zA-Z\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
+  const re = new RegExp('([a-zA-Z\\-\\|]+)([><=]+)(".*"|\\d+)(%{0,1})');
 
   const matched = {};
   let compositePriority = 10000;
@@ -391,7 +391,7 @@ export function evaluateComparatorEffects(token, effects = []) {
         let maxVal;
         if (property === 'hp') {
           [currVal, maxVal] = _getTokenHP(token);
-        } else currVal = getProperty(token, property);
+        } else currVal = getProperty(token, property.replaceAll('|', '.'));
 
         if (currVal != null) {
           const sign = match[2];

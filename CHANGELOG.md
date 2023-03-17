@@ -1,3 +1,9 @@
+# 4.31.3
+
+- Patch fix for periods not being supported in effect mapping names
+  - If you wish to specify properties such as flags, bars `|` can be used instead
+  - e.g. `flags|token-variants|test="true"`
+
 # 4.31.2
 
 - Left or Right-clicking the Effect Token Image while holding the "Config" key (Default: Shift) will now remove the image
