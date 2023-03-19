@@ -67,6 +67,8 @@ export default class OverlayConfig extends FormApplication {
     const lockButtons = $(html).find('.scaleLock > a');
     const sliderScaleWidth = $(html).find('[name="scaleX"]');
     const sliderScaleHeight = $(html).find('[name="scaleY"]');
+    const sliderWidth = html.find('.scaleX');
+    const sliderHeight = html.find('.scaleY');
 
     lockButtons.on('click', function () {
       scaleState.locked = !scaleState.locked;
@@ -76,12 +78,20 @@ export default class OverlayConfig extends FormApplication {
     sliderScaleWidth.on('change', function () {
       if (scaleState.locked && sliderScaleWidth.val() !== sliderScaleHeight.val()) {
         sliderScaleHeight.val(sliderScaleWidth.val()).trigger('change');
+        sliderHeight.val(sliderScaleWidth.val());
       }
     });
     sliderScaleHeight.on('change', function () {
       if (scaleState.locked && sliderScaleWidth.val() !== sliderScaleHeight.val()) {
         sliderScaleWidth.val(sliderScaleHeight.val()).trigger('change');
+        sliderWidth.val(sliderScaleHeight.val());
       }
+    });
+    html.on('change', '.scaleX', () => {
+      sliderScaleWidth.trigger('change');
+    });
+    html.on('change', '.scaleY', () => {
+      sliderScaleHeight.trigger('change');
     });
 
     html.find('.me-edit-json').on('click', async (event) => {
