@@ -35,7 +35,13 @@ export const DEFAULT_OVERLAY_CONFIG = {
     clockwise: true,
     relative: false,
   },
-  limitToUser: false,
   limitedUsers: [],
   alwaysVisible: false,
+  text: {
+    text: '',
+    fontSize: CONFIG.canvasTextStyle.fontSize,
+    fontFamily: CONFIG.canvasTextStyle.fontFamily,
+    fill: CONFIG.canvasTextStyle.fill,
+    curve: { radius: 0 },
+  },
 };

@@ -105,7 +105,7 @@ export function registerTokenHooks() {
     if (token.tva_sprites)
       for (const child of token.tva_sprites) {
         if (child instanceof TVASprite) {
-          child.refresh(null, false, false);
+          child.refresh(null, { preview: false, fullRefresh: false });
         }
       }
   });

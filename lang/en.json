@@ -177,7 +177,9 @@
       "exact": "Exact",
       "fuzzy": "Fuzzy",
       "limit": "Limit",
-      "save": "Save"
+      "save": "Save",
+      "import": "Import",
+      "export": "Export"
     },
     "windows": {
       "art-select": {
