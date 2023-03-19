@@ -76,7 +76,7 @@ export class TVASprite extends TokenMesh {
     return (
       this.ready &&
       (this.object.visible || this.tvaOverlayConfig.alwaysVisible) &&
-      (!this.tvaOverlayConfig.limitToUser || this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
+      (!this.tvaOverlayConfig.limitedUsers?.length || this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
     );
   }
   set visible(visible) {}
@@ -108,8 +108,22 @@ export class TVASprite extends TokenMesh {
     }
   }
 
-  refresh(configuration, preview = false, fullRefresh = true) {
+  refresh(configuration, { preview = false, fullRefresh = true, previewTexture = null } = {}) {
     if (!this.texture) return;
+
+    // Text preview handling
+    if (previewTexture) {
+      if (this.previewTexture) this.previewTexture.baseTexture?.destroy();
+      this.previewTexture = previewTexture;
+      if (!this.originalTexture) this.originalTexture = this.texture;
+      this.texture = previewTexture;
+    } else if (!preview && this.previewTexture) {
+      this.previewTexture.baseTexture?.destroy();
+      this.texture = this.originalTexture;
+      delete this.previewTexture;
+      delete this.originalTexture;
+    }
+
     const config = mergeObject(this.tvaOverlayConfig, configuration, { inplace: !preview });
 
     if (fullRefresh) {
@@ -253,10 +267,13 @@ export class TVASprite extends TokenMesh {
   }
 
   destroy() {
-    if (this.texture?.baseTexture.resource.source?.tagName === 'VIDEO') {
+    this.stopAnimation();
+    if (this.isGenText) {
+      return super.destroy(true);
+    }
+    if (this.texture?.baseTexture.resource.source.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();
     }
-    this.stopAnimation();
     super.destroy();
   }
 }

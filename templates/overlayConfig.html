@@ -6,6 +6,7 @@
         <a class="item" data-tab="filter"><i class="fas fa-paint-roller"></i> Filter</a>
         <a class="item" data-tab="animation"><i class="fas fa-camera-movie"></i> Animation</a>
         <a class="item" data-tab="visibility"><i class="fas fa-eye"></i> Visibility</a>
+        <a class="item" data-tab="text"><i class="fas fa-text-size"></i> Text</a>
     </nav>
 
     <section class = "content">
@@ -99,7 +100,7 @@
             <div class="form-group">
                 <label>Horizontal Offset</label>
                 <div class="form-fields">
-                    <input type="range" name="offsetX" value="{{offsetX}}" min="-2" max="2" step="0.01">
+                    <input type="range" name="offsetX" value="{{offsetX}}" min="-3" max="3" step="0.01">
                     <span class="range-value">{{offsetX}}</span>
                 </div>
             </div>
@@ -107,7 +108,7 @@
             <div class="form-group">
                 <label>Vertical Offset</label>
                 <div class="form-fields">
-                    <input type="range" name="offsetY" value="{{offsetY}}" min="-2" max="2" step="0.01">
+                    <input type="range" name="offsetY" value="{{offsetY}}" min="-3" max="3" step="0.01">
                     <span class="range-value">{{offsetY}}</span>
                 </div>
             </div>
@@ -199,20 +200,60 @@
                 <p class="notes">Overlay will be visible in explored areas of the map even when the Token is not.</p>
             </div>
 
-            <div class="form-group">
-                <label>Limit Visibility to Users</label>
-                <div class="form-fields">
-                    <input type="checkbox" name="limitToUser" data-dtype="Boolean" value="{{limitToUser}}" {{#if limitToUser}}checked{{/if}}>
+            <fieldset>
+                <legend>Limit Visibility to Users</legend>
+                {{#each users as |user|}}
+                <div class="form-group">
+                    <label>{{user.name}}</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="limitedUsers" data-dtype="String" value="{{user.id}}" {{#if user.selected}}checked{{/if}}>
+                    </div>
                 </div>
+                {{/each}}
+            </fieldset>
+        </div>
+
+        <div class="tab active" data-group="main" data-tab="text">
+            <div class="form-group">
+                <label>Text</label>
+                <div class="form-fields">
+                    <input type="text" name="text.text" value="{{text.text}}">
+                </div>
+                <p class="notes">The text entered here will replace any image assigned as an overlay.</p>
             </div>
 
             <div class="form-group">
-                <label>Limited to:</label>
-                <select class="limited-user-select" name="limitedUsers" data-dtype="string" multiple="multiple">
-                    {{#each users as |user|}}
-                        <option value="{{user.id}}" {{#if user.selected}}selected{{/if}}>{{user.name}}</option>
+                <label>{{localize "DRAWING.FontFamily"}}</label>
+                <div class="form-fields">
+                    <select name="text.fontFamily">
+                    {{#each fonts as |font|}}
+                    <option value="{{font}}" {{#if (eq ../text.fontFamily font)}}selected="selected"{{/if}}>{{font}}</option>
                     {{/each}}
-                </select>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Quality</label>
+                <div class="form-fields">
+                    <input type="range" name="text.fontSize" value="{{text.fontSize}}" min="24" max="100" step="1">
+                    <span class="range-value">{{text.fontSize}}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>{{localize "DRAWING.FillColor"}}</label>
+                <div class="form-fields">
+                    <input class="color" type="text" name="text.fill" value="{{text.fill}}">
+                    <input type="color" value="{{text.fill}}" data-edit="text.fill">
+                </div>
+            </div>
+
+            <h2>Curve</h2>
+            <div class="form-group">
+                <label>Radius</label>
+                <div class="form-fields">
+                    <input type="range" name="text.curve.radius" value="{{text.curve.radius}}" min="0" max="300" step="5">
+                    <span class="range-value">{{text.curve.radius}}</span>
+                </div>
             </div>
         </div>
     </section>

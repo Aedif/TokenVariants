@@ -1,5 +1,6 @@
 import { DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings } from '../scripts/token/effects.js';
+import { generateTextTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 
@@ -186,7 +187,11 @@ export default class OverlayConfig extends FormApplication {
     const icons = this.getPreviewIcons();
     const preview = expandObject(this.previewConfig);
     for (const icon of icons) {
-      icon.refresh(preview, true);
+      let pTexture;
+      if (preview.text.text.trim()) {
+        pTexture = generateTextTexture(preview);
+      }
+      icon.refresh(preview, { preview: true, previewTexture: pTexture });
     }
   }
 
@@ -223,6 +228,8 @@ export default class OverlayConfig extends FormApplication {
       return { id: u.id, name: u.name, selected: settings.limitedUsers.includes(u.id) };
     });
 
+    data.fonts = Object.keys(CONFIG.fontDefinitions);
+
     return mergeObject(data, settings);
   }
 
@@ -252,6 +259,11 @@ export default class OverlayConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
+    if (formData.limitedUsers) {
+      formData.limitedUsers = formData.limitedUsers.filter((uid) => uid);
+    } else {
+      formData.limitedUsers = [];
+    }
     if (this.callback) this.callback(expandObject(formData));
   }
 }

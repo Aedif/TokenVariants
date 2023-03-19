@@ -73,21 +73,71 @@ export async function drawOverlays(token) {
 }
 
 async function _drawEffectOverlay(token, conf) {
-  let img = conf.img;
-  if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
-    const images = await wildcardImageSearch(conf.img);
-    if (images.length) {
+  if (conf.text?.text.trim()) {
+    // let pText = new PreciseText(conf.text.text, PreciseText.getTextStyle(conf.text));
+    // pText.updateText(false);
+    // texture = pText.texture;
+    const texture = generateTextTexture(conf);
+    const sprite = new TVASprite(texture, token, conf);
+    sprite.isGenText = true;
+    return sprite;
+  } else {
+    let img = conf.img;
+    if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
+      const images = await wildcardImageSearch(conf.img);
       if (images.length) {
-        img = images[Math.floor(Math.random() * images.length)];
+        if (images.length) {
+          img = images[Math.floor(Math.random() * images.length)];
+        }
       }
     }
+
+    const texture = await loadTexture(img, {
+      fallback: 'modules/token-variants/img/token-images.svg',
+    });
+    return new TVASprite(texture, token, conf);
+  }
+}
+
+export function generateTextTexture(conf) {
+  let text = new PreciseText(conf.text.text, PreciseText.getTextStyle(conf.text));
+  text.updateText(false);
+
+  if (!conf.text.curve?.radius) {
+    return text.texture;
   }
 
-  const texture = await loadTexture(img, {
-    fallback: 'modules/token-variants/img/token-images.svg',
-  });
-  const sprite = new TVASprite(texture, token, conf);
-  return sprite;
+  // Curve
+  const curve = conf.text.curve;
+  const radius = curve.radius;
+  const maxRopePoints = 100;
+  const step = Math.PI / maxRopePoints;
+
+  let ropePoints = maxRopePoints - Math.round((text.texture.width / (radius * Math.PI)) * maxRopePoints);
+  ropePoints /= 2;
+
+  const points = [];
+  for (let i = maxRopePoints - ropePoints; i > ropePoints; i--) {
+    const x = radius * Math.cos(step * i);
+    const y = radius * Math.sin(step * i);
+    points.push(new PIXI.Point(x, -y));
+  }
+
+  const container = new PIXI.Container();
+  const rope = new PIXI.SimpleRope(text.texture, points);
+  container.addChild(rope);
+  const bounds = container.getLocalBounds();
+  console.log('bounds', bounds);
+  const matrix = new PIXI.Matrix();
+  matrix.tx = -bounds.x;
+  matrix.ty = -bounds.y;
+
+  const renderTexture = PIXI.RenderTexture.create({ width: bounds.width, height: bounds.height, resolution: 2 });
+  // const renderTexture = PIXI.RenderTexture.create(bounds.width, bounds.height);
+  canvas.app.renderer.render(container, renderTexture, true, matrix, false);
+  text.destroy();
+
+  return renderTexture;
 }
 
 function _markAllOverlaysForRemoval(token) {
