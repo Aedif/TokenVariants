@@ -10,6 +10,7 @@ import {
 import { broadcastOverlayRedraw } from './overlay.js';
 
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
+const PF2E_ITEM_TYPES = ['condition', 'effect', 'weapon', 'equipment'];
 
 export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
   token = token._object ? token._object : token;
@@ -312,7 +313,9 @@ export function getTokenEffects(token, includeExpressions = false) {
     if (data.actorLink) {
       effects = getEffectsFromActor(token.actor);
     } else {
-      effects = (data.actorData?.items || []).filter((item) => item.type === 'condition').map((item) => item.name);
+      effects = (data.actorData?.items || [])
+        .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
+        .map((item) => item.name);
     }
   } else {
     if (data.actorLink && token.actor) {
@@ -363,7 +366,13 @@ export function getEffectsFromActor(actor) {
 
   if (game.system.id === 'pf2e') {
     (actor.items || []).forEach((item, id) => {
-      if (item.type === 'condition' && item.isActive) effects.push(item.name);
+      if (PF2E_ITEM_TYPES.includes(item.type)) {
+        if ('active' in item) {
+          if (item.active) effects.push(item.name);
+        } else {
+          effects.push(item.name);
+        }
+      }
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
@@ -574,7 +583,7 @@ export function registerEffectHooks() {
     if (
       game.user.id === userId &&
       game.system.id === 'pf2e' &&
-      ['condition', 'effect'].includes(item.type) &&
+      PF2E_ITEM_TYPES.includes(item.type) &&
       'name' in change
     ) {
       options['token-variants-old-name'] = item.name;
@@ -584,7 +593,7 @@ export function registerEffectHooks() {
   Hooks.on('updateItem', (item, change, options, userId) => {
     if (game.user.id !== userId) return;
     // Handle condition/effect name change
-    if (game.system.id === 'pf2e' && ['condition', 'effect'].includes(item.type) && 'name' in change) {
+    if (game.system.id === 'pf2e' && PF2E_ITEM_TYPES.includes(item.type) && 'name' in change) {
       _updateImageOnMultiEffectChange(item.parent, [change.name], [options['token-variants-old-name']]);
     }
 
@@ -611,14 +620,14 @@ export function registerEffectHooks() {
 
   Hooks.on('createItem', (item, options, userId) => {
     if (game.userId !== userId) return;
-    if (game.system.id !== 'pf2e' || !['condition', 'effect'].includes(item.type) || !item.parent) return;
+    if (game.system.id !== 'pf2e' || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent) return;
     _updateImageOnEffectChange(item.name, item.parent, true);
   });
 
   Hooks.on('deleteItem', (item, options, userId) => {
     if (
       game.system.id !== 'pf2e' ||
-      !['condition', 'effect'].includes(item.type) ||
+      !PF2E_ITEM_TYPES.includes(item.type) ||
       !item.parent ||
       item.disabled ||
       game.userId !== userId
