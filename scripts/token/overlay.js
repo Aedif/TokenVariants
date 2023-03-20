@@ -40,7 +40,7 @@ export async function drawOverlays(token) {
           if (!isEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
             if (ov.img.includes('*') || (ov.img.includes('{') && ov.img.includes('}'))) {
               sprite.refresh(ov);
-            } else if (sprite.tvaOverlayConfig.img !== ov.img) {
+            } else if (sprite.tvaOverlayConfig.img !== ov.img || !objectsEqual(sprite.tvaOverlayConfig.text, ov.text)) {
               canvas.primary.removeChild(sprite)?.destroy();
               sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
               token.tva_sprites.push(sprite);
@@ -77,7 +77,7 @@ async function _drawEffectOverlay(token, conf) {
     // let pText = new PreciseText(conf.text.text, PreciseText.getTextStyle(conf.text));
     // pText.updateText(false);
     // texture = pText.texture;
-    const texture = generateTextTexture(conf);
+    const texture = generateTextTexture(token, conf);
     const sprite = new TVASprite(texture, token, conf);
     sprite.isGenText = true;
     return sprite;
@@ -99,8 +99,16 @@ async function _drawEffectOverlay(token, conf) {
   }
 }
 
-export function generateTextTexture(conf) {
-  let text = new PreciseText(conf.text.text, PreciseText.getTextStyle(conf.text));
+export function generateTextTexture(token, conf) {
+  let re = new RegExp('{{.*}}');
+  let label = conf.text.text.replace(re, function replace(match) {
+    const property = match.substring(2, match.length - 2);
+    if (property === 'effect') return conf.effect;
+    let val = getProperty(token.document ?? token, property);
+    return val === undefined ? match : val;
+  });
+
+  let text = new PreciseText(label, PreciseText.getTextStyle(conf.text));
   text.updateText(false);
 
   if (!conf.text.curve?.radius) {
@@ -120,7 +128,7 @@ export function generateTextTexture(conf) {
   for (let i = maxRopePoints - ropePoints; i > ropePoints; i--) {
     const x = radius * Math.cos(step * i);
     const y = radius * Math.sin(step * i);
-    points.push(new PIXI.Point(x, -y));
+    points.push(new PIXI.Point(x, curve.invert ? y : -y));
   }
 
   const container = new PIXI.Container();

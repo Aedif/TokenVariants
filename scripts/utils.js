@@ -895,6 +895,7 @@ export async function drawMorphOverlay(token, morph) {
       inheritTint: true,
       linkRotation: true,
       linkMirror: true,
+      linkScale: true,
       linkOpacity: false,
     });
     sprite.tempTVASprite = true;

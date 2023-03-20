@@ -35,11 +35,25 @@
                         <input type="checkbox" name="linkRotation" data-dtype="Boolean" value="{{linkRotation}}" {{#if linkRotation}}checked{{/if}}>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label>&nbsp;&nbsp; -- Overlay Relative</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="animation.relative" data-dtype="Boolean" value="{{animation.relative}}" {{#if animation.relative}}checked{{/if}}>
+                    </div>
+                </div>
     
                 <div class="form-group">
                     <label>Mirror Image</label>
                     <div class="form-fields">
                         <input type="checkbox" name="linkMirror" data-dtype="Boolean" value="{{linkMirror}}" {{#if linkMirror}}checked{{/if}}>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Scale</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="linkScale" data-dtype="Boolean" value="{{linkScale}}" {{#if linkScale}}checked{{/if}}>
                     </div>
                 </div>
     
@@ -169,13 +183,6 @@
             </div>
 
             <div class="form-group">
-                <label>Relative</label>
-                <div class="form-fields">
-                    <input type="checkbox" name="animation.relative" data-dtype="Boolean" value="{{animation.relative}}" {{#if animation.relative}}checked{{/if}}>
-                </div>
-            </div>
-
-            <div class="form-group">
                 <label>Duration (ms)</label>
                 <div class="form-fields">
                     <input type="range" name="animation.duration" value="{{animation.duration}}" min="100" max="30000" step="100">
@@ -219,7 +226,7 @@
                 <div class="form-fields">
                     <input type="text" name="text.text" value="{{text.text}}">
                 </div>
-                <p class="notes">The text entered here will replace any image assigned as an overlay.</p>
+                <p class="notes">The text entered here will replace any image assigned as an overlay. Token attributes can be inserted as so: &#123;&#123;name&#125;&#125;</p>
             </div>
 
             <div class="form-group">
@@ -233,7 +240,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Quality</label>
+                <label>Font Size</label>
                 <div class="form-fields">
                     <input type="range" name="text.fontSize" value="{{text.fontSize}}" min="24" max="100" step="1">
                     <span class="range-value">{{text.fontSize}}</span>
@@ -251,8 +258,14 @@
             <div class="form-group">
                 <label>Radius</label>
                 <div class="form-fields">
-                    <input type="range" name="text.curve.radius" value="{{text.curve.radius}}" min="0" max="300" step="5">
+                    <input type="range" name="text.curve.radius" value="{{text.curve.radius}}" min="0" max="450" step="5">
                     <span class="range-value">{{text.curve.radius}}</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Invert</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="text.curve.invert" data-dtype="String" value="{{text.curve.invert}}" {{#if text.curve.invert}}checked{{/if}}>
                 </div>
             </div>
         </div>

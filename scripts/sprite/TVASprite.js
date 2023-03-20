@@ -113,14 +113,12 @@ export class TVASprite extends TokenMesh {
 
     // Text preview handling
     if (previewTexture) {
-      if (this.previewTexture) this.previewTexture.baseTexture?.destroy();
-      this.previewTexture = previewTexture;
-      if (!this.originalTexture) this.originalTexture = this.texture;
+      if (this.originalTexture) this.texture.baseTexture?.destroy();
+      else this.originalTexture = this.texture;
       this.texture = previewTexture;
-    } else if (!preview && this.previewTexture) {
-      this.previewTexture.baseTexture?.destroy();
+    } else if (this.originalTexture) {
+      this.texture.baseTexture?.destroy();
       this.texture = this.originalTexture;
-      delete this.previewTexture;
       delete this.originalTexture;
     }
 
@@ -136,26 +134,25 @@ export class TVASprite extends TokenMesh {
         }
         source.loop = config.loop;
       }
-
-      if (this.anchor) {
-        if (config.animation.relative) {
-          this.anchor.set(0.5, 0.5);
-        } else {
-          this.anchor.set(0.5 + config.offsetX, 0.5 + config.offsetY);
-        }
-      }
     }
 
     // Scale the image using the same logic as the token
     const tex = this.texture;
-    let aspect = tex.width / tex.height;
-    const scale = this.scale;
-    if (aspect >= 1) {
-      this.width = this.object.w * this.object.document.texture.scaleX;
-      scale.y = Number(scale.x);
+    if (config.linkScale) {
+      let aspect = tex.width / tex.height;
+      const scale = this.scale;
+      if (aspect >= 1) {
+        this.width = this.object.w * this.object.document.texture.scaleX;
+        scale.y = Number(scale.x);
+      } else {
+        this.height = this.object.h * this.object.document.texture.scaleY;
+        scale.x = Number(scale.y);
+      }
     } else {
-      this.height = this.object.h * this.object.document.texture.scaleY;
-      scale.x = Number(scale.y);
+      this.width = tex.width;
+      this.height = tex.height;
+      this.scale.x = 1;
+      this.scale.y = 1;
     }
 
     // Adjust scale according to config
@@ -168,11 +165,22 @@ export class TVASprite extends TokenMesh {
       this.scale.y = Math.abs(this.scale.y) * (this.object.document.texture.scaleY < 0 ? -1 : 1);
     }
 
-    // Center the image
+    if (this.anchor) {
+      if (config.animation.relative) {
+        this.anchor.set(0.5, 0.5);
+      } else {
+        this.anchor.set(
+          0.5 + (config.offsetX * this.object.w) / this.width,
+          0.5 + (config.offsetY * this.object.h) / this.height
+        );
+      }
+    }
+
+    // Center and then offset
     if (config.animation.relative) {
       this.position.set(
-        this.object.document.x + this.object.w / 2 - config.offsetX * this.width,
-        this.object.document.y + this.object.h / 2 - config.offsetY * this.width
+        this.object.document.x + this.object.w / 2 - config.offsetX * this.object.w,
+        this.object.document.y + this.object.h / 2 - config.offsetY * this.object.h
       );
     } else {
       this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);

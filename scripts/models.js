@@ -25,6 +25,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
   linkRotation: true,
   linkMirror: true,
   linkOpacity: false,
+  linkScale: true,
   mirror: false,
   tint: null,
   loop: true,
@@ -42,6 +43,6 @@ export const DEFAULT_OVERLAY_CONFIG = {
     fontSize: CONFIG.canvasTextStyle.fontSize,
     fontFamily: CONFIG.canvasTextStyle.fontFamily,
     fill: CONFIG.canvasTextStyle.fill,
-    curve: { radius: 0 },
+    curve: { radius: 0, invert: false },
   },
 };

@@ -188,8 +188,8 @@ export default class OverlayConfig extends FormApplication {
     const preview = expandObject(this.previewConfig);
     for (const icon of icons) {
       let pTexture;
-      if (preview.text.text.trim()) {
-        pTexture = generateTextTexture(preview);
+      if (preview.text?.text.trim()) {
+        pTexture = generateTextTexture(icon.object, preview);
       }
       icon.refresh(preview, { preview: true, previewTexture: pTexture });
     }
