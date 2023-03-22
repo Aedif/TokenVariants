@@ -9,7 +9,6 @@ import { drawOverlays } from './overlay.js';
  */
 export function overrideTokenVisibility(token, img) {
   if (img && decodeURI(img) === TVA_CONFIG.invisibleImage && !token.tva_customVisibility) {
-    console.log('OVERRIDING VISIBLITY');
     const originalIsVisible = Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible').get;
     Object.defineProperty(token, 'isVisible', {
       get: function () {
@@ -22,7 +21,6 @@ export function overrideTokenVisibility(token, img) {
     token.visible = token.isVisible;
     token.tva_customVisibility = true;
   } else if (token.tva_customVisibility) {
-    console.log('rESETTING VISIBILITY');
     Object.defineProperty(token, 'isVisible', Object.getOwnPropertyDescriptor(Token.prototype, 'isVisible'));
     token.visible = token.isVisible;
     delete token.tva_customVisibility;

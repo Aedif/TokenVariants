@@ -43,6 +43,9 @@ export const DEFAULT_OVERLAY_CONFIG = {
     fontSize: CONFIG.canvasTextStyle.fontSize,
     fontFamily: CONFIG.canvasTextStyle.fontFamily,
     fill: CONFIG.canvasTextStyle.fill,
+    dropShadow: CONFIG.canvasTextStyle.dropShadow,
+    strokeThickness: CONFIG.canvasTextStyle.strokeThickness,
+    stroke: CONFIG.canvasTextStyle.stroke,
     curve: { radius: 0, invert: false },
   },
 };

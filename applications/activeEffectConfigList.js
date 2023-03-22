@@ -6,7 +6,7 @@ import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
-import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
+import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/token/effects.js';
 
 export default class ActiveEffectConfigList extends FormApplication {
@@ -86,6 +86,37 @@ export default class ActiveEffectConfigList extends FormApplication {
           priority: 50,
           overlay: false,
           alwaysOn: false,
+          overlay: true,
+          overlayConfig: mergeObject(
+            DEFAULT_OVERLAY_CONFIG,
+            {
+              img: '',
+              linkScale: false,
+              offsetY: 0.5 + Math.round(Math.random() * 0.3 * 100) / 100,
+              offsetX: 0,
+              scaleX: 0.68,
+              scaleY: 0.68,
+              text: {
+                text: '{{effect}}',
+                fontFamily: CONFIG.defaultFontFamily,
+                fontSize: 36,
+                fill: new Color(Math.round(Math.random() * 16777215)).toString(),
+                stroke: '#000000',
+                strokeThickness: 2,
+                dropShadow: false,
+                curve: {
+                  radius: 160,
+                  invert: false,
+                },
+              },
+              animation: {
+                rotate: true,
+                duration: 10000 + Math.round(Math.random() * 14000) + 10000,
+                clockwise: true,
+              },
+            },
+            { inplace: false }
+          ),
         });
       }
       this.createMapping = null;

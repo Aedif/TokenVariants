@@ -38,7 +38,7 @@ export async function drawOverlays(token) {
         let sprite = _findTVASprite(ov.effect, token);
         if (sprite) {
           if (!isEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
-            if (ov.img.includes('*') || (ov.img.includes('{') && ov.img.includes('}'))) {
+            if (ov.img?.includes('*') || (ov.img?.includes('{') && ov.img?.includes('}'))) {
               sprite.refresh(ov);
             } else if (sprite.tvaOverlayConfig.img !== ov.img || !objectsEqual(sprite.tvaOverlayConfig.text, ov.text)) {
               canvas.primary.removeChild(sprite)?.destroy();
@@ -73,15 +73,7 @@ export async function drawOverlays(token) {
 }
 
 async function _drawEffectOverlay(token, conf) {
-  if (conf.text?.text.trim()) {
-    // let pText = new PreciseText(conf.text.text, PreciseText.getTextStyle(conf.text));
-    // pText.updateText(false);
-    // texture = pText.texture;
-    const texture = generateTextTexture(token, conf);
-    const sprite = new TVASprite(texture, token, conf);
-    sprite.isGenText = true;
-    return sprite;
-  } else {
+  if (conf.img?.trim()) {
     let img = conf.img;
     if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
       const images = await wildcardImageSearch(conf.img);
@@ -96,6 +88,13 @@ async function _drawEffectOverlay(token, conf) {
       fallback: 'modules/token-variants/img/token-images.svg',
     });
     return new TVASprite(texture, token, conf);
+  } else if (conf.text?.text.trim()) {
+    const texture = generateTextTexture(token, conf);
+    const sprite = new TVASprite(texture, token, conf);
+    sprite.isGenText = true;
+    return sprite;
+  } else {
+    return new TVASprite(await loadTexture('modules/token-variants/img/token-images.svg'), token, conf);
   }
 }
 
@@ -135,7 +134,6 @@ export function generateTextTexture(token, conf) {
   const rope = new PIXI.SimpleRope(text.texture, points);
   container.addChild(rope);
   const bounds = container.getLocalBounds();
-  console.log('bounds', bounds);
   const matrix = new PIXI.Matrix();
   matrix.tx = -bounds.x;
   matrix.ty = -bounds.y;
