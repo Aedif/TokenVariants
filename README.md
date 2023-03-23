@@ -29,6 +29,9 @@ Watch a short feature showcase on YouTube:
 
 [![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
 
+Watch a video guide to help setup main module features:
+https://youtu.be/r3bK0UEBAL4 
+
 You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to helping me to continue working on FoundryVTT modules you will be granted access to a selection of pre-configured animated overlays to be used along with this module:
 
 !["Animated Overlays"](./docs/animated_overlays.gif)
