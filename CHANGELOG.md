@@ -1,3 +1,36 @@
+# 4.32.0
+
+!! Important !!
+
+- Fixed inaccuracies wit Overlay scaling and offsetting
+
+  - This fix may change the size and positioning of your current overlays. **DO NOT** update or revert back to the previous version until you are ready to adjust your mappings
+
+- Fixed current Token image showing in manual Token HUD searches
+- Fixed shared Token images not being marked as such in manual Token HUD searches
+- Fixed Token Config not being removed from effect mappings
+- Fixed conflict between `Disable SOME Token Effect Icons` setting and `DFred's Convenient Effects` module
+- Removed `Limit Visibility to Users` overlay toggle
+  - This setting will now be automatically enabled if any of the users are selected
+  - User selection is now also done via a checkboxes rather than a multi-select box
+
+New Overlay options
+
+- Link To Token: Scale
+  - When enabled overlays will scale together with the token
+- Link To Token: Rotation - Overlay Relative
+  - When enabled the overlay will rotate together with the token but around it's own centre point
+- Text
+  - Text to be displayed instead of an image/video
+  - Can accept variables via the following format: {{name}}
+  - Can be customized using:
+    - Font Family
+    - Font Size
+    - Fill Color
+    - Curve: Radius
+    - Curve: Invert
+- Shift-left clicking status effects in the "Assign Status Effects" menu will generate a spinning text of the effect name
+
 # 4.31.4
 
 - Dots are now supported in effect mapping names

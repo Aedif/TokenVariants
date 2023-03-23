@@ -193,6 +193,8 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
     }
   };
 
+  actorVariants = tokenActor?.getFlag('token-variants', 'variants') || [];
+
   if (!fp_files) {
     if (!searchText) {
       // Insert current token image
@@ -214,7 +216,6 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
         }
 
         if (FULL_ACCESS || PARTIAL_ACCESS) {
-          actorVariants = tokenActor.getFlag('token-variants', 'variants') || [];
           actorVariants.forEach((variant) => {
             for (const name of variant.names) {
               pushImage({ path: variant.imgSrc, name: name });

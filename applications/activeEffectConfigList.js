@@ -38,7 +38,7 @@ export default class ActiveEffectConfigList extends FormApplication {
 
   _processConfig(effectName, attrs) {
     if (!attrs.config) attrs.config = {};
-    let hasTokenConfig = Object.keys(attrs.config).length;
+    let hasTokenConfig = Object.keys(attrs.config).filter((k) => attrs.config[k]).length;
     if (attrs.config.flags) hasTokenConfig--;
     if (attrs.config.tv_script) hasTokenConfig--;
 
@@ -78,46 +78,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       }
 
       if (this.createMapping && !(this.createMapping in effectMappings)) {
-        mappings.push({
-          effectName: this.createMapping,
-          highlightedEffectName: highlightOperators(this.createMapping),
-          imgName: '',
-          imgSrc: '',
-          priority: 50,
-          overlay: false,
-          alwaysOn: false,
-          overlay: true,
-          overlayConfig: mergeObject(
-            DEFAULT_OVERLAY_CONFIG,
-            {
-              img: '',
-              linkScale: false,
-              offsetY: 0.5 + Math.round(Math.random() * 0.3 * 100) / 100,
-              offsetX: 0,
-              scaleX: 0.68,
-              scaleY: 0.68,
-              text: {
-                text: '{{effect}}',
-                fontFamily: CONFIG.defaultFontFamily,
-                fontSize: 36,
-                fill: new Color(Math.round(Math.random() * 16777215)).toString(),
-                stroke: '#000000',
-                strokeThickness: 2,
-                dropShadow: false,
-                curve: {
-                  radius: 160,
-                  invert: false,
-                },
-              },
-              animation: {
-                rotate: true,
-                duration: 10000 + Math.round(Math.random() * 14000) + 10000,
-                clockwise: true,
-              },
-            },
-            { inplace: false }
-          ),
-        });
+        mappings.push(this._getNewEffectConfig(this.createMapping, true));
       }
       this.createMapping = null;
     }
@@ -267,7 +228,6 @@ export default class ActiveEffectConfigList extends FormApplication {
           config.tv_script = mapping.config.tv_script;
           config.flags = mapping.config.flags;
         }
-
         mapping.config = config;
         this._toggleActiveControls(event);
       },
@@ -373,8 +333,55 @@ export default class ActiveEffectConfigList extends FormApplication {
   async _onCreate(event) {
     event.preventDefault();
     await this._onSubmit(event);
-    this.object.mappings.push(deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG));
+    this.object.mappings.push(this._getNewEffectConfig(''));
     this.render();
+  }
+
+  _getNewEffectConfig(name, textOverlay = false) {
+    if (textOverlay) {
+      return {
+        effectName: name,
+        highlightedEffectName: highlightOperators(name),
+        imgName: '',
+        imgSrc: '',
+        priority: 50,
+        overlay: false,
+        alwaysOn: false,
+        overlay: true,
+        overlayConfig: mergeObject(
+          DEFAULT_OVERLAY_CONFIG,
+          {
+            img: '',
+            linkScale: false,
+            offsetY: 0.5 + Math.round(Math.random() * 0.3 * 100) / 100,
+            offsetX: 0,
+            scaleX: 0.68,
+            scaleY: 0.68,
+            text: {
+              text: '{{effect}}',
+              fontFamily: CONFIG.defaultFontFamily,
+              fontSize: 36,
+              fill: new Color(Math.round(Math.random() * 16777215)).toString(),
+              stroke: '#000000',
+              strokeThickness: 2,
+              dropShadow: false,
+              curve: {
+                radius: 160,
+                invert: false,
+              },
+            },
+            animation: {
+              rotate: true,
+              duration: 10000 + Math.round(Math.random() * 14000) + 10000,
+              clockwise: true,
+            },
+          },
+          { inplace: false }
+        ),
+      };
+    } else {
+      return deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG);
+    }
   }
 
   _getHeaderButtons() {
@@ -743,5 +750,5 @@ async function _setGlobalEffectMappings(mappings) {
       delete TVA_CONFIG.globalMappings[key];
     }
   }
-  mergeObject(TVA_CONFIG.globalMappings, mappings);
+  mergeObject(TVA_CONFIG.globalMappings, mappings, { recursive: false });
 }
