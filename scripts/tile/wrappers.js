@@ -6,7 +6,7 @@ export function registerTileWrappers() {
   if (TVA_CONFIG.tilesEnabled) _registerDraw();
 }
 
-// Controls image change morph and UserToImage mappings
+// Controls image change UserToImage mappings
 function _registerDraw() {
   libWrapper.register(
     'token-variants',

@@ -79,13 +79,10 @@ export function startBatchUpdater() {
   });
 }
 
-export function queueTokenUpdate(id, update, callback = null, animate = true, tmfxMorph = null) {
+export function queueTokenUpdate(id, update, callback = null, animate = true) {
   update._id = id;
   BATCH_UPDATES.TOKEN.push(update);
-  BATCH_UPDATES.TOKEN_CONTEXT = { animate, tvaMorph: tmfxMorph };
-  if (tmfxMorph) {
-    BATCH_UPDATES.TOKEN_CONTEXT.tvaMorphUserId = game.user.id;
-  }
+  BATCH_UPDATES.TOKEN_CONTEXT = { animate };
   if (callback) BATCH_UPDATES.TOKEN_CALLBACKS.push(callback);
 }
 
@@ -120,7 +117,6 @@ export async function updateTokenImage(
     callback = null,
     config = undefined,
     animate = true,
-    tmfxMorph = null,
   } = {}
 ) {
   if (!(token || actor)) {
@@ -144,8 +140,7 @@ export async function updateTokenImage(
 
   const getDefaultConfig = (token, actor) => {
     let configEntries = [];
-    if (token)
-      configEntries = (token.document ? token.document : token).getFlag('token-variants', 'defaultConfig') || [];
+    if (token) configEntries = (token.document ?? token).getFlag('token-variants', 'defaultConfig') || [];
     else if (actor) {
       const tokenData = actor.prototypeToken;
       if ('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
@@ -181,8 +176,7 @@ export async function updateTokenImage(
   }
 
   const tokenCustomConfig = config || getTokenConfigForUpdate(imgSrc, imgName);
-  const usingCustomConfig =
-    token && (token.document ? token.document : token).getFlag('token-variants', 'usingCustomConfig');
+  const usingCustomConfig = token && (token.document ?? token).getFlag('token-variants', 'usingCustomConfig');
   const defaultConfig = getDefaultConfig(token);
   if (tokenCustomConfig || usingCustomConfig) {
     tokenUpdateObj = modMergeObject(tokenUpdateObj, defaultConfig);
@@ -191,7 +185,8 @@ export async function updateTokenImage(
   if (tokenCustomConfig && !isEmpty(tokenCustomConfig)) {
     if (token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
-      const tokenData = token.document ? token.document.toObject() : deepClone(token);
+      let doc = token.document ?? token;
+      const tokenData = doc.toObject ? doc.toObject() : deepClone(doc);
 
       const defConf = constructDefaultConfig(mergeObject(tokenData, defaultConfig), tokenCustomConfig);
       tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
@@ -237,7 +232,13 @@ export async function updateTokenImage(
           setTimeout(() => token.actor.update({ token: tokenUpdateObj }), 500);
         }
       }
-      queueTokenUpdate(token.id, tokenUpdateObj, callback, animate, tmfxMorph);
+      let doc = token.document ?? token;
+
+      if (doc.object) queueTokenUpdate(token.id, tokenUpdateObj, callback, animate);
+      else {
+        await doc.update(tokenUpdateObj, { animate });
+        callback();
+      }
     }
   }
 }
@@ -436,46 +437,6 @@ export function registerKeybinds() {
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
-  });
-
-  game.keybindings.register('token-variants', 'secretCode', {
-    name: 'Super Secret Code',
-    hint: 'TOP SECRET.',
-    uneditable: [
-      {
-        key: 'ArrowUp',
-      },
-      {
-        key: 'ArrowDown',
-      },
-      {
-        key: 'ArrowLeft',
-      },
-      {
-        key: 'ArrowRight',
-      },
-      {
-        key: 'KeyA',
-      },
-      {
-        key: 'KeyB',
-      },
-    ],
-    restricted: true,
-    onDown: (event) => {
-      if (!game.settings.get('token-variants', 'secretCode')) {
-        if (event.key === ACCEPTED_CODE[K_CODE.length]) {
-          K_CODE.push(event.key);
-        } else {
-          K_CODE = [];
-        }
-
-        if (K_CODE.length === 10) {
-          game.settings.set('token-variants', 'secretCode', true);
-          ui.notifications.info('Token Variant Art :: TMFX Morph Transitions Unlocked :: Effect Config -> Scripts');
-        }
-      }
-    },
   });
 }
 
@@ -797,7 +758,7 @@ export async function tv_executeScript(script, { actor, token, tvaUpdate } = {})
   const speaker = ChatMessage.getSpeaker();
   const character = game.user.character;
   actor = actor || game.actors.get(speaker.actor);
-  token = token || (canvas.ready ? canvas.tokens.get(speaker.token) : null);
+  token = token.object || (canvas.ready ? canvas.tokens.get(speaker.token) : null);
 
   // Attempt script execution
   const AsyncFunction = async function () {}.constructor;
@@ -810,15 +771,15 @@ export async function tv_executeScript(script, { actor, token, tvaUpdate } = {})
   }
 }
 
-export async function applyTMFXPreset(token, presetName, action = 'apply') {
-  if (game.modules.get('tokenmagic')?.active) {
+export async function applyTMFXPreset(tokenDoc, presetName, action = 'apply') {
+  if (game.modules.get('tokenmagic')?.active && tokenDoc.object) {
     const preset = TokenMagic.getPreset(presetName);
     if (preset) {
       if (action === 'apply') {
-        await TokenMagic.addUpdateFilters(token, preset);
+        await TokenMagic.addUpdateFilters(tokenDoc.object, preset);
       } else if (action === 'remove') {
         for (const filter of preset) {
-          if (filter?.filterId) await TokenMagic.deleteFilters(token, filter.filterId);
+          if (filter?.filterId) await TokenMagic.deleteFilters(tokenDoc.object, filter.filterId);
         }
       }
     }
@@ -884,56 +845,6 @@ export async function wildcardImageSearch(imgSrc) {
     return content.files;
   } catch (err) {}
   return [];
-}
-
-export async function drawMorphOverlay(token, morph) {
-  if (token && !token.tva_morphing) {
-    token.tvaMorph = null;
-
-    let sprite = new TVASprite(token.texture, token, {
-      alpha: token.document.alpha,
-      inheritTint: true,
-      linkRotation: true,
-      linkMirror: true,
-      linkScale: true,
-      linkOpacity: false,
-    });
-    sprite.tempTVASprite = true;
-
-    token.tva_sprites = token.tva_sprites ?? [];
-    sprite = canvas.primary.addChild(sprite);
-    token.tva_sprites.push(sprite);
-    sprite.overlaySort = -1;
-
-    return (alpha) => {
-      token.mesh.alpha = 0;
-      token.tva_morphing = true;
-      sprite.refresh({
-        filter: 'Token Magic FX',
-        filterOptions: {
-          params: morph,
-        },
-      });
-
-      let duration = morph[0].animated.progress.loopDuration + 100;
-      setTimeout(async () => {
-        const ovs = [];
-        for (const ov of token.tva_sprites) {
-          if (ov.tempTVASprite) {
-            ov.alpha = 0;
-            canvas.primary.removeChild(ov)?.destroy();
-          } else {
-            ovs.push(ov);
-          }
-        }
-        token.tva_sprites = ovs;
-
-        token.tva_morphing = false;
-        token.mesh.alpha = alpha;
-        // token.refresh();
-      }, duration);
-    };
-  }
 }
 
 /**

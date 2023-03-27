@@ -1,3 +1,11 @@
+# 4.33.0
+
+- Added new special effect names:
+  - `combat-turn`
+    - Activates for the token whose turn it is in combat
+  - `combat-turn-next`
+    - Activates for the token who is next in turn order
+
 # 4.32.0
 
 !! Important !!

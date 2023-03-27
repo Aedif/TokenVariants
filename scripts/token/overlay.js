@@ -185,7 +185,7 @@ function _removeAllOverlays(token) {
 
 export function broadcastOverlayRedraw(token) {
   // Need to broadcast to other users to re-draw the overlay
-  drawOverlays(token);
+  drawOverlays(token.object ?? token);
   const message = {
     handlerName: 'drawOverlays',
     args: { tokenId: token.id },

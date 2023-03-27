@@ -84,22 +84,15 @@ async function initialize() {
 
   // Handle broadcasts
   game.socket?.on(`module.token-variants`, (message) => {
-    if (message.handlerName === 'drawMorphOverlay') {
-      const token = canvas.tokens.get(message.args.tokenId);
-      if (token) token.tvaMorph = message.args.morph;
-    }
-
-    // Workaround for forgeSearchPaths setting to be updated by non-GM clients
     if (message.handlerName === 'forgeSearchPaths' && message.type === 'UPDATE') {
+      // Workaround for forgeSearchPaths setting to be updated by non-GM clients
       if (!game.user.isGM) return;
       const isResponsibleGM = !game.users
         .filter((user) => user.isGM && (user.active || user.isActive))
         .some((other) => other.id < game.user.id);
       if (!isResponsibleGM) return;
       updateSettings({ forgeSearchPaths: message.args });
-    }
-
-    if (message.handlerName === 'drawOverlays' && message.type === 'UPDATE') {
+    } else if (message.handlerName === 'drawOverlays' && message.type === 'UPDATE') {
       if (message.args.all) {
         if (canvas.scene.id !== message.args.sceneId) {
           for (const tkn of canvas.tokens.placeables) {
@@ -110,6 +103,15 @@ async function initialize() {
         const tkn = canvas.tokens.get(message.args.tokenId);
         if (tkn) drawOverlays(tkn);
       }
+    } else if (message.handlerName === 'effectMappings') {
+      if (!game.user.isGM) return;
+      const isResponsibleGM = !game.users
+        .filter((user) => user.isGM && (user.active || user.isActive))
+        .some((other) => other.id < game.user.id);
+      if (!isResponsibleGM) return;
+      const args = message.args;
+      const token = game.scenes.get(args.sceneId)?.tokens.get(args.tokenId);
+      if (token) updateWithEffectMapping(token, { added: args.added, removed: args.removed });
     }
   });
 
@@ -203,11 +205,20 @@ Hooks.on('init', function () {
   };
 });
 
-Hooks.on('canvasReady', async function () {
-  for (const tkn of canvas.tokens.placeables) {
-    if (MODULE_INITIALIZED) {
+Hooks.on('renderCombatTracker', async function () {
+  if (MODULE_INITIALIZED) {
+    for (const tkn of canvas.tokens.placeables) {
       updateWithEffectMapping(tkn);
       drawOverlays(tkn);
     }
   }
 });
+
+// Hooks.on('canvasReady', async function () {
+//   if (MODULE_INITIALIZED) {
+//     for (const tkn of canvas.tokens.placeables) {
+//       updateWithEffectMapping(tkn);
+//       drawOverlays(tkn);
+//     }
+//   }
+// });

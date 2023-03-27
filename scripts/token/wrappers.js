@@ -1,6 +1,5 @@
 import { libWrapper } from '../libWrapper/shim.js';
 import { TVA_CONFIG } from '../settings.js';
-import { drawMorphOverlay } from '../utils.js';
 import { getAllEffectMappings } from './effects.js';
 import { overrideTokenVisibility } from './userToImage.js';
 
@@ -19,19 +18,12 @@ function _unregister(methodName) {
   }
 }
 
-// Controls image change morph and UserToImage mappings
+// Controls image change UserToImage mappings
 function _registerDraw() {
   libWrapper.register(
     'token-variants',
     'Token.prototype.draw',
     async function (wrapped, ...args) {
-      let startMorph;
-      if (this.tvaMorph && !this.tva_morphing) {
-        startMorph = await drawMorphOverlay(this, this.tvaMorph);
-      } else if (this.tva_morphing) {
-        this.tvaMorph = null;
-      }
-
       let result;
 
       // If the Token has a UserToImage mappings momentarily set document.texture.src to it
@@ -49,10 +41,6 @@ function _registerDraw() {
       } else {
         overrideTokenVisibility(this);
         result = await wrapped(...args);
-      }
-
-      if (startMorph) {
-        startMorph(this.document.alpha);
       }
 
       return result;

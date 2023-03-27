@@ -28,9 +28,6 @@ export default class EditScriptConfig extends FormApplication {
     data.onRemove = script.onRemove;
 
     data.tmfxPreset = script.tmfxPreset;
-    if (script.tmfxMorph) {
-      data.tmfxMorph = JSON.stringify(script.tmfxMorph, null, 2);
-    }
     data.tmfxActive = game.modules.get('tokenmagic')?.active;
     if (data.tmfxActive) {
       data.tmfxPresets = TokenMagic.getPresets().map((p) => p.name);
@@ -60,12 +57,6 @@ export default class EditScriptConfig extends FormApplication {
     });
 
     html.find('.remove').click(this._onRemove.bind(this));
-    html.find('.defaultMorph').click((event) => {
-      $(event.target)
-        .closest('form')
-        .find('[name="tmfxMorph"]')
-        .val(JSON.stringify(DEFAULT_MORPH, null, 2));
-    });
   }
 
   async _onRemove(event) {
@@ -80,21 +71,7 @@ export default class EditScriptConfig extends FormApplication {
   async _updateObject(event, formData) {
     formData.onApply = formData.onApply.trim();
     formData.onRemove = formData.onRemove.trim();
-    try {
-      const tmfxMorph = JSON.parse(formData.tmfxMorph?.trim());
-      if (
-        foundry.utils.getType(tmfxMorph) === 'Object' &&
-        tmfxMorph.filterType === 'polymorph' &&
-        tmfxMorph.animated?.progress?.loopDuration
-      ) {
-        formData.tmfxMorph = tmfxMorph;
-      } else {
-        delete formData.tmfxMorph;
-      }
-    } catch (ex) {
-      delete formData.tmfxMorph;
-    }
-    if (!formData.onApply && !formData.onRemove && !formData.tmfxPreset && !formData.tmfxMorph) {
+    if (!formData.onApply && !formData.onRemove && !formData.tmfxPreset) {
       if (this.callback) this.callback(null);
     } else {
       if (this.callback)
@@ -102,27 +79,7 @@ export default class EditScriptConfig extends FormApplication {
           onApply: formData.onApply,
           onRemove: formData.onRemove,
           tmfxPreset: formData.tmfxPreset,
-          tmfxMorph: formData.tmfxMorph,
         });
     }
   }
 }
-
-const DEFAULT_MORPH = {
-  filterType: 'polymorph',
-  filterId: 'WILL BE SET BY THE MODULE',
-  type: 4,
-  padding: 70,
-  magnify: 1,
-  imagePath: 'WILL BE SET BY THE MODULE',
-  animated: {
-    progress: {
-      active: true,
-      animType: 'halfCosOscillation',
-      val1: 0,
-      val2: 100,
-      loops: 1,
-      loopDuration: 1000,
-    },
-  },
-};

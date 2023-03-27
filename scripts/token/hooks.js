@@ -85,6 +85,47 @@ export function registerTokenHooks() {
     _deleteCombatant(combatant);
   });
 
+  Hooks.on('preUpdateCombat', (combat, round, options, userId) => {
+    if (game.userId !== userId) return;
+    options['token-variants'] = {
+      combatantId: combat?.combatant?.token?.id,
+      nextCombatantId: combat?.nextCombatant?.token?.id,
+    };
+  });
+
+  Hooks.on('updateCombat', (combat, round, options, userId) => {
+    if (game.userId !== userId) return;
+
+    const previousCombatantId = options['token-variants']?.combatantId;
+    const previousNextCombatantId = options['token-variants']?.nextCombatantId;
+
+    const currentCombatantId = combat?.combatant?.token?.id;
+    const currentNextCombatantId = combat?.nextCombatant?.token?.id;
+
+    const updateCombatant = function (id, added = [], removed = []) {
+      if (game.user.isGM) {
+        const token = canvas.tokens.get(id);
+        if (token) updateWithEffectMapping(token, { added, removed });
+      } else {
+        const message = {
+          handlerName: 'effectMappings',
+          args: { tokenId: id, sceneId: canvas.scene.id, added, removed },
+          type: 'UPDATE',
+        };
+        game.socket?.emit('module.token-variants', message);
+      }
+    };
+
+    if (previousCombatantId !== currentCombatantId) {
+      if (previousCombatantId) updateCombatant(previousCombatantId, [], ['combat-turn']);
+      if (currentCombatantId) updateCombatant(previousCombatantId, ['combat-turn'], []);
+    }
+    if (previousNextCombatantId !== currentNextCombatantId) {
+      if (previousNextCombatantId) updateCombatant(previousNextCombatantId, [], ['combat-turn-next']);
+      if (currentNextCombatantId) updateCombatant(currentNextCombatantId, ['combat-turn-next'], []);
+    }
+  });
+
   Hooks.on('deleteCombat', (combat, options, userId) => {
     if (game.userId !== userId) return;
     combat.combatants.forEach((combatant) => {
@@ -99,9 +140,6 @@ export function registerTokenHooks() {
   // ========================
 
   Hooks.on('refreshToken', (token) => {
-    if (token.tva_morphing) {
-      token.mesh.alpha = 0;
-    }
     if (token.tva_sprites)
       for (const child of token.tva_sprites) {
         if (child instanceof TVASprite) {
@@ -207,26 +245,6 @@ export function registerTokenHooks() {
   });
 
   Hooks.on('preUpdateToken', function (token, change, options, userId) {
-    // Handle a morph request
-    if (options.tvaMorph && change.texture?.src) {
-      let morph = Array.isArray(options.tvaMorph) ? options.tvaMorph[0] : options.tvaMorph;
-      morph.filterId = 'tvaMorph';
-      morph.imagePath = change.texture.src;
-
-      const message = {
-        handlerName: 'drawMorphOverlay',
-        args: {
-          tokenId: token.id,
-          morph: [morph],
-        },
-        type: 'UPDATE',
-      };
-      game.socket?.emit('module.token-variants', message);
-      token.object.tvaMorph = [morph];
-
-      options.animate = false;
-    }
-
     if (game.user.id !== userId) return;
 
     const preUpdateEffects = evaluateComparatorEffects(token);

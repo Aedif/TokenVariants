@@ -13,16 +13,16 @@ const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 const PF2E_ITEM_TYPES = ['condition', 'effect', 'weapon', 'equipment'];
 
 export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
-  token = token._object ? token._object : token;
-  const tokenImgName =
-    (token.document ?? token).getFlag('token-variants', 'name') || getFileName(token.document.texture.src);
-  let tokenDefaultImg = (token.document ?? token).getFlag('token-variants', 'defaultImg');
+  token = token._object ?? token;
+  const tokenDoc = token.document ?? token;
+  const tokenImgName = tokenDoc.getFlag('token-variants', 'name') || getFileName(tokenDoc.texture.src);
+  let tokenDefaultImg = tokenDoc.getFlag('token-variants', 'defaultImg');
   const animate = !TVA_CONFIG.disableTokenUpdateAnimation;
   const tokenUpdateObj = {};
-  const hadActiveHUD = token.hasActiveHUD;
-  const toggleStatus = canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
+  const hadActiveHUD = tokenDoc.object?.hasActiveHUD;
+  const toggleStatus = canvas.tokens.hud.object?.id === tokenDoc.id ? canvas.tokens.hud._statusEffects : false;
 
-  let effects = getTokenEffects(token);
+  let effects = getTokenEffects(tokenDoc);
 
   // If effect is included in `added` or `removed` we need to:
   // 1. Insert it into `effects` if it's not there in case of 'added' and place it on top of the list
@@ -43,7 +43,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
     }
   }
 
-  const mappings = getAllEffectMappings(token);
+  const mappings = getAllEffectMappings(tokenDoc);
 
   // 3. Configurations may contain effect names in a form of a logical expressions
   //    We need to evaluate them and insert them into effects/added/removed if needed
@@ -74,28 +74,23 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
   let deferredUpdateScripts = [];
-  let tmfxMorph;
   for (const ef of removed) {
     const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
     if (onRemove) {
       if (onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(onRemove);
-      else executeOnCallback.push({ script: onRemove, token: token });
+      else executeOnCallback.push({ script: onRemove, token: tokenDoc });
     }
     const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
-    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
-    const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
-    if (morph) tmfxMorph = morph;
+    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token: tokenDoc, action: 'remove' });
   }
   for (const ef of added) {
     const onApply = mappings[ef]?.config?.tv_script?.onApply;
     if (onApply) {
       if (onApply.includes('tvaUpdate')) deferredUpdateScripts.push(onApply);
-      else executeOnCallback.push({ script: onApply, token: token });
+      else executeOnCallback.push({ script: onApply, token: tokenDoc });
     }
     const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
-    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
-    const morph = mappings[ef]?.config?.tv_script?.tmfxMorph;
-    if (morph) tmfxMorph = morph;
+    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token: tokenDoc, action: 'apply' });
   }
 
   // Next we're going to determine what configs need to be applied and in what order
@@ -107,14 +102,14 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
 
   // Check if image update should be prevented based on module settings
   let disableImageUpdate = false;
-  if (TVA_CONFIG.disableImageChangeOnPolymorphed && token.actor?.isPolymorphed) {
+  if (TVA_CONFIG.disableImageChangeOnPolymorphed && tokenDoc.actor?.isPolymorphed) {
     disableImageUpdate = true;
   } else if (
     TVA_CONFIG.disableImageUpdateOnNonPrototype &&
-    token.actor?.prototypeToken?.texture?.src !== token.document.texture.src
+    tokenDoc.actor?.prototypeToken?.texture?.src !== tokenDoc.texture.src
   ) {
     disableImageUpdate = true;
-    const tknImg = token.document.texture.src;
+    const tknImg = tokenDoc.texture.src;
     for (const m of Object.values(mappings)) {
       if (m.imgSrc === tknImg) {
         disableImageUpdate = false;
@@ -140,7 +135,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
           if (iSrc.includes('*') || (iSrc.includes('{') && iSrc.includes('}'))) {
             // wildcard image, if this effect hasn't been newly applied we do not want to randomize the image again
             if (!added.includes(effects[i].overlayConfig?.effect)) {
-              newImg.imgSrc = token.document.texture.src;
+              newImg.imgSrc = tokenDoc.texture.src;
               newImg.imgName = getFileName(newImg.imgSrc);
               break;
             }
@@ -176,20 +171,19 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
       newImg.imgName = tokenDefaultImg.imgName;
     } else if (!tokenDefaultImg && newImg.imgSrc) {
       tokenUpdateObj['flags.token-variants.defaultImg'] = {
-        imgSrc: token.document.texture.src,
+        imgSrc: tokenDoc.texture.src,
         imgName: tokenImgName,
       };
     }
 
     updateCall = () =>
       updateTokenImage(newImg.imgSrc ?? null, {
-        token: token,
+        token: tokenDoc,
         imgName: newImg.imgName ? newImg.imgName : tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(null, tokenDoc, hadActiveHUD, toggleStatus, executeOnCallback),
         config: config,
         animate,
-        tmfxMorph,
       });
   }
 
@@ -201,24 +195,22 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
 
     updateCall = () =>
       updateTokenImage(tokenDefaultImg.imgSrc, {
-        token: token,
+        token: tokenDoc,
         imgName: tokenDefaultImg.imgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(null, tokenDoc, hadActiveHUD, toggleStatus, executeOnCallback),
         animate,
-        tmfxMorph,
       });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
     // clear it
-  } else if (effects.length === 0 && (token.document ?? token).getFlag('token-variants', 'usingCustomConfig')) {
+  } else if (effects.length === 0 && tokenDoc.getFlag('token-variants', 'usingCustomConfig')) {
     updateCall = () =>
-      updateTokenImage(token.document.texture.src, {
-        token: token,
+      updateTokenImage(tokenDoc.texture.src, {
+        token: tokenDoc,
         imgName: tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(null, tokenDoc, hadActiveHUD, toggleStatus, executeOnCallback),
         animate,
-        tmfxMorph,
       });
   }
 
@@ -227,28 +219,28 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
       for (let i = 0; i < deferredUpdateScripts.length; i++) {
         if (i === deferredUpdateScripts.length - 1) {
           await tv_executeScript(deferredUpdateScripts[i], {
-            token,
+            token: tokenDoc,
             tvaUpdate: () => {
-              broadcastOverlayRedraw(token);
+              broadcastOverlayRedraw(tokenDoc);
               updateCall();
             },
           });
         } else {
-          await tv_executeScript(deferredUpdateScripts[i], { token, tvaUpdate: () => {} });
+          await tv_executeScript(deferredUpdateScripts[i], { token: tokenDoc, tvaUpdate: () => {} });
         }
       }
     } else {
-      broadcastOverlayRedraw(token);
+      broadcastOverlayRedraw(tokenDoc);
       updateCall();
     }
   } else {
-    broadcastOverlayRedraw(token);
+    broadcastOverlayRedraw(tokenDoc);
   }
 }
 
-async function _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {
-  if (hadActiveHUD) {
-    canvas.tokens.hud.bind(token);
+async function _postTokenUpdateProcessing(tokenDoc, hadActiveHUD, toggleStatus, scripts) {
+  if (hadActiveHUD && tokenDoc.object) {
+    canvas.tokens.hud.bind(tokenDoc.object);
     if (toggleStatus) canvas.tokens.hud._toggleStatusEffects(true);
   }
   for (const scr of scripts) {
@@ -306,7 +298,7 @@ export function fixEffectMappings(mappings) {
 }
 
 export function getTokenEffects(token, includeExpressions = false) {
-  const data = token.document ? token.document : token;
+  const data = token.document ?? token;
   let effects = [];
 
   if (game.system.id === 'pf2e') {
@@ -334,9 +326,9 @@ export function getTokenEffects(token, includeExpressions = false) {
   }
   if (game.combat?.started) {
     if (game.combat?.combatant?.token?.id === token.id) {
-      effects.unshift('current-combatant');
+      effects.unshift('combat-turn');
     } else if (game.combat?.nextCombatant?.token?.id === token.id) {
-      effects.unshift('next-combatant');
+      effects.unshift('combat-turn-next');
     }
   }
   if (data.hidden) {
