@@ -1,3 +1,7 @@
+# 4.33.2
+
+- Patch fix for Foundry's faulty `SpriteMesh.calculateTrimmedVertices()` method
+
 # 4.33.1
 
 - HP comparator support for Simple World-Building system

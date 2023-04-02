@@ -311,6 +311,11 @@ export class TVASprite extends TokenMesh {
     }
     super.destroy();
   }
+
+  // Foundry BUG Fix
+  calculateTrimmedVertices() {
+    return PIXI.Sprite.prototype.calculateTrimmedVertices.call(this);
+  }
 }
 
 async function constructTMFXFilters(paramsArray, sprite) {
