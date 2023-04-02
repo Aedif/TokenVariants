@@ -1,4 +1,5 @@
 import { getTokenConfig, setTokenConfig } from '../scripts/utils.js';
+import EditScriptConfig from './configScriptEdit.js';
 
 export default class TokenCustomConfig extends TokenConfig {
   constructor(object, options, imgSrc, imgName, callback, config) {
@@ -55,10 +56,13 @@ export default class TokenCustomConfig extends TokenConfig {
       }
     });
 
+    if (this.tv_script) {
+      filtered.tv_script = this.tv_script;
+    }
+
     if (this.config) {
       let config = expandObject(filtered);
       config.flags = config.flags ? mergeObject(this.flags || {}, config.flags) : this.flags;
-      config.tv_script = this.tv_script;
       if (this.callback) this.callback(config);
     } else {
       const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);
@@ -67,9 +71,7 @@ export default class TokenCustomConfig extends TokenConfig {
   }
 
   applyCustomConfig() {
-    const tokenConfig = flattenObject(
-      this.config || getTokenConfig(this.imgSrc, this.imgName) || {}
-    );
+    const tokenConfig = flattenObject(this.config || getTokenConfig(this.imgSrc, this.imgName) || {});
     const form = $(this.form);
     for (const key of Object.keys(tokenConfig)) {
       const el = form.find(`[name="${key}"]`);
@@ -99,6 +101,7 @@ export default class TokenCustomConfig extends TokenConfig {
 
     // Add checkboxes to control inclusion of specific tabs in the custom config
     const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName);
+    this.tv_script = tokenConfig.tv_script;
 
     $(html).on('change', '.tva-config-checkbox', this._onCheckboxChange);
 
@@ -146,9 +149,7 @@ export default class TokenCustomConfig extends TokenConfig {
     if (tokenConfig) {
       $(html)
         .find('.sheet-footer')
-        .append(
-          '<button type="button" class="remove-config"><i class="fas fa-trash"></i> Remove Config</button>'
-        );
+        .append('<button type="button" class="remove-config"><i class="fas fa-trash"></i> Remove Config</button>');
       html.find('.remove-config').click(this._onRemoveConfig.bind(this));
     }
 
@@ -213,6 +214,21 @@ export default class TokenCustomConfig extends TokenConfig {
 
   get id() {
     return `token-custom-config-${this.object.id}`;
+  }
+
+  _getHeaderButtons() {
+    const buttons = super._getHeaderButtons();
+    // buttons.unshift({
+    //   label: 'Scripts',
+    //   class: 'tva-scripts-button',
+    //   icon: 'fas fa-play',
+    //   onclick: () => {
+    //     new EditScriptConfig(this.tv_script, (script) => {
+    //       this.tv_script = isEmpty(script ?? {}) ? null : script;
+    //     }).render(true);
+    //   },
+    // });
+    return buttons;
   }
 }
 

@@ -10,21 +10,6 @@ export const SUPPORTED_COMP_ATTRIBUTES = ['rotation', 'elevation'];
 export const EXPRESSION_OPERATORS = ['\\(', '\\)', '&&', '||', '\\!'];
 export const FAUX_DOT = '¶';
 
-// Record Code
-let K_CODE = [];
-const ACCEPTED_CODE = [
-  'ArrowUp',
-  'ArrowUp',
-  'ArrowDown',
-  'ArrowDown',
-  'ArrowLeft',
-  'ArrowRight',
-  'ArrowLeft',
-  'ArrowRight',
-  'KeyB',
-  'KeyA',
-];
-
 // Types of searches
 export const SEARCH_TYPE = {
   PORTRAIT: 'Portrait',
@@ -176,6 +161,31 @@ export async function updateTokenImage(
   }
 
   const tokenCustomConfig = config || getTokenConfigForUpdate(imgSrc, imgName);
+
+  //
+  // Accumulate all scripts that will need to be run after the update
+  // const executeOnCallback = [];
+  // let deferredUpdateScripts = [];
+  // for (const ef of removed) {
+  //   const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
+  //   if (onRemove) {
+  //     if (onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(onRemove);
+  //     else executeOnCallback.push({ script: onRemove, token: tokenDoc });
+  //   }
+  //   const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
+  //   if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token: tokenDoc, action: 'remove' });
+  // }
+  // for (const ef of added) {
+  //   const onApply = mappings[ef]?.config?.tv_script?.onApply;
+  //   if (onApply) {
+  //     if (onApply.includes('tvaUpdate')) deferredUpdateScripts.push(onApply);
+  //     else executeOnCallback.push({ script: onApply, token: tokenDoc });
+  //   }
+  //   const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
+  //   if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token: tokenDoc, action: 'apply' });
+  // }
+  //
+
   const usingCustomConfig = token && (token.document ?? token).getFlag('token-variants', 'usingCustomConfig');
   const defaultConfig = getDefaultConfig(token);
   if (tokenCustomConfig || usingCustomConfig) {

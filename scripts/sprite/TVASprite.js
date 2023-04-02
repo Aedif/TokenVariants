@@ -183,6 +183,15 @@ export class TVASprite extends TokenMesh {
         this.object.document.y + this.object.h / 2 - config.offsetY * this.object.h
       );
     } else {
+      // this._activateTicker();
+
+      // let coord = canvas.canvasCoordinatesFromClient({
+      //   x: window.innerWidth / 2 + config.offsetX * window.innerWidth,
+      //   y: window.innerHeight / 2 + config.offsetY * window.innerHeight,
+      // });
+      // console.log(coord);
+      // this.position.set(coord.x, coord.y);
+
       this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
     }
 
@@ -217,6 +226,24 @@ export class TVASprite extends TokenMesh {
     //if (fullRefresh) this.filters = this._getFilters(config);
 
     this.ready = true;
+  }
+
+  _activateTicker() {
+    this._deactivateTicker();
+    canvas.app.ticker.add(this.updatePosition, this, PIXI.UPDATE_PRIORITY.HIGH);
+  }
+
+  _deactivateTicker() {
+    canvas.app.ticker.remove(this.updatePosition, this);
+  }
+
+  updatePosition() {
+    let coord = canvas.canvasCoordinatesFromClient({
+      x: window.innerWidth / 2 + this.tvaOverlayConfig.offsetX * window.innerWidth,
+      y: window.innerHeight / 2 + this.tvaOverlayConfig.offsetY * window.innerHeight,
+    });
+    console.log(coord);
+    this.position.set(coord.x, coord.y);
   }
 
   async _applyFilters(config) {
