@@ -1,9 +1,8 @@
 export default class EditScriptConfig extends FormApplication {
-  constructor(script, imgSrc, callback) {
+  constructor(script, callback) {
     super({}, {});
     this.script = script;
     this.callback = callback;
-    this.imgSrc = imgSrc;
   }
 
   static get defaultOptions() {
@@ -31,9 +30,6 @@ export default class EditScriptConfig extends FormApplication {
     data.tmfxActive = game.modules.get('tokenmagic')?.active;
     if (data.tmfxActive) {
       data.tmfxPresets = TokenMagic.getPresets().map((p) => p.name);
-    }
-    if (game.settings.get('token-variants', 'secretCode')) {
-      data.hasTokenImage = this.imgSrc && this.imgSrc.trim();
     }
 
     return data;

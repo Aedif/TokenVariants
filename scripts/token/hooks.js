@@ -183,7 +183,7 @@ export function registerTokenHooks() {
     let containsHPUpdate = false;
     if (game.system.id === 'cyberpunk-red-core') {
       containsHPUpdate = change.system?.derivedStats?.hp;
-    } else if (game.system.id === 'lfg') {
+    } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
       containsHPUpdate = change.system?.health;
     } else {
       containsHPUpdate = change.system?.attributes?.hp;
@@ -222,7 +222,7 @@ export function registerTokenHooks() {
     let containsHPUpdate = false;
     if (game.system.id === 'cyberpunk-red-core') {
       containsHPUpdate = change.system?.derivedStats?.hp;
-    } else if (game.system.id === 'lfg') {
+    } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
       containsHPUpdate = change.system?.health;
     } else {
       containsHPUpdate = change.system?.attributes?.hp;
@@ -300,7 +300,7 @@ export function registerTokenHooks() {
     let containsHPUpdate = false;
     if (game.system.id === 'cyberpunk-red-core') {
       containsHPUpdate = change.actorData?.system?.derivedStats?.hp;
-    } else if (game.system.id === 'lfg') {
+    } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
       containsHPUpdate = change.actorData?.system?.health;
     } else {
       containsHPUpdate = change.actorData?.system?.attributes?.hp;

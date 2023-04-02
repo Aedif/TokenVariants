@@ -1,3 +1,7 @@
+# 4.33.1
+
+- HP comparator support for Simple World-Building system
+
 # 4.33.0
 
 - Added new special effect names:

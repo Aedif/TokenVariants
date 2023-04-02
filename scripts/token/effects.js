@@ -508,7 +508,7 @@ function _getTokenHP(token) {
         inplace: false,
       });
     }
-  } else if (game.system.id === 'lfg') {
+  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
     if (token.actorLink) {
       attributes = token.actor.system?.health;
     } else {

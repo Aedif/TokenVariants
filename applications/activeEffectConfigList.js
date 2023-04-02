@@ -196,7 +196,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
 
-    new EditScriptConfig(mapping.config?.tv_script, mapping.imgSrc, (script) => {
+    new EditScriptConfig(mapping.config?.tv_script, (script) => {
       if (!mapping.config) mapping.config = {};
       if (script) mapping.config.tv_script = script;
       else delete mapping.config.tv_script;
