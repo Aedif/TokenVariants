@@ -126,6 +126,26 @@ export default class OverlayConfig extends FormApplication {
           });
       }
     });
+
+    const underlay = html.find('[name="underlay"]');
+    const top = html.find('[name="top"]');
+    const bottom = html.find('[name="bottom"]');
+    underlay.change(function () {
+      if (this.checked) top.prop('checked', false);
+      else bottom.prop('checked', false);
+    });
+    top.change(function () {
+      if (this.checked) {
+        underlay.prop('checked', false);
+        bottom.prop('checked', false);
+      }
+    });
+    bottom.change(function () {
+      if (this.checked) {
+        underlay.prop('checked', true);
+        top.prop('checked', false);
+      }
+    });
   }
 
   _convertColor(colString) {

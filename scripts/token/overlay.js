@@ -33,7 +33,8 @@ export async function drawOverlays(token) {
       _markAllOverlaysForRemoval(token);
 
       // To keep track of the overlay order
-      let sort = (token.document.sort || 0) + 1;
+      let overlaySort = 0;
+      let underlaySort = 0;
       for (const ov of overlays) {
         let sprite = _findTVASprite(ov.effect, token);
         if (sprite) {
@@ -56,11 +57,12 @@ export async function drawOverlays(token) {
 
         // Assign order to the overlay
         if (sprite.tvaOverlayConfig.underlay) {
-          sprite.overlaySort = sort - 100;
+          underlaySort -= 0.01;
+          sprite.overlaySort = underlaySort;
         } else {
-          sprite.overlaySort = sort;
+          overlaySort += 0.01;
+          sprite.overlaySort = overlaySort;
         }
-        sort += 1;
       }
 
       _removeMarkedOverlays(token);

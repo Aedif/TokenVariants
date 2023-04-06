@@ -1,3 +1,13 @@
+# 4.34.0
+
+Overlays
+
+- Overlays/underlays will no longer display above or bellow other tokens unless specified to:
+- New option: BOTTOM
+  - Underlays with this enabled will ALWAYS show bellow all tokens
+- New option: TOP
+  - Overlays with enabled will ALWAYS show above all tokens
+
 # 4.33.2
 
 - Patch fix for Foundry's faulty `SpriteMesh.calculateTrimmedVertices()` method

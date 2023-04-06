@@ -21,6 +21,8 @@ export const DEFAULT_OVERLAY_CONFIG = {
   filter: 'NONE',
   filterOptions: {},
   inheritTint: false,
+  top: false,
+  bottom: false,
   underlay: false,
   linkRotation: true,
   linkMirror: true,

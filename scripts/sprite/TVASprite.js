@@ -63,14 +63,25 @@ export class TVASprite extends TokenMesh {
 
     this.texture = texture;
     this.ready = false;
+    this.overlaySort = 0;
 
     this.tvaOverlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
     this._tvaPlay().then(() => this.refresh());
   }
 
+  // Overlays have the same sort order as the parent
   get sort() {
-    return this.overlaySort || this.object.document.sort || 0;
+    let sort = this.object.document.sort || 0;
+    if (this.tvaOverlayConfig.top) return sort + 1000;
+    else if (this.tvaOverlayConfig.bottom) return sort - 1000;
+    return sort;
   }
+
+  get _lastSortedIndex() {
+    return (this.object.mesh._lastSortedIndex || 0) + this.overlaySort;
+  }
+
+  set _lastSortedIndex(val) {}
 
   get visible() {
     return (
