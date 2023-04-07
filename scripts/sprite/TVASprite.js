@@ -60,7 +60,6 @@ class OutlineFilter extends OutlineOverlayFilter {
 export class TVASprite extends TokenMesh {
   constructor(texture, token, config) {
     super(token);
-
     this.texture = texture;
     this.ready = false;
     this.overlaySort = 0;
@@ -117,6 +116,14 @@ export class TVASprite extends TokenMesh {
       };
       game.video.play(s, options);
     }
+  }
+
+  setTexture(texture) {
+    if (this.texture.textLabel) {
+      this.texture.destroy(true);
+    }
+    this.texture = texture;
+    this.refresh(this.tvaOverlayConfig, { fullRefresh: false });
   }
 
   refresh(configuration, { preview = false, fullRefresh = true, previewTexture = null } = {}) {
@@ -314,10 +321,9 @@ export class TVASprite extends TokenMesh {
 
   destroy() {
     this.stopAnimation();
-    if (this.isGenText) {
+    if (this.texture.tvaLabel) {
       return super.destroy(true);
-    }
-    if (this.texture?.baseTexture.resource.source.tagName === 'VIDEO') {
+    } else if (this.texture?.baseTexture.resource?.source?.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();
     }
     super.destroy();

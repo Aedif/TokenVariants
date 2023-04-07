@@ -1,3 +1,7 @@
+# 4.34.1
+
+- Text overlays will now respond to token/actor updates
+
 # 4.34.0
 
 Overlays

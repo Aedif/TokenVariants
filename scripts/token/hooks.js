@@ -203,6 +203,11 @@ export function registerTokenHooks() {
   });
 
   Hooks.on('updateActor', async function (actor, change, options, userId) {
+    if (actor.getActiveTokens)
+      actor.getActiveTokens(true).forEach((token) => {
+        drawOverlays(token);
+      });
+
     if (game.user.id !== userId) return;
 
     if ('flags' in change && 'token-variants' in change.flags) {
@@ -279,6 +284,7 @@ export function registerTokenHooks() {
         }
       }
     }
+    if (token.object) drawOverlays(token.object);
 
     if (game.user.id !== userId) return;
 

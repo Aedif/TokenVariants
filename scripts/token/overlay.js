@@ -42,15 +42,15 @@ export async function drawOverlays(token) {
             if (ov.img?.includes('*') || (ov.img?.includes('{') && ov.img?.includes('}'))) {
               sprite.refresh(ov);
             } else if (sprite.tvaOverlayConfig.img !== ov.img || !objectsEqual(sprite.tvaOverlayConfig.text, ov.text)) {
-              canvas.primary.removeChild(sprite)?.destroy();
-              sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
-              token.tva_sprites.push(sprite);
+              sprite.setTexture(await genTexture(token, ov));
             } else {
               sprite.refresh(ov);
             }
+          } else if (sprite.texture.textLabel && sprite.texture.textLabel != genTextLabel(token, ov)) {
+            sprite.setTexture(await genTexture(token, ov));
           }
         } else {
-          sprite = canvas.primary.addChild(await _drawEffectOverlay(token, ov));
+          sprite = canvas.primary.addChild(new TVASprite(await genTexture(token, ov), token, ov));
           token.tva_sprites.push(sprite);
         }
         sprite.tvaRemove = false; // Sprite in use, do not remove
@@ -74,7 +74,7 @@ export async function drawOverlays(token) {
   }
 }
 
-async function _drawEffectOverlay(token, conf) {
+async function genTexture(token, conf) {
   if (conf.img?.trim()) {
     let img = conf.img;
     if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
@@ -86,33 +86,33 @@ async function _drawEffectOverlay(token, conf) {
       }
     }
 
-    const texture = await loadTexture(img, {
+    return await loadTexture(img, {
       fallback: 'modules/token-variants/img/token-images.svg',
     });
-    return new TVASprite(texture, token, conf);
   } else if (conf.text?.text.trim()) {
-    const texture = generateTextTexture(token, conf);
-    const sprite = new TVASprite(texture, token, conf);
-    sprite.isGenText = true;
-    return sprite;
+    return await generateTextTexture(token, conf);
   } else {
-    return new TVASprite(await loadTexture('modules/token-variants/img/token-images.svg'), token, conf);
+    return await loadTexture('modules/token-variants/img/token-images.svg');
   }
 }
 
-export function generateTextTexture(token, conf) {
+function genTextLabel(token, conf) {
   let re = new RegExp('{{.*}}');
-  let label = conf.text.text.replace(re, function replace(match) {
+  return conf.text.text.replace(re, function replace(match) {
     const property = match.substring(2, match.length - 2);
     if (property === 'effect') return conf.effect;
     let val = getProperty(token.document ?? token, property);
     return val === undefined ? match : val;
   });
+}
 
+export async function generateTextTexture(token, conf) {
+  let label = genTextLabel(token, conf);
   let text = new PreciseText(label, PreciseText.getTextStyle(conf.text));
   text.updateText(false);
 
   if (!conf.text.curve?.radius) {
+    text.texture.textLabel = label;
     return text.texture;
   }
 
@@ -145,6 +145,7 @@ export function generateTextTexture(token, conf) {
   canvas.app.renderer.render(container, renderTexture, true, matrix, false);
   text.destroy();
 
+  renderTexture.textLabel = label;
   return renderTexture;
 }
 
