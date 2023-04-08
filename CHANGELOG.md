@@ -1,3 +1,7 @@
+# 4.34.2
+
+- Token Custom Config bug fix
+
 # 4.34.1
 
 - Text overlays will now respond to token/actor updates

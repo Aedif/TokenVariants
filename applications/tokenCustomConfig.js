@@ -100,7 +100,7 @@ export default class TokenCustomConfig extends TokenConfig {
     $(html).find('.assign-token').remove();
 
     // Add checkboxes to control inclusion of specific tabs in the custom config
-    const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName);
+    const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName) || {};
     this.tv_script = tokenConfig.tv_script;
 
     $(html).on('change', '.tva-config-checkbox', this._onCheckboxChange);
