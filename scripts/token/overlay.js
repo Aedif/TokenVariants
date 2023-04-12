@@ -97,7 +97,7 @@ async function genTexture(token, conf) {
 }
 
 function genTextLabel(token, conf) {
-  let re = new RegExp('{{.*}}');
+  let re = new RegExp('{{.*?}}', 'gi');
   return conf.text.text.replace(re, function replace(match) {
     const property = match.substring(2, match.length - 2);
     if (property === 'effect') return conf.effect;

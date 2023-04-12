@@ -1,3 +1,7 @@
+# 4.34.3
+
+- Fixing multiple property insert into text overlays
+
 # 4.34.2
 
 - Token Custom Config bug fix
