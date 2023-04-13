@@ -83,11 +83,17 @@ export class TVASprite extends TokenMesh {
   set _lastSortedIndex(val) {}
 
   get visible() {
-    return (
-      this.ready &&
-      (this.object.visible || this.tvaOverlayConfig.alwaysVisible) &&
-      (!this.tvaOverlayConfig.limitedUsers?.length || this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
-    );
+    if (!this.ready || !(this.object.visible || this.tvaOverlayConfig.alwaysVisible)) return false;
+    if (this.tvaOverlayConfig.limitedUsers?.length && !this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
+      return false;
+
+    if (this.tvaOverlayConfig.limitOnHover || this.tvaOverlayConfig.limitOnControl) {
+      let visible = false;
+      if (this.tvaOverlayConfig.limitOnHover && (this.object.hover || canvas.tokens._highlight)) visible = true;
+      if (this.tvaOverlayConfig.limitOnControl && this.object.controlled) visible = true;
+      return visible;
+    }
+    return true;
   }
   set visible(visible) {}
 

@@ -1,3 +1,11 @@
+# 4.35.0
+
+Overlays
+
+- New option: `Visibility` > `Limit Visibility to State`: `Hover`
+- New option: `Visibility` > `Limit Visibility to State`: `Control`
+  - Will restrict visibility of overlays to when the Token is hovered over or controlled
+
 # 4.34.3
 
 - Fixing multiple property insert into text overlays

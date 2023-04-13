@@ -238,6 +238,22 @@
                 </div>
                 {{/each}}
             </fieldset>
+
+            <fieldset>
+                <legend>Limit Visibility to State</legend>
+                <div class="form-group">
+                    <label>Hover</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="limitOnHover" data-dtype="Boolean" value="{{limitOnHover}}" {{#if limitOnHover}}checked{{/if}}>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Control</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="limitOnControl" data-dtype="Boolean" value="{{limitOnControl}}" {{#if limitOnControl}}checked{{/if}}>
+                    </div>
+                </div>
+            </fieldset>
         </div>
 
         <div class="tab active" data-group="main" data-tab="text">
