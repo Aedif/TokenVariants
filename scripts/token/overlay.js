@@ -188,10 +188,11 @@ function _removeAllOverlays(token) {
 
 export function broadcastOverlayRedraw(token) {
   // Need to broadcast to other users to re-draw the overlay
-  drawOverlays(token.object ?? token);
+  if (token.object) drawOverlays(token.object);
+  const actorId = token.actorLink ? token.actor?.id : null;
   const message = {
     handlerName: 'drawOverlays',
-    args: { tokenId: token.id },
+    args: { tokenId: token.id, actorId },
     type: 'UPDATE',
   };
   game.socket?.emit('module.token-variants', message);

@@ -5,6 +5,7 @@ import { TVA_CONFIG } from '../settings.js';
 import { TVASprite } from '../sprite/TVASprite.js';
 import {
   determineAddedRemovedEffects,
+  getAllActorTokens,
   getTokenConfigForUpdate,
   keyPressed,
   nameForgeRandomize,
@@ -213,13 +214,12 @@ export function registerTokenHooks() {
     if ('flags' in change && 'token-variants' in change.flags) {
       const tokenVariantFlags = change.flags['token-variants'];
       if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
-        const tokens = actor.token ? [actor.token] : actor.getActiveTokens();
+        const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+        tokens.forEach((tkn) => updateWithEffectMapping(tkn));
         for (const tkn of tokens) {
-          if (TVA_CONFIG.filterEffectIcons) {
-            await tkn.drawEffects();
+          if (tkn.object && TVA_CONFIG.filterEffectIcons) {
+            await tkn.object.drawEffects();
           }
-          if (game.user.id === userId) updateWithEffectMapping(tkn);
-          else drawOverlays(tkn);
         }
       }
     }
@@ -234,14 +234,14 @@ export function registerTokenHooks() {
     }
 
     if (containsHPUpdate) {
-      const tokens = actor.getActiveTokens();
+      const tokens = getAllActorTokens(actor, true, true);
       for (const tkn of tokens) {
-        if (!tkn.document.actorLink) continue;
+        if (!tkn.actorLink) continue;
         // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
         const added = [];
         const removed = [];
         const postUpdateEffects = evaluateComparatorEffects(tkn);
-        const preUpdateEffects = options['token-variants']?.[tkn.id]?.preUpdateEffects || [];
+        const preUpdateEffects = [...(options['token-variants']?.[tkn.id]?.preUpdateEffects || [])];
 
         determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
         if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
@@ -336,7 +336,7 @@ async function _deleteCombatant(combatant) {
 }
 
 async function _createToken(token, options, userId) {
-  drawOverlays(token._object);
+  if (token._object) drawOverlays(token._object);
   if (userId && game.user.id != userId) return;
   updateWithEffectMapping(token);
 

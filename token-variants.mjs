@@ -99,6 +99,9 @@ async function initialize() {
             drawOverlays(tkn);
           }
         }
+      } else if (message.args.actorId) {
+        const actor = game.actors.get(message.args.actorId);
+        if (actor) actor.getActiveTokens(true)?.forEach((tkn) => drawOverlays(tkn));
       } else if (message.args.tokenId) {
         const tkn = canvas.tokens.get(message.args.tokenId);
         if (tkn) drawOverlays(tkn);
@@ -208,7 +211,7 @@ Hooks.on('init', function () {
 Hooks.on('renderCombatTracker', async function () {
   if (MODULE_INITIALIZED) {
     for (const tkn of canvas.tokens.placeables) {
-      updateWithEffectMapping(tkn);
+      if (game.user.isGM) updateWithEffectMapping(tkn);
       drawOverlays(tkn);
     }
   }

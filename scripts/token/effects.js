@@ -3,6 +3,7 @@ import {
   applyTMFXPreset,
   EXPRESSION_OPERATORS,
   FAUX_DOT,
+  getAllActorTokens,
   getFileName,
   tv_executeScript,
   updateTokenImage,
@@ -13,7 +14,7 @@ const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 const PF2E_ITEM_TYPES = ['condition', 'effect', 'weapon', 'equipment'];
 
 export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
-  token = token._object ?? token;
+  token = token.object ?? token._object ?? token;
   const tokenDoc = token.document ?? token;
   const tokenImgName = tokenDoc.getFlag('token-variants', 'name') || getFileName(tokenDoc.texture.src);
   let tokenDefaultImg = tokenDoc.getFlag('token-variants', 'defaultImg');
@@ -632,7 +633,7 @@ export function registerEffectHooks() {
 async function _updateImageOnEffectChange(effectName, actor, added = true) {
   const mappings = getAllEffectMappings({ actor });
   if (effectName in mappings) {
-    const tokens = actor.token ? [actor.token] : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
+    const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
     for (const token of tokens) {
       await updateWithEffectMapping(token, {
         added: added ? [effectName] : [],
@@ -646,7 +647,7 @@ async function _updateImageOnMultiEffectChange(actor, added = [], removed = []) 
   if (!actor) return;
   const mappings = getAllEffectMappings({ actor });
   if (added.filter((ef) => ef in mappings).length || removed.filter((ef) => ef in mappings).length) {
-    const tokens = actor.token ? [actor.token] : actor.getActiveTokens().filter((tkn) => tkn.document.actorLink);
+    const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
     for (const token of tokens) {
       await updateWithEffectMapping(token, {
         added: added,

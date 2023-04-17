@@ -952,3 +952,23 @@ function captureToken(token, { scale = 3, width = null, height = null } = {}) {
 
   return renderTexture;
 }
+
+export function getAllActorTokens(actor, linked = false, document = false) {
+  if (actor.isToken) {
+    if (document) return [actor.token];
+    else if (actor.token.object) return [actor.token.object];
+    else return [];
+  }
+
+  const tokens = [];
+  game.scenes.forEach((scene) =>
+    scene.tokens.forEach((token) => {
+      if (token.actorId === actor.id) {
+        if (linked && token.actorLink) tokens.push(token);
+        else if (!linked) tokens.push(token);
+      }
+    })
+  );
+  if (document) return tokens;
+  else return tokens.map((token) => token.object).filter((token) => token);
+}

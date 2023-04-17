@@ -266,7 +266,6 @@ export class TVASprite extends TokenMesh {
       x: window.innerWidth / 2 + this.tvaOverlayConfig.offsetX * window.innerWidth,
       y: window.innerHeight / 2 + this.tvaOverlayConfig.offsetY * window.innerHeight,
     });
-    console.log(coord);
     this.position.set(coord.x, coord.y);
   }
 

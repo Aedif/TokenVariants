@@ -1,3 +1,8 @@
+# 4.35.1
+
+- Fixed player clients attempting to perform GM only updates
+- Improved cross-scene updating of Tokens via `Effect Mappings`
+
 # 4.35.0
 
 Overlays
