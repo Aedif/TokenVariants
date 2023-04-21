@@ -152,7 +152,7 @@ export function registerTokenHooks() {
   Hooks.on('destroyToken', (token) => {
     if (token.tva_sprites)
       for (const child of token.tva_sprites) {
-        canvas.primary.removeChild(child)?.destroy();
+        child.parent?.removeChild(child)?.destroy();
       }
   });
 

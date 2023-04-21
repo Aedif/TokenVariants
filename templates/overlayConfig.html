@@ -12,6 +12,17 @@
     <section class = "content">
         <div class="tab active" data-group="main" data-tab="misc">
 
+            <div class="form-group">
+                <label>Parent</label>
+                <div class="form-fields">
+                <select name="parent">
+                    {{#each parents as |parent|}}
+                    <option value="{{parent}}" {{#if (eq ../parent parent)}}selected="selected"{{/if}}>{{parent}}</option>
+                    {{/each}}
+                </select>
+                </div>
+            </div>
+
             <fieldset>
                 <legend>Display Priority</legend>
 

@@ -8,6 +8,7 @@ import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/token/effects.js';
+import { drawOverlays } from '../scripts/token/overlay.js';
 
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
@@ -27,12 +28,12 @@ export default class EffectMappingForm extends FormApplication {
       id: 'token-variants-active-effect-config',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/effectMappingForm.html',
-      resizable: false,
+      resizable: true,
       minimizable: false,
       closeOnSubmit: false,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      width: 700,
+      width: 795,
     });
   }
 
@@ -82,6 +83,12 @@ export default class EffectMappingForm extends FormApplication {
       }
       this.createMapping = null;
     }
+
+    const groups = ['Default'];
+    mappings.forEach((mapping) => {
+      if (mapping.group && !groups.includes(mapping.group)) groups.push(mapping.group);
+    });
+    data.groups = groups;
 
     this.object.mappings = mappings;
     data.mappings = mappings;
@@ -645,30 +652,30 @@ export default class EffectMappingForm extends FormApplication {
           updateSettings({ globalMappings: effectMappings });
         } else {
           await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
-          setTimeout(() => this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings), 500);
+          await this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
         }
       } else if (this.globalMappings) {
         _setGlobalEffectMappings(null);
         updateSettings({ globalMappings: {} });
       } else {
-        this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
+        await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
       }
 
-      if (this.globalMappings) {
-        for (const tkn of canvas.tokens.placeables) {
-          if (TVA_CONFIG.filterEffectIcons) {
-            await tkn.drawEffects();
-          }
-          updateWithEffectMapping(tkn);
-          // Instruct users on other scenes to refresh the overlays
-          const message = {
-            handlerName: 'drawOverlays',
-            args: { all: true, sceneId: canvas.scene.id },
-            type: 'UPDATE',
-          };
-          game.socket?.emit('module.token-variants', message);
+      const tokens = this.globalMappings ? canvas.tokens.placeables : this.objectToFlag.getActiveTokens();
+      for (const tkn of tokens) {
+        if (TVA_CONFIG.filterEffectIcons) {
+          await tkn.drawEffects();
         }
+        await updateWithEffectMapping(tkn);
       }
+
+      // Instruct users on other scenes to refresh the overlays
+      const message = {
+        handlerName: 'drawOverlays',
+        args: { all: true, sceneId: canvas.scene.id },
+        type: 'UPDATE',
+      };
+      game.socket?.emit('module.token-variants', message);
     }
     if (this.callback) this.callback();
     this.close();

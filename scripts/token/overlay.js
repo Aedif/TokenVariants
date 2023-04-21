@@ -12,7 +12,11 @@ export async function drawOverlays(token) {
 
   filteredOverlays = filteredOverlays
     .filter((ef) => ef in mappings && mappings[ef].overlay)
-    .sort((ef1, ef2) => mappings[ef1].priority - mappings[ef2].priority)
+    .sort(
+      (ef1, ef2) =>
+        (mappings[ef1].priority - mappings[ef1].parent ? 999 : 0) -
+        (mappings[ef2].priority - mappings[ef2].parent ? 999 : 0)
+    )
     .map((ef) => {
       const overlayConfig = mappings[ef].overlayConfig ?? {};
       overlayConfig.effect = ef;
@@ -50,18 +54,26 @@ export async function drawOverlays(token) {
             sprite.setTexture(await genTexture(token, ov));
           }
         } else {
-          sprite = canvas.primary.addChild(new TVASprite(await genTexture(token, ov), token, ov));
-          token.tva_sprites.push(sprite);
+          if (ov.parent) {
+            const parent = _findTVASprite(ov.parent, token);
+            if (parent) sprite = parent.addChild(new TVASprite(await genTexture(token, ov), token, ov));
+          } else {
+            sprite = canvas.primary.addChild(new TVASprite(await genTexture(token, ov), token, ov));
+          }
+          if (sprite) token.tva_sprites.push(sprite);
         }
-        sprite.tvaRemove = false; // Sprite in use, do not remove
 
-        // Assign order to the overlay
-        if (sprite.tvaOverlayConfig.underlay) {
-          underlaySort -= 0.01;
-          sprite.overlaySort = underlaySort;
-        } else {
-          overlaySort += 0.01;
-          sprite.overlaySort = overlaySort;
+        if (sprite) {
+          sprite.tvaRemove = false; // Sprite in use, do not remove
+
+          // Assign order to the overlay
+          if (sprite.tvaOverlayConfig.underlay) {
+            underlaySort -= 0.01;
+            sprite.overlaySort = underlaySort;
+          } else {
+            overlaySort += 0.01;
+            sprite.overlaySort = overlaySort;
+          }
         }
       }
 
@@ -161,7 +173,7 @@ function _removeMarkedOverlays(token) {
   const sprites = [];
   for (const child of token.tva_sprites) {
     if (child.tvaRemove) {
-      canvas.primary.removeChild(child)?.destroy();
+      child.parent?.removeChild(child)?.destroy();
     } else {
       sprites.push(child);
     }
@@ -181,7 +193,7 @@ function _findTVASprite(effect, token) {
 function _removeAllOverlays(token) {
   if (token.tva_sprites)
     for (const child of token.tva_sprites) {
-      canvas.primary.removeChild(child)?.destroy();
+      child.parent?.removeChild(child)?.destroy();
     }
   token.tva_sprites = null;
 }

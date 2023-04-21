@@ -8,6 +8,7 @@ export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
   alwaysOn: false,
   overlayConfig: null,
   targetActors: null,
+  group: 'Default',
 };
 
 export const DEFAULT_OVERLAY_CONFIG = {
@@ -51,4 +52,5 @@ export const DEFAULT_OVERLAY_CONFIG = {
     curve: { radius: 0, invert: false },
     letterSpacing: CONFIG.canvasTextStyle.letterSpacing,
   },
+  parent: '',
 };

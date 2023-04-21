@@ -375,26 +375,31 @@ ol.token-variant-table .table-header {
 /* Active Effect Config List                */
 /* ---------------------------------------- */
 ol.token-variant-table .table-row .effect-priority {
-  flex: 0.26;
+  flex: 0.1;
 }
 
 ol.token-variant-table .table-row .effect-target {
+  flex: 0.12;
+  text-align: center;
+}
+
+ol.token-variant-table .table-row .effect-group {
   flex: 0.2;
   text-align: center;
 }
 
 ol.token-variant-table .table-row .effect-image {
-  flex: 0 0 80px;
+  flex: 0.2;
   text-align: center;
 }
 
 ol.token-variant-table .table-row .effect-config {
-  flex: 0 0 70px;
+  flex: 0.12;
   text-align: center;
 }
 
 ol.token-variant-table .table-row .effect-overlay {
-  flex: 0 0 50px;
+  flex: 0.2;
   text-align: center;
 }
 
@@ -429,6 +434,7 @@ ol.token-variant-table .table-row .effect-config-script.active {
 }
 
 ol.token-variant-table .table-row .effect-name {
+  flex: 0.5;
   margin-top: 5px;
 }
 
@@ -444,7 +450,6 @@ ol.token-variant-table .table-row .effect-name .div-input span.hp-expression {
 ol.token-variant-table .table-row .effect-name .div-input {
   white-space: nowrap;
   overflow: hidden;
-  width: 240px;
 
   writing-mode: horizontal-tb !important;
   text-rendering: auto;

@@ -270,11 +270,10 @@ export function getAllEffectMappings(token = null) {
   }
 
   if (token) {
-    allMappings = mergeObject(
-      applicableGlobal,
-      token.actor ? token.actor.getFlag('token-variants', 'effectMappings') : {},
-      { inplace: false, recursive: false }
-    );
+    allMappings = mergeObject(applicableGlobal, token.actor?.getFlag('token-variants', 'effectMappings') || {}, {
+      inplace: false,
+      recursive: false,
+    });
   } else {
     allMappings = applicableGlobal;
   }

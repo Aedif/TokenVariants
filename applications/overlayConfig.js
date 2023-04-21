@@ -1,5 +1,5 @@
 import { DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
-import { fixEffectMappings } from '../scripts/token/effects.js';
+import { fixEffectMappings, getAllEffectMappings } from '../scripts/token/effects.js';
 import { generateTextTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
@@ -250,6 +250,11 @@ export default class OverlayConfig extends FormApplication {
 
     data.fonts = Object.keys(CONFIG.fontDefinitions);
 
+    data.parents = Object.keys(getAllEffectMappings(this.token)).filter((ef) => ef !== this.config.effect);
+    const defaultParent = 'Token (Default)';
+    data.parents.unshift(defaultParent);
+    if (!data.parent) data.parent = defaultParent;
+
     return mergeObject(data, settings);
   }
 
@@ -284,6 +289,7 @@ export default class OverlayConfig extends FormApplication {
     } else {
       formData.limitedUsers = [];
     }
+    if (formData.parent === 'Token (Default)') formData.parent = '';
     if (this.callback) this.callback(expandObject(formData));
   }
 }

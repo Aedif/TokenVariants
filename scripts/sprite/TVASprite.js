@@ -190,33 +190,23 @@ export class TVASprite extends TokenMesh {
     }
 
     if (this.anchor) {
-      if (config.animation.relative) {
-        this.anchor.set(0.5, 0.5);
-      } else {
-        this.anchor.set(
-          0.5 + (config.offsetX * this.object.w) / this.width,
-          0.5 + (config.offsetY * this.object.h) / this.height
-        );
-      }
+      this.anchor.set(0.5, 0.5);
     }
 
     // Center and then offset
-    if (config.animation.relative) {
-      this.position.set(
-        this.object.document.x + this.object.w / 2 - config.offsetX * this.object.w,
-        this.object.document.y + this.object.h / 2 - config.offsetY * this.object.h
-      );
+    if (config.parent) {
+      this.position.set(config.offsetX * this.parent.width, config.offsetY * this.parent.height);
     } else {
-      // this._activateTicker();
-
-      // let coord = canvas.canvasCoordinatesFromClient({
-      //   x: window.innerWidth / 2 + config.offsetX * window.innerWidth,
-      //   y: window.innerHeight / 2 + config.offsetY * window.innerHeight,
-      // });
-      // console.log(coord);
-      // this.position.set(coord.x, coord.y);
-
-      this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
+      if (config.animation.relative) {
+        this.pivot.set(0, 0);
+        this.position.set(
+          this.object.document.x + this.object.w / 2 + config.offsetX * this.object.w,
+          this.object.document.y + this.object.h / 2 + config.offsetY * this.object.h
+        );
+      } else {
+        this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
+        this.pivot.set(-config.offsetX * this.object.w, -config.offsetY * this.object.h);
+      }
     }
 
     // Set alpha but only if playOnce is disabled and the video hasn't
