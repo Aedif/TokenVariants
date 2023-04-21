@@ -9,7 +9,7 @@ import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.j
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/token/effects.js';
 
-export default class ActiveEffectConfigList extends FormApplication {
+export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
     super({}, { title: (globalMappings ? 'GLOBAL ' : '') + 'Effect Config' });
 
@@ -26,7 +26,7 @@ export default class ActiveEffectConfigList extends FormApplication {
     return mergeObject(super.defaultOptions, {
       id: 'token-variants-active-effect-config',
       classes: ['sheet'],
-      template: 'modules/token-variants/templates/activeEffectConfigList.html',
+      template: 'modules/token-variants/templates/effectMappingForm.html',
       resizable: false,
       minimizable: false,
       closeOnSubmit: false,
@@ -414,7 +414,7 @@ export default class ActiveEffectConfigList extends FormApplication {
       icon: 'fas fa-globe',
       onclick: async (ev) => {
         await this.close();
-        new ActiveEffectConfigList(this.token, { globalMappings: true }).render(true);
+        new EffectMappingForm(this.token, { globalMappings: true }).render(true);
       },
     });
 

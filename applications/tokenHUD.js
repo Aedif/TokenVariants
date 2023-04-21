@@ -8,7 +8,7 @@ import {
   updateTokenImage,
 } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import ActiveEffectConfigList from './activeEffectConfigList.js';
+import EffectMappingForm from './effectMappingForm.js';
 import { TVA_CONFIG } from '../scripts/settings.js';
 import UserList from './userList.js';
 import FlagsConfig from './flagsConfig.js';
@@ -143,7 +143,7 @@ function _onButtonRightClick(event, hud, html, token) {
       }).render(true);
     });
     contextMenu.find('.effectConfig').click((event) => {
-      new ActiveEffectConfigList(token).render(true);
+      new EffectMappingForm(token).render(true);
     });
     contextMenu.find('.randomizerConfig').click((event) => {
       new RandomizerConfig(token).render(true);
@@ -600,7 +600,7 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new ActiveEffectConfigList(token).render(true);
+          new EffectMappingForm(token).render(true);
         }
       });
 
@@ -610,7 +610,7 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new ActiveEffectConfigList(token, { createMapping: 'token-variants-visibility' }).render(true);
+          new EffectMappingForm(token, { createMapping: 'token-variants-visibility' }).render(true);
         }
       });
 
@@ -620,7 +620,7 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new ActiveEffectConfigList(token, { createMapping: 'token-variants-combat' }).render(true);
+          new EffectMappingForm(token, { createMapping: 'token-variants-combat' }).render(true);
         }
       });
 
@@ -635,7 +635,7 @@ function activateStatusEffectListeners(token) {
           if (game.system.id === 'pf2e') {
             effectName = $(event.target).closest('picture').attr('title');
           }
-          new ActiveEffectConfigList(token, { createMapping: effectName }).render(true);
+          new EffectMappingForm(token, { createMapping: effectName }).render(true);
         }
       });
   }

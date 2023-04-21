@@ -1,7 +1,7 @@
 import { cacheImages } from '../scripts/search.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { getFileName } from '../scripts/utils.js';
-import ActiveEffectConfigList from './activeEffectConfigList.js';
+import EffectMappingForm from './effectMappingForm.js';
 import { showPathSelectCategoryDialog } from './dialogs.js';
 
 export default class ConfigureSettings extends FormApplication {
@@ -231,7 +231,7 @@ export default class ConfigureSettings extends FormApplication {
       const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
       const data = new foundry.data.PrototypeToken(setting);
       const token = new TokenDocument(data, { actor: null });
-      new ActiveEffectConfigList(token, {
+      new EffectMappingForm(token, {
         globalMappings: true,
         callback: () => (this.settings.globalMappings = TVA_CONFIG.globalMappings),
       }).render(true);
