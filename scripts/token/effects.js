@@ -381,8 +381,7 @@ export function evaluateComparatorEffects(token, effects = []) {
   const mappings = getAllEffectMappings(token);
   const re = new RegExp('([a-zA-Z\\-\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
 
-  const matched = {};
-  let compositePriority = 10000;
+  const matched = new Set();
   for (const key of Object.keys(mappings)) {
     const expressions = key
       .split(EXPRESSION_MATCH_RE)
@@ -431,12 +430,7 @@ export function evaluateComparatorEffects(token, effects = []) {
             passed = toCompare <= val;
           }
           if (passed) {
-            if (expressions.length > 1) {
-              compositePriority++;
-              matched[compositePriority] = exp.replaceAll('.', FAUX_DOT);
-            } else {
-              matched[mappings[key].priority] = exp.replaceAll('.', FAUX_DOT);
-            }
+            matched.add(exp.replaceAll('.', FAUX_DOT));
           }
         }
       }
@@ -444,13 +438,7 @@ export function evaluateComparatorEffects(token, effects = []) {
   }
 
   // Remove duplicate expressions and insert into effects
-  const tempSet = new Set();
-  for (const [k, v] of Object.entries(matched)) {
-    if (!tempSet.has(v)) {
-      effects.unshift(v);
-      tempSet.add(v);
-    }
-  }
+  matched.forEach((exp) => effects.unshift(exp));
 
   return effects;
 }

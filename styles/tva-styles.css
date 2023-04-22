@@ -480,7 +480,7 @@ ol.token-variant-table .table-row .effect-name .div-input span.hp-expression {
   color: blue;
 }
 
-/* Copied from input[type="text"] */
+/* Copied from input[type="text"] with some adjustments */
 ol.token-variant-table .table-row .effect-name .div-input {
   white-space: nowrap;
   overflow: hidden;
@@ -500,6 +500,7 @@ ol.token-variant-table .table-row .effect-name .div-input {
   border-image: initial;
 
   min-width: 20px;
+  max-width: 215px;
   height: var(--form-field-height);
   background: rgba(0, 0, 0, 0.05);
   padding: 3px 3px;
