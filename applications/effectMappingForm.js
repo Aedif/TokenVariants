@@ -31,7 +31,7 @@ export default class EffectMappingForm extends FormApplication {
       resizable: false,
       minimizable: false,
       closeOnSubmit: false,
-      width: 805,
+      width: 835,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
     });
@@ -56,6 +56,7 @@ export default class EffectMappingForm extends FormApplication {
       config: attrs.config,
       overlay: attrs.overlay,
       alwaysOn: attrs.alwaysOn,
+      disabled: attrs.disabled,
       overlayConfig: attrs.overlayConfig,
       targetActors: attrs.targetActors,
       group: attrs.group,
@@ -138,7 +139,7 @@ export default class EffectMappingForm extends FormApplication {
           $(this).trigger('click');
         }
       });
-    this.setPosition({ width: 805 });
+    this.setPosition({ width: 835 });
     html.find('.effect-group > input').on('change', this._onGroupChange.bind(this));
   }
 
@@ -409,6 +410,7 @@ export default class EffectMappingForm extends FormApplication {
         priority: 50,
         overlay: false,
         alwaysOn: false,
+        disabled: false,
         group: 'Text Overlays',
         overlay: true,
         overlayConfig: mergeObject(
@@ -700,6 +702,7 @@ export default class EffectMappingForm extends FormApplication {
             config: mapping.config,
             overlay: mapping.overlay,
             alwaysOn: mapping.alwaysOn,
+            disabled: mapping.disabled,
             overlayConfig: mapping.overlayConfig || {},
             targetActors: mapping.targetActors,
             group: mapping.group,
@@ -756,6 +759,7 @@ export default class EffectMappingForm extends FormApplication {
       m2.effectName = m1.effectName.replaceAll('.', FAUX_DOT);
       m2.overlay = m1.overlay;
       m2.alwaysOn = m1.alwaysOn;
+      m2.disabled = m1.disabled;
       m2.group = m1.group;
     }
   }

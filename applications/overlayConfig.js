@@ -264,7 +264,7 @@ export default class OverlayConfig extends FormApplication {
 
     data.fonts = Object.keys(CONFIG.fontDefinitions);
 
-    data.parents = Object.keys(getAllEffectMappings(this.token)).filter((ef) => ef !== this.config.effect);
+    data.parents = Object.keys(getAllEffectMappings(this.token, true)).filter((ef) => ef !== this.config.effect);
     const defaultParent = 'Token (Default)';
     data.parents.unshift(defaultParent);
     if (!data.parent) data.parent = defaultParent;

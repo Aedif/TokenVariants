@@ -6,6 +6,7 @@ export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
   config: null,
   overlay: false,
   alwaysOn: false,
+  disabled: false,
   overlayConfig: null,
   targetActors: null,
   group: 'Default',

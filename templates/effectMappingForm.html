@@ -18,6 +18,7 @@
         <div class="effect-config"><label>Config</label></div>
         <div class="effect-overlay"><label>Overlay</label></div>
         <div class="effect-alwaysOn"><label>Always On</label></div>
+        <div class="effect-disable"><label>Disable</label></div>
         {{#if global}}
         <div class="effect-target"><i class="fas fa-users" title="Configure Applicable actors"></i></div>
         {{/if}}
@@ -88,6 +89,9 @@
         </div>
         <div class="effect-alwaysOn">
           <input type="checkbox" name="mappings.{{mapping.i}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>
+        </div>
+        <div class="effect-disable">
+          <input type="checkbox" name="mappings.{{mapping.i}}.disabled" {{#if mapping.disabled}}checked{{/if}}/>
         </div>
         {{#if ../../global}}
         <div class="effect-target" title="Configure Applicable Actors">

@@ -451,6 +451,11 @@ ol.token-variant-table .table-row .effect-alwaysOn {
   text-align: center;
 }
 
+ol.token-variant-table .table-row .effect-disable {
+  flex: 0 0 60px;
+  text-align: center;
+}
+
 ol.token-variant-table .table-row .effect-config i.active {
   color: orange;
 }

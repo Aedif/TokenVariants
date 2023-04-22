@@ -253,7 +253,7 @@ async function _postTokenUpdateProcessing(tokenDoc, hadActiveHUD, toggleStatus, 
   }
 }
 
-export function getAllEffectMappings(token = null) {
+export function getAllEffectMappings(token = null, includeDisabled = false) {
   let allMappings;
 
   // Sort out global mappings that do not apply to this actor
@@ -277,6 +277,11 @@ export function getAllEffectMappings(token = null) {
   } else {
     allMappings = applicableGlobal;
   }
+
+  if (!includeDisabled)
+    for (const [k, v] of Object.entries(allMappings)) {
+      if (v.disabled) delete allMappings[k];
+    }
 
   fixEffectMappings(allMappings);
 
