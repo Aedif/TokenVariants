@@ -8,7 +8,6 @@ import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/token/effects.js';
-import { drawOverlays } from '../scripts/token/overlay.js';
 
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
@@ -360,6 +359,8 @@ export default class EffectMappingForm extends FormApplication {
           {
             img: '',
             linkScale: false,
+            linkRotation: false,
+            linkMirror: false,
             offsetY: 0.5 + Math.round(Math.random() * 0.3 * 100) / 100,
             offsetX: 0,
             scaleX: 0.68,

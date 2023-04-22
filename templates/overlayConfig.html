@@ -23,7 +23,7 @@
                 </div>
             </div>
 
-            <fieldset>
+            <fieldset class="token-specific-fields">
                 <legend>Display Priority</legend>
 
                 <div class="form-group">
@@ -53,7 +53,7 @@
 
             <fieldset>
                 <legend>Link To Token</legend>
-                <div class="form-group">
+                <div class="form-group token-specific-fields">
                     <label>Tint Color</label>
                     <div class="form-fields">
                         <input type="checkbox" name="inheritTint" data-dtype="Boolean" value="{{inheritTint}}" {{#if inheritTint}}checked{{/if}}>
@@ -74,14 +74,14 @@
                     </div>
                 </div>
     
-                <div class="form-group">
+                <div class="form-group token-specific-fields">
                     <label>Mirror Image</label>
                     <div class="form-fields">
                         <input type="checkbox" name="linkMirror" data-dtype="Boolean" value="{{linkMirror}}" {{#if linkMirror}}checked{{/if}}>
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group token-specific-fields">
                     <label>Scale</label>
                     <div class="form-fields">
                         <input type="checkbox" name="linkScale" data-dtype="Boolean" value="{{linkScale}}" {{#if linkScale}}checked{{/if}}>
@@ -141,20 +141,21 @@
                 </div>
             </div>
 
+            <hr>
 
             <div class="form-group">
                 <label>Horizontal Offset</label>
                 <div class="form-fields">
-                    <input type="range" name="offsetX" value="{{offsetX}}" min="-3" max="3" step="0.01">
-                    <span class="range-value">{{offsetX}}</span>
+                    <input class="offsetX" type="range" value="{{offsetX}}" min="-3" max="3" step="0.01">
+                    <input name="offsetX" class="range-value" type="number" step="any" value="{{offsetX}}"></input>
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Vertical Offset</label>
                 <div class="form-fields">
-                    <input type="range" name="offsetY" value="{{offsetY}}" min="-3" max="3" step="0.01">
-                    <span class="range-value">{{offsetY}}</span>
+                    <input class="offsetY" type="range" value="{{offsetY}}" min="-3" max="3" step="0.01">
+                    <input name="offsetY" class="range-value" type="number" step="any" value="{{offsetY}}"></input>
                 </div>
             </div>
 
@@ -186,6 +187,18 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label>Anchor</label>
+                <div class="form-fields">
+                    <label>X</label>
+                    <input name="anchor.x" type="number" step="any" value="{{anchor.x}}" min="0" max="1"></input>
+                    <label>Y</label>
+                    <input name="anchor.y" type="number" step="any" value="{{anchor.y}}" min="0" max="1"></input>
+                </div>
+                <p class="notes">Set the point on an overlay to be used to anchor it to the center of the parent.</p>
+            </div>
+
+            <img src="modules/token-variants/img/anchor_diagram.webp" width="200" height="200" style="margin: auto;display: block;border: none;"/>
         </div>
 
         <div class="tab active" data-group="main" data-tab="filter">

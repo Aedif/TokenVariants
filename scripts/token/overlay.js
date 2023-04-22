@@ -47,13 +47,17 @@ export async function drawOverlays(token) {
               sprite.refresh(ov);
             } else if (sprite.tvaOverlayConfig.img !== ov.img || !objectsEqual(sprite.tvaOverlayConfig.text, ov.text)) {
               sprite.setTexture(await genTexture(token, ov));
+            } else if (sprite.tvaOverlayConfig.parent !== ov.parent) {
+              sprite.parent?.removeChild(sprite)?.destroy();
+              sprite = null;
             } else {
               sprite.refresh(ov);
             }
           } else if (sprite.texture.textLabel && sprite.texture.textLabel != genTextLabel(token, ov)) {
             sprite.setTexture(await genTexture(token, ov));
           }
-        } else {
+        }
+        if (!sprite) {
           if (ov.parent) {
             const parent = _findTVASprite(ov.parent, token);
             if (parent) sprite = parent.addChild(new TVASprite(await genTexture(token, ov), token, ov));

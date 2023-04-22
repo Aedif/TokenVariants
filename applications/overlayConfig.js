@@ -35,6 +35,15 @@ export default class OverlayConfig extends FormApplication {
     super.activateListeners(html);
     html.find('input,select').on('change', this._onInputChange.bind(this));
     html.find('textarea').on('input', this._onInputChange.bind(this));
+    html.find('[name="parent"]').on('change', (event) => {
+      if (event.target.value === 'Token (Default)') {
+        html.find('.token-specific-fields').show();
+      } else {
+        html.find('.token-specific-fields').hide();
+      }
+      this.setPosition();
+    });
+    html.find('[name="parent"]').trigger('change');
 
     html.find('[name="filter"]').on('change', (event) => {
       html.find('.filterOptions').empty();
@@ -65,6 +74,11 @@ export default class OverlayConfig extends FormApplication {
 
     // Controls for locking scale sliders together
     let scaleState = { locked: true };
+
+    html.find('.offsetX, .offsetY').on('change', (event) => {
+      $(event.target).siblings('.range-value').val($(event.target).val()).trigger('change');
+    });
+
     const lockButtons = $(html).find('.scaleLock > a');
     const sliderScaleWidth = $(html).find('[name="scaleX"]');
     const sliderScaleHeight = $(html).find('[name="scaleY"]');
@@ -254,6 +268,8 @@ export default class OverlayConfig extends FormApplication {
     const defaultParent = 'Token (Default)';
     data.parents.unshift(defaultParent);
     if (!data.parent) data.parent = defaultParent;
+
+    if (!data.anchor) data.anchor = { x: 0.5, y: 0.5 };
 
     return mergeObject(data, settings);
   }

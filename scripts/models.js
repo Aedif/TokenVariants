@@ -53,4 +53,5 @@ export const DEFAULT_OVERLAY_CONFIG = {
     letterSpacing: CONFIG.canvasTextStyle.letterSpacing,
   },
   parent: '',
+  anchor: { x: 0.5, y: 0.5 },
 };

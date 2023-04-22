@@ -211,8 +211,8 @@ Hooks.on('init', function () {
 Hooks.on('renderCombatTracker', async function () {
   if (MODULE_INITIALIZED) {
     for (const tkn of canvas.tokens.placeables) {
-      if (game.user.isGM) updateWithEffectMapping(tkn);
-      drawOverlays(tkn);
+      if (game.user.isGM) await updateWithEffectMapping(tkn);
+      else drawOverlays(tkn);
     }
   }
 });

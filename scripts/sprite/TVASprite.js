@@ -162,7 +162,7 @@ export class TVASprite extends TokenMesh {
 
     // Scale the image using the same logic as the token
     const tex = this.texture;
-    if (config.linkScale) {
+    if (config.linkScale && !config.parent) {
       let aspect = tex.width / tex.height;
       const scale = this.scale;
       if (aspect >= 1) {
@@ -184,28 +184,37 @@ export class TVASprite extends TokenMesh {
     this.scale.y = this.scale.y * config.scaleY;
 
     // Check if mirroring should be inherited from the token and if so apply it
-    if (config.linkMirror) {
+    if (config.linkMirror && !config.parent) {
       this.scale.x = Math.abs(this.scale.x) * (this.object.document.texture.scaleX < 0 ? -1 : 1);
       this.scale.y = Math.abs(this.scale.y) * (this.object.document.texture.scaleY < 0 ? -1 : 1);
     }
 
     if (this.anchor) {
-      this.anchor.set(0.5, 0.5);
+      if (!config.anchor) this.anchor.set(0.5, 0.5);
+      else this.anchor.set(config.anchor.x, config.anchor.y);
     }
 
-    // Center and then offset
-    if (config.parent) {
-      this.position.set(config.offsetX * this.parent.width, config.offsetY * this.parent.height);
+    // Position
+    if (config.parent && this.parent?.anchor) {
+      const pWidth = this.parent.width / this.parent.scale.x;
+      const pHeight = this.parent.height / this.parent.scale.y;
+      this.position.set(
+        -config.offsetX * pWidth - this.parent.anchor.x * pWidth + pWidth / 2,
+        -config.offsetY * pHeight - this.parent.anchor.y * pHeight + pHeight / 2
+      );
     } else {
       if (config.animation.relative) {
         this.pivot.set(0, 0);
         this.position.set(
-          this.object.document.x + this.object.w / 2 + config.offsetX * this.object.w,
-          this.object.document.y + this.object.h / 2 + config.offsetY * this.object.h
+          this.object.document.x + this.object.w / 2 + -config.offsetX * this.object.w,
+          this.object.document.y + this.object.h / 2 + -config.offsetY * this.object.h
         );
       } else {
         this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
-        this.pivot.set(-config.offsetX * this.object.w, -config.offsetY * this.object.h);
+        this.pivot.set(
+          (config.offsetX * this.object.w) / this.scale.x,
+          (config.offsetY * this.object.h) / this.scale.y
+        );
       }
     }
 
