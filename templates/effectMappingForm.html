@@ -1,5 +1,12 @@
 <form>
   <section>
+
+    <datalist id="groups">
+      {{#each groups}}
+      <option value="{{this}}"></option>
+      {{/each}}
+    </datalist>
+
     <ol class="token-variant-table" style="overflow-x: hidden;">
       <li class="table-row table-header flexrow">
         <div class="effect-controls">
@@ -17,8 +24,13 @@
         <div class="effect-group"><label>Group</label></div>
       </li>
 
-      {{#each mappings as |mapping index|}}
-      <li class="table-row flexrow" data-index="{{index}}">
+    {{#each groupedMappings as |mappings group|}}
+      <div class="group-title flexrow">
+        <p>{{group}}</p>
+        <div class="group-toggle active" data-toggle="{{group}}"><a><i class="fas fa-chevron-double-up"></i></a></div>
+      </div>
+      {{#each mappings as |mapping|}}
+      <li class="table-row flexrow" data-group="{{group}}" data-index="{{mapping.i}}">
         <div class="effect-controls">
           <a class="clone-mapping" title="Clone mapping"><i class="fas fa-clone"></i></a>
           <a class="delete-mapping" title="Delete mapping"><i class="fas fa-trash"></i></a>
@@ -27,14 +39,14 @@
           <div class="div-input" contenteditable="true">{{{mapping.highlightedEffectName}}}</div>
           <input
             type="text"
-            name="mappings.{{index}}.effectName"
+            name="mappings.{{mapping.i}}.effectName"
             value="{{mapping.effectName}}"
             hidden/>
         </div>
         <div class="effect-priority">
           <input
             type="number"
-            name="mappings.{{index}}.priority"
+            name="mappings.{{mapping.i}}.priority"
             value="{{mapping.priority}}"
             placeholder="priority"
           />
@@ -54,13 +66,13 @@
           <input
             class="imgSrc"
             type="hidden"
-            name="mappings.{{index}}.imgSrc"
+            name="mappings.{{mapping.i}}.imgSrc"
             value="{{mapping.imgSrc}}"
           />
           <input
             class="imgName"
             type="hidden"
-            name="mappings.{{index}}.imgName"
+            name="mappings.{{mapping.i}}.imgName"
             value="{{mapping.imgName}}"
           />
         </div>
@@ -68,31 +80,26 @@
           <a><i class="fas fa-cog fa-lg config {{#if mapping.hasTokenConfig}}active{{/if}}"></i></a>
           <a><i class="fas fa-edit config-edit {{#if mapping.hasConfig}}active{{/if}}"></i></a>
           <a><i class="fas fa-play config-script {{#if mapping.hasScript}}active{{/if}}"></i></a>
-          <input class="config" type="hidden" name="mappings.{{index}}.config" value="{{mapping.config}}">
+          <input class="config" type="hidden" name="mappings.{{mapping.i}}.config" value="{{mapping.config}}">
         </div>
         <div class="effect-overlay">
-          <input type="checkbox" name="mappings.{{index}}.overlay" {{#if mapping.overlay}}checked{{/if}}/>
+          <input type="checkbox" name="mappings.{{mapping.i}}.overlay" {{#if mapping.overlay}}checked{{/if}}/>
           <a><i class="fas fa-cog fa-lg overlay-config"></i></a>
         </div>
         <div class="effect-alwaysOn">
-          <input type="checkbox" name="mappings.{{index}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>
+          <input type="checkbox" name="mappings.{{mapping.i}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>
         </div>
-        {{#if ../global}}
+        {{#if ../../global}}
         <div class="effect-target" title="Configure Applicable Actors">
           <a><i class="fas fa-users"></i></a>
         </div>
         {{/if}}
         <div class="effect-group">
-          <div class="form-fields">
-            <select name="mappings.{{index}}.group">
-              {{#each ../groups as |group|}}
-              <option value="{{group}}" {{#if (eq ../mapping.group group)}}selected="selected"{{/if}}>{{group}}</option>
-              {{/each}}
-            </select>
-          </div>
+            <input list="groups" name="mappings.{{mapping.i}}.group" value="{{mapping.group}}"/>
         </div>
       </li>
       {{/each}}
+    {{/each}}
     </ol>
   </section>
   <footer class="sheet-footer flexrow">

@@ -371,6 +371,32 @@ ol.token-variant-table .table-header {
   font-weight: bold;
 }
 
+ol.token-variant-table .group-title {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid #7a7971;
+  line-height: 24px;
+  font-weight: bold;
+  margin-top: 5px;
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+ol.token-variant-table .group-title > p {
+  margin-left: 6px;
+  flex: 0.2;
+}
+
+ol.token-variant-table .group-toggle {
+  flex: 0.8;
+  text-align: right;
+  margin-right: 10px;
+  margin-top: 7px;
+}
+
+ol.token-variant-table .group-toggle a.active {
+  transform: rotate(180deg);
+}
+
 /* ---------------------------------------- */
 /* Active Effect Config List                */
 /* ---------------------------------------- */
@@ -386,6 +412,10 @@ ol.token-variant-table .table-row .effect-target {
 ol.token-variant-table .table-row .effect-group {
   flex: 0.2;
   text-align: center;
+}
+
+ol.token-variant-table .table-row .effect-group > input {
+  width: 80px;
 }
 
 ol.token-variant-table .table-row .effect-image {

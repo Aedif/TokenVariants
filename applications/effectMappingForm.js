@@ -36,7 +36,7 @@ export default class EffectMappingForm extends FormApplication {
     });
   }
 
-  _processConfig(effectName, attrs) {
+  _processConfig(effectName, attrs, index) {
     if (!attrs.config) attrs.config = {};
     let hasTokenConfig = Object.keys(attrs.config).filter((k) => attrs.config[k]).length;
     if (attrs.config.flags) hasTokenConfig--;
@@ -57,6 +57,7 @@ export default class EffectMappingForm extends FormApplication {
       alwaysOn: attrs.alwaysOn,
       overlayConfig: attrs.overlayConfig,
       targetActors: attrs.targetActors,
+      group: attrs.group,
     };
   }
 
@@ -83,14 +84,17 @@ export default class EffectMappingForm extends FormApplication {
       this.createMapping = null;
     }
 
-    const groups = ['Default'];
-    mappings.forEach((mapping) => {
-      if (mapping.group && !groups.includes(mapping.group)) groups.push(mapping.group);
+    let groupedMappings = { Default: [] };
+    mappings.forEach((mapping, index) => {
+      mapping.i = index; // assign so that we can reference the mapping inside of an array
+      if (!mapping.group || !mapping.group.trim()) mapping.group = 'Default';
+      if (!(mapping.group in groupedMappings)) groupedMappings[mapping.group] = [];
+      groupedMappings[mapping.group].push(mapping);
     });
-    data.groups = groups;
+    data.groups = Object.keys(groupedMappings);
 
     this.object.mappings = mappings;
-    data.mappings = mappings;
+    data.groupedMappings = groupedMappings;
     data.global = Boolean(this.globalMappings);
     return data;
   }
@@ -119,6 +123,34 @@ export default class EffectMappingForm extends FormApplication {
     html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
     html.find('.div-input').on('input paste', this._onEffectNameChange);
+    html.find('.group-toggle > a').on('click', this._onGroupToggle.bind(this));
+    html.find('.effect-group > input').on('change', this._onGroupChange.bind(this));
+  }
+
+  async _onGroupChange(event) {
+    const input = $(event.target);
+    let group = input.val().trim();
+    if (!group) group = 'Default';
+    input.val(group);
+
+    await this._onSubmit(event);
+    this.render();
+
+    console.log(event);
+  }
+
+  async _onGroupToggle(event) {
+    const group = $(event.target).closest('.group-toggle');
+    const form = $(event.target).closest('form');
+    form.find(`[data-group="${group.data('toggle')}"]`).toggle();
+    if (group.hasClass('active')) {
+      group.removeClass('active');
+      group.find('i').addClass('fa-rotate-180');
+    } else {
+      group.addClass('active');
+      group.find('i').removeClass('fa-rotate-180');
+    }
+    this.setPosition();
   }
 
   async _onEffectNameChange(event) {
@@ -353,6 +385,7 @@ export default class EffectMappingForm extends FormApplication {
         priority: 50,
         overlay: false,
         alwaysOn: false,
+        group: 'Text Overlay',
         overlay: true,
         overlayConfig: mergeObject(
           DEFAULT_OVERLAY_CONFIG,
@@ -645,6 +678,7 @@ export default class EffectMappingForm extends FormApplication {
             alwaysOn: mapping.alwaysOn,
             overlayConfig: mapping.overlayConfig || {},
             targetActors: mapping.targetActors,
+            group: mapping.group,
           };
           effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
         }
@@ -698,6 +732,7 @@ export default class EffectMappingForm extends FormApplication {
       m2.effectName = m1.effectName.replaceAll('.', FAUX_DOT);
       m2.overlay = m1.overlay;
       m2.alwaysOn = m1.alwaysOn;
+      m2.group = m1.group;
     }
   }
 }
