@@ -20,6 +20,7 @@ export default class EffectMappingForm extends FormApplication {
     if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
     this.callback = callback;
     this.createMapping = createMapping;
+    this.toggled = { Default: true };
   }
 
   static get defaultOptions() {
@@ -27,12 +28,12 @@ export default class EffectMappingForm extends FormApplication {
       id: 'token-variants-active-effect-config',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/effectMappingForm.html',
-      resizable: true,
+      resizable: false,
       minimizable: false,
       closeOnSubmit: false,
+      width: 805,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
-      width: 795,
     });
   }
 
@@ -58,6 +59,7 @@ export default class EffectMappingForm extends FormApplication {
       overlayConfig: attrs.overlayConfig,
       targetActors: attrs.targetActors,
       group: attrs.group,
+      parent: attrs.overlayConfig?.parent,
     };
   }
 
@@ -83,6 +85,8 @@ export default class EffectMappingForm extends FormApplication {
       }
       this.createMapping = null;
     }
+
+    mappings = mappings.sort((m1, m2) => m1.priority - m2.priority);
 
     let groupedMappings = { Default: [] };
     mappings.forEach((mapping, index) => {
@@ -123,7 +127,18 @@ export default class EffectMappingForm extends FormApplication {
     html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
     html.find('.div-input').on('input paste', this._onEffectNameChange);
-    html.find('.group-toggle > a').on('click', this._onGroupToggle.bind(this));
+    const app = this;
+    html
+      .find('.group-toggle > a')
+      .on('click', this._onGroupToggle.bind(this))
+      .each(function () {
+        const group = $(this).closest('.group-toggle');
+        const groupName = group.data('toggle');
+        if (!app.toggled[groupName]) {
+          $(this).trigger('click');
+        }
+      });
+    this.setPosition({ width: 805 });
     html.find('.effect-group > input').on('change', this._onGroupChange.bind(this));
   }
 
@@ -135,22 +150,23 @@ export default class EffectMappingForm extends FormApplication {
 
     await this._onSubmit(event);
     this.render();
-
-    console.log(event);
   }
 
-  async _onGroupToggle(event) {
+  _onGroupToggle(event) {
     const group = $(event.target).closest('.group-toggle');
+    const groupName = group.data('toggle');
     const form = $(event.target).closest('form');
-    form.find(`[data-group="${group.data('toggle')}"]`).toggle();
+    form.find(`[data-group="${groupName}"]`).toggle();
     if (group.hasClass('active')) {
       group.removeClass('active');
       group.find('i').addClass('fa-rotate-180');
+      this.toggled[groupName] = false;
     } else {
       group.addClass('active');
       group.find('i').removeClass('fa-rotate-180');
+      this.toggled[groupName] = true;
     }
-    this.setPosition();
+    this.setPosition({ height: 'auto' });
   }
 
   async _onEffectNameChange(event) {
@@ -197,6 +213,14 @@ export default class EffectMappingForm extends FormApplication {
       mapping.overlayConfig,
       (config) => {
         mapping.overlayConfig = config;
+        const gear = $(li).find('.effect-overlay > a');
+        if (config?.parent && config.parent !== 'Token (Default)') {
+          gear.addClass('child');
+          gear.attr('title', 'Child Of: ' + config.parent);
+        } else {
+          gear.removeClass('child');
+          gear.attr('title', '');
+        }
       },
       mapping.effectName,
       this.token
@@ -385,7 +409,7 @@ export default class EffectMappingForm extends FormApplication {
         priority: 50,
         overlay: false,
         alwaysOn: false,
-        group: 'Text Overlay',
+        group: 'Text Overlays',
         overlay: true,
         overlayConfig: mergeObject(
           DEFAULT_OVERLAY_CONFIG,

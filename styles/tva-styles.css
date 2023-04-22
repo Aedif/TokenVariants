@@ -372,9 +372,9 @@ ol.token-variant-table .table-header {
 }
 
 ol.token-variant-table .group-title {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.15);
   border: 1px solid #7a7971;
-  line-height: 24px;
+  line-height: 11px;
   font-weight: bold;
   margin-top: 5px;
   margin-left: 5px;
@@ -440,6 +440,10 @@ ol.token-variant-table .table-row .effect-overlay > input {
 
 ol.token-variant-table .table-row .effect-overlay > a {
   vertical-align: middle;
+}
+
+ol.token-variant-table .table-row .effect-overlay > a.child {
+  color: rgb(252, 30, 252);
 }
 
 ol.token-variant-table .table-row .effect-alwaysOn {

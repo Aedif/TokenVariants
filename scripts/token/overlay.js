@@ -14,8 +14,8 @@ export async function drawOverlays(token) {
     .filter((ef) => ef in mappings && mappings[ef].overlay)
     .sort(
       (ef1, ef2) =>
-        (mappings[ef1].priority - mappings[ef1].parent ? 999 : 0) -
-        (mappings[ef2].priority - mappings[ef2].parent ? 999 : 0)
+        (mappings[ef1].priority - mappings[ef1].overlayConfig?.parent ? 0 : 999) -
+        (mappings[ef2].priority - mappings[ef2].overlayConfig?.parent ? 0 : 999)
     )
     .map((ef) => {
       const overlayConfig = mappings[ef].overlayConfig ?? {};
