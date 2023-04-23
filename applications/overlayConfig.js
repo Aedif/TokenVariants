@@ -188,6 +188,7 @@ export default class OverlayConfig extends FormApplication {
     } else {
       this.previewConfig[event.target.name] = $(event.target).val();
     }
+    if (this.previewConfig?.parent === 'Token (Default)') delete this.previewConfig.parent;
     this._applyPreviews();
   }
 

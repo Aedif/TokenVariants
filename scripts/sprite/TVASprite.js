@@ -1,5 +1,6 @@
 import { FILTERS } from '../../applications/overlayConfig.js';
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
+import { removeMarkedOverlays } from '../token/overlay.js';
 
 class OutlineFilter extends OutlineOverlayFilter {
   /** @inheritdoc */
@@ -325,6 +326,14 @@ export class TVASprite extends TokenMesh {
 
   destroy() {
     this.stopAnimation();
+
+    if (this.children) {
+      for (const ch of this.children) {
+        if (ch instanceof TVASprite) ch.tvaRemove = true;
+      }
+      removeMarkedOverlays(this.object);
+    }
+
     if (this.texture.tvaLabel) {
       return super.destroy(true);
     } else if (this.texture?.baseTexture.resource?.source?.tagName === 'VIDEO') {

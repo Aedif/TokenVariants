@@ -81,7 +81,7 @@ export async function drawOverlays(token) {
         }
       }
 
-      _removeMarkedOverlays(token);
+      removeMarkedOverlays(token);
       token.tva_drawing_overlays = false;
     });
   } else {
@@ -173,7 +173,7 @@ function _markAllOverlaysForRemoval(token) {
   }
 }
 
-function _removeMarkedOverlays(token) {
+export function removeMarkedOverlays(token) {
   const sprites = [];
   for (const child of token.tva_sprites) {
     if (child.tvaRemove) {
