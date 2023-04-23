@@ -504,7 +504,7 @@ ol.token-variant-table .table-row .effect-name .div-input {
   border-style: inset;
   border-image: initial;
 
-  min-width: 20px;
+  min-width: 215px;
   max-width: 215px;
   height: var(--form-field-height);
   background: rgba(0, 0, 0, 0.05);

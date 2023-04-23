@@ -31,7 +31,7 @@ export default class EffectMappingForm extends FormApplication {
       resizable: false,
       minimizable: false,
       closeOnSubmit: false,
-      width: 835,
+      width: 845,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
     });
@@ -139,7 +139,7 @@ export default class EffectMappingForm extends FormApplication {
           $(this).trigger('click');
         }
       });
-    this.setPosition({ width: 835 });
+    this.setPosition({ width: 845 });
     html.find('.effect-group > input').on('change', this._onGroupChange.bind(this));
   }
 

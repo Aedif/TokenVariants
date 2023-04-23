@@ -1,3 +1,23 @@
+# 4.36.0
+
+Overlays
+
+- New option: `Misc` > `Parent`
+  - Allows assignment of an overlay as a child to another instead of the token
+  - This `child` overlay will move and scale relative to the `parent`
+  - Note that if the parent mapping is not applicable then children will not get displayed
+- New option: `Appearance` > `Anchor`
+  - Allows you to define the point on the overlay that will be used for positioning
+  - e.g. top-left corner, centre, bottom-right corner, etc.
+- Fixed position offset inaccuracies when scale != 1
+
+Effect Mapping
+
+- New option: `Group`
+  - Allows to visually group mappings within the form
+- New option: `Disable`
+  - Disables the mapping without needing to remove it
+
 # 4.35.1
 
 - Fixed player clients attempting to perform GM only updates

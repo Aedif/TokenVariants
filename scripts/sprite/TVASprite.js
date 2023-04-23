@@ -249,6 +249,12 @@ export class TVASprite extends TokenMesh {
     if (fullRefresh) this._applyFilters(config);
     //if (fullRefresh) this.filters = this._getFilters(config);
 
+    if (preview && this.children) {
+      this.children.forEach((ch) => {
+        if (ch instanceof TVASprite) ch.refresh(null, { preview: true });
+      });
+    }
+
     this.ready = true;
   }
 
