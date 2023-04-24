@@ -266,7 +266,7 @@ export function getAllEffectMappings(token = null, includeDisabled = false) {
       }
     }
   } else {
-    applicableGlobal = TVA_CONFIG.globalMappings;
+    applicableGlobal = { ...TVA_CONFIG.globalMappings };
   }
 
   if (token) {

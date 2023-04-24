@@ -87,19 +87,22 @@ export default class EffectMappingForm extends FormApplication {
       this.createMapping = null;
     }
 
-    mappings = mappings.sort((m1, m2) => m1.priority - m2.priority);
+    mappings = mappings.sort((m1, m2) => {
+      if (!m1.effectName && m2.effectName) return -1;
+      else if (m1.effectName && !m2.effectName) return 1;
 
-    let groupedMappings = { Default: { list: [], active: false } };
-    mappings.forEach((mapping, index) => {
-      mapping.i = index; // assign so that we can reference the mapping inside of an array
-      if (!mapping.group || !mapping.group.trim()) mapping.group = 'Default';
-      if (!(mapping.group in groupedMappings)) groupedMappings[mapping.group] = { list: [], active: false };
-      if (!mapping.disabled) groupedMappings[mapping.group].active = true;
-      groupedMappings[mapping.group].list.push(mapping);
+      if (!m1.overlayConfig?.parent && m2.overlayConfig?.parent) return -1;
+      else if (m1.overlayConfig?.parent && !m2.overlayConfig?.parent) return 1;
+
+      let priorityDiff = m1.priority - m2.priority;
+      if (priorityDiff === 0) return m1.effectName.localeCompare(m2.effectName);
+      return priorityDiff;
     });
+
+    const [sMappings, groupedMappings] = sortMappingsToGroups(mappings);
     data.groups = Object.keys(groupedMappings);
 
-    this.object.mappings = mappings;
+    this.object.mappings = sMappings;
     data.groupedMappings = groupedMappings;
     data.global = Boolean(this.globalMappings);
     return data;
@@ -248,7 +251,7 @@ export default class EffectMappingForm extends FormApplication {
       (config) => {
         mapping.overlayConfig = config;
         const gear = $(li).find('.effect-overlay > a');
-        if (config?.parent && config.parent !== 'Token (Default)') {
+        if (config?.parent && config.parent !== 'Token (Placeable)') {
           gear.addClass('child');
           gear.attr('title', 'Child Of: ' + config.parent);
         } else {
@@ -607,16 +610,25 @@ export default class EffectMappingForm extends FormApplication {
     if (!mappings || isEmpty(mappings)) return;
 
     let content = '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
-    for (const key of Object.keys(mappings)) {
-      content += `
-      <div class="form-group">
-        <label>${key}</label>
-        <div class="form-fields">
-            <input type="checkbox" name="${key}" data-dtype="Boolean">
-        </div>
-      </div>
-      `;
+
+    const [_, mappingGroups] = sortMappingsToGroups(mappings);
+    console.log;
+    for (const [group, obj] of Object.entries(mappingGroups)) {
+      if (obj.list.length) {
+        content += `<h4 style="text-align:center;"><b>${group}</b></h4>`;
+        for (const mapping of obj.list) {
+          content += `
+          <div class="form-group">
+            <label>${mapping.effectName.replaceAll(FAUX_DOT, '.')}</label>
+            <div class="form-fields">
+                <input type="checkbox" name="${mapping.effectName}" data-dtype="Boolean">
+            </div>
+          </div>
+          `;
+        }
+      }
     }
+
     content += `</form><div class="form-group"><button type="button" class="select-all">Select all</div>`;
 
     new Dialog({
@@ -855,4 +867,36 @@ async function _setGlobalEffectMappings(mappings) {
     }
   }
   mergeObject(TVA_CONFIG.globalMappings, mappings, { recursive: false });
+}
+
+export function sortMappingsToGroups(mappings) {
+  if (!Array.isArray(mappings)) {
+    let tempMappings = [];
+    for (const [effectName, attrs] of Object.entries(mappings)) {
+      tempMappings.push({ effectName, ...attrs });
+    }
+    mappings = tempMappings;
+  }
+
+  mappings.sort((m1, m2) => {
+    if (!m1.effectName && m2.effectName) return -1;
+    else if (m1.effectName && !m2.effectName) return 1;
+
+    if (!m1.overlayConfig?.parent && m2.overlayConfig?.parent) return -1;
+    else if (m1.overlayConfig?.parent && !m2.overlayConfig?.parent) return 1;
+
+    let priorityDiff = m1.priority - m2.priority;
+    if (priorityDiff === 0) return m1.effectName.localeCompare(m2.effectName);
+    return priorityDiff;
+  });
+
+  let groupedMappings = { Default: { list: [], active: false } };
+  mappings.forEach((mapping, index) => {
+    mapping.i = index; // assign so that we can reference the mapping inside of an array
+    if (!mapping.group || !mapping.group.trim()) mapping.group = 'Default';
+    if (!(mapping.group in groupedMappings)) groupedMappings[mapping.group] = { list: [], active: false };
+    if (!mapping.disabled) groupedMappings[mapping.group].active = true;
+    groupedMappings[mapping.group].list.push(mapping);
+  });
+  return [mappings, groupedMappings];
 }

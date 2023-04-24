@@ -3,6 +3,7 @@ import { fixEffectMappings, getAllEffectMappings } from '../scripts/token/effect
 import { generateTextTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
+import { sortMappingsToGroups } from './effectMappingForm.js';
 
 export default class OverlayConfig extends FormApplication {
   constructor(config, callback, effectName, token) {
@@ -36,7 +37,7 @@ export default class OverlayConfig extends FormApplication {
     html.find('input,select').on('change', this._onInputChange.bind(this));
     html.find('textarea').on('input', this._onInputChange.bind(this));
     html.find('[name="parent"]').on('change', (event) => {
-      if (event.target.value === 'Token (Default)') {
+      if (event.target.value === 'Token (Placeable)') {
         html.find('.token-specific-fields').show();
       } else {
         html.find('.token-specific-fields').hide();
@@ -188,7 +189,7 @@ export default class OverlayConfig extends FormApplication {
     } else {
       this.previewConfig[event.target.name] = $(event.target).val();
     }
-    if (this.previewConfig?.parent === 'Token (Default)') delete this.previewConfig.parent;
+    if (this.previewConfig?.parent === 'Token (Placeable)') delete this.previewConfig.parent;
     this._applyPreviews();
   }
 
@@ -265,11 +266,12 @@ export default class OverlayConfig extends FormApplication {
 
     data.fonts = Object.keys(CONFIG.fontDefinitions);
 
-    data.parents = Object.keys(getAllEffectMappings(this.token, true)).filter((ef) => ef !== this.config.effect);
-    const defaultParent = 'Token (Default)';
-    data.parents.unshift(defaultParent);
-    if (!data.parent) data.parent = defaultParent;
+    const allMappings = getAllEffectMappings(this.token, true);
+    delete allMappings[this.config.effect];
+    const [_, groupedMappings] = sortMappingsToGroups(allMappings);
 
+    data.parents = groupedMappings;
+    if (!data.parent) data.parent = 'Token (Placeable)';
     if (!data.anchor) data.anchor = { x: 0.5, y: 0.5 };
 
     return mergeObject(data, settings);
@@ -306,7 +308,7 @@ export default class OverlayConfig extends FormApplication {
     } else {
       formData.limitedUsers = [];
     }
-    if (formData.parent === 'Token (Default)') formData.parent = '';
+    if (formData.parent === 'Token (Placeable)') formData.parent = '';
     if (this.callback) this.callback(expandObject(formData));
   }
 }

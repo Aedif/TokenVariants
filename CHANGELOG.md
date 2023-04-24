@@ -1,3 +1,9 @@
+# 4.37.0
+
+- Added a disable button for Effect Mapping groups
+- Copy global effect mappings dialog and Overlay parent field is now sorted into mapping groups
+- Effect Mappings will now be sorted based on priority first and then the effect name
+
 # 4.36.0
 
 Overlays

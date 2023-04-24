@@ -16,8 +16,13 @@
                 <label>Parent</label>
                 <div class="form-fields">
                 <select name="parent">
-                    {{#each parents as |parent|}}
-                    <option value="{{parent}}" {{#if (eq ../parent parent)}}selected="selected"{{/if}}>{{parent}}</option>
+                    <option value="Token (Placeable)" {{#if (eq ../../parent "Token (Placeable)")}}selected="selected"{{/if}}>Token (Placeable)</option>
+                    {{#each parents as |parent group|}}
+                    <optgroup label="{{group}}">
+                        {{#each parent.list as |mapping|}}
+                        <option value="{{mapping.effectName}}" {{#if (eq ../../parent mapping.effectName)}}selected="selected"{{/if}}>{{mapping.effectName}}</option>
+                        {{/each}}
+                    </optgroup>
                     {{/each}}
                 </select>
                 </div>
