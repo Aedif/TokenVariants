@@ -28,9 +28,10 @@
     {{#each groupedMappings as |mappings group|}}
       <div class="group-title flexrow">
         <p>{{group}}</p>
-        <div class="group-toggle active" data-toggle="{{group}}"><a><i class="fas fa-chevron-double-up"></i></a></div>
+        <div class="group-disable {{#if mappings.active}}active{{/if}}" data-group="{{group}}"><a><i class="fas fa-power-off"></i></a></div>
+        <div class="group-toggle active {{#if ../global}}global{{/if}}" data-group="{{group}}"><a><i class="fas fa-chevron-double-up"></i></a></div>
       </div>
-      {{#each mappings as |mapping|}}
+      {{#each mappings.list as |mapping|}}
       <li class="table-row flexrow" data-group="{{group}}" data-index="{{mapping.i}}">
         <div class="effect-controls">
           <a class="clone-mapping" title="Clone mapping"><i class="fas fa-clone"></i></a>

@@ -383,11 +383,29 @@ ol.token-variant-table .group-title {
 
 ol.token-variant-table .group-title > p {
   margin-left: 6px;
-  flex: 0.2;
+}
+
+ol.token-variant-table .group-disable {
+  flex: 0.1;
+  text-align: right;
+  margin-right: 10px;
+  margin-top: 7px;
+  color: red;
+}
+
+ol.token-variant-table .group-disable.active {
+  color: green;
 }
 
 ol.token-variant-table .group-toggle {
-  flex: 0.8;
+  flex: 0.148;
+  text-align: right;
+  margin-right: 10px;
+  margin-top: 7px;
+}
+
+ol.token-variant-table .group-toggle.global {
+  flex: 0.232;
   text-align: right;
   margin-right: 10px;
   margin-top: 7px;

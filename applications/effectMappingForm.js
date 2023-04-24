@@ -89,12 +89,13 @@ export default class EffectMappingForm extends FormApplication {
 
     mappings = mappings.sort((m1, m2) => m1.priority - m2.priority);
 
-    let groupedMappings = { Default: [] };
+    let groupedMappings = { Default: { list: [], active: false } };
     mappings.forEach((mapping, index) => {
       mapping.i = index; // assign so that we can reference the mapping inside of an array
       if (!mapping.group || !mapping.group.trim()) mapping.group = 'Default';
-      if (!(mapping.group in groupedMappings)) groupedMappings[mapping.group] = [];
-      groupedMappings[mapping.group].push(mapping);
+      if (!(mapping.group in groupedMappings)) groupedMappings[mapping.group] = { list: [], active: false };
+      if (!mapping.disabled) groupedMappings[mapping.group].active = true;
+      groupedMappings[mapping.group].list.push(mapping);
     });
     data.groups = Object.keys(groupedMappings);
 
@@ -134,13 +135,45 @@ export default class EffectMappingForm extends FormApplication {
       .on('click', this._onGroupToggle.bind(this))
       .each(function () {
         const group = $(this).closest('.group-toggle');
-        const groupName = group.data('toggle');
+        const groupName = group.data('group');
         if (!app.toggled[groupName]) {
           $(this).trigger('click');
         }
       });
     this.setPosition({ width: 845 });
+    html.find('.effect-disable > input').on('change', this._onDisable.bind(this));
+    html.find('.group-disable > a').on('click', this._onGroupDisable.bind(this));
     html.find('.effect-group > input').on('change', this._onGroupChange.bind(this));
+  }
+
+  async _onDisable(event) {
+    const groupName = $(event.target).closest('.table-row').data('group');
+    const disableGroupToggle = $(event.target)
+      .closest('.token-variant-table')
+      .find(`.group-disable[data-group="${groupName}"]`);
+
+    const checkboxes = $(event.target)
+      .closest('.token-variant-table')
+      .find(`[data-group="${groupName}"] > .effect-disable`);
+    const numChecked = checkboxes.find('input:checked').length;
+
+    if (checkboxes.length !== numChecked) {
+      disableGroupToggle.addClass('active');
+    } else disableGroupToggle.removeClass('active');
+  }
+
+  async _onGroupDisable(event) {
+    const group = $(event.target).closest('.group-disable');
+    const groupName = group.data('group');
+    const chks = $(event.target).closest('form').find(`[data-group="${groupName}"]`).find('.effect-disable > input');
+
+    if (group.hasClass('active')) {
+      group.removeClass('active');
+      chks.prop('checked', true);
+    } else {
+      group.addClass('active');
+      chks.prop('checked', false);
+    }
   }
 
   async _onGroupChange(event) {
@@ -155,9 +188,9 @@ export default class EffectMappingForm extends FormApplication {
 
   _onGroupToggle(event) {
     const group = $(event.target).closest('.group-toggle');
-    const groupName = group.data('toggle');
+    const groupName = group.data('group');
     const form = $(event.target).closest('form');
-    form.find(`[data-group="${groupName}"]`).toggle();
+    form.find(`li[data-group="${groupName}"]`).toggle();
     if (group.hasClass('active')) {
       group.removeClass('active');
       group.find('i').addClass('fa-rotate-180');
