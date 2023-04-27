@@ -1,18 +1,69 @@
-import { showArtSelect } from '../token-variants.mjs';
-import { TVA_CONFIG } from './settings.js';
-import { SEARCH_TYPE, updateActorImage } from './utils.js';
+import { showArtSelect } from '../../token-variants.mjs';
+import { TVA_CONFIG } from '../settings.js';
+import { SEARCH_TYPE, getTokenConfigForUpdate, updateActorImage } from '../utils.js';
+import { registerHook, unregisterHook } from './hooks.js';
 
-export function registerMiscHooks() {
-  // Insert buttons and listeners to open up ArtSelect forms from
-  // various contexts
-  Hooks.on('renderTileConfig', _modTileConfig);
-  Hooks.on('renderMeasuredTemplateConfig', _modTemplateConfig);
+const feature_id = 'artSelect';
 
+export function registerArtSelectButtonHooks() {
+  // Insert buttons and listeners to open up ArtSelect forms from various contexts
   if (TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
-    Hooks.on('renderActorSheet', _modActorSheet);
-    Hooks.on('renderItemSheet', _modItemSheet);
-    Hooks.on('renderItemActionSheet', _modItemSheet);
-    Hooks.on('renderJournalSheet', _modJournalSheet);
+    registerHook(feature_id, 'renderActorSheet', _modActorSheet);
+    registerHook(feature_id, 'renderItemSheet', _modItemSheet);
+    registerHook(feature_id, 'renderItemActionSheet', _modItemSheet);
+    registerHook(feature_id, 'renderJournalSheet', _modJournalSheet);
+    registerHook(feature_id, 'renderTileConfig', _modTileConfig);
+    registerHook(feature_id, 'renderMeasuredTemplateConfig', _modTemplateConfig);
+    registerHook(feature_id, 'renderTokenConfig', _modTokenConfig);
+  } else {
+    [
+      'renderActorSheet',
+      'renderItemSheet',
+      'renderItemActionSheet',
+      'renderJournalSheet',
+      'renderTileConfig',
+      'renderMeasuredTemplateConfig',
+      'renderTokenConfig',
+    ].forEach((name) => unregisterHook(feature_id, name));
+  }
+}
+
+/**
+ * Adds a button to 'Token Configuration' window's 'Image' tab which opens
+ * ArtSelect using the token's name.
+ */
+function _modTokenConfig(tokenConfig, html, _) {
+  if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
+    let fields = html[0].getElementsByClassName('image');
+    for (let field of fields) {
+      if (field.getAttribute('name') == 'texture.src') {
+        let el = document.createElement('button');
+        el.type = 'button';
+        el.title = game.i18n.localize('token-variants.windows.art-select.select-variant');
+        el.className = 'token-variants-image-select-button';
+        el.innerHTML = '<i class="fas fa-images"></i>';
+        el.tabIndex = -1;
+        el.setAttribute('data-type', 'imagevideo');
+        el.setAttribute('data-target', 'texture.src');
+        el.onclick = async () => {
+          showArtSelect(tokenConfig.object.name, {
+            callback: (imgSrc, name) => {
+              field.value = imgSrc;
+              const tokenConfig = getTokenConfigForUpdate(imgSrc, name);
+              if (tokenConfig) {
+                for (var key in tokenConfig) {
+                  $(html).find(`[name="${key}"]`).val(tokenConfig[key]);
+                }
+              }
+            },
+            searchType: SEARCH_TYPE.TOKEN,
+            object: tokenConfig.object,
+          });
+        };
+        field.parentNode.append(el);
+        return;
+      }
+    }
   }
 }
 

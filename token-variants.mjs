@@ -9,13 +9,11 @@ import {
   waitForTokenTexture,
 } from './scripts/utils.js';
 import { drawOverlays } from './scripts/token/overlay.js';
-import { updateWithEffectMapping } from './scripts/token/effects.js';
-import { registerTokenHooks } from './scripts/token/hooks.js';
+import { updateWithEffectMapping } from './scripts/hooks/effectMappingHooks.js';
 import { registerTokenWrappers } from './scripts/token/wrappers.js';
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
-import { registerMiscHooks } from './scripts/miscHooks.js';
 import { registerTileWrappers } from './scripts/tile/wrappers.js';
-import { registerTileHooks } from './scripts/tile/hooks.js';
+import { registerAllHooks, registerHook } from './scripts/hooks/hooks.js';
 
 // Tracks if module has been initialized
 let MODULE_INITIALIZED = false;
@@ -66,19 +64,13 @@ async function initialize() {
 
   if (userRequiresImageCache()) cacheImages();
 
+  // Register ALL Hooks
+  registerAllHooks();
+
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
   startBatchUpdater();
 
-  // Token
-  registerTokenHooks();
-
-  // Tile
-  registerTileHooks();
-
-  // Misc
-  registerMiscHooks();
-
-  Hooks.on('renderArtSelect', () => {
+  registerHook('search', 'renderArtSelect', () => {
     showArtSelectExecuting.inProgress = false;
   });
 
@@ -188,10 +180,10 @@ export async function showArtSelect(
 }
 
 // Initialize module
-Hooks.once('ready', initialize);
+registerHook('main', 'ready', initialize, { once: true });
 
 // Register API and Keybinds
-Hooks.on('init', function () {
+registerHook('main', 'init', function () {
   registerSettings();
   registerTokenWrappers();
   registerTileWrappers();
@@ -207,21 +199,3 @@ Hooks.on('init', function () {
     TVA_CONFIG,
   };
 });
-
-Hooks.on('renderCombatTracker', async function () {
-  if (MODULE_INITIALIZED) {
-    for (const tkn of canvas.tokens.placeables) {
-      if (game.user.isGM) await updateWithEffectMapping(tkn);
-      else drawOverlays(tkn);
-    }
-  }
-});
-
-// Hooks.on('canvasReady', async function () {
-//   if (MODULE_INITIALIZED) {
-//     for (const tkn of canvas.tokens.placeables) {
-//       updateWithEffectMapping(tkn);
-//       drawOverlays(tkn);
-//     }
-//   }
-// });

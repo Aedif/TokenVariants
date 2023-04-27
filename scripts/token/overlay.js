@@ -1,7 +1,7 @@
 import { TVA_CONFIG } from '../settings.js';
 import { TVASprite } from '../sprite/TVASprite.js';
 import { waitForTokenTexture } from '../utils.js';
-import { getAllEffectMappings, getTokenEffects } from './effects.js';
+import { getAllEffectMappings, getTokenEffects } from '../hooks/effectMappingHooks.js';
 
 export async function drawOverlays(token) {
   if (token.tva_drawing_overlays) return;

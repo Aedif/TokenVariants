@@ -7,7 +7,7 @@ import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
-import { fixEffectMappings, updateWithEffectMapping } from '../scripts/token/effects.js';
+import { fixEffectMappings, updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {

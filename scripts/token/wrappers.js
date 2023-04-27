@@ -1,6 +1,6 @@
 import { libWrapper } from '../libWrapper/shim.js';
 import { TVA_CONFIG } from '../settings.js';
-import { getAllEffectMappings } from './effects.js';
+import { getAllEffectMappings } from '../hooks/effectMappingHooks.js';
 import { overrideTokenVisibility } from './userToImage.js';
 
 const registeredWrappers = {};

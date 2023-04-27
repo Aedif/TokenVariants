@@ -1,5 +1,5 @@
 import { DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
-import { fixEffectMappings, getAllEffectMappings } from '../scripts/token/effects.js';
+import { fixEffectMappings, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
 import { generateTextTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';

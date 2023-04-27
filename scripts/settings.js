@@ -137,6 +137,12 @@ export const TVA_CONFIG = {
   invisibleImage: '',
 };
 
+export const FEATURE_CONTROL = {
+  overlays: true,
+  search: true,
+  effectMapping: true,
+};
+
 export function registerSettings() {
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',

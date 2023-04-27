@@ -7,10 +7,7 @@
 export let libWrapper = undefined;
 
 export const VERSIONS = [1, 12, 2];
-export const TGT_SPLIT_RE = new RegExp(
-  '([^.[]+|\\[(\'([^\'\\\\]|\\\\.)+?\'|"([^"\\\\]|\\\\.)+?")\\])',
-  'g'
-);
+export const TGT_SPLIT_RE = new RegExp('([^.[]+|\\[(\'([^\'\\\\]|\\\\.)+?\'|"([^"\\\\]|\\\\.)+?")\\])', 'g');
 export const TGT_CLEANUP_RE = new RegExp('(^\\[\'|\'\\]$|^\\["|"\\]$)', 'g');
 
 // Main shim code
@@ -40,9 +37,7 @@ Hooks.once('init', () => {
     static register(package_id, target, fn, type = 'MIXED', { chain = undefined, bind = [] } = {}) {
       const is_setter = target.endsWith('#set');
       target = !is_setter ? target : target.slice(0, -4);
-      const split = target
-        .match(TGT_SPLIT_RE)
-        .map((x) => x.replace(/\\(.)/g, '$1').replace(TGT_CLEANUP_RE, ''));
+      const split = target.match(TGT_SPLIT_RE).map((x) => x.replace(/\\(.)/g, '$1').replace(TGT_CLEANUP_RE, ''));
       const root_nm = split.splice(0, 1)[0];
 
       let obj, fn_name;
@@ -101,15 +96,11 @@ Hooks.once('init', () => {
     //************** USER CUSTOMIZABLE:
     // Package ID & Package Title - by default attempts to auto-detect, but you might want to hardcode your package ID and title here to avoid potential auto-detect issues
     const [PACKAGE_ID, PACKAGE_TITLE] = (() => {
-      const match = (import.meta?.url ?? Error().stack)?.match(
-        /\/(worlds|systems|modules)\/(.+)(?=\/)/i
-      );
+      const match = (import.meta?.url ?? Error().stack)?.match(/\/(worlds|systems|modules)\/(.+)(?=\/)/i);
       if (match?.length !== 3) return [null, null];
       const dirs = match[2].split('/');
       if (match[1] === 'worlds')
-        return dirs.find((n) => n && game.world.id === n)
-          ? [game.world.id, game.world.title]
-          : [null, null];
+        return dirs.find((n) => n && game.world.id === n) ? [game.world.id, game.world.title] : [null, null];
       if (match[1] === 'systems')
         return dirs.find((n) => n && game.system.id === n)
           ? [game.system.id, game.system.title ?? game.system.data.title]

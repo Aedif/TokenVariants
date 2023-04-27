@@ -1,6 +1,7 @@
-import { TVA_CONFIG } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
 import {
   applyTMFXPreset,
+  determineAddedRemovedEffects,
   EXPRESSION_OPERATORS,
   FAUX_DOT,
   getAllActorTokens,
@@ -8,10 +9,354 @@ import {
   tv_executeScript,
   updateTokenImage,
 } from '../utils.js';
-import { broadcastOverlayRedraw } from './overlay.js';
+import { broadcastOverlayRedraw } from '../token/overlay.js';
+import { registerHook, unregisterHook } from './hooks.js';
 
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 const PF2E_ITEM_TYPES = ['condition', 'effect', 'weapon', 'equipment'];
+const feature_id = 'effectMappings';
+
+export function registerEffectMappingHooks() {
+  if (!FEATURE_CONTROL[feature_id]) {
+    [
+      'renderCombatTracker',
+      'createActiveEffect',
+      'deleteActiveEffect',
+      'preUpdateActiveEffect',
+      'updateActiveEffect',
+      'updateItem',
+      'createCombatant',
+      'deleteCombatant',
+      'preUpdateCombat',
+      'updateCombat',
+      'deleteCombat',
+      'preUpdateToken',
+      'preUpdateActor',
+      'updateActor',
+      'updateToken',
+      'createToken',
+    ].forEach((name) => unregisterHook(feature_id, name));
+
+    if (game.system.id === 'pf2e') {
+      ['preUpdateItem', 'updateItem', 'createItem', 'deleteItem'].forEach((name) =>
+        unregisterHook(feature_id + '-pf2e', name)
+      );
+    }
+  }
+
+  if (game.user.isGM) {
+    registerHook(feature_id, 'renderCombatTracker', async function () {
+      for (const tkn of canvas.tokens.placeables) {
+        await updateWithEffectMapping(tkn);
+      }
+    });
+  }
+
+  registerHook(feature_id, 'createActiveEffect', (activeEffect, options, userId) => {
+    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
+    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
+    _updateImageOnEffectChange(effectName, activeEffect.parent, true);
+  });
+  registerHook(feature_id, 'deleteActiveEffect', (activeEffect, options, userId) => {
+    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
+    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
+    _updateImageOnEffectChange(effectName, activeEffect.parent, false);
+  });
+  registerHook(feature_id, 'preUpdateActiveEffect', _preUpdateActiveEffect);
+  registerHook(feature_id, 'updateActiveEffect', _updateActiveEffect);
+  registerHook(feature_id, 'preUpdateToken', _preUpdateToken);
+  registerHook(feature_id, 'preUpdateActor', _preUpdateActor);
+  registerHook(feature_id, 'updateActor', _updateActor);
+  registerHook(feature_id, 'updateToken', _updateToken);
+  registerHook(feature_id, 'createToken', _createToken);
+  registerHook(feature_id, 'createCombatant', _createCombatant);
+  registerHook(feature_id, 'deleteCombatant', (combatant, options, userId) => {
+    if (game.userId !== userId) return;
+    _deleteCombatant(combatant);
+  });
+  registerHook(feature_id, 'preUpdateCombat', _preUpdateCombat);
+  registerHook(feature_id, 'updateCombat', _updateCombat);
+  registerHook(feature_id, 'deleteCombat', (combat, options, userId) => {
+    if (game.userId !== userId) return;
+    combat.combatants.forEach((combatant) => {
+      _deleteCombatant(combatant);
+    });
+  });
+
+  //
+  // PF2e hooks
+  //
+
+  if (game.system.id === 'pf2e') {
+    const pf2e_feature_id = feature_id + '-pf2e';
+    // Want to track condition/effect previous name so that the config can be reverted for it
+    registerHook(pf2e_feature_id, 'preUpdateItem', (item, change, options, userId) => {
+      if (game.user.id === userId && PF2E_ITEM_TYPES.includes(item.type) && 'name' in change) {
+        options['token-variants-old-name'] = item.name;
+      }
+    });
+
+    registerHook(pf2e_feature_id, 'updateItem', (item, change, options, userId) => {
+      if (game.user.id !== userId) return;
+      // Handle condition/effect name change
+      if (PF2E_ITEM_TYPES.includes(item.type) && 'name' in change) {
+        _updateImageOnMultiEffectChange(item.parent, [change.name], [options['token-variants-old-name']]);
+      }
+    });
+
+    registerHook(pf2e_feature_id, 'createItem', (item, options, userId) => {
+      if (game.userId !== userId || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent) return;
+      _updateImageOnEffectChange(item.name, item.parent, true);
+    });
+
+    registerHook(pf2e_feature_id, 'deleteItem', (item, options, userId) => {
+      if (game.userId !== userId || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent || item.disabled) return;
+      _updateImageOnEffectChange(item.name, item.parent, false);
+    });
+  }
+  // Status Effects can be applied "stealthily" on item equip/un-equip
+  registerHook(feature_id, 'updateItem', _updateItem);
+}
+
+function _createCombatant(combatant, options, userId) {
+  if (game.userId !== userId) return;
+  const token = combatant._token || canvas.tokens.get(combatant.tokenId);
+  if (!token || !token.actor) return;
+
+  updateWithEffectMapping(token, {
+    added: ['token-variants-combat'],
+  });
+}
+
+function _preUpdateActiveEffect(activeEffect, change, options, userId) {
+  if (!activeEffect.parent || game.userId !== userId) return;
+
+  if ('label' in change) {
+    options['token-variants-old-name'] = activeEffect.label;
+  }
+}
+
+function _updateActiveEffect(activeEffect, change, options, userId) {
+  if (!activeEffect.parent || game.userId !== userId) return;
+
+  const added = [];
+  const removed = [];
+
+  if ('disabled' in change) {
+    if (change.disabled) removed.push(activeEffect.label);
+    else added.push(activeEffect.label);
+  }
+  if ('label' in change) {
+    removed.push(options['token-variants-old-name']);
+    added.push(change.label);
+  }
+
+  if (added.length || removed.length) {
+    _updateImageOnMultiEffectChange(activeEffect.parent, added, removed);
+  }
+}
+
+function _preUpdateToken(token, change, options, userId) {
+  if (game.user.id !== userId) return;
+
+  const preUpdateEffects = evaluateComparatorEffects(token);
+  if (preUpdateEffects.length) {
+    if (!options['token-variants']) options['token-variants'] = {};
+    options['token-variants'].preUpdateEffects = preUpdateEffects;
+  }
+
+  // System specific effects
+  const stateEffects = [];
+  evaluateStateEffects(token, stateEffects);
+  if (stateEffects.length) {
+    if (!options['token-variants']) options['token-variants'] = {};
+    options['token-variants']['system'] = stateEffects;
+  }
+
+  if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
+    options['token-variants'] = {
+      wasPolymorphed: true,
+    };
+  }
+}
+
+async function _updateActor(actor, change, options, userId) {
+  if (game.user.id !== userId) return;
+
+  if ('flags' in change && 'token-variants' in change.flags) {
+    const tokenVariantFlags = change.flags['token-variants'];
+    if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
+      const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+      tokens.forEach((tkn) => updateWithEffectMapping(tkn));
+      for (const tkn of tokens) {
+        if (tkn.object && TVA_CONFIG.filterEffectIcons) {
+          await tkn.object.drawEffects();
+        }
+      }
+    }
+  }
+
+  let containsHPUpdate = false;
+  if (game.system.id === 'cyberpunk-red-core') {
+    containsHPUpdate = change.system?.derivedStats?.hp;
+  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
+    containsHPUpdate = change.system?.health;
+  } else {
+    containsHPUpdate = change.system?.attributes?.hp;
+  }
+
+  if (containsHPUpdate) {
+    const tokens = getAllActorTokens(actor, true, true);
+    for (const tkn of tokens) {
+      if (!tkn.actorLink) continue;
+      // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
+      const added = [];
+      const removed = [];
+      const postUpdateEffects = evaluateComparatorEffects(tkn);
+      const preUpdateEffects = [...(options['token-variants']?.[tkn.id]?.preUpdateEffects || [])];
+
+      determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
+      if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
+    }
+  }
+}
+
+function _preUpdateActor(actor, change, options, userId) {
+  if (game.user.id !== userId) return;
+
+  // If this is an HP update we need to determine what the current HP effects would be
+  // so that they can be compared against in 'updateActor' hook
+  let containsHPUpdate = false;
+  if (game.system.id === 'cyberpunk-red-core') {
+    containsHPUpdate = change.system?.derivedStats?.hp;
+  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
+    containsHPUpdate = change.system?.health;
+  } else {
+    containsHPUpdate = change.system?.attributes?.hp;
+  }
+
+  if (containsHPUpdate) {
+    const tokens = actor.getActiveTokens();
+    for (const tkn of tokens) {
+      if (!tkn.document.actorLink) continue;
+      const preUpdateEffects = evaluateComparatorEffects(tkn);
+      if (preUpdateEffects.length) {
+        if (!options['token-variants']) options['token-variants'] = {};
+        options['token-variants'][tkn.id] = { preUpdateEffects };
+      }
+    }
+  }
+}
+
+async function _updateToken(token, change, options, userId) {
+  if (game.user.id !== userId) return;
+
+  const addedEffects = [];
+  const removedEffects = [];
+  const postUpdateEffects = evaluateComparatorEffects(token);
+  const preUpdateEffects = options['token-variants']?.preUpdateEffects || [];
+  determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
+
+  const newStateEffects = [];
+  evaluateStateEffects(token, newStateEffects);
+  const oldStateEffects = options['token-variants']?.['system'] || [];
+  determineAddedRemovedEffects(addedEffects, removedEffects, newStateEffects, oldStateEffects);
+
+  if (addedEffects.length || removedEffects.length)
+    updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
+
+  // HP Effects
+  let containsHPUpdate = false;
+  if (game.system.id === 'cyberpunk-red-core') {
+    containsHPUpdate = change.actorData?.system?.derivedStats?.hp;
+  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
+    containsHPUpdate = change.actorData?.system?.health;
+  } else {
+    containsHPUpdate = change.actorData?.system?.attributes?.hp;
+  }
+
+  if ('actorLink' in change || containsHPUpdate) {
+    updateWithEffectMapping(token);
+  } else if (options['token-variants']?.wasPolymorphed && !token.actor?.isPolymorphed) {
+    updateWithEffectMapping(token);
+  }
+
+  if (game.userId === userId && 'hidden' in change) {
+    updateWithEffectMapping(token, {
+      added: change.hidden ? ['token-variants-visibility'] : [],
+      removed: !change.hidden ? ['token-variants-visibility'] : [],
+    });
+  }
+}
+
+function _createToken(token, options, userId) {
+  if (userId && userId === game.user.id) updateWithEffectMapping(token);
+}
+
+function _preUpdateCombat(combat, round, options, userId) {
+  if (game.userId !== userId) return;
+  options['token-variants'] = {
+    combatantId: combat?.combatant?.token?.id,
+    nextCombatantId: combat?.nextCombatant?.token?.id,
+  };
+}
+
+function _updateCombat(combat, round, options, userId) {
+  if (game.userId !== userId) return;
+
+  const previousCombatantId = options['token-variants']?.combatantId;
+  const previousNextCombatantId = options['token-variants']?.nextCombatantId;
+
+  const currentCombatantId = combat?.combatant?.token?.id;
+  const currentNextCombatantId = combat?.nextCombatant?.token?.id;
+
+  const updateCombatant = function (id, added = [], removed = []) {
+    if (game.user.isGM) {
+      const token = canvas.tokens.get(id);
+      if (token) updateWithEffectMapping(token, { added, removed });
+    } else {
+      const message = {
+        handlerName: 'effectMappings',
+        args: { tokenId: id, sceneId: canvas.scene.id, added, removed },
+        type: 'UPDATE',
+      };
+      game.socket?.emit('module.token-variants', message);
+    }
+  };
+
+  if (previousCombatantId !== currentCombatantId) {
+    if (previousCombatantId) updateCombatant(previousCombatantId, [], ['combat-turn']);
+    if (currentCombatantId) updateCombatant(previousCombatantId, ['combat-turn'], []);
+  }
+  if (previousNextCombatantId !== currentNextCombatantId) {
+    if (previousNextCombatantId) updateCombatant(previousNextCombatantId, [], ['combat-turn-next']);
+    if (currentNextCombatantId) updateCombatant(currentNextCombatantId, ['combat-turn-next'], []);
+  }
+}
+
+function _updateItem(item, change, options, userId) {
+  if (
+    game.user.id === userId &&
+    item.parent &&
+    change.system &&
+    'equipped' in change.system &&
+    item.effects &&
+    item.effects.size
+  ) {
+    const added = [];
+    const removed = [];
+    item.effects.forEach((effect) => {
+      if (!effect.disabled) {
+        if (change.system.equipped) added.push(effect.label);
+        else removed.push(effect.label);
+      }
+    });
+
+    if (added.length || removed.length) {
+      _updateImageOnMultiEffectChange(item.parent, added, removed);
+    }
+  }
+}
 
 export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
   token = token.object ?? token._object ?? token;
@@ -522,106 +867,6 @@ function _getTokenHP(token) {
   return [attributes?.hp?.value, attributes?.hp?.max];
 }
 
-export function registerEffectHooks() {
-  Hooks.on('createActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
-    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
-    _updateImageOnEffectChange(effectName, activeEffect.parent, true);
-  });
-
-  Hooks.on('deleteActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
-    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
-    _updateImageOnEffectChange(effectName, activeEffect.parent, false);
-  });
-
-  Hooks.on('preUpdateActiveEffect', (activeEffect, change, options, userId) => {
-    if (!activeEffect.parent || game.userId !== userId) return;
-
-    if ('label' in change) {
-      options['token-variants-old-name'] = activeEffect.label;
-    }
-  });
-
-  Hooks.on('updateActiveEffect', (activeEffect, change, options, userId) => {
-    if (!activeEffect.parent || game.userId !== userId) return;
-
-    const added = [];
-    const removed = [];
-
-    if ('disabled' in change) {
-      if (change.disabled) removed.push(activeEffect.label);
-      else added.push(activeEffect.label);
-    }
-    if ('label' in change) {
-      removed.push(options['token-variants-old-name']);
-      added.push(change.label);
-    }
-
-    if (added.length || removed.length) {
-      _updateImageOnMultiEffectChange(activeEffect.parent, added, removed);
-    }
-  });
-
-  // Want to track condition/effect previous name so that the config can be reverted for it
-  Hooks.on('preUpdateItem', (item, change, options, userId) => {
-    if (
-      game.user.id === userId &&
-      game.system.id === 'pf2e' &&
-      PF2E_ITEM_TYPES.includes(item.type) &&
-      'name' in change
-    ) {
-      options['token-variants-old-name'] = item.name;
-    }
-  });
-
-  Hooks.on('updateItem', (item, change, options, userId) => {
-    if (game.user.id !== userId) return;
-    // Handle condition/effect name change
-    if (game.system.id === 'pf2e' && PF2E_ITEM_TYPES.includes(item.type) && 'name' in change) {
-      _updateImageOnMultiEffectChange(item.parent, [change.name], [options['token-variants-old-name']]);
-    }
-
-    // Status Effects can be applied "stealthily" on item equip/un-equip
-    if (item.parent && change.system && 'equipped' in change.system && item.effects && item.effects.size) {
-      const added = [];
-      const removed = [];
-      item.effects.forEach((effect) => {
-        if (!effect.disabled) {
-          if (change.system.equipped) added.push(effect.label);
-          else removed.push(effect.label);
-        }
-      });
-
-      if (added.length || removed.length) {
-        _updateImageOnMultiEffectChange(item.parent, added, removed);
-      }
-    }
-  });
-
-  //
-  // PF2e hooks
-  //
-
-  Hooks.on('createItem', (item, options, userId) => {
-    if (game.userId !== userId) return;
-    if (game.system.id !== 'pf2e' || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent) return;
-    _updateImageOnEffectChange(item.name, item.parent, true);
-  });
-
-  Hooks.on('deleteItem', (item, options, userId) => {
-    if (
-      game.system.id !== 'pf2e' ||
-      !PF2E_ITEM_TYPES.includes(item.type) ||
-      !item.parent ||
-      item.disabled ||
-      game.userId !== userId
-    )
-      return;
-    _updateImageOnEffectChange(item.name, item.parent, false);
-  });
-}
-
 async function _updateImageOnEffectChange(effectName, actor, added = true) {
   const mappings = getAllEffectMappings({ actor });
   if (effectName in mappings) {
@@ -647,4 +892,12 @@ async function _updateImageOnMultiEffectChange(actor, added = [], removed = []) 
       });
     }
   }
+}
+
+async function _deleteCombatant(combatant) {
+  const token = combatant._token || canvas.tokens.get(combatant.tokenId);
+  if (!token || !token.actor) return;
+  await updateWithEffectMapping(token, {
+    removed: ['token-variants-combat'],
+  });
 }
