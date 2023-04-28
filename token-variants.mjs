@@ -10,10 +10,9 @@ import {
 } from './scripts/utils.js';
 import { drawOverlays } from './scripts/token/overlay.js';
 import { updateWithEffectMapping } from './scripts/hooks/effectMappingHooks.js';
-import { registerTokenWrappers } from './scripts/token/wrappers.js';
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
-import { registerTileWrappers } from './scripts/tile/wrappers.js';
-import { registerAllHooks, registerHook } from './scripts/hooks/hooks.js';
+import { REGISTERED_HOOKS, registerAllHooks, registerHook } from './scripts/hooks/hooks.js';
+import { REGISTERED_WRAPPERS, registerAllWrappers } from './scripts/wrappers/wrappers.js';
 
 // Tracks if module has been initialized
 let MODULE_INITIALIZED = false;
@@ -185,11 +184,11 @@ registerHook('main', 'ready', initialize, { once: true });
 // Register API and Keybinds
 registerHook('main', 'init', function () {
   registerSettings();
-  registerTokenWrappers();
-  registerTileWrappers();
+  registerAllWrappers();
 
   registerKeybinds();
-  game.modules.get('token-variants').api = {
+
+  const api = {
     cacheImages,
     doImageSearch,
     doRandomSearch,
@@ -198,4 +197,20 @@ registerHook('main', 'init', function () {
     exportSettingsToJSON,
     TVA_CONFIG,
   };
+
+  Object.defineProperty(api, 'hooks', {
+    get() {
+      return deepClone(REGISTERED_HOOKS);
+    },
+    configurable: true,
+  });
+
+  Object.defineProperty(api, 'wrappers', {
+    get() {
+      return deepClone(REGISTERED_WRAPPERS);
+    },
+    configurable: true,
+  });
+
+  game.modules.get('token-variants').api = api;
 });

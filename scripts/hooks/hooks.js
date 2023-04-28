@@ -7,7 +7,7 @@ import { registerUserMappingHooks } from './userMappingHooks.js';
 import { registerWildcardHooks } from './wildcardHooks.js';
 import { registerTokenHooks } from './tokenHooks.js';
 
-const REGISTERED_HOOKS = {};
+export const REGISTERED_HOOKS = {};
 
 export function registerHook(feature_id, name, fn, { once = false } = {}) {
   if (!(feature_id in REGISTERED_HOOKS)) REGISTERED_HOOKS[feature_id] = {};
