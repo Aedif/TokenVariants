@@ -2,10 +2,10 @@ import { registerEffectIconHooks } from './effectIconHooks.js';
 import { registerArtSelectButtonHooks } from './artSelectButtonHooks.js';
 import { registerOverlayHooks } from './overlayHooks.js';
 import { registerEffectMappingHooks } from './effectMappingHooks.js';
-import { registerTileHooks } from './tileHooks.js';
+import { registerHUDHooks } from './hudHooks.js';
 import { registerUserMappingHooks } from './userMappingHooks.js';
 import { registerWildcardHooks } from './wildcardHooks.js';
-import { registerTokenHooks } from './tokenHooks.js';
+import { registerPopRandomizeHooks } from './popUpRandomizeHooks.js';
 
 export const REGISTERED_HOOKS = {};
 
@@ -24,12 +24,20 @@ export function unregisterHook(feature_id, name) {
 }
 
 export function registerAllHooks() {
+  // Hide effect icons
   registerEffectIconHooks();
+  // Display overlays
   registerOverlayHooks();
+  // Insert Art Select buttons and contextmenu listeners
   registerArtSelectButtonHooks();
+  // Effect Mapping related listening for state changes and applying configurations
   registerEffectMappingHooks();
-  registerTileHooks();
+  // Display HUD buttons for Tokens and Tiles
+  registerHUDHooks();
+  // Default Wildcard image controls
   registerWildcardHooks();
+  // User to Image mappings for Tile and Tokens
   registerUserMappingHooks();
-  registerTokenHooks();
+  // Handle pop-ups and randomization on token/actor create
+  registerPopRandomizeHooks();
 }

@@ -1,0 +1,20 @@
+import { renderTileHUD } from '../../applications/tileHUD.js';
+import { renderTokenHUD } from '../../applications/tokenHUD.js';
+import { TVA_CONFIG } from '../settings.js';
+import { registerHook, unregisterHook } from './hooks.js';
+
+const feature_id = 'HUD';
+
+export function registerHUDHooks() {
+  if (TVA_CONFIG.tilesEnabled) {
+    registerHook(feature_id, 'renderTileHUD', renderTileHUD);
+  } else {
+    unregisterHook(feature_id, 'renderTileHUD');
+  }
+
+  if (TVA_CONFIG.permissions.hudFullAccess[game.user.role] || TVA_CONFIG.permissions.hud[game.user.role]) {
+    registerHook(feature_id, 'renderTokenHUD', renderTokenHUD);
+  } else {
+    unregisterHook(feature_id, 'renderTokenHUD');
+  }
+}

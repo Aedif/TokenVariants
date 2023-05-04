@@ -2,7 +2,7 @@ import { getAllEffectMappings } from '../hooks/effectMappingHooks.js';
 import { TVA_CONFIG } from '../settings.js';
 import { registerWrapper, unregisterWrapper } from './wrappers.js';
 
-const feature_id = 'effectIcons';
+const feature_id = 'EffectIcons';
 
 export function registerEffectIconWrappers() {
   if (TVA_CONFIG.disableEffectIcons) {

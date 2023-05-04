@@ -69,7 +69,7 @@ async function initialize() {
   // Startup ticker that will periodically call 'updateEmbeddedDocuments' with all the accrued updates since the last tick
   startBatchUpdater();
 
-  registerHook('search', 'renderArtSelect', () => {
+  registerHook('Search', 'renderArtSelect', () => {
     showArtSelectExecuting.inProgress = false;
   });
 

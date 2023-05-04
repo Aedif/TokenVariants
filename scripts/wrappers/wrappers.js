@@ -19,6 +19,8 @@ export function unregisterWrapper(feature_id, name) {
 }
 
 export function registerAllWrappers() {
+  // User to Image mappings for Tile and Tokens
   registerUserMappingWrappers();
+  // Hide effect icons
   registerEffectIconWrappers();
 }

@@ -138,9 +138,11 @@ export const TVA_CONFIG = {
 };
 
 export const FEATURE_CONTROL = {
-  overlays: true,
-  search: true,
-  effectMapping: true,
+  EffectMappings: true,
+  Overlays: true,
+  UserMappings: true,
+  Wildcards: true,
+  PopUpAndRandomize: true,
 };
 
 export function registerSettings() {

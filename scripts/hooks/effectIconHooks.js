@@ -1,7 +1,7 @@
 import { TVA_CONFIG } from '../settings.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
-const feature_id = 'effectIcons';
+const feature_id = 'EffectIcons';
 
 export function registerEffectIconHooks() {
   // OnHover settings specific hooks

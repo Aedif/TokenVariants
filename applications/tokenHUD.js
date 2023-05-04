@@ -15,7 +15,7 @@ import FlagsConfig from './flagsConfig.js';
 import RandomizerConfig from './randomizerConfig.js';
 import { doImageSearch, findImagesFuzzy } from '../scripts/search.js';
 
-export async function renderHud(hud, html, token, searchText = '', fp_files = null) {
+export async function renderTokenHUD(hud, html, token, searchText = '', fp_files = null) {
   activateStatusEffectListeners(token);
 
   const hudSettings = TVA_CONFIG.hud;

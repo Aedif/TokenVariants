@@ -1,7 +1,7 @@
 import { TVA_CONFIG } from '../settings.js';
 import { registerWrapper } from './wrappers.js';
 
-const feature_id = 'userMapping';
+const feature_id = 'UserMappings';
 
 export function registerUserMappingWrappers() {
   registerWrapper(feature_id, 'Tile.prototype.draw', _draw);

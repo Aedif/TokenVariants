@@ -14,7 +14,7 @@ import { registerHook, unregisterHook } from './hooks.js';
 
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 const PF2E_ITEM_TYPES = ['condition', 'effect', 'weapon', 'equipment'];
-const feature_id = 'effectMappings';
+const feature_id = 'EffectMappings';
 
 export function registerEffectMappingHooks() {
   if (!FEATURE_CONTROL[feature_id]) {
@@ -42,6 +42,7 @@ export function registerEffectMappingHooks() {
         unregisterHook(feature_id + '-pf2e', name)
       );
     }
+    return;
   }
 
   if (game.user.isGM) {

@@ -5,6 +5,7 @@
       {{#if enabledTabs.searchFilters}}<a class="item" data-tab="searchFilters"><i class="fas fa-filter"></i> Search Filters</a>{{/if}}
       {{#if enabledTabs.searchAlgorithm}}<a class="item" data-tab="searchAlgorithm"><i class="fas fa-plug"></i> Search Algorithm</a>{{/if}}
       {{#if enabledTabs.randomizer}}<a class="item" data-tab="randomizer"><i class="fas fa-dice"></i> Randomizer</a>{{/if}}
+      {{#if enabledTabs.features}}<a class="item" data-tab="features"><i class="fas fa-power-off"></i> Features</a>{{/if}}
       <hr>
       {{#if enabledTabs.popup}}<a class="item" data-tab="popup"><i class="fas fa-book-open"></i> Pop-up</a>{{/if}}
       {{#if enabledTabs.permissions}}<a class="item" data-tab="permissions"><i class="fas fa-user-lock"></i> Permissions</a>{{/if}}
@@ -285,6 +286,35 @@
               <h4>{{localize "token-variants.settings.randomizer.window.pop-up-if-randomization-disabled"}}</h4>
               <input type="checkbox" name="randomizer.popupOnDisable" data-dtype="Boolean" {{#if randomizer.popupOnDisable}}checked{{/if}}>
             </div>
+        </div>
+        {{/if}}
+
+        <!-- Features -->
+        {{#if enabledTabs.features}}
+        <div class="tab token-variants-permissions" data-tab="features" data-group="primary-tabs">
+          <p class="notes">Fully turn-off module features.</p>
+
+          <header class="table-header flexrow">
+            <label class="index">Features</label>
+            <label>Enabled</label>
+          </header>
+        
+          <ul class="permissions-list">
+            <li class="permission form-group">
+              <label class="index">Effect Mappings</label>
+              <div class="form-fields">
+                <input type="checkbox" name="features.EffectMappings" {{ checked features.EffectMappings}} />
+              </div>
+              <p class="hint"></p>
+            </li>
+            <li class="permission form-group">
+              <label class="index">Overlays</label>
+              <div class="form-fields">
+                <input type="checkbox" name="features.Overlays" {{ checked features.Overlays}} />
+              </div>
+              <p class="hint"></p>
+            </li>
+          </ul>
         </div>
         {{/if}}
 

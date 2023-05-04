@@ -228,6 +228,7 @@ export default class CompendiumMapConfig extends FormApplication {
       searchFilters: true,
       searchAlgorithm: true,
       randomizer: false,
+      features: false,
       popup: false,
       permissions: false,
       worldHud: false,

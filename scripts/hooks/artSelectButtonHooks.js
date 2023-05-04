@@ -3,7 +3,7 @@ import { TVA_CONFIG } from '../settings.js';
 import { SEARCH_TYPE, getTokenConfigForUpdate, updateActorImage } from '../utils.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
-const feature_id = 'artSelect';
+const feature_id = 'ArtSelect';
 
 export function registerArtSelectButtonHooks() {
   // Insert buttons and listeners to open up ArtSelect forms from various contexts

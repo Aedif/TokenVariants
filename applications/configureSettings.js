@@ -17,6 +17,7 @@ export default class ConfigureSettings extends FormApplication {
       worldHud = true,
       misc = true,
       activeEffects = true,
+      features = false,
     } = {}
   ) {
     super({}, {});
@@ -25,6 +26,7 @@ export default class ConfigureSettings extends FormApplication {
       searchFilters,
       searchAlgorithm,
       randomizer,
+      features,
       popup,
       permissions,
       worldHud,

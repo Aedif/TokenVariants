@@ -1,16 +1,18 @@
-import { renderHud } from '../../applications/tokenHUD.js';
 import { showArtSelect } from '../../token-variants.mjs';
 import { doRandomSearch, doSyncSearch } from '../search.js';
-import { TVA_CONFIG } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
 import { keyPressed, nameForgeRandomize, SEARCH_TYPE, updateActorImage, updateTokenImage } from '../utils.js';
-import { registerHook } from './hooks.js';
+import { registerHook, unregisterHook } from './hooks.js';
 
-const feature_id = 'token';
+const feature_id = 'PopUpAndRandomize';
 
-export function registerTokenHooks() {
-  registerHook(feature_id, 'createActor', _createActor);
-  registerHook(feature_id, 'createToken', _createToken);
-  registerHook(feature_id, 'renderTokenHUD', renderHud);
+export function registerPopRandomizeHooks() {
+  if (FEATURE_CONTROL[feature_id]) {
+    registerHook(feature_id, 'createActor', _createActor);
+    registerHook(feature_id, 'createToken', _createToken);
+  } else {
+    ['createActor', 'createToken'].forEach((name) => unregisterHook(feature_id, name));
+  }
 }
 
 async function _createToken(token, options, userId) {

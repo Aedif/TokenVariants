@@ -3,7 +3,7 @@ import { TVASprite } from '../sprite/TVASprite.js';
 import { drawOverlays } from '../token/overlay.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
-const feature_id = 'overlays';
+const feature_id = 'Overlays';
 
 export function registerOverlayHooks() {
   if (!FEATURE_CONTROL[feature_id]) {
