@@ -161,6 +161,15 @@ export default class OverlayConfig extends FormApplication {
         top.prop('checked', false);
       }
     });
+
+    const linkScale = html.find('[name="linkScale"]');
+    const linkDimensions = html.find('[name="linkDimensions"]');
+    linkScale.change(function () {
+      if (this.checked) linkDimensions.prop('checked', false);
+    });
+    linkDimensions.change(function () {
+      if (this.checked) linkScale.prop('checked', false);
+    });
   }
 
   _convertColor(colString) {

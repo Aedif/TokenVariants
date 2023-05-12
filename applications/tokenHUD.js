@@ -200,7 +200,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
       // Insert current token image
       if (token.texture?.src && token.texture?.src !== CONST.DEFAULT_TOKEN) {
         pushImage({
-          path: token.texture.src,
+          path: decodeURI(token.texture.src),
           name: token.flags?.['token-variants']?.name ?? getFileName(token.texture.src),
         });
       }
@@ -212,13 +212,13 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
           tokenActor.prototypeToken?.flags['token-hud-wildcard']?.['default'] ||
           '';
         if (defaultImg) {
-          pushImage({ path: defaultImg, name: getFileName(defaultImg) });
+          pushImage({ path: decodeURI(defaultImg), name: getFileName(defaultImg) });
         }
 
         if (FULL_ACCESS || PARTIAL_ACCESS) {
           actorVariants.forEach((variant) => {
             for (const name of variant.names) {
-              pushImage({ path: variant.imgSrc, name: name });
+              pushImage({ path: decodeURI(variant.imgSrc), name: name });
             }
           });
         }
@@ -245,7 +245,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
               dirFlagImages = [];
             }
             dirFlagImages = dirFlagImages.forEach((f) => {
-              if (isImage(f) || isVideo(f)) pushImage({ path: f, name: getFileName(f) });
+              if (isImage(f) || isVideo(f)) pushImage({ path: decodeURI(f), name: getFileName(f) });
             });
           }
         }
@@ -261,7 +261,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
             (await tokenActor.getTokenImages())
               .filter((img) => !img.includes('*'))
               .forEach((img) => {
-                pushImage({ path: img, name: getFileName(img) });
+                pushImage({ path: decodeURI(img), name: getFileName(img) });
               });
           } else if (protoImg.includes('*') || protoImg.includes('{') || protoImg.includes('}')) {
             // Modified version of Actor.getTokenImages()
@@ -295,7 +295,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
             (await getTokenImages())
               .filter((img) => !img.includes('*') && (isImage(img) || isVideo(img)))
               .forEach((variant) => {
-                pushImage({ path: variant, name: getFileName(variant) });
+                pushImage({ path: decodeURI(variant), name: getFileName(variant) });
               });
           }
         }
@@ -331,7 +331,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
     }
   } else {
     images = fp_files.map((f) => {
-      return { path: f, name: getFileName(f) };
+      return { path: decodeURI(f), name: getFileName(f) };
     });
   }
 

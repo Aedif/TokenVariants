@@ -851,14 +851,14 @@ function _getTokenHP(token) {
     if (token.actorLink) {
       attributes = token.actor.system?.health;
     } else {
-      attributes = mergeObject(token.actor.system?.health || {}, token.actorData?.system?.health || {}, {
+      attributes = mergeObject(token.actor?.system?.health || {}, token.actorData?.system?.health || {}, {
         inplace: false,
       });
     }
     attributes = { hp: attributes };
   } else {
     if (token.actorLink) {
-      attributes = token.actor.system?.attributes;
+      attributes = token.actor?.system?.attributes;
     } else {
       attributes = mergeObject(token.actor?.system?.attributes || {}, token.actorData?.system?.attributes || {}, {
         inplace: false,

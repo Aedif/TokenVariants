@@ -272,7 +272,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
           }
           result.data.images.forEach((img) => {
             const rtName = img.title ?? img.description ?? getFileName(img.link);
-            _addToFound({ path: img.link, name: rtName }, typeKey, found_images);
+            _addToFound({ path: decodeURI(img.link), name: rtName }, typeKey, found_images);
           });
         })
         .catch((error) => console.log('Token Variant Art: ', error));
@@ -290,7 +290,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
         for (let baseTableData of table.results) {
           const rtPath = baseTableData.img;
           const rtName = baseTableData.text || getFileName(rtPath);
-          _addToFound({ path: rtPath, name: rtName }, typeKey, found_images);
+          _addToFound({ path: decodeURI(rtPath), name: rtName }, typeKey, found_images);
         }
       }
       return;
@@ -307,7 +307,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
           }
           result.forEach((img) => {
             const rtName = img.name ?? getFileName(img.path);
-            _addToFound({ path: img.path, name: rtName, tags: img.tags }, typeKey, found_images);
+            _addToFound({ path: decodeURI(img.path), name: rtName, tags: img.tags }, typeKey, found_images);
           });
         })
         .catch((error) => console.log('Token Variant Art: ', error));
@@ -328,7 +328,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
 
   if (files.files) {
     files.files.forEach((tokenSrc) => {
-      _addToFound({ path: tokenSrc, name: getFileName(tokenSrc) }, typeKey, found_images);
+      _addToFound({ path: decodeURI(tokenSrc), name: getFileName(tokenSrc) }, typeKey, found_images);
     });
   }
 

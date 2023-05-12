@@ -173,6 +173,9 @@ export class TVASprite extends TokenMesh {
         this.height = this.object.h * this.object.document.texture.scaleY;
         scale.x = Number(scale.y);
       }
+    } else if (config.linkDimensions) {
+      this.scale.x = this.object.document.width;
+      this.scale.y = this.object.document.height;
     } else {
       this.width = tex.width;
       this.height = tex.height;

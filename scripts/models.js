@@ -30,6 +30,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
   linkMirror: true,
   linkOpacity: false,
   linkScale: true,
+  linkDimensions: false,
   mirror: false,
   tint: null,
   loop: true,
