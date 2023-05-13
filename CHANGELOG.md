@@ -1,3 +1,25 @@
+# 4.38.0
+
+- New overlay option: `Link` > `Dimensions`
+  - Scales the overlay based on Token Dimensions instead of scale
+- Fixed `User to Image` mappings not turning Tokens/Tiles invisible in certain situations
+- Added `Art Select` buttons to Drawing, Note, and Scene configuration forms
+- Added `Art Select` button to `User To Image` form
+- RollTable result icons can now be Right-clicked to open `Art Select`
+- Effect group toggles will be remembered after closing the form
+- Added `lib-wrapper` as a dependency
+- Implemented a workaround for ForgeVTT Bazaar paths not being recursively searched when set to `modules`, `assets`, `worlds`, or `systems`
+
+Hooks & Wrapper
+
+- The module will now dynamically register/un-register hooks and wrappers according to settings
+- You can view all the module hooks and wrapper organized by feature via:
+  - `game.modules.get("token-variants").api.hooks`
+  - `game.modules.get("token-variants").api.wrappers`
+- While still in test, module features can be forcibly turned off regardless of any other setting via `featureControl`:
+  - `game.settings.get("token-variants", "featureControl")`
+  - May require game re-load or scene refresh/change for some features to fully turn on/off
+
 # 4.37.0
 
 - Added a disable button for Effect Mapping groups
