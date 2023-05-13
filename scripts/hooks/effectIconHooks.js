@@ -1,11 +1,11 @@
-import { TVA_CONFIG } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
 const feature_id = 'EffectIcons';
 
 export function registerEffectIconHooks() {
   // OnHover settings specific hooks
-  if (TVA_CONFIG.displayEffectIconsOnHover) {
+  if (FEATURE_CONTROL[feature_id] && TVA_CONFIG.displayEffectIconsOnHover) {
     registerHook(feature_id, 'hoverToken', (token, hoverIn) => {
       if (token.effects) {
         token.effects.visible = hoverIn;
@@ -15,7 +15,7 @@ export function registerEffectIconHooks() {
     unregisterHook(feature_id, 'hoverToken');
   }
 
-  if (TVA_CONFIG.displayEffectIconsOnHover) {
+  if (FEATURE_CONTROL[feature_id] && TVA_CONFIG.displayEffectIconsOnHover) {
     registerHook(feature_id, 'highlightObjects', () => {
       if (canvas.tokens.active) {
         for (const tkn of canvas.tokens.placeables) {

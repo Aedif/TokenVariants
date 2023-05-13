@@ -141,13 +141,28 @@ export const TVA_CONFIG = {
 
 export const FEATURE_CONTROL = {
   EffectMappings: true,
+  EffectIcons: true,
   Overlays: true,
   UserMappings: true,
   Wildcards: true,
   PopUpAndRandomize: true,
+  HUD: true,
 };
 
 export function registerSettings() {
+  game.settings.register('token-variants', 'featureControl', {
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: FEATURE_CONTROL,
+    onChange: async (val) => {
+      mergeObject(FEATURE_CONTROL, val);
+      registerAllHooks();
+      registerAllWrappers();
+    },
+  });
+  mergeObject(FEATURE_CONTROL, game.settings.get('token-variants', 'featureControl'));
+
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',
     hint: 'Configure Token Variant Art settings',

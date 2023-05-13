@@ -1,17 +1,16 @@
 import { getAllEffectMappings } from '../hooks/effectMappingHooks.js';
-import { TVA_CONFIG } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
 import { registerWrapper, unregisterWrapper } from './wrappers.js';
 
 const feature_id = 'EffectIcons';
 
 export function registerEffectIconWrappers() {
-  if (TVA_CONFIG.disableEffectIcons) {
-    registerWrapper(feature_id + '-fullOverride', 'Token.prototype.drawEffects', _drawEffects_fullReplace, 'OVERRIDE');
-  } else {
+  if (!(FEATURE_CONTROL[feature_id] && TVA_CONFIG.disableEffectIcons)) {
     unregisterWrapper(feature_id + '-fullOverride', 'Token.prototype.drawEffects');
   }
 
   if (
+    FEATURE_CONTROL[feature_id] &&
     !TVA_CONFIG.disableEffectIcons &&
     (TVA_CONFIG.displayEffectIconsOnHover ||
       (TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)))
@@ -19,6 +18,10 @@ export function registerEffectIconWrappers() {
     registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects, 'OVERRIDE');
   } else {
     unregisterWrapper(feature_id, 'Token.prototype.drawEffects');
+  }
+
+  if (FEATURE_CONTROL[feature_id] && TVA_CONFIG.disableEffectIcons) {
+    registerWrapper(feature_id + '-fullOverride', 'Token.prototype.drawEffects', _drawEffects_fullReplace, 'OVERRIDE');
   }
 }
 
