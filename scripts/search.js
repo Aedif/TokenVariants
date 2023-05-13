@@ -332,7 +332,15 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
     });
   }
 
-  if (path.source.startsWith('forgevtt') || path.source.startsWith('forge-bazaar')) return;
+  // ForgeVTT requires special treatment
+  // Bazaar paths fail recursive search if one level above root
+  if (path.source.startsWith('forgevtt')) return;
+  else if (
+    path.source.startsWith('forge-bazaar') &&
+    !['modules', 'systems', 'worlds', 'assets'].includes(path.text.replaceAll(/[\/\\]/g, ''))
+  ) {
+    return;
+  }
 
   for (let f_dir of files.dirs) {
     await walkFindImages({ text: f_dir, source: path.source, types: path.types }, { apiKey: apiKey }, found_images);

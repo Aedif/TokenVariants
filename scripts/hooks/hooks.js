@@ -6,19 +6,23 @@ import { registerHUDHooks } from './hudHooks.js';
 import { registerUserMappingHooks } from './userMappingHooks.js';
 import { registerWildcardHooks } from './wildcardHooks.js';
 import { registerPopRandomizeHooks } from './popUpRandomizeHooks.js';
+import { TVA_CONFIG } from '../settings.js';
 
 export const REGISTERED_HOOKS = {};
 
 export function registerHook(feature_id, name, fn, { once = false } = {}) {
   if (!(feature_id in REGISTERED_HOOKS)) REGISTERED_HOOKS[feature_id] = {};
   if (name in REGISTERED_HOOKS[feature_id]) return;
+  if (TVA_CONFIG.debug) console.log(`TVA: Registering Hook`, { feature_id, name, fn, once });
   const num = Hooks.on(name, fn, { once });
   REGISTERED_HOOKS[feature_id][name] = num;
 }
 
 export function unregisterHook(feature_id, name) {
   if (feature_id in REGISTERED_HOOKS && name in REGISTERED_HOOKS[feature_id]) {
-    Hooks.off(REGISTERED_HOOKS[feature_id][name]);
+    if (TVA_CONFIG.debug)
+      console.log(`TVA: Un-Registering Hook`, { feature_id, name, id: REGISTERED_HOOKS[feature_id][name] });
+    Hooks.off(name, REGISTERED_HOOKS[feature_id][name]);
     delete REGISTERED_HOOKS[feature_id][name];
   }
 }

@@ -5,6 +5,8 @@ import CompendiumMapConfig from '../applications/compendiumMap.js';
 import ImportExport from '../applications/importExport.js';
 import ConfigureSettings from '../applications/configureSettings.js';
 import { cacheImages, saveCache } from './search.js';
+import { registerAllHooks } from './hooks/hooks.js';
+import { registerAllWrappers } from './wrappers/wrappers.js';
 
 export const TVA_CONFIG = {
   debug: false,
@@ -204,6 +206,9 @@ export function registerSettings() {
         }
       }
       TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
+
+      registerAllHooks();
+      registerAllWrappers();
     },
   });
 
