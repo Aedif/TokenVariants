@@ -31,5 +31,13 @@
       "name": "English",
       "path": "lang/en.json"
     }
-  ]
+  ],
+  "relationships": {
+    "requires": [
+      {
+        "id": "lib-wrapper",
+        "type": "module"
+      }
+    ]
+  }
 }
