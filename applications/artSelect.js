@@ -1,12 +1,5 @@
 import TokenCustomConfig from './tokenCustomConfig.js';
-import {
-  isVideo,
-  isImage,
-  keyPressed,
-  SEARCH_TYPE,
-  BASE_IMAGE_CATEGORIES,
-  getFileName,
-} from '../scripts/utils.js';
+import { isVideo, isImage, keyPressed, SEARCH_TYPE, BASE_IMAGE_CATEGORIES, getFileName } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { TVA_CONFIG, getSearchOptions } from '../scripts/settings.js';
 
@@ -19,9 +12,7 @@ export function addToArtSelectQueue(search, options) {
     search: search,
     options: options,
   });
-  $('button#token-variant-art-clear-queue')
-    .html(`Clear Queue (${ART_SELECT_QUEUE.queue.length})`)
-    .show();
+  $('button#token-variant-art-clear-queue').html(`Clear Queue (${ART_SELECT_QUEUE.queue.length})`).show();
 }
 
 export function addToQueue(search, options) {
@@ -36,9 +27,7 @@ export function renderFromQueue(force = false) {
     const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
     if (artSelects.length !== 0) {
       if (ART_SELECT_QUEUE.queue.length !== 0)
-        $('button#token-variant-art-clear-queue')
-          .html(`Clear Queue (${ART_SELECT_QUEUE.queue.length})`)
-          .show();
+        $('button#token-variant-art-clear-queue').html(`Clear Queue (${ART_SELECT_QUEUE.queue.length})`).show();
       return;
     }
   }
@@ -240,18 +229,12 @@ export class ArtSelect extends FormApplication {
           type: vid || img,
           name: imageObj.name,
           label:
-            fuzzySearch && !searchOptions.runSearchOnPath
-              ? genLabel(imageObj.name, imageObj.indices)
-              : imageObj.name,
+            fuzzySearch && !searchOptions.runSearchOnPath ? genLabel(imageObj.name, imageObj.indices) : imageObj.name,
           title: genTitle(imageObj),
           hasConfig:
-            this.searchType === SEARCH_TYPE.TOKEN ||
-            this.searchType === SEARCH_TYPE.PORTRAIT_AND_TOKEN
+            this.searchType === SEARCH_TYPE.TOKEN || this.searchType === SEARCH_TYPE.PORTRAIT_AND_TOKEN
               ? Boolean(
-                  tokenConfigs.find(
-                    (config) =>
-                      config.tvImgSrc == imageObj.path && config.tvImgName == imageObj.name
-                  )
+                  tokenConfigs.find((config) => config.tvImgSrc == imageObj.path && config.tvImgName == imageObj.name)
                 )
               : false,
         });
@@ -314,12 +297,7 @@ export class ArtSelect extends FormApplication {
       boxes[box].addEventListener('click', async function (event) {
         if (keyPressed('config')) {
           if (object)
-            new TokenCustomConfig(
-              object,
-              {},
-              event.target.dataset.name,
-              event.target.dataset.filename
-            ).render(true);
+            new TokenCustomConfig(object, {}, event.target.dataset.name, event.target.dataset.filename).render(true);
         } else {
           if (!preventClose) {
             close();
@@ -447,4 +425,25 @@ export class ArtSelect extends FormApplication {
       return super.close(options);
     }
   }
+}
+
+export function insertArtSelectButton(html, target, { search = '', searchType = SEARCH_TYPE.TOKEN } = {}) {
+  const button = $(`<button 
+      class="token-variants-image-select-button" 
+      type="button"
+      data-type="imagevideo"
+      data-target="${target}"
+      title="${game.i18n.localize('token-variants.windows.art-select.select-variant')}">
+        <i class="fas fa-images"></i>
+      </button>`);
+  button.on('click', () => {
+    showArtSelect(search, {
+      callback: (imgSrc, name) => {
+        button.siblings(`[name="${target}"]`).val(imgSrc);
+      },
+      searchType,
+    });
+  });
+  console.log(html.find(`[name="${target}"]`));
+  html.find(`[name="${target}"]`).after(button);
 }

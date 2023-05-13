@@ -1,4 +1,6 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { SEARCH_TYPE } from '../scripts/utils.js';
+import { insertArtSelectButton } from './artSelect.js';
 
 export default class UserList extends FormApplication {
   constructor(object, img, regenStyle) {
@@ -36,6 +38,14 @@ export default class UserList extends FormApplication {
     data.users = users;
     data.invisibleImage = TVA_CONFIG.invisibleImage;
     return data;
+  }
+
+  /**
+   * @param {JQuery} html
+   */
+  activateListeners(html) {
+    super.activateListeners(html);
+    insertArtSelectButton(html, 'invisibleImage', { search: 'Invisible Image', searchType: SEARCH_TYPE.TOKEN });
   }
 
   async _updateObject(event, formData) {

@@ -9,6 +9,9 @@ import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.j
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 
+// Persist group toggles across forms
+const TOGGLED_GROUPS = { Default: true };
+
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
     super({}, { title: (globalMappings ? 'GLOBAL ' : '') + 'Effect Config' });
@@ -20,7 +23,6 @@ export default class EffectMappingForm extends FormApplication {
     if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
     this.callback = callback;
     this.createMapping = createMapping;
-    this.toggled = { Default: true };
   }
 
   static get defaultOptions() {
@@ -139,7 +141,7 @@ export default class EffectMappingForm extends FormApplication {
       .each(function () {
         const group = $(this).closest('.group-toggle');
         const groupName = group.data('group');
-        if (!app.toggled[groupName]) {
+        if (!TOGGLED_GROUPS[groupName]) {
           $(this).trigger('click');
         }
       });
@@ -197,11 +199,11 @@ export default class EffectMappingForm extends FormApplication {
     if (group.hasClass('active')) {
       group.removeClass('active');
       group.find('i').addClass('fa-rotate-180');
-      this.toggled[groupName] = false;
+      TOGGLED_GROUPS[groupName] = false;
     } else {
       group.addClass('active');
       group.find('i').removeClass('fa-rotate-180');
-      this.toggled[groupName] = true;
+      TOGGLED_GROUPS[groupName] = true;
     }
     this.setPosition({ height: 'auto' });
   }
