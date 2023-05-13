@@ -39,7 +39,7 @@ async function _draw(wrapped, ...args) {
  */
 function overrideVisibility(obj, img) {
   if (img && decodeURI(img) === TVA_CONFIG.invisibleImage && !obj.tva_customVisibility) {
-    const originalIsVisible = Object.getOwnPropertyDescriptor(obj.constructor.prototype, 'isVisible').get;
+    const originalIsVisible = _getIsVisibleDescriptor(obj).get;
     Object.defineProperty(obj, 'isVisible', {
       get: function () {
         const isVisible = originalIsVisible.call(this);
@@ -48,11 +48,20 @@ function overrideVisibility(obj, img) {
       },
       configurable: true,
     });
-    obj.visible = obj.isVisible;
     obj.tva_customVisibility = true;
-  } else if (obj.tva_customVisibility) {
-    Object.defineProperty(obj, 'isVisible', Object.getOwnPropertyDescriptor(obj.constructor.prototype, 'isVisible'));
-    obj.visible = obj.isVisible;
+  } else if (!img && obj.tva_customVisibility) {
+    Object.defineProperty(obj, 'isVisible', _getIsVisibleDescriptor(obj));
     delete obj.tva_customVisibility;
   }
+}
+
+function _getIsVisibleDescriptor(obj) {
+  let iObj = Object.getPrototypeOf(obj);
+  let descriptor = null;
+  while (iObj) {
+    descriptor = Object.getOwnPropertyDescriptor(iObj, 'isVisible');
+    if (descriptor) break;
+    iObj = Object.getPrototypeOf(iObj);
+  }
+  return descriptor;
 }
