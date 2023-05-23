@@ -215,15 +215,16 @@ export function registerSettings() {
         saveCache(cacheFile);
       }
 
-      if ('displayEffectIconsOnHover' in diff) {
-        for (const tkn of canvas.tokens.placeables) {
-          if (tkn.effects) tkn.effects.visible = !diff.displayEffectIconsOnHover;
-        }
-      }
       TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
 
       registerAllHooks();
       registerAllWrappers();
+
+      if ('filterEffectIcons' in diff || 'disableEffectIcons' in diff || 'displayEffectIconsOnHover' in diff) {
+        for (const tkn of canvas.tokens.placeables) {
+          tkn.drawEffects();
+        }
+      }
     },
   });
 

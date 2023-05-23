@@ -24,7 +24,7 @@ export function showOverlayJsonConfigDialog(overlayConfig, callback) {
             try {
               json = JSON.parse(json);
             } catch (e) {
-              console.log(e);
+              console.log(`TVA |`, e);
               json = {};
             }
           } else {
@@ -65,8 +65,7 @@ export async function showPathSelectCategoryDialog(event) {
     for (const type of split) {
       content += `<label>${type}</label>`;
     }
-    content +=
-      '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
+    content += '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
     for (const type of split) {
       content += `<input class="category" type="checkbox" name="${type}" data-dtype="Boolean" ${
         selectedTypes.includes(type) ? 'checked' : ''

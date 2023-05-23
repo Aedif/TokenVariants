@@ -183,6 +183,18 @@ export default class ConfigureSettings extends FormApplication {
     // Search Filters
     html.on('input', 'input.filterRegex', this._validateRegex.bind(this));
 
+    // Active Effects
+    const disableEffectIcons = html.find('[name="disableEffectIcons"]');
+    const filterEffectIcons = html.find('[name="filterEffectIcons"]');
+    disableEffectIcons
+      .on('change', (e) => {
+        if (e.target.checked) filterEffectIcons.prop('checked', false);
+      })
+      .trigger('change');
+    filterEffectIcons.on('change', (e) => {
+      if (e.target.checked) disableEffectIcons.prop('checked', false);
+    });
+
     // Algorithm
     const algorithmTab = $(html).find('div[data-tab="searchAlgorithm"]');
     algorithmTab.find(`input[name="algorithm.exact"]`).change((e) => {
@@ -383,7 +395,7 @@ export default class ConfigureSettings extends FormApplication {
           sourceInput.val('rolltable').trigger('input');
         }.bind(this)
       )
-      .catch((error) => console.log('Token Variant Art | ', error));
+      .catch((error) => console.log('TVA | ', error));
   }
 
   /**
@@ -439,7 +451,7 @@ export default class ConfigureSettings extends FormApplication {
           sourceInput.val('rolltable').trigger('input');
         }.bind(this)
       )
-      .catch((error) => console.log('Token Variant Art | ', error));
+      .catch((error) => console.log('TVA | ', error));
   }
 
   /**

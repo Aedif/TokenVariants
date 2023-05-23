@@ -116,7 +116,7 @@ export default class OverlayConfig extends FormApplication {
       try {
         params = eval(textarea.val());
       } catch (e) {
-        console.log(e);
+        console.log('TVA |', e);
       }
 
       if (params) {

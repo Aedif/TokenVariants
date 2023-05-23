@@ -5,24 +5,22 @@ import { registerWrapper, unregisterWrapper } from './wrappers.js';
 const feature_id = 'EffectIcons';
 
 export function registerEffectIconWrappers() {
-  if (!(FEATURE_CONTROL[feature_id] && TVA_CONFIG.disableEffectIcons)) {
-    unregisterWrapper(feature_id + '-fullOverride', 'Token.prototype.drawEffects');
-  }
+  unregisterWrapper(feature_id, 'Token.prototype.drawEffects');
+  if (!FEATURE_CONTROL[feature_id]) return;
 
-  if (
-    FEATURE_CONTROL[feature_id] &&
-    !TVA_CONFIG.disableEffectIcons &&
-    (TVA_CONFIG.displayEffectIconsOnHover ||
-      (TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)))
-  ) {
+  if (!TVA_CONFIG.disableEffectIcons && TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
     registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects, 'OVERRIDE');
-  } else {
-    unregisterWrapper(feature_id, 'Token.prototype.drawEffects');
+  } else if (TVA_CONFIG.disableEffectIcons) {
+    registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects_fullReplace, 'OVERRIDE');
+  } else if (TVA_CONFIG.displayEffectIconsOnHover) {
+    registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects_hoverOnly, 'WRAPPER');
   }
+}
 
-  if (FEATURE_CONTROL[feature_id] && TVA_CONFIG.disableEffectIcons) {
-    registerWrapper(feature_id + '-fullOverride', 'Token.prototype.drawEffects', _drawEffects_fullReplace, 'OVERRIDE');
-  }
+async function _drawEffects_hoverOnly(wrapped, ...args) {
+  let result = await wrapped(...args);
+  this.effects.visible = this.hover;
+  return result;
 }
 
 async function _drawEffects_fullReplace(...args) {
@@ -46,6 +44,7 @@ async function _drawEffects(...args) {
   };
 
   // Modified from the original token.drawEffects
+  if (TVA_CONFIG.displayEffectIconsOnHover) this.effects.visible = this.hover;
   if (tokenEffects.length || actorEffects.length) {
     let restrictedEffects = TVA_CONFIG.filterIconList;
     if (TVA_CONFIG.filterCustomEffectIcons) {

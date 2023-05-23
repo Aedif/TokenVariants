@@ -156,7 +156,7 @@ function _modActorSheet(actorSheet, html, options) {
     }
 
     if (!profile) {
-      console.log(game.i18n.localize('token-variants.notifications.warn.profile-image-not-found'));
+      console.log('TVA |', game.i18n.localize('token-variants.notifications.warn.profile-image-not-found'));
       return;
     }
 

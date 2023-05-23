@@ -444,6 +444,5 @@ export function insertArtSelectButton(html, target, { search = '', searchType = 
       searchType,
     });
   });
-  console.log(html.find(`[name="${target}"]`));
   html.find(`[name="${target}"]`).after(button);
 }

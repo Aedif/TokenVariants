@@ -614,7 +614,6 @@ export default class EffectMappingForm extends FormApplication {
     let content = '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
 
     const [_, mappingGroups] = sortMappingsToGroups(mappings);
-    console.log;
     for (const [group, obj] of Object.entries(mappingGroups)) {
       if (obj.list.length) {
         content += `<h4 style="text-align:center;"><b>${group}</b></h4>`;

@@ -1,3 +1,8 @@
+# 4.38.1
+
+- Fixed `Display Token Effect Icons on Hover` not hiding effects on game load
+- `Disable ALL Token Effect Icons` and `Disable SOME Token Effect Icons` setting changes no longer require game reload
+
 # 4.38.0
 
 - New overlay option: `Link` > `Dimensions`
