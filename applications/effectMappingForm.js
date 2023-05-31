@@ -8,6 +8,7 @@ import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
+import { drawOverlays } from '../scripts/token/overlay.js';
 
 // Persist group toggles across forms
 const TOGGLED_GROUPS = { Default: true };
@@ -775,6 +776,7 @@ export default class EffectMappingForm extends FormApplication {
           await tkn.drawEffects();
         }
         await updateWithEffectMapping(tkn);
+        drawOverlays(tkn);
       }
 
       // Instruct users on other scenes to refresh the overlays

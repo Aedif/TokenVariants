@@ -1,3 +1,10 @@
+# 4.38.2
+
+Overlays
+
+- Should now be properly refreshed on effect mapping change
+- v11 compatibility fixes
+
 # 4.38.1
 
 - Fixed `Display Token Effect Icons on Hover` not hiding effects on game load

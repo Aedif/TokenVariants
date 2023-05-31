@@ -67,6 +67,27 @@ export class TVASprite extends TokenMesh {
 
     this.tvaOverlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
     this._tvaPlay().then(() => this.refresh());
+
+    // Workaround needed for v11 visible property
+    Object.defineProperty(this, 'visible', {
+      get: this._customVisible,
+      set: function () {},
+      configurable: true,
+    });
+  }
+
+  _customVisible() {
+    if (!this.ready || !(this.object.visible || this.tvaOverlayConfig.alwaysVisible)) return false;
+    if (this.tvaOverlayConfig.limitedUsers?.length && !this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
+      return false;
+
+    if (this.tvaOverlayConfig.limitOnHover || this.tvaOverlayConfig.limitOnControl) {
+      let visible = false;
+      if (this.tvaOverlayConfig.limitOnHover && (this.object.hover || canvas.tokens._highlight)) visible = true;
+      if (this.tvaOverlayConfig.limitOnControl && this.object.controlled) visible = true;
+      return visible;
+    }
+    return true;
   }
 
   // Overlays have the same sort order as the parent
@@ -82,21 +103,6 @@ export class TVASprite extends TokenMesh {
   }
 
   set _lastSortedIndex(val) {}
-
-  get visible() {
-    if (!this.ready || !(this.object.visible || this.tvaOverlayConfig.alwaysVisible)) return false;
-    if (this.tvaOverlayConfig.limitedUsers?.length && !this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
-      return false;
-
-    if (this.tvaOverlayConfig.limitOnHover || this.tvaOverlayConfig.limitOnControl) {
-      let visible = false;
-      if (this.tvaOverlayConfig.limitOnHover && (this.object.hover || canvas.tokens._highlight)) visible = true;
-      if (this.tvaOverlayConfig.limitOnControl && this.object.controlled) visible = true;
-      return visible;
-    }
-    return true;
-  }
-  set visible(visible) {}
 
   async _tvaPlay() {
     // Ensure playback state for video
@@ -134,7 +140,7 @@ export class TVASprite extends TokenMesh {
   }
 
   refresh(configuration, { preview = false, fullRefresh = true, previewTexture = null } = {}) {
-    if (!this.texture) return;
+    if (!this.tvaOverlayConfig || !this.texture) return;
 
     // Text preview handling
     if (previewTexture) {
@@ -147,7 +153,7 @@ export class TVASprite extends TokenMesh {
       delete this.originalTexture;
     }
 
-    const config = mergeObject(this.tvaOverlayConfig, configuration, { inplace: !preview });
+    const config = mergeObject(this.tvaOverlayConfig, configuration ?? {}, { inplace: !preview });
 
     if (fullRefresh) {
       const source = foundry.utils.getProperty(this.texture, 'baseTexture.resource.source');
