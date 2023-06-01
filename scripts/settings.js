@@ -220,7 +220,13 @@ export function registerSettings() {
       registerAllHooks();
       registerAllWrappers();
 
-      if ('filterEffectIcons' in diff || 'disableEffectIcons' in diff || 'displayEffectIconsOnHover' in diff) {
+      if ('displayEffectIconsOnHover' in diff) {
+        for (const tkn of canvas.tokens.placeables) {
+          if (tkn.effects) tkn.effects.visible = !diff.displayEffectIconsOnHover;
+        }
+      }
+
+      if ('filterEffectIcons' in diff || 'disableEffectIcons' in diff) {
         for (const tkn of canvas.tokens.placeables) {
           tkn.drawEffects();
         }

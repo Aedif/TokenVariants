@@ -1,3 +1,13 @@
+# 4.39.0
+
+- Fixed `Display Token Effect Icons on Hover` setting not updating effect visibility immediately on setting change
+- New Overlay setting: `Visibility` > `Limit Visibility to Token With Effect`
+  - Overlay will only be shown to tokens that have an active effect matching this name
+- New Overlay setting: `Visibility` > `Limit Visibility to Token With Property`
+  - Overlay will only be shown to tokens that pass the provided expression e.g.
+  - `actor.system.attributes.senses.truesight>0`
+  - `hp<=50%`
+
 # 4.38.2
 
 Overlays

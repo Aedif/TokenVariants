@@ -573,7 +573,10 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
             },
           });
         } else {
-          await tv_executeScript(deferredUpdateScripts[i], { token: tokenDoc, tvaUpdate: () => {} });
+          await tv_executeScript(deferredUpdateScripts[i], {
+            token: tokenDoc,
+            tvaUpdate: () => {},
+          });
         }
       }
     } else {
@@ -726,11 +729,59 @@ export function getEffectsFromActor(actor) {
   return effects;
 }
 
+export const VALID_EXPRESSION = new RegExp('([a-zA-Z\\-\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
+
+export function evaluateComparator(token, expression) {
+  const exp = expression.replaceAll(FAUX_DOT, '.');
+  const match = exp.match(VALID_EXPRESSION);
+  if (match) {
+    const property = match[1];
+
+    let currVal;
+    let maxVal;
+    if (property === 'hp') {
+      [currVal, maxVal] = _getTokenHP(token);
+    } else currVal = getProperty(token, property);
+
+    if (currVal != null) {
+      const sign = match[2];
+      let val = Number(match[3]);
+      if (isNaN(val)) {
+        val = match[3].substring(1, match[3].length - 1);
+        if (val === 'true') val = true;
+        if (val === 'false') val = false;
+      }
+      const isPercentage = Boolean(match[4]);
+
+      if (property === 'rotation') {
+        maxVal = 360;
+      } else if (maxVal == null) {
+        maxVal = 999999;
+      }
+      const toCompare = isPercentage ? (currVal / maxVal) * 100 : currVal;
+
+      let passed = false;
+      if (sign === '=') {
+        passed = toCompare == val;
+      } else if (sign === '>') {
+        passed = toCompare > val;
+      } else if (sign === '<') {
+        passed = toCompare < val;
+      } else if (sign === '>=') {
+        passed = toCompare >= val;
+      } else if (sign === '<=') {
+        passed = toCompare <= val;
+      }
+      return passed;
+    }
+  }
+  return false;
+}
+
 export function evaluateComparatorEffects(token, effects = []) {
   token = token.document ? token.document : token;
 
   const mappings = getAllEffectMappings(token);
-  const re = new RegExp('([a-zA-Z\\-\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
 
   const matched = new Set();
   for (const key of Object.keys(mappings)) {
@@ -740,50 +791,8 @@ export function evaluateComparatorEffects(token, effects = []) {
       .map((exp) => exp.trim())
       .filter(Boolean);
     for (let i = 0; i < expressions.length; i++) {
-      const exp = expressions[i].replaceAll(FAUX_DOT, '.');
-      const match = exp.match(re);
-      if (match) {
-        const property = match[1];
-
-        let currVal;
-        let maxVal;
-        if (property === 'hp') {
-          [currVal, maxVal] = _getTokenHP(token);
-        } else currVal = getProperty(token, property);
-
-        if (currVal != null) {
-          const sign = match[2];
-          let val = Number(match[3]);
-          if (isNaN(val)) {
-            val = match[3].substring(1, match[3].length - 1);
-            if (val === 'true') val = true;
-            if (val === 'false') val = false;
-          }
-          const isPercentage = Boolean(match[4]);
-
-          if (property === 'rotation') {
-            maxVal = 360;
-          } else if (maxVal == null) {
-            maxVal = 999999;
-          }
-          const toCompare = isPercentage ? (currVal / maxVal) * 100 : currVal;
-
-          let passed = false;
-          if (sign === '=') {
-            passed = toCompare == val;
-          } else if (sign === '>') {
-            passed = toCompare > val;
-          } else if (sign === '<') {
-            passed = toCompare < val;
-          } else if (sign === '>=') {
-            passed = toCompare >= val;
-          } else if (sign === '<=') {
-            passed = toCompare <= val;
-          }
-          if (passed) {
-            matched.add(exp.replaceAll('.', FAUX_DOT));
-          }
-        }
+      if (evaluateComparator(token, expressions[i])) {
+        matched.add(expressions[i].replaceAll('.', FAUX_DOT));
       }
     }
   }

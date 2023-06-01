@@ -1,4 +1,5 @@
 import { FILTERS } from '../../applications/overlayConfig.js';
+import { evaluateComparator, getTokenEffects } from '../hooks/effectMappingHooks.js';
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
 import { removeMarkedOverlays } from '../token/overlay.js';
 
@@ -78,8 +79,21 @@ export class TVASprite extends TokenMesh {
 
   _customVisible() {
     if (!this.ready || !(this.object.visible || this.tvaOverlayConfig.alwaysVisible)) return false;
+
     if (this.tvaOverlayConfig.limitedUsers?.length && !this.tvaOverlayConfig.limitedUsers.includes(game.user.id))
       return false;
+
+    if (this.tvaOverlayConfig.limitOnEffect || this.tvaOverlayConfig.limitOnProperty) {
+      const speaker = ChatMessage.getSpeaker();
+      let token = canvas.ready ? canvas.tokens.get(speaker.token) : null;
+      if (!token) return false;
+      if (this.tvaOverlayConfig.limitOnEffect) {
+        if (!getTokenEffects(token).includes(this.tvaOverlayConfig.limitOnEffect)) return false;
+      }
+      if (this.tvaOverlayConfig.limitOnProperty) {
+        if (!evaluateComparator(token.document, this.tvaOverlayConfig.limitOnProperty)) return false;
+      }
+    }
 
     if (this.tvaOverlayConfig.limitOnHover || this.tvaOverlayConfig.limitOnControl) {
       let visible = false;

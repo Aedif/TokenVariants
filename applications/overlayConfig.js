@@ -1,5 +1,5 @@
 import { DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
-import { fixEffectMappings, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
+import { VALID_EXPRESSION, fixEffectMappings, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
 import { generateTextTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
@@ -170,6 +170,23 @@ export default class OverlayConfig extends FormApplication {
     linkDimensions.change(function () {
       if (this.checked) linkScale.prop('checked', false);
     });
+
+    // Setting border color for property expression
+    const limitOnProperty = html.find('[name="limitOnProperty"]');
+    limitOnProperty.on('input', (event) => {
+      const input = $(event.target);
+      if (input.val() === '') {
+        input.removeClass('tvaValid');
+        input.removeClass('tvaInvalid');
+      } else if (input.val().match(VALID_EXPRESSION)) {
+        input.addClass('tvaValid');
+        input.removeClass('tvaInvalid');
+      } else {
+        input.addClass('tvaInvalid');
+        input.removeClass('tvaValid');
+      }
+    });
+    limitOnProperty.trigger('input');
   }
 
   _convertColor(colString) {
@@ -317,6 +334,8 @@ export default class OverlayConfig extends FormApplication {
     } else {
       formData.limitedUsers = [];
     }
+    formData.limitOnEffect = formData.limitOnEffect.trim();
+    formData.limitOnProperty = formData.limitOnProperty.trim();
     if (formData.parent === 'Token (Placeable)') formData.parent = '';
     if (this.callback) this.callback(expandObject(formData));
   }

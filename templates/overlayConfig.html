@@ -290,6 +290,32 @@
                     </div>
                 </div>
             </fieldset>
+
+            <fieldset>
+                <legend>Limit Visibility to Token With Effect</legend>
+                <div class="form-group">
+                    <label>Effect Name</label>
+                    <div class="form-fields">
+                        <input type="text" name="limitOnEffect" value="{{limitOnEffect}}">
+                    </div>
+                    <p class="notes">Overlay will only be visible to Tokens with this effect applied to them.</p>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Limit Visibility to Token With Property</legend>
+                <div class="form-group">
+                    <label>Expression</label>
+                    <div class="form-fields">
+                        <input type="text" name="limitOnProperty" value="{{limitOnProperty}}" placeholder="actor.system.attributes.senses.truesight>0">
+                    </div>
+                    <p class="notes">Overlay will only be visible to Tokens that satisfy this expression.</p>
+                    <p class="notes"> e.g. 
+                        <br>actor.system.attributes.senses.truesight>0 
+                        <br> actor.system.skills.prc.passive>=15
+                        <br>hp&lt;=50%</p>
+                </div>
+            </fieldset>
         </div>
 
         <div class="tab active" data-group="main" data-tab="text">

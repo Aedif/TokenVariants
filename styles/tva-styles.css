@@ -840,3 +840,15 @@ ol.token-variant-table .table-row .effect-name .div-input {
 .token-variants-macro > .form-group {
   height: 50%;
 }
+
+/* ---------------------------------------- */
+/* MISC.                                    */
+/* ---------------------------------------- */
+
+input.tvaValid {
+  border: 2px solid #009b00;
+}
+
+input.tvaInvalid {
+  border: 2px solid #ff0000;
+}
