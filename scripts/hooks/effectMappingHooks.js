@@ -55,12 +55,12 @@ export function registerEffectMappingHooks() {
 
   registerHook(feature_id, 'createActiveEffect', (activeEffect, options, userId) => {
     if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
-    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
+    const effectName = activeEffect.name ?? activeEffect.label;
     _updateImageOnEffectChange(effectName, activeEffect.parent, true);
   });
   registerHook(feature_id, 'deleteActiveEffect', (activeEffect, options, userId) => {
     if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
-    const effectName = game.system.id === 'pf2e' ? activeEffect.name : activeEffect.label;
+    const effectName = activeEffect.name ?? activeEffect.label;
     _updateImageOnEffectChange(effectName, activeEffect.parent, false);
   });
   registerHook(feature_id, 'preUpdateActiveEffect', _preUpdateActiveEffect);
@@ -197,54 +197,30 @@ async function _updateActor(actor, change, options, userId) {
     }
   }
 
-  let containsHPUpdate = false;
-  if (game.system.id === 'cyberpunk-red-core') {
-    containsHPUpdate = change.system?.derivedStats?.hp;
-  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
-    containsHPUpdate = change.system?.health;
-  } else {
-    containsHPUpdate = change.system?.attributes?.hp;
-  }
+  const tokens = getAllActorTokens(actor, true, true);
+  for (const tkn of tokens) {
+    // Check if effects changed by comparing them against the ones calculated in preUpdateActor
+    const added = [];
+    const removed = [];
+    const postUpdateEffects = evaluateComparatorEffects(tkn);
+    const preUpdateEffects = [...(options['token-variants']?.[tkn.id]?.preUpdateEffects || [])];
 
-  if (containsHPUpdate) {
-    const tokens = getAllActorTokens(actor, true, true);
-    for (const tkn of tokens) {
-      if (!tkn.actorLink) continue;
-      // Check if HP effects changed by comparing them against the ones calculated in preUpdateActor
-      const added = [];
-      const removed = [];
-      const postUpdateEffects = evaluateComparatorEffects(tkn);
-      const preUpdateEffects = [...(options['token-variants']?.[tkn.id]?.preUpdateEffects || [])];
-
-      determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
-      if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
-    }
+    determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
+    if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
   }
 }
 
 function _preUpdateActor(actor, change, options, userId) {
   if (game.user.id !== userId) return;
 
-  // If this is an HP update we need to determine what the current HP effects would be
-  // so that they can be compared against in 'updateActor' hook
-  let containsHPUpdate = false;
-  if (game.system.id === 'cyberpunk-red-core') {
-    containsHPUpdate = change.system?.derivedStats?.hp;
-  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
-    containsHPUpdate = change.system?.health;
-  } else {
-    containsHPUpdate = change.system?.attributes?.hp;
-  }
-
-  if (containsHPUpdate) {
-    const tokens = actor.getActiveTokens();
-    for (const tkn of tokens) {
-      if (!tkn.document.actorLink) continue;
-      const preUpdateEffects = evaluateComparatorEffects(tkn);
-      if (preUpdateEffects.length) {
-        if (!options['token-variants']) options['token-variants'] = {};
-        options['token-variants'][tkn.id] = { preUpdateEffects };
-      }
+  // Determine which comparators are applicable so that we can compare after the
+  // actor update
+  const tokens = actor.getActiveTokens();
+  for (const tkn of tokens) {
+    const preUpdateEffects = evaluateComparatorEffects(tkn);
+    if (preUpdateEffects.length) {
+      if (!options['token-variants']) options['token-variants'] = {};
+      options['token-variants'][tkn.id] = { preUpdateEffects };
     }
   }
 }
@@ -263,21 +239,8 @@ async function _updateToken(token, change, options, userId) {
   const oldStateEffects = options['token-variants']?.['system'] || [];
   determineAddedRemovedEffects(addedEffects, removedEffects, newStateEffects, oldStateEffects);
 
-  if (addedEffects.length || removedEffects.length)
+  if (addedEffects.length || removedEffects.length || 'actorLink' in change) {
     updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
-
-  // HP Effects
-  let containsHPUpdate = false;
-  if (game.system.id === 'cyberpunk-red-core') {
-    containsHPUpdate = change.actorData?.system?.derivedStats?.hp;
-  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
-    containsHPUpdate = change.actorData?.system?.health;
-  } else {
-    containsHPUpdate = change.actorData?.system?.attributes?.hp;
-  }
-
-  if ('actorLink' in change || containsHPUpdate) {
-    updateWithEffectMapping(token);
   } else if (options['token-variants']?.wasPolymorphed && !token.actor?.isPolymorphed) {
     updateWithEffectMapping(token);
   }
@@ -659,9 +622,15 @@ export function getTokenEffects(token, includeExpressions = false) {
     if (data.actorLink) {
       effects = getEffectsFromActor(token.actor);
     } else {
-      effects = (data.actorData?.items || [])
-        .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
-        .map((item) => item.name);
+      if (isNewerVersion('11', game.version)) {
+        effects = (data.actorData?.items || [])
+          .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
+          .map((item) => item.name);
+      } else {
+        effects = (data.delta?.items || [])
+          .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
+          .map((item) => item.name);
+      }
     }
   } else {
     if (data.actorLink && token.actor) {
@@ -722,7 +691,7 @@ export function getEffectsFromActor(actor) {
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.label);
+      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.name ?? activeEffect.label);
     });
   }
 
@@ -845,36 +814,41 @@ export function evaluateEffectAsExpression(effect, effects) {
   return [evaluation, foundEffects];
 }
 
-function _getTokenHP(token) {
-  let attributes = {};
+function _getTokenHPv11(token) {
+  let attributes;
 
-  if (game.system.id === 'cyberpunk-red-core') {
-    if (token.actorLink) {
-      attributes = token.actor.system?.derivedStats;
-    } else {
-      attributes = mergeObject(token.actor.system?.derivedStats || {}, token.actorData?.system?.derivedStats || {}, {
-        inplace: false,
-      });
-    }
-  } else if (game.system.id === 'lfg' || game.system.id === 'worldbuilding') {
-    if (token.actorLink) {
-      attributes = token.actor.system?.health;
-    } else {
-      attributes = mergeObject(token.actor?.system?.health || {}, token.actorData?.system?.health || {}, {
-        inplace: false,
-      });
-    }
-    attributes = { hp: attributes };
+  if (token.actorLink) {
+    attributes = mergeObject(getProperty(token.actor.system, TVA_CONFIG.systemHpPath));
   } else {
-    if (token.actorLink) {
-      attributes = token.actor?.system?.attributes;
-    } else {
-      attributes = mergeObject(token.actor?.system?.attributes || {}, token.actorData?.system?.attributes || {}, {
+    attributes = mergeObject(
+      getProperty(token.actor.system, TVA_CONFIG.systemHpPath) || {},
+      getProperty(token.delta?.system) || {},
+      {
         inplace: false,
-      });
-    }
+      }
+    );
   }
-  return [attributes?.hp?.value, attributes?.hp?.max];
+
+  return [attributes?.value, attributes?.max];
+}
+
+function _getTokenHP(token) {
+  if (!isNewerVersion('11', game.version)) return _getTokenHPv11(token);
+
+  let attributes;
+
+  if (token.actorLink) {
+    attributes = mergeObject(getProperty(token.actor.system, TVA_CONFIG.systemHpPath));
+  } else {
+    attributes = mergeObject(
+      getProperty(token.actor.system, TVA_CONFIG.systemHpPath) || {},
+      getProperty(token.actorData?.system) || {},
+      {
+        inplace: false,
+      }
+    );
+  }
+  return [attributes?.value, attributes?.max];
 }
 
 async function _updateImageOnEffectChange(effectName, actor, added = true) {

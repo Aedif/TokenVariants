@@ -1,3 +1,10 @@
+# 4.40.0
+
+- v11 warning fixes
+- New setting: `Active Effects` > `System's HP Path`
+  - Allows to change the module's assumed path to the HP values (`attributes.hp`)
+  - This path is used by HP comparators in effect mappings (e.g. `hp<=50%`)
+
 # 4.39.0
 
 - Fixed `Display Token Effect Icons on Hover` setting not updating effect visibility immediately on setting change

@@ -137,6 +137,7 @@ export const TVA_CONFIG = {
   disableImageUpdateOnNonPrototype: false,
   disableTokenUpdateAnimation: false,
   invisibleImage: '',
+  systemHpPath: '',
 };
 
 export const FEATURE_CONTROL = {
@@ -172,6 +173,14 @@ export function registerSettings() {
     type: ConfigureSettings,
     restricted: true,
   });
+
+  const systemHpPaths = {
+    'cyberpunk-red-core': 'derivedStats.hp',
+    lfg: 'health',
+    worldbuilding: 'health',
+    twodsix: 'hits',
+  };
+  TVA_CONFIG.systemHpPath = systemHpPaths[game.system.id] ?? 'attributes.hp';
 
   game.settings.register('token-variants', 'settings', {
     scope: 'world',

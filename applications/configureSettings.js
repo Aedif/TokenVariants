@@ -136,6 +136,7 @@ export default class ConfigureSettings extends FormApplication {
     // === Misc ===
     data.keywordSearch = settings.keywordSearch;
     data.excludedKeywords = settings.excludedKeywords;
+    data.systemHpPath = settings.systemHpPath;
     data.runSearchOnPath = settings.runSearchOnPath;
     data.imgurClientId = settings.imgurClientId;
     data.enableStatusConfig = settings.enableStatusConfig;
@@ -614,6 +615,7 @@ export default class ConfigureSettings extends FormApplication {
     mergeObject(settings, {
       keywordSearch: formData.keywordSearch,
       excludedKeywords: formData.excludedKeywords,
+      systemHpPath: formData.systemHpPath.trim(),
       runSearchOnPath: formData.runSearchOnPath,
       imgurClientId: formData.imgurClientId,
       enableStatusConfig: formData.enableStatusConfig,
