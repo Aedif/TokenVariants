@@ -531,7 +531,6 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
           await tv_executeScript(deferredUpdateScripts[i], {
             token: tokenDoc,
             tvaUpdate: () => {
-              broadcastOverlayRedraw(tokenDoc);
               updateCall();
             },
           });
@@ -543,12 +542,10 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
         }
       }
     } else {
-      broadcastOverlayRedraw(tokenDoc);
       updateCall();
     }
-  } else {
-    broadcastOverlayRedraw(tokenDoc);
   }
+  broadcastOverlayRedraw(tokenDoc);
 }
 
 async function _postTokenUpdateProcessing(tokenDoc, hadActiveHUD, toggleStatus, scripts) {
@@ -605,7 +602,7 @@ export function getAllEffectMappings(token = null, includeDisabled = false) {
 // We need to adjust old configs to account for this
 export function fixEffectMappings(mappings) {
   for (const v of Object.values(mappings)) {
-    if (v.overlay && !v.overlayConfig.img) {
+    if (v.overlay && !v.overlayConfig.img && !v.overlayConfig.text) {
       v.overlayConfig.img = v.imgSrc;
       v.imgSrc = null;
       v.imgName = null;
@@ -853,14 +850,12 @@ function _getTokenHP(token) {
 
 async function _updateImageOnEffectChange(effectName, actor, added = true) {
   const mappings = getAllEffectMappings({ actor });
-  if (effectName in mappings) {
-    const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
-    for (const token of tokens) {
-      await updateWithEffectMapping(token, {
-        added: added ? [effectName] : [],
-        removed: !added ? [effectName] : [],
-      });
-    }
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  for (const token of tokens) {
+    await updateWithEffectMapping(token, {
+      added: added ? [effectName] : [],
+      removed: !added ? [effectName] : [],
+    });
   }
 }
 

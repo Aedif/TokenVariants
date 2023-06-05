@@ -45,7 +45,10 @@ export function registerArtSelectButtonHooks() {
 }
 
 function _modTokenConfig(config, html) {
-  insertArtSelectButton(html, 'texture.src', { search: config.object.name, searchType: SEARCH_TYPE.TOKEN });
+  insertArtSelectButton(html, 'texture.src', {
+    search: config.object.name,
+    searchType: SEARCH_TYPE.TOKEN,
+  });
 }
 
 function _modTemplateConfig(config, html) {
@@ -156,7 +159,7 @@ function _modActorSheet(actorSheet, html, options) {
     }
 
     if (!profile) {
-      console.log('TVA |', game.i18n.localize('token-variants.notifications.warn.profile-image-not-found'));
+      console.warn('TVA |', game.i18n.localize('token-variants.notifications.warn.profile-image-not-found'));
       return;
     }
 

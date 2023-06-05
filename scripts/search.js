@@ -43,7 +43,7 @@ export async function doImageSearch(
 
   search = search.trim();
 
-  if (TVA_CONFIG.debug) console.log('TVA | STARTING: Art Search', search, searchType, searchOptions);
+  if (TVA_CONFIG.debug) console.info('TVA | STARTING: Art Search', search, searchType, searchOptions);
 
   let searches = [search];
   let allImages = new Map();
@@ -69,7 +69,7 @@ export async function doImageSearch(
     results.forEach(usedImages.add, usedImages);
   }
 
-  if (TVA_CONFIG.debug) console.log('TVA | ENDING: Art Search');
+  if (TVA_CONFIG.debug) console.info('TVA | ENDING: Art Search');
 
   if (simpleResults) {
     allImages = Array.from(usedImages).map((obj) => obj.path);
@@ -275,7 +275,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
             _addToFound({ path: decodeURI(img.link), name: rtName }, typeKey, found_images);
           });
         })
-        .catch((error) => console.log('TVA |', error));
+        .catch((error) => console.warn('TVA |', error));
       return;
     } else if (path.source.startsWith('rolltable')) {
       const table = game.tables.contents.find((t) => t.name === path.text);
@@ -310,13 +310,13 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
             _addToFound({ path: decodeURI(img.path), name: rtName, tags: img.tags }, typeKey, found_images);
           });
         })
-        .catch((error) => console.log('TVA |', error));
+        .catch((error) => console.warn('TVA |', error));
       return;
     } else {
       files = await FilePicker.browse(path.source, path.text);
     }
   } catch (err) {
-    console.log(
+    console.warn(
       `TVA | ${game.i18n.localize('token-variants.notifications.warn.path-not-found')} ${path.source}:${path.text}`
     );
     return;
@@ -396,7 +396,7 @@ function _filterPathsByType(paths, searchType) {
 
 export async function findImagesFuzzy(name, searchType, searchOptions, forceSearchName = false) {
   if (TVA_CONFIG.debug)
-    console.log('TVA | STARTING: Fuzzy Image Search', name, searchType, searchOptions, forceSearchName);
+    console.info('TVA | STARTING: Fuzzy Image Search', name, searchType, searchOptions, forceSearchName);
 
   const filters = getFilters(searchType, searchOptions.searchFilters);
 
@@ -436,13 +436,13 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
     });
   }
 
-  if (TVA_CONFIG.debug) console.log('TVA | ENDING: Fuzzy Image Search', results);
+  if (TVA_CONFIG.debug) console.info('TVA | ENDING: Fuzzy Image Search', results);
 
   return results;
 }
 
 async function findImagesExact(name, searchType, searchOptions) {
-  if (TVA_CONFIG.debug) console.log('TVA | STARTING: Exact Image Search', name, searchType, searchOptions);
+  if (TVA_CONFIG.debug) console.info('TVA | STARTING: Exact Image Search', name, searchType, searchOptions);
 
   const found_images = await walkAllPaths(searchType);
 
@@ -464,7 +464,7 @@ async function findImagesExact(name, searchType, searchOptions) {
     }
   }
 
-  if (TVA_CONFIG.debug) console.log('TVA | ENDING: Exact Image Search', matchedImages);
+  if (TVA_CONFIG.debug) console.info('TVA | ENDING: Exact Image Search', matchedImages);
   return matchedImages;
 }
 
@@ -565,11 +565,11 @@ export async function cacheImages({
   if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(game.i18n.format('token-variants.notifications.info.caching-started'));
 
-  if (TVA_CONFIG.debug) console.log('TVA | STARTING: Token Caching');
+  if (TVA_CONFIG.debug) console.info('TVA | STARTING: Token Caching');
   const found_images = await walkAllPaths();
   CACHED_IMAGES = found_images;
 
-  if (TVA_CONFIG.debug) console.log('TVA | ENDING: Token Caching');
+  if (TVA_CONFIG.debug) console.info('TVA | ENDING: Token Caching');
 
   caching = false;
   if (!TVA_CONFIG.disableNotifs)

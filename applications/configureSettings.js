@@ -396,7 +396,7 @@ export default class ConfigureSettings extends FormApplication {
           sourceInput.val('rolltable').trigger('input');
         }.bind(this)
       )
-      .catch((error) => console.log('TVA | ', error));
+      .catch((error) => console.warn('TVA | ', error));
   }
 
   /**
@@ -452,7 +452,7 @@ export default class ConfigureSettings extends FormApplication {
           sourceInput.val('rolltable').trigger('input');
         }.bind(this)
       )
-      .catch((error) => console.log('TVA | ', error));
+      .catch((error) => console.warn('TVA | ', error));
   }
 
   /**

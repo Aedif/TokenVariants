@@ -24,7 +24,7 @@ export function showOverlayJsonConfigDialog(overlayConfig, callback) {
             try {
               json = JSON.parse(json);
             } catch (e) {
-              console.log(`TVA |`, e);
+              console.warn(`TVA |`, e);
               json = {};
             }
           } else {

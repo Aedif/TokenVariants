@@ -156,7 +156,11 @@ export async function generateTextTexture(token, conf) {
   matrix.tx = -bounds.x;
   matrix.ty = -bounds.y;
 
-  const renderTexture = PIXI.RenderTexture.create({ width: bounds.width, height: bounds.height, resolution: 2 });
+  const renderTexture = PIXI.RenderTexture.create({
+    width: bounds.width,
+    height: bounds.height,
+    resolution: 2,
+  });
   // const renderTexture = PIXI.RenderTexture.create(bounds.width, bounds.height);
   canvas.app.renderer.render(container, renderTexture, true, matrix, false);
   text.destroy();
