@@ -1,5 +1,4 @@
 import { getTokenConfig, setTokenConfig } from '../scripts/utils.js';
-import EditScriptConfig from './configScriptEdit.js';
 
 export default class TokenCustomConfig extends TokenConfig {
   constructor(object, options, imgSrc, imgName, callback, config) {

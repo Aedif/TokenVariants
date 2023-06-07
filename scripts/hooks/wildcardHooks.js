@@ -1,4 +1,5 @@
-import { FEATURE_CONTROL } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
+import { extractDimensionsFromImgName } from '../utils.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
 const feature_id = 'Wildcards';
@@ -49,11 +50,20 @@ async function _renderTokenConfig(config, html) {
 }
 
 function _preCreateToken(tokenDocument, data, options, userId) {
-  if (game.user.id === userId && tokenDocument.actor?.prototypeToken?.randomImg) {
+  if (!game.user.id === userId) return;
+
+  let update = {};
+  if (tokenDocument.actor?.prototypeToken?.randomImg) {
     const defaultImg =
       tokenDocument.actor?.prototypeToken?.flags['token-variants']?.['randomImgDefault'] ||
       tokenDocument.actor?.prototypeToken?.flags['token-hud-wildcard']?.['default'] ||
       '';
-    if (defaultImg) tokenDocument.updateSource({ 'texture.src': defaultImg });
+    if (defaultImg) update['texture.src'] = defaultImg;
   }
+
+  if (TVA_CONFIG.imgNameContainsDimensions) {
+    extractDimensionsFromImgName(tokenDocument.texture.src, update);
+  }
+
+  if (!isEmpty(update)) tokenDocument.updateSource(update);
 }

@@ -719,6 +719,14 @@
             <p class="notes">Token updates using the module will also affect the prototype token.</p>
           </div>
 
+          <div class="form-group">
+            <label>Image Names Contain Dimensions</label>
+            <div class="form-fields">
+              <input type="checkbox" name="imgNameContainsDimensions" data-dtype="Boolean" {{#if imgNameContainsDimensions}}checked{{/if}}>
+            </div>
+            <p class="notes">Module will recognize `_scaleX.X_`, `_widthX.X_`, and `_heightX.X_` in image names and apply them to the token.</p>
+          </div>
+
           <hr>
 
           <div class="form-group">

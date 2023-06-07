@@ -463,18 +463,25 @@ export function getTokenConfig(imgSrc, imgName) {
  */
 export function getTokenConfigForUpdate(imgSrc, imgName) {
   if (!imgSrc || !imgName) return undefined;
-  const tokenConfig = getTokenConfig(imgSrc, imgName);
+  let tokenConfig = getTokenConfig(imgSrc, imgName);
   if (tokenConfig) {
-    const config = deepClone(tokenConfig);
-    delete config.tvImgSrc;
-    delete config.tvImgName;
-    for (var key in config) {
+    tokenConfig = deepClone(tokenConfig);
+    delete tokenConfig.tvImgSrc;
+    delete tokenConfig.tvImgName;
+    for (var key in tokenConfig) {
       if (key.startsWith('tvTab_')) {
-        delete config[key];
+        delete tokenConfig[key];
       }
     }
-    return config;
   }
+
+  if (TVA_CONFIG.imgNameContainsDimensions) {
+    const dimensions = extractDimensionsFromImgName(imgSrc);
+    console.log(dimensions);
+    tokenConfig = mergeObject(dimensions, tokenConfig || {});
+  }
+
+  if (!tokenConfig || !isEmpty(tokenConfig)) return tokenConfig;
   return undefined;
 }
 
@@ -970,4 +977,18 @@ export function getAllActorTokens(actor, linked = false, document = false) {
   );
   if (document) return tokens;
   else return tokens.map((token) => token.object).filter((token) => token);
+}
+
+export function extractDimensionsFromImgName(img, dimensions = {}) {
+  const name = getFileName(img);
+  const height = name.match(/_height(.*)_/)?.[1];
+  if (height) dimensions.height = parseFloat(height);
+  const width = name.match(/_width(.*)_/)?.[1];
+  if (width) dimensions.width = parseFloat(width);
+  const scale = name.match(/_scale(.*)_/)?.[1];
+  if (scale) {
+    dimensions['texture.scaleX'] = scale;
+    dimensions['texture.scaleY'] = scale;
+  }
+  return dimensions;
 }

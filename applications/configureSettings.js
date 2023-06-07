@@ -152,6 +152,7 @@ export default class ConfigureSettings extends FormApplication {
     data.filterIconList = settings.filterIconList.join(',');
     data.tilesEnabled = settings.tilesEnabled;
     data.updateTokenProto = settings.updateTokenProto;
+    data.imgNameContainsDimensions = settings.imgNameContainsDimensions;
     data.playVideoOnHover = settings.playVideoOnHover;
     data.pauseVideoOnHoverOut = settings.pauseVideoOnHoverOut;
     data.disableImageChangeOnPolymorphed = settings.disableImageChangeOnPolymorphed;
@@ -615,7 +616,7 @@ export default class ConfigureSettings extends FormApplication {
     mergeObject(settings, {
       keywordSearch: formData.keywordSearch,
       excludedKeywords: formData.excludedKeywords,
-      systemHpPath: formData.systemHpPath.trim(),
+      systemHpPath: formData.systemHpPath?.trim(),
       runSearchOnPath: formData.runSearchOnPath,
       imgurClientId: formData.imgurClientId,
       enableStatusConfig: formData.enableStatusConfig,
@@ -637,6 +638,7 @@ export default class ConfigureSettings extends FormApplication {
         .map((t) => t.trim())
         .filter((t) => t),
       updateTokenProto: formData.updateTokenProto,
+      imgNameContainsDimensions: formData.imgNameContainsDimensions,
       playVideoOnHover: formData.playVideoOnHover,
       pauseVideoOnHoverOut: formData.pauseVideoOnHoverOut,
       disableImageChangeOnPolymorphed: formData.disableImageChangeOnPolymorphed,

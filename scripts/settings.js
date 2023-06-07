@@ -131,6 +131,7 @@ export const TVA_CONFIG = {
   filterCustomEffectIcons: true,
   filterIconList: [],
   updateTokenProto: false,
+  imgNameContainsDimensions: false,
   playVideoOnHover: true,
   pauseVideoOnHoverOut: false,
   disableImageChangeOnPolymorphed: false,
