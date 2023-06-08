@@ -1,6 +1,6 @@
 import { TVA_CONFIG } from '../settings.js';
 import { TVASprite } from '../sprite/TVASprite.js';
-import { waitForTokenTexture } from '../utils.js';
+import { string2Hex, waitForTokenTexture } from '../utils.js';
 import { getAllEffectMappings, getTokenEffects } from '../hooks/effectMappingHooks.js';
 
 export async function drawOverlays(token) {
@@ -90,7 +90,7 @@ export async function drawOverlays(token) {
   }
 }
 
-async function genTexture(token, conf) {
+export async function genTexture(token, conf) {
   if (conf.img?.trim()) {
     let img = conf.img;
     if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
@@ -107,9 +107,37 @@ async function genTexture(token, conf) {
     });
   } else if (conf.text?.text.trim()) {
     return await generateTextTexture(token, conf);
+  } else if (conf.shapes?.length) {
+    return await generateShapeTexture(token, conf);
   } else {
     return await loadTexture('modules/token-variants/img/token-images.svg');
   }
+}
+
+export async function generateShapeTexture(token, conf) {
+  let graphics = new PIXI.Graphics();
+
+  for (const shape of conf.shapes) {
+    graphics.beginFill(string2Hex(shape.fill.color), shape.fill.alpha);
+    graphics.lineStyle(shape.line.width, string2Hex(shape.line.color), shape.line.alpha);
+    graphics.drawRect(shape.shape.x, shape.shape.y, shape.shape.width, shape.shape.height);
+  }
+
+  const container = new PIXI.Container();
+  container.addChild(graphics);
+  const bounds = container.getLocalBounds();
+  const matrix = new PIXI.Matrix();
+  matrix.tx = -bounds.x;
+  matrix.ty = -bounds.y;
+
+  const renderTexture = PIXI.RenderTexture.create({
+    width: bounds.width,
+    height: bounds.height,
+    resolution: 2,
+  });
+  canvas.app.renderer.render(container, renderTexture, true, matrix, false);
+  renderTexture.shapes = deepClone(conf.shapes);
+  return renderTexture;
 }
 
 function genTextLabel(token, conf) {

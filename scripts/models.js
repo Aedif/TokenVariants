@@ -56,4 +56,26 @@ export const DEFAULT_OVERLAY_CONFIG = {
   },
   parent: '',
   anchor: { x: 0.5, y: 0.5 },
+  shapes: [],
 };
+
+export const OVERLAY_SHAPES = {
+  Rectangle: {
+    type: 'rectangle',
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+  },
+};
+
+export const CORE_SHAPE = {
+  line: {
+    width: 1,
+    color: '#000000',
+    alpha: 1,
+  },
+  fill: { color: '#ffffff', alpha: 1 },
+};
+
+export const EFFECT_TEMPLATES = {};

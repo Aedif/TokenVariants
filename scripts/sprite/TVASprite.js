@@ -146,9 +146,7 @@ export class TVASprite extends TokenMesh {
   }
 
   setTexture(texture) {
-    if (this.texture.textLabel) {
-      this.texture.destroy(true);
-    }
+    this._destroyTexture(this.texture);
     this.texture = texture;
     this.refresh(this.tvaOverlayConfig, { fullRefresh: false });
   }
@@ -158,11 +156,11 @@ export class TVASprite extends TokenMesh {
 
     // Text preview handling
     if (previewTexture) {
-      if (this.originalTexture) this.texture.baseTexture?.destroy();
+      if (this.originalTexture) this._destroyTexture(this.texture);
       else this.originalTexture = this.texture;
       this.texture = previewTexture;
     } else if (this.originalTexture) {
-      this.texture.baseTexture?.destroy();
+      this._destroyTexture(this.texture);
       this.texture = this.originalTexture;
       delete this.originalTexture;
     }
@@ -353,6 +351,12 @@ export class TVASprite extends TokenMesh {
     }
   }
 
+  _destroyTexture(texture) {
+    if (texture.textLabel || texture.shapes) {
+      this.texture.destroy(true);
+    }
+  }
+
   destroy() {
     this.stopAnimation();
 
@@ -363,7 +367,7 @@ export class TVASprite extends TokenMesh {
       removeMarkedOverlays(this.object);
     }
 
-    if (this.texture.tvaLabel) {
+    if (this.texture.textLabel || this.texture.shapes) {
       return super.destroy(true);
     } else if (this.texture?.baseTexture.resource?.source?.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();

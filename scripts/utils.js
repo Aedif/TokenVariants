@@ -992,3 +992,7 @@ export function extractDimensionsFromImgName(img, dimensions = {}) {
   }
   return dimensions;
 }
+
+export function string2Hex(hexString) {
+  return PIXI.utils.string2hex(hexString);
+}

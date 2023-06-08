@@ -1,6 +1,6 @@
-import { DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
+import { CORE_SHAPE, DEFAULT_OVERLAY_CONFIG, OVERLAY_SHAPES } from '../scripts/models.js';
 import { VALID_EXPRESSION, fixEffectMappings, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
-import { generateTextTexture } from '../scripts/token/overlay.js';
+import { genTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { sortMappingsToGroups } from './effectMappingForm.js';
@@ -187,6 +187,22 @@ export default class OverlayConfig extends FormApplication {
       }
     });
     limitOnProperty.trigger('input');
+
+    // Shape Controls
+    html.find('.addShape').on('click', this._onAddShape.bind(this));
+  }
+
+  _onAddShape(event) {
+    let shape = $(event.target).siblings('select').val();
+    shape = deepClone(OVERLAY_SHAPES[shape]);
+    shape = mergeObject(deepClone(CORE_SHAPE), { shape });
+
+    this.config = this._getSubmitData();
+
+    if (!this.config.shapes) this.config.shapes = [];
+    this.config.shapes.push(shape);
+
+    this.render(true);
   }
 
   _convertColor(colString) {
@@ -201,21 +217,12 @@ export default class OverlayConfig extends FormApplication {
   }
 
   async _onInputChange(event) {
-    if (event.target.name.startsWith('filterOptions')) {
-      const filterOptions = expandObject(this._getSubmitData()).filterOptions;
-      this.previewConfig.filterOptions = filterOptions;
-    } else if (event.target.type === 'range') {
-      this.previewConfig[event.target.name] = parseFloat($(event.target).val());
-    } else if (event.target.type === 'color') {
+    this.previewConfig = this._getSubmitData();
+    if (event.target.type === 'color') {
       const color = $(event.target).siblings('.color');
       color.val(event.target.value).trigger('change');
       return;
-    } else if (event.target.type === 'checkbox') {
-      this.previewConfig[event.target.name] = event.target.checked;
-    } else {
-      this.previewConfig[event.target.name] = $(event.target).val();
     }
-    if (this.previewConfig?.parent === 'Token (Placeable)') delete this.previewConfig.parent;
     this._applyPreviews();
   }
 
@@ -247,13 +254,9 @@ export default class OverlayConfig extends FormApplication {
 
   async _applyPreviews() {
     const icons = this.getPreviewIcons();
-    const preview = expandObject(this.previewConfig);
+    const preview = this.previewConfig;
     for (const icon of icons) {
-      let pTexture;
-      if (!preview.img?.trim() && preview.text?.text.trim()) {
-        pTexture = await generateTextTexture(icon.object, preview);
-      }
-      icon.refresh(preview, { preview: true, previewTexture: pTexture });
+      icon.refresh(preview, { preview: true, previewTexture: await genTexture(icon, preview) });
     }
   }
 
@@ -271,7 +274,7 @@ export default class OverlayConfig extends FormApplication {
     data.filters.sort();
     if (typeof TokenMagic !== 'undefined') data.filters.unshift('Token Magic FX');
     data.filters.unshift('NONE');
-    const settings = mergeObject(DEFAULT_OVERLAY_CONFIG, this.config || {}, {
+    const settings = mergeObject(DEFAULT_OVERLAY_CONFIG, this.config, {
       inplace: false,
     });
 
@@ -300,6 +303,11 @@ export default class OverlayConfig extends FormApplication {
     if (!data.parent) data.parent = 'Token (Placeable)';
     if (!data.anchor) data.anchor = { x: 0.5, y: 0.5 };
 
+    // Cache Partials
+    await getTemplate('modules/token-variants/templates/partials/shapeRectangle.html');
+
+    data.allShapes = Object.keys(OVERLAY_SHAPES);
+
     return mergeObject(data, settings);
   }
 
@@ -309,7 +317,22 @@ export default class OverlayConfig extends FormApplication {
   }
 
   _getSubmitData() {
-    const formData = super._getSubmitData();
+    let formData = super._getSubmitData();
+    formData = expandObject(formData);
+
+    if (formData.shapes) {
+      formData.shapes = Object.values(formData.shapes);
+    }
+    if (formData.limitedUsers) {
+      formData.limitedUsers = formData.limitedUsers.filter((uid) => uid);
+    } else {
+      formData.limitedUsers = [];
+    }
+
+    formData.limitOnEffect = formData.limitOnEffect.trim();
+    formData.limitOnProperty = formData.limitOnProperty.trim();
+    if (formData.parent === 'Token (Placeable)') formData.parent = '';
+
     if (formData.filter === 'OutlineOverlayFilter' && 'filterOptions.outlineColor' in formData) {
       formData['filterOptions.outlineColor'] = this._convertColor(formData['filterOptions.outlineColor']);
     } else if (formData.filter === 'BevelFilter') {
@@ -321,6 +344,7 @@ export default class OverlayConfig extends FormApplication {
       if ('filterOptions.color' in formData)
         formData['filterOptions.color'] = Number(Color.fromString(formData['filterOptions.color']));
     }
+
     return formData;
   }
 
@@ -329,15 +353,7 @@ export default class OverlayConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    if (formData.limitedUsers) {
-      formData.limitedUsers = formData.limitedUsers.filter((uid) => uid);
-    } else {
-      formData.limitedUsers = [];
-    }
-    formData.limitOnEffect = formData.limitOnEffect.trim();
-    formData.limitOnProperty = formData.limitOnProperty.trim();
-    if (formData.parent === 'Token (Placeable)') formData.parent = '';
-    if (this.callback) this.callback(expandObject(formData));
+    if (this.callback) this.callback(formData);
   }
 }
 
