@@ -416,6 +416,10 @@
 
             {{#if (eq shape.shape.type "rectangle")}}
                 {{~>modules/token-variants/templates/partials/shapeRectangle.html shape}}
+            {{else if (eq shape.shape.type "ellipse")}}
+                {{~>modules/token-variants/templates/partials/shapeEllipse.html shape}}
+            {{else if (eq shape.shape.type "polygon")}}
+                {{~>modules/token-variants/templates/partials/shapePolygon.html shape}}
             {{/if}}
 
             <fieldset>

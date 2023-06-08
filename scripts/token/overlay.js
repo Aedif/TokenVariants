@@ -42,6 +42,7 @@ export async function drawOverlays(token) {
       for (const ov of overlays) {
         let sprite = _findTVASprite(ov.effect, token);
         if (sprite) {
+          // Check if we need to create a new texture or simply refresh the overlay
           if (!isEmpty(diffObject(sprite.tvaOverlayConfig, ov))) {
             if (ov.img?.includes('*') || (ov.img?.includes('{') && ov.img?.includes('}'))) {
               sprite.refresh(ov);
@@ -54,6 +55,12 @@ export async function drawOverlays(token) {
               sprite.refresh(ov);
             }
           } else if (sprite.texture.textLabel && sprite.texture.textLabel != genTextLabel(token, ov)) {
+            sprite.setTexture(await genTexture(token, ov));
+          } else if (
+            sprite.texture.shapes &&
+            (sprite.texture.shapes.length !== ov.shapes?.length ||
+              !isEmpty(diffObject(sprite.texture.shapes, ov.shapes)))
+          ) {
             sprite.setTexture(await genTexture(token, ov));
           }
         }
@@ -117,10 +124,19 @@ export async function genTexture(token, conf) {
 export async function generateShapeTexture(token, conf) {
   let graphics = new PIXI.Graphics();
 
-  for (const shape of conf.shapes) {
-    graphics.beginFill(string2Hex(shape.fill.color), shape.fill.alpha);
-    graphics.lineStyle(shape.line.width, string2Hex(shape.line.color), shape.line.alpha);
-    graphics.drawRect(shape.shape.x, shape.shape.y, shape.shape.width, shape.shape.height);
+  for (const obj of conf.shapes) {
+    graphics.beginFill(string2Hex(obj.fill.color), obj.fill.alpha);
+    graphics.lineStyle(obj.line.width, string2Hex(obj.line.color), obj.line.alpha);
+    const shape = obj.shape;
+    if (shape.type === 'rectangle') {
+      graphics.drawRoundedRect(shape.x, shape.y, shape.width, shape.height, shape.radius);
+    } else if (shape.type === 'ellipse') {
+      graphics.drawEllipse(shape.x, shape.y, shape.width, shape.height);
+    } else if (shape.type === 'polygon') {
+      graphics.drawPolygon(
+        shape.points.split(',').map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
+      );
+    }
   }
 
   const container = new PIXI.Container();

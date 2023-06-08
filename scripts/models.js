@@ -66,6 +66,21 @@ export const OVERLAY_SHAPES = {
     y: 0,
     width: 100,
     height: 100,
+    radius: 0,
+  },
+  Ellipse: {
+    type: 'ellipse',
+    x: 50,
+    y: 50,
+    width: 50,
+    height: 50,
+  },
+  Polygon: {
+    type: 'polygon',
+    x: 0,
+    y: 0,
+    points: '0,1,0.95,0.31,0.59,-0.81,-0.59,-0.81,-0.95,0.31',
+    scale: 50,
   },
 };
 

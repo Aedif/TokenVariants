@@ -190,6 +190,7 @@ export default class OverlayConfig extends FormApplication {
 
     // Shape Controls
     html.find('.addShape').on('click', this._onAddShape.bind(this));
+    html.find('.deleteShape').on('click', this._onDeleteShape.bind(this));
   }
 
   _onAddShape(event) {
@@ -201,6 +202,17 @@ export default class OverlayConfig extends FormApplication {
 
     if (!this.config.shapes) this.config.shapes = [];
     this.config.shapes.push(shape);
+
+    this.render(true);
+  }
+
+  _onDeleteShape(event) {
+    const index = $(event.target).closest('.deleteShape').data('index');
+    if (!index && index != 0) return;
+
+    this.config = this._getSubmitData();
+    if (!this.config.shapes) this.config.shapes = [];
+    this.config.shapes.splice(index, 1);
 
     this.render(true);
   }
@@ -304,7 +316,9 @@ export default class OverlayConfig extends FormApplication {
     if (!data.anchor) data.anchor = { x: 0.5, y: 0.5 };
 
     // Cache Partials
-    await getTemplate('modules/token-variants/templates/partials/shapeRectangle.html');
+    for (const shapeName of Object.keys(OVERLAY_SHAPES)) {
+      await getTemplate(`modules/token-variants/templates/partials/shape${shapeName}.html`);
+    }
 
     data.allShapes = Object.keys(OVERLAY_SHAPES);
 
