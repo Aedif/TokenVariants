@@ -6,7 +6,7 @@ import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
-import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG } from '../scripts/models.js';
+import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG, EFFECT_TEMPLATES } from '../scripts/models.js';
 import { fixEffectMappings, updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 import { drawOverlays } from '../scripts/token/overlay.js';
 
@@ -441,6 +441,7 @@ export default class EffectMappingForm extends FormApplication {
 
   _getNewEffectConfig(name, textOverlay = false) {
     if (textOverlay) {
+      TOGGLED_GROUPS['Text Overlays'] = true;
       return {
         effectName: name,
         highlightedEffectName: highlightOperators(name),
@@ -486,6 +487,7 @@ export default class EffectMappingForm extends FormApplication {
         ),
       };
     } else {
+      TOGGLED_GROUPS['Default'] = true;
       return deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG);
     }
   }
@@ -504,6 +506,36 @@ export default class EffectMappingForm extends FormApplication {
       class: 'token-variants-import',
       icon: 'fas fa-file-import',
       onclick: (ev) => this._importConfigs(ev),
+    });
+
+    buttons.unshift({
+      label: 'Templates',
+      class: 'token-variants-templates',
+      icon: 'fa-solid fa-book',
+      onclick: async (ev) => {
+        const buttons = {};
+        let i = 0;
+        for (const k of Object.keys(EFFECT_TEMPLATES)) {
+          buttons[i++] = {
+            label: k,
+            callback: () => {
+              this._insertMappings(ev, EFFECT_TEMPLATES[k].config);
+            },
+          };
+        }
+
+        let dialog;
+        dialog = new Dialog({
+          title: 'Mapping Templates',
+          content:
+            '<a href="https://github.com/Aedif/TokenVariants/wiki/Templates">https://github.com/Aedif/TokenVariants/wiki/Templates</a><hr>',
+          buttons,
+          render: (html) => {
+            html.find('.dialog-button').parent().css('display', 'block');
+          },
+        });
+        dialog.render(true);
+      },
     });
 
     if (this.globalMappings) return buttons;
@@ -648,17 +680,7 @@ export default class EffectMappingForm extends FormApplication {
               }
             });
             if (!isEmpty(toCopy)) {
-              await this._onSubmit(event);
-              for (const effect of Object.keys(toCopy)) {
-                toCopy[effect].effectName = effect;
-
-                const found = this.object.mappings.find((m) => m.effectName === effect);
-                if (found) {
-                  this.object.mappings.splice(found, 1);
-                }
-                this.object.mappings.push(toCopy[effect]);
-              }
-              this.render();
+              this._insertMappings(event, toCopy);
             }
           },
         },
@@ -669,6 +691,24 @@ export default class EffectMappingForm extends FormApplication {
         });
       },
     }).render(true);
+  }
+
+  async _insertMappings(event, mappings) {
+    const cMappings = deepClone(mappings);
+    await this._onSubmit(event);
+    for (const effect of Object.keys(cMappings)) {
+      cMappings[effect].effectName = effect;
+
+      const found = this.object.mappings.find((m) => m.effectName === effect);
+      if (found) {
+        this.object.mappings.splice(found, 1);
+      }
+      this.object.mappings.push(cMappings[effect]);
+      if (cMappings[effect].group) {
+        TOGGLED_GROUPS[cMappings[effect].group] = true;
+      }
+    }
+    this.render();
   }
 
   _onConfigureApplicableActors(event) {
