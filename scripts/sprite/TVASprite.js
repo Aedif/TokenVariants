@@ -1,5 +1,6 @@
 import { FILTERS } from '../../applications/overlayConfig.js';
 import { evaluateComparator, getTokenEffects } from '../hooks/effectMappingHooks.js';
+import { registerOverlayRefreshHook, unregisterOverlayRefreshHooks } from '../hooks/overlayHooks.js';
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
 import { removeMarkedOverlays } from '../token/overlay.js';
 
@@ -67,6 +68,7 @@ export class TVASprite extends TokenMesh {
     this.overlaySort = 0;
 
     this.tvaOverlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
+    this._registerHooks(this.tvaOverlayConfig);
     this._tvaPlay().then(() => this.refresh());
 
     // Workaround needed for v11 visible property
@@ -165,6 +167,11 @@ export class TVASprite extends TokenMesh {
       delete this.originalTexture;
     }
 
+    // Register/Unregister hooks that should refresh this overlay
+    if (configuration) {
+      this._registerHooks(configuration);
+    }
+
     const config = mergeObject(this.tvaOverlayConfig, configuration ?? {}, { inplace: !preview });
 
     if (fullRefresh) {
@@ -194,6 +201,9 @@ export class TVASprite extends TokenMesh {
     } else if (config.linkDimensions) {
       this.scale.x = this.object.document.width;
       this.scale.y = this.object.document.height;
+    } else if (config.linkStageScale) {
+      this.scale.x = 1 / canvas.stage.scale.x;
+      this.scale.y = 1 / canvas.stage.scale.y;
     } else {
       this.width = tex.width;
       this.height = tex.height;
@@ -351,6 +361,11 @@ export class TVASprite extends TokenMesh {
     }
   }
 
+  _registerHooks(configuration) {
+    if (configuration.linkStageScale) registerOverlayRefreshHook(this, 'canvasPan');
+    else unregisterOverlayRefreshHooks(this, 'canvasPan');
+  }
+
   _destroyTexture(texture) {
     if (texture.textLabel || texture.shapes) {
       this.texture.destroy(true);
@@ -359,6 +374,7 @@ export class TVASprite extends TokenMesh {
 
   destroy() {
     this.stopAnimation();
+    unregisterOverlayRefreshHooks(this);
 
     if (this.children) {
       for (const ch of this.children) {

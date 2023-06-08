@@ -50,3 +50,36 @@ export function registerOverlayHooks() {
     }
   });
 }
+
+const REFRESH_HOOKS = {};
+
+export function registerOverlayRefreshHook(tvaSprite, hookName) {
+  if (!(hookName in REFRESH_HOOKS)) {
+    registerHook('TVASpriteRefresh', hookName, () => {
+      REFRESH_HOOKS[hookName]?.forEach((s) => s.refresh());
+    });
+    REFRESH_HOOKS[hookName] = [tvaSprite];
+  } else if (!REFRESH_HOOKS[hookName].find((s) => s == tvaSprite)) {
+    REFRESH_HOOKS[hookName].push(tvaSprite);
+  }
+}
+
+export function unregisterOverlayRefreshHooks(tvaSprite, hookName = null) {
+  const unregister = function (hook) {
+    if (REFRESH_HOOKS[hook]) {
+      let index = REFRESH_HOOKS[hook].findIndex((s) => s == tvaSprite);
+      if (index > -1) {
+        REFRESH_HOOKS[hook].splice(index, 1);
+        if (!REFRESH_HOOKS[hook].length) {
+          unregisterHook('TVASpriteRefresh', hook);
+          delete REFRESH_HOOKS[hook];
+        }
+      }
+    }
+  };
+
+  if (hookName) unregister(hookName);
+  else {
+    Object.keys(REFRESH_HOOKS).forEach((k) => unregister(k));
+  }
+}

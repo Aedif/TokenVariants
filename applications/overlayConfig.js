@@ -164,11 +164,24 @@ export default class OverlayConfig extends FormApplication {
 
     const linkScale = html.find('[name="linkScale"]');
     const linkDimensions = html.find('[name="linkDimensions"]');
+    const linkStageScale = html.find('[name="linkStageScale"]');
     linkScale.change(function () {
-      if (this.checked) linkDimensions.prop('checked', false);
+      if (this.checked) {
+        linkDimensions.prop('checked', false);
+        linkStageScale.prop('checked', false);
+      }
     });
     linkDimensions.change(function () {
-      if (this.checked) linkScale.prop('checked', false);
+      if (this.checked) {
+        linkScale.prop('checked', false);
+        linkStageScale.prop('checked', false);
+      }
+    });
+    linkStageScale.change(function () {
+      if (this.checked) {
+        linkScale.prop('checked', false);
+        linkDimensions.prop('checked', false);
+      }
     });
 
     // Setting border color for property expression

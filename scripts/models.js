@@ -31,6 +31,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
   linkOpacity: false,
   linkScale: true,
   linkDimensions: false,
+  linkStageScale: false,
   mirror: false,
   tint: null,
   loop: true,

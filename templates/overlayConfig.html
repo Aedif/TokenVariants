@@ -110,6 +110,16 @@
             </fieldset>
 
             <fieldset>
+                <legend>Link To Stage</legend>
+                <div class="form-group token-specific-fields">
+                    <label>Scale</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="linkStageScale" data-dtype="Boolean" value="{{linkStageScale}}" {{#if linkStageScale}}checked{{/if}}>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
                 <legend>Video</legend>
                 <div class="form-group">
                     <label>Loop Video</label>
@@ -393,7 +403,7 @@
             <div class="form-group">
                 <label>Invert</label>
                 <div class="form-fields">
-                    <input type="checkbox" name="text.curve.invert" data-dtype="String" value="{{text.curve.invert}}" {{#if text.curve.invert}}checked{{/if}}>
+                    <input type="checkbox" name="text.curve.invert" data-dtype="Boolean" {{#if text.curve.invert}}checked{{/if}}>
                 </div>
             </div>
         </div>
