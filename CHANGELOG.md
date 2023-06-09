@@ -1,3 +1,36 @@
+# 4.41.0
+
+**Effect Mappings**
+
+- New header button: `Templates`
+  - Brings up a menu that allows you to quickly apply pre-configured mappings
+  - Explanations/images of these mappings can be found here: https://github.com/Aedif/TokenVariants/wiki/Templates
+- Improved Boolean comparisons in `Effect Name` expressions
+  - e.g. `flags.token-variants.heart="true"` will now be evaluated as `Boolean(flags.token-variants.heart)`
+  - This means you can now properly check existence/non-existence of a flag
+- Added new comparator: `<>` (lesser or greater than)
+
+**Overlays**
+
+- New setting: `Overlay` > `Shapes`
+  - Draw a custom shape instead of using an image or text
+  - Currently supports rectangles, ellipses, and polygons
+- New setting: `Overlay` > `Link to Stage` > `Scale`
+  - Scales the overlay according the the canvas zoom/scale
+- FontAwesome Glyphs can now be used in text overlays
+- New lines ('\n') are now supported in text overlays
+
+**Misc**
+
+- New setting: `Misc` > `Image Names Contain Dimensions`
+
+  - When enabled the module will recognise the following strings in image names and apply corresponding scale, width, and/or height to the token:
+  - `_scaleX.X_` (e.g. `Goblin_scale0.8_.png`)
+  - `_widthX.X_` (e.g. `Goblin_width0.5_.png`)
+  - `_heightX.X_` (e.g. `Goblin_width2_height_2.png`)
+
+- Fixed error thrown when saving `Compendium Mapper`'s `Search Settings`
+
 # 4.40.0
 
 - v11 warning fixes

@@ -728,7 +728,9 @@ export function evaluateComparator(token, expression) {
 
       let passed = false;
       if (sign === '=') {
-        passed = toCompare == val;
+        if (val === true) passed = Boolean(toCompare);
+        else if (val === false) passed = !Boolean(toCompare);
+        else passed = toCompare == val;
       } else if (sign === '>') {
         passed = toCompare > val;
       } else if (sign === '<') {
@@ -737,6 +739,8 @@ export function evaluateComparator(token, expression) {
         passed = toCompare >= val;
       } else if (sign === '<=') {
         passed = toCompare <= val;
+      } else if (sign === '<>') {
+        passed = toCompare < val || toCompare > val;
       }
       return passed;
     }

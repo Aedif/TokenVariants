@@ -158,17 +158,23 @@ export async function generateShapeTexture(token, conf) {
 
 function genTextLabel(token, conf) {
   let re = new RegExp('{{.*?}}', 'gi');
-  return conf.text.text.replace(re, function replace(match) {
-    const property = match.substring(2, match.length - 2);
-    if (property === 'effect') return conf.effect;
-    let val = getProperty(token.document ?? token, property);
-    return val === undefined ? match : val;
-  });
+  return conf.text.text
+    .replace(re, function replace(match) {
+      const property = match.substring(2, match.length - 2);
+      if (property === 'effect') return conf.effect;
+      let val = getProperty(token.document ?? token, property);
+      return val === undefined ? match : val;
+    })
+    .replace('\\n', '\n');
 }
 
 export async function generateTextTexture(token, conf) {
   let label = genTextLabel(token, conf);
-  let text = new PreciseText(label, PreciseText.getTextStyle(conf.text));
+
+  let text = new PreciseText(
+    label,
+    PreciseText.getTextStyle({ ...conf.text, fontFamily: [conf.text.fontFamily, 'fontAwesome'] })
+  );
   text.updateText(false);
 
   if (!conf.text.curve?.radius) {
