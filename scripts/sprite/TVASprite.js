@@ -147,24 +147,30 @@ export class TVASprite extends TokenMesh {
     }
   }
 
-  setTexture(texture) {
-    this._destroyTexture(this.texture);
-    this.texture = texture;
-    this.refresh(this.tvaOverlayConfig, { fullRefresh: false });
+  setTexture(texture, { preview = false, refresh = true, configuration = null } = {}) {
+    // Text preview handling
+    if (preview) {
+      if (this.originalTexture) this._destroyTexture(this.texture);
+      else this.originalTexture = this.texture;
+      this.texture = texture;
+    } else if (this.originalTexture) {
+      this._destroyTexture(this.texture);
+      this.texture = this.originalTexture;
+      delete this.originalTexture;
+    } else {
+      this._destroyTexture(this.texture);
+      this.texture = texture;
+    }
+
+    if (refresh) this.refresh(configuration, { fullRefresh: !preview });
   }
 
   refresh(configuration, { preview = false, fullRefresh = true, previewTexture = null } = {}) {
     if (!this.tvaOverlayConfig || !this.texture) return;
 
     // Text preview handling
-    if (previewTexture) {
-      if (this.originalTexture) this._destroyTexture(this.texture);
-      else this.originalTexture = this.texture;
-      this.texture = previewTexture;
-    } else if (this.originalTexture) {
-      this._destroyTexture(this.texture);
-      this.texture = this.originalTexture;
-      delete this.originalTexture;
+    if (previewTexture || this.originalTexture) {
+      this.setTexture(previewTexture, { preview: Boolean(previewTexture), refresh: false });
     }
 
     // Register/Unregister hooks that should refresh this overlay

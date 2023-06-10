@@ -1,3 +1,10 @@
+# 4.41.1
+
+- `Misc` > `Image Names Contain Dimensions`
+  - Fixed it's interaction with default wildcard image
+- Effect Mapping boolean comparators (e.g. flags.module.val="true") will now evaluate non-existent flags and flags pointing to objects as truthy/falsy
+- Adjusted Info Box templates to display over tokens
+
 # 4.41.0
 
 **Effect Mappings**

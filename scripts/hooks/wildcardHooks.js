@@ -62,7 +62,7 @@ function _preCreateToken(tokenDocument, data, options, userId) {
   }
 
   if (TVA_CONFIG.imgNameContainsDimensions) {
-    extractDimensionsFromImgName(tokenDocument.texture.src, update);
+    extractDimensionsFromImgName(update['texture.src'] ?? tokenDocument.texture.src, update);
   }
 
   if (!isEmpty(update)) tokenDocument.updateSource(update);

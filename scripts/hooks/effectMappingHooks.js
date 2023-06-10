@@ -708,42 +708,44 @@ export function evaluateComparator(token, expression) {
     if (property === 'hp') {
       [currVal, maxVal] = _getTokenHP(token);
     } else currVal = getProperty(token, property);
+    if (currVal == null) currVal = 0;
 
-    if (currVal != null) {
-      const sign = match[2];
-      let val = Number(match[3]);
-      if (isNaN(val)) {
-        val = match[3].substring(1, match[3].length - 1);
-        if (val === 'true') val = true;
-        if (val === 'false') val = false;
+    const sign = match[2];
+    let val = Number(match[3]);
+    if (isNaN(val)) {
+      val = match[3].substring(1, match[3].length - 1);
+      if (val === 'true') val = true;
+      if (val === 'false') val = false;
+      // Convert currVal to a truthy/falsy one if this is a bool check
+      if (val === true || val === false) {
+        if (isEmpty(currVal)) currVal = false;
+        else currVal = Boolean(currVal);
       }
-      const isPercentage = Boolean(match[4]);
-
-      if (property === 'rotation') {
-        maxVal = 360;
-      } else if (maxVal == null) {
-        maxVal = 999999;
-      }
-      const toCompare = isPercentage ? (currVal / maxVal) * 100 : currVal;
-
-      let passed = false;
-      if (sign === '=') {
-        if (val === true) passed = Boolean(toCompare);
-        else if (val === false) passed = !Boolean(toCompare);
-        else passed = toCompare == val;
-      } else if (sign === '>') {
-        passed = toCompare > val;
-      } else if (sign === '<') {
-        passed = toCompare < val;
-      } else if (sign === '>=') {
-        passed = toCompare >= val;
-      } else if (sign === '<=') {
-        passed = toCompare <= val;
-      } else if (sign === '<>') {
-        passed = toCompare < val || toCompare > val;
-      }
-      return passed;
     }
+    const isPercentage = Boolean(match[4]);
+
+    if (property === 'rotation') {
+      maxVal = 360;
+    } else if (maxVal == null) {
+      maxVal = 999999;
+    }
+    const toCompare = isPercentage ? (currVal / maxVal) * 100 : currVal;
+
+    let passed = false;
+    if (sign === '=') {
+      passed = toCompare == val;
+    } else if (sign === '>') {
+      passed = toCompare > val;
+    } else if (sign === '<') {
+      passed = toCompare < val;
+    } else if (sign === '>=') {
+      passed = toCompare >= val;
+    } else if (sign === '<=') {
+      passed = toCompare <= val;
+    } else if (sign === '<>') {
+      passed = toCompare < val || toCompare > val;
+    }
+    return passed;
   }
   return false;
 }

@@ -1405,7 +1405,7 @@ export const EFFECT_TEMPLATES = {
           parent: '',
           underlay: false,
           bottom: false,
-          top: false,
+          top: true,
           inheritTint: false,
           linkRotation: false,
           animation: {
@@ -2289,7 +2289,7 @@ export const EFFECT_TEMPLATES = {
           parent: '',
           underlay: false,
           bottom: false,
-          top: false,
+          top: true,
           inheritTint: false,
           linkRotation: false,
           animation: {
