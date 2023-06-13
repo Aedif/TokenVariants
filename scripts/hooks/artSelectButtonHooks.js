@@ -1,7 +1,7 @@
 import { insertArtSelectButton } from '../../applications/artSelect.js';
 import { showArtSelect } from '../../token-variants.mjs';
 import { TVA_CONFIG } from '../settings.js';
-import { SEARCH_TYPE, getTokenConfigForUpdate, updateActorImage } from '../utils.js';
+import { SEARCH_TYPE, updateActorImage } from '../utils.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
 const feature_id = 'ArtSelect';

@@ -70,7 +70,7 @@ export default class TokenCustomConfig extends TokenConfig {
   }
 
   applyCustomConfig() {
-    const tokenConfig = flattenObject(this.config || getTokenConfig(this.imgSrc, this.imgName) || {});
+    const tokenConfig = flattenObject(this.config || getTokenConfig(this.imgSrc, this.imgName));
     const form = $(this.form);
     for (const key of Object.keys(tokenConfig)) {
       const el = form.find(`[name="${key}"]`);
@@ -99,7 +99,7 @@ export default class TokenCustomConfig extends TokenConfig {
     $(html).find('.assign-token').remove();
 
     // Add checkboxes to control inclusion of specific tabs in the custom config
-    const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName) || {};
+    const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName);
     this.tv_script = tokenConfig.tv_script;
 
     $(html).on('change', '.tva-config-checkbox', this._onCheckboxChange);
@@ -217,16 +217,6 @@ export default class TokenCustomConfig extends TokenConfig {
 
   _getHeaderButtons() {
     const buttons = super._getHeaderButtons();
-    // buttons.unshift({
-    //   label: 'Scripts',
-    //   class: 'tva-scripts-button',
-    //   icon: 'fas fa-play',
-    //   onclick: () => {
-    //     new EditScriptConfig(this.tv_script, (script) => {
-    //       this.tv_script = isEmpty(script ?? {}) ? null : script;
-    //     }).render(true);
-    //   },
-    // });
     return buttons;
   }
 }

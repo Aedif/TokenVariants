@@ -101,12 +101,15 @@ export async function updateTokenImage(
     callback = null,
     config = undefined,
     animate = true,
+    update = null,
   } = {}
 ) {
   if (!(token || actor)) {
     console.warn(game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor'));
     return;
   }
+
+  token = token?.document ?? token;
 
   // Check if it's a wildcard image
   if ((imgSrc && imgSrc.includes('*')) || (imgSrc.includes('{') && imgSrc.includes('}'))) {
@@ -124,7 +127,7 @@ export async function updateTokenImage(
 
   const getDefaultConfig = (token, actor) => {
     let configEntries = [];
-    if (token) configEntries = (token.document ?? token).getFlag('token-variants', 'defaultConfig') || [];
+    if (token) configEntries = token.getFlag('token-variants', 'defaultConfig') || [];
     else if (actor) {
       const tokenData = actor.prototypeToken;
       if ('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
@@ -159,39 +162,14 @@ export async function updateTokenImage(
     tokenUpdateObj['flags.token-variants.name'] = imgName;
   }
 
-  const tokenCustomConfig = config || getTokenConfigForUpdate(imgSrc, imgName);
-
-  //
-  // Accumulate all scripts that will need to be run after the update
-  // const executeOnCallback = [];
-  // let deferredUpdateScripts = [];
-  // for (const ef of removed) {
-  //   const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
-  //   if (onRemove) {
-  //     if (onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(onRemove);
-  //     else executeOnCallback.push({ script: onRemove, token: tokenDoc });
-  //   }
-  //   const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
-  //   if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token: tokenDoc, action: 'remove' });
-  // }
-  // for (const ef of added) {
-  //   const onApply = mappings[ef]?.config?.tv_script?.onApply;
-  //   if (onApply) {
-  //     if (onApply.includes('tvaUpdate')) deferredUpdateScripts.push(onApply);
-  //     else executeOnCallback.push({ script: onApply, token: tokenDoc });
-  //   }
-  //   const tmfxPreset = mappings[ef]?.config?.tv_script?.tmfxPreset;
-  //   if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token: tokenDoc, action: 'apply' });
-  // }
-  //
-
-  const usingCustomConfig = token && (token.document ?? token).getFlag('token-variants', 'usingCustomConfig');
+  const tokenCustomConfig = mergeObject(getTokenConfigForUpdate(imgSrc || token?.texture.src, imgName), config ?? {});
+  const usingCustomConfig = token?.getFlag('token-variants', 'usingCustomConfig');
   const defaultConfig = getDefaultConfig(token);
-  if (tokenCustomConfig || usingCustomConfig) {
+  if (!isEmpty(tokenCustomConfig) || usingCustomConfig) {
     tokenUpdateObj = modMergeObject(tokenUpdateObj, defaultConfig);
   }
 
-  if (tokenCustomConfig && !isEmpty(tokenCustomConfig)) {
+  if (!isEmpty(tokenCustomConfig)) {
     if (token) {
       tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
       let doc = token.document ?? token;
@@ -233,20 +211,27 @@ export async function updateTokenImage(
     if (token) {
       TokenDataAdapter.formToData(token, tokenUpdateObj);
       if (TVA_CONFIG.updateTokenProto && token.actor) {
-        // Timeout to prevent race conditions with other modules namely MidiQOL
-        // this is a low priority update so it should be Ok to do
-        if ((token.document ?? token).actorLink) {
-          setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
+        if (update) {
+          mergeObject(update, { token: tokenUpdateObj });
         } else {
-          setTimeout(() => token.actor.update({ token: tokenUpdateObj }), 500);
+          // Timeout to prevent race conditions with other modules namely MidiQOL
+          // this is a low priority update so it should be Ok to do
+          if (token.actorLink) {
+            setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
+          } else {
+            setTimeout(() => token.actor.update({ token: tokenUpdateObj }), 500);
+          }
         }
       }
-      let doc = token.document ?? token;
 
-      if (doc.object) queueTokenUpdate(token.id, tokenUpdateObj, callback, animate);
-      else {
-        await doc.update(tokenUpdateObj, { animate });
-        callback();
+      if (update) {
+        mergeObject(update, tokenUpdateObj);
+      } else {
+        if (token.object) queueTokenUpdate(token.id, tokenUpdateObj, callback, animate);
+        else {
+          await token.update(tokenUpdateObj, { animate });
+          callback();
+        }
       }
     }
   }
@@ -454,7 +439,7 @@ export function registerKeybinds() {
  */
 export function getTokenConfig(imgSrc, imgName) {
   const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
-  return tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
+  return tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName) ?? {};
 }
 
 /**
@@ -462,9 +447,9 @@ export function getTokenConfig(imgSrc, imgName) {
  * returning a clean config that can be used in token update.
  */
 export function getTokenConfigForUpdate(imgSrc, imgName) {
-  if (!imgSrc || !imgName) return undefined;
-  let tokenConfig = getTokenConfig(imgSrc, imgName);
-  if (tokenConfig) {
+  if (!imgSrc) return {};
+  let tokenConfig = getTokenConfig(imgSrc, imgName ?? getFileName(imgSrc));
+  if (!isEmpty(tokenConfig)) {
     tokenConfig = deepClone(tokenConfig);
     delete tokenConfig.tvImgSrc;
     delete tokenConfig.tvImgName;
@@ -476,13 +461,10 @@ export function getTokenConfigForUpdate(imgSrc, imgName) {
   }
 
   if (TVA_CONFIG.imgNameContainsDimensions) {
-    const dimensions = extractDimensionsFromImgName(imgSrc);
-    console.log(dimensions);
-    tokenConfig = mergeObject(dimensions, tokenConfig || {});
+    extractDimensionsFromImgName(imgSrc, tokenConfig);
   }
 
-  if (!tokenConfig || !isEmpty(tokenConfig)) return tokenConfig;
-  return undefined;
+  return tokenConfig;
 }
 
 /**
