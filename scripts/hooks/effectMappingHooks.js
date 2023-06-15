@@ -322,7 +322,7 @@ function _updateItem(item, change, options, userId) {
   }
 }
 
-export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
+export async function updateWithEffectMapping(token, { added = [], removed = [], effects = null } = {}) {
   token = token.object ?? token._object ?? token;
   const tokenDoc = token.document ?? token;
   const tokenImgName = tokenDoc.getFlag('token-variants', 'name') || getFileName(tokenDoc.texture.src);
@@ -332,7 +332,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
   const hadActiveHUD = tokenDoc.object?.hasActiveHUD;
   const toggleStatus = canvas.tokens.hud.object?.id === tokenDoc.id ? canvas.tokens.hud._statusEffects : false;
 
-  let effects = getTokenEffects(tokenDoc);
+  effects = effects ?? getTokenEffects(tokenDoc, true);
 
   // If effect is included in `added` or `removed` we need to:
   // 1. Insert it into `effects` if it's not there in case of 'added' and place it on top of the list
@@ -355,35 +355,9 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
 
   const mappings = getAllEffectMappings(tokenDoc);
 
-  // 3. Configurations may contain effect names in a form of a logical expressions
-  //    We need to evaluate them and insert them into effects/added/removed if needed
-  for (const key of Object.keys(mappings)) {
-    const [evaluation, identifiedEffects] = evaluateEffectAsExpression(key, effects);
-    if (identifiedEffects == null) continue;
-    if (evaluation) {
-      let containsAdded = false;
-      for (const ef of identifiedEffects) {
-        if (added.includes(ef) || removed.includes(ef)) {
-          containsAdded = true;
-          added.push(key);
-          break;
-        }
-      }
-      if (containsAdded) effects.push(key);
-      else effects.unshift(key);
-    } else {
-      for (const ef of identifiedEffects) {
-        if (removed.includes(ef) || added.includes(ef)) {
-          removed.push(key);
-          break;
-        }
-      }
-    }
-  }
-
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
-  let deferredUpdateScripts = [];
+  const deferredUpdateScripts = [];
   for (const ef of removed) {
     const onRemove = mappings[ef]?.config?.tv_script?.onRemove;
     if (onRemove) {
@@ -615,44 +589,42 @@ export function getTokenEffects(token, includeExpressions = false) {
   const data = token.document ?? token;
   let effects = [];
 
+  // Special Effects
+  if (data.inCombat) {
+    effects.push('token-variants-combat');
+  }
+  if (game.combat?.started) {
+    if (game.combat?.combatant?.token?.id === token.id) {
+      effects.push('combat-turn');
+    } else if (game.combat?.nextCombatant?.token?.id === token.id) {
+      effects.push('combat-turn-next');
+    }
+  }
+  if (data.hidden) {
+    effects.push('token-variants-visibility');
+  }
+
   if (game.system.id === 'pf2e') {
     if (data.actorLink) {
       effects = getEffectsFromActor(token.actor);
     } else {
       if (isNewerVersion('11', game.version)) {
-        effects = (data.actorData?.items || [])
+        (data.actorData?.items || [])
           .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
-          .map((item) => item.name);
+          .forEach((item) => effects.push(item.name));
       } else {
-        effects = (data.delta?.items || [])
+        (data.delta?.items || [])
           .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
-          .map((item) => item.name);
+          .forEach((item) => effects.push(item.name));
       }
     }
   } else {
     if (data.actorLink && token.actor) {
-      effects = getEffectsFromActor(token.actor);
+      getEffectsFromActor(token.actor, effects);
     } else {
-      const actorEffects = getEffectsFromActor(token.actor);
-      effects = (data.effects || [])
-        .filter((ef) => !ef.disabled && !ef.isSuppressed)
-        .map((ef) => ef.label)
-        .concat(actorEffects);
+      (data.effects || []).filter((ef) => !ef.disabled && !ef.isSuppressed).forEach((ef) => effects.push(ef.label));
+      getEffectsFromActor(token.actor, effects);
     }
-  }
-
-  if (data.inCombat) {
-    effects.unshift('token-variants-combat');
-  }
-  if (game.combat?.started) {
-    if (game.combat?.combatant?.token?.id === token.id) {
-      effects.unshift('combat-turn');
-    } else if (game.combat?.nextCombatant?.token?.id === token.id) {
-      effects.unshift('combat-turn-next');
-    }
-  }
-  if (data.hidden) {
-    effects.unshift('token-variants-visibility');
   }
 
   evaluateComparatorEffects(token, effects);
@@ -664,16 +636,15 @@ export function getTokenEffects(token, includeExpressions = false) {
   for (const [k, m] of Object.entries(mappings)) {
     if (m.alwaysOn) effects.unshift(k);
     else if (includeExpressions) {
-      const [evaluation, identifiedEffects] = evaluateEffectAsExpression(k, effects);
-      if (evaluation && identifiedEffects !== null) effects.unshift(k);
+      const evaluation = evaluateEffectAsExpression(k, effects);
+      if (evaluation) effects.unshift(k);
     }
   }
 
   return effects;
 }
 
-export function getEffectsFromActor(actor) {
-  let effects = [];
+export function getEffectsFromActor(actor, effects = []) {
   if (!actor) return effects;
 
   if (game.system.id === 'pf2e') {
@@ -751,7 +722,7 @@ export function evaluateComparator(token, expression) {
 }
 
 export function evaluateComparatorEffects(token, effects = []) {
-  token = token.document ? token.document : token;
+  token = token.document ?? token;
 
   const mappings = getAllEffectMappings(token);
 
@@ -782,6 +753,46 @@ export function evaluateStateEffects(token, effects) {
   }
 }
 
+/**
+ * Replaces {1,a,5,b} type string in the expressions with (1|a|5|b)
+ * @param {*} exp
+ * @returns
+ */
+function _findReplaceBracketWildcard(exp) {
+  let nExp = '';
+  let lIndex = 0;
+  while (lIndex >= 0) {
+    let i1 = exp.indexOf('\\\\\\{', lIndex);
+    if (i1 !== -1) {
+      let i2 = exp.indexOf('\\\\\\}', i1);
+      if (i2 !== -1) {
+        nExp += exp.substring(lIndex, i1);
+        nExp +=
+          '(' +
+          exp
+            .substring(i1 + 4, i2)
+            .split(',')
+            .join('|') +
+          ')';
+      }
+      lIndex = i2 + 4;
+    } else {
+      return nExp + exp.substring(lIndex, exp.length);
+    }
+  }
+  return nExp ?? exp;
+}
+
+function _testRegExEffect(effect, effects) {
+  let re = effect
+    .replace(/[/\-\\^$+?.()|[\]{}]/g, '\\$&')
+    .replaceAll('\\\\*', '.*')
+    .replaceAll('\\\\\\{', '[')
+    .replaceAll('\\\\\\}', ']');
+  re = new RegExp('^' + re + '$');
+  return effects.some((ef) => re.test(ef));
+}
+
 export function evaluateEffectAsExpression(effect, effects) {
   let arrExpression = effect
     .split(EXPRESSION_MATCH_RE)
@@ -789,32 +800,32 @@ export function evaluateEffectAsExpression(effect, effects) {
     .map((s) => s.trim())
     .filter(Boolean);
 
+  if (arrExpression.length === 1 && /\\\*|\\{.*\\}/g.test(arrExpression[0])) {
+    return _testRegExEffect(arrExpression[0], effects);
+  }
+
   // Not an expression, return as false
   if (arrExpression.length < 2) {
-    return [false, null];
+    return false;
   }
 
   let temp = '';
-  let foundEffects = [];
   for (const exp of arrExpression) {
     if (EXPRESSION_OPERATORS.includes(exp)) {
       temp += exp.replace('\\', '');
+    } else if (/\\\*|\\{.*\\}/g.test(exp)) {
+      temp += _testRegExEffect(exp, effects) ? 'true' : 'false';
     } else if (effects.includes(exp)) {
-      foundEffects.push(exp);
       temp += 'true';
     } else {
-      foundEffects.push(exp);
       temp += 'false';
     }
   }
 
-  let evaluation = false;
   try {
-    evaluation = eval(temp);
-  } catch (e) {
-    return [false, null];
-  }
-  return [evaluation, foundEffects];
+    return eval(temp);
+  } catch (e) {}
+  return false;
 }
 
 function _getTokenHPv11(token) {
@@ -855,7 +866,6 @@ function _getTokenHP(token) {
 }
 
 async function _updateImageOnEffectChange(effectName, actor, added = true) {
-  const mappings = getAllEffectMappings({ actor });
   const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
@@ -867,15 +877,12 @@ async function _updateImageOnEffectChange(effectName, actor, added = true) {
 
 async function _updateImageOnMultiEffectChange(actor, added = [], removed = []) {
   if (!actor) return;
-  const mappings = getAllEffectMappings({ actor });
-  if (added.filter((ef) => ef in mappings).length || removed.filter((ef) => ef in mappings).length) {
-    const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
-    for (const token of tokens) {
-      await updateWithEffectMapping(token, {
-        added: added,
-        removed: removed,
-      });
-    }
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  for (const token of tokens) {
+    await updateWithEffectMapping(token, {
+      added: added,
+      removed: removed,
+    });
   }
 }
 

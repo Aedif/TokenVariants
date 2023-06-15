@@ -32,6 +32,7 @@ export function registerArtSelectButtonHooks() {
     registerHook(feature_id, 'renderDrawingConfig', _modDrawingConfig);
     registerHook(feature_id, 'renderNoteConfig', _modNoteConfig);
     registerHook(feature_id, 'renderSceneConfig', _modSceneConfig);
+    registerHook(feature_id, 'renderActiveEffectConfig', _modActiveEffectConfig);
   } else {
     [
       'renderTileConfig',
@@ -40,6 +41,7 @@ export function registerArtSelectButtonHooks() {
       'renderDrawingConfig',
       'renderNoteConfig',
       'renderSceneConfig',
+      `renderActiveEffectConfig`,
     ].forEach((name) => unregisterHook(feature_id, name));
   }
 }
@@ -88,6 +90,13 @@ function _modTileConfig(tileConfig, html) {
   insertArtSelectButton(html, 'texture.src', {
     search: tileConfig.object.getFlag('token-variants', 'tileName') || 'Tile',
     searchType: SEARCH_TYPE.TILE,
+  });
+}
+
+function _modActiveEffectConfig(effectConfig, html) {
+  insertArtSelectButton(html, 'icon', {
+    search: effectConfig.object.name || 'Active Effect',
+    searchType: TVA_CONFIG.customImageCategories.includes('Active Effect') ? 'Active Effect' : SEARCH_TYPE.ITEM,
   });
 }
 

@@ -1,3 +1,16 @@
+# 4.42.0
+
+- Effect names now support wildcards
+
+  - `\*` and `\{` `\}`
+  - e.g.
+    - `Exhaustion\*`
+    - `Exhaustion \{1,2,3\}`
+    - `Level \{1,2,3,4,5\} Bolt`
+
+- Added `Art Select` button to Active Effect configuration form
+- Fixed white spaces in effect mapping names being parsed as `&nbsp;` (160) instead of regular whitespace (32)
+
 # 4.41.2
 
 - `Misc` > `Image Names Contain Dimensions`
