@@ -28,12 +28,12 @@ export const TVA_CONFIG = {
     useNameSimilarity: false,
     includeWildcard: true,
     showFullPath: false,
+    animate: true,
   },
   hud: {
     enableSideMenu: true,
     displayAsImage: true,
     imageOpacity: 50,
-    alwaysShowButton: false,
   },
   keywordSearch: true,
   excludedKeywords: 'and,for',

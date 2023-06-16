@@ -449,7 +449,11 @@ async function _onImageClick(event, tokenId) {
     let tokenImageName = token.document.getFlag('token-variants', 'name');
     if (!tokenImageName) tokenImageName = getFileName(token.document.texture.src);
     if (tokenImageName !== name) {
-      await updateTokenImage(imgSrc, { token: token, imgName: name });
+      await updateTokenImage(imgSrc, {
+        token: token,
+        imgName: name,
+        animate: worldHudSettings.animate,
+      });
       if (token.actor && worldHudSettings.updateActorImage) {
         if (worldHudSettings.useNameSimilarity) {
           updateActorWithSimilarName(imgSrc, name, token.actor);
@@ -459,7 +463,11 @@ async function _onImageClick(event, tokenId) {
       }
     }
   } else {
-    await updateTokenImage(imgSrc, { token: token, imgName: name });
+    await updateTokenImage(imgSrc, {
+      token: token,
+      imgName: name,
+      animate: worldHudSettings.animate,
+    });
     if (token.actor && worldHudSettings.updateActorImage) {
       if (worldHudSettings.useNameSimilarity) {
         updateActorWithSimilarName(imgSrc, name, token.actor);

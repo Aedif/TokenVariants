@@ -519,6 +519,14 @@
               Instead of using the same image for the portrait the module will perform a Portrait image search and attempt to find a similarly named image.
             </p>
           </div>
+
+          <div class="form-group">
+            <label>Token Animation</label>
+            <div class="form-fields">
+              <input type="checkbox" name="worldHud.animate" data-dtype="Boolean" {{#if worldHud.animate}}checked{{/if}} {{#unless worldHud.animate}}disabled{{/unless}}>
+            </div>
+            <p class="notes">Apply core foundry animations on image change.</p>
+          </div>
         
           <hr/>
         
