@@ -68,6 +68,7 @@ export class TVASprite extends TokenMesh {
     this.overlaySort = 0;
 
     this.tvaOverlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
+
     this._registerHooks(this.tvaOverlayConfig);
     this._tvaPlay().then(() => this.refresh());
 
@@ -99,7 +100,11 @@ export class TVASprite extends TokenMesh {
 
     if (this.tvaOverlayConfig.limitOnHover || this.tvaOverlayConfig.limitOnControl) {
       let visible = false;
-      if (this.tvaOverlayConfig.limitOnHover && (this.object.hover || canvas.tokens._highlight)) visible = true;
+      if (
+        this.tvaOverlayConfig.limitOnHover &&
+        (this.object.hover || (canvas.tokens.highlightObjects ?? canvas.tokens._highlight))
+      )
+        visible = true;
       if (this.tvaOverlayConfig.limitOnControl && this.object.controlled) visible = true;
       return visible;
     }

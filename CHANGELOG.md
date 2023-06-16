@@ -1,3 +1,12 @@
+# 4.42.1
+
+- The module will now batch Active Effect/Item changes to prevent rapid updates of the token
+
+v11
+
+- Fixed curved text overlays and shapes not rendering
+- Fixed warning thrown when visibility on hover is enabled for overlays
+
 # 4.42.0
 
 - Effect names now support wildcards

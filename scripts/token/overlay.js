@@ -151,7 +151,18 @@ export async function generateShapeTexture(token, conf) {
     height: bounds.height,
     resolution: 2,
   });
-  canvas.app.renderer.render(container, renderTexture, true, matrix, false);
+
+  if (isNewerVersion('11', game.version)) {
+    canvas.app.renderer.render(container, renderTexture, true, matrix, false);
+  } else {
+    canvas.app.renderer.render(container, {
+      renderTexture,
+      clear: true,
+      transform: matrix,
+      skipUpdateTransform: false,
+    });
+  }
+
   renderTexture.shapes = deepClone(conf.shapes);
   return renderTexture;
 }
@@ -212,7 +223,17 @@ export async function generateTextTexture(token, conf) {
     resolution: 2,
   });
   // const renderTexture = PIXI.RenderTexture.create(bounds.width, bounds.height);
-  canvas.app.renderer.render(container, renderTexture, true, matrix, false);
+
+  if (isNewerVersion('11', game.version)) {
+    canvas.app.renderer.render(container, renderTexture, true, matrix, false);
+  } else {
+    canvas.app.renderer.render(container, {
+      renderTexture,
+      clear: true,
+      transform: matrix,
+      skipUpdateTransform: false,
+    });
+  }
   text.destroy();
 
   renderTexture.textLabel = label;
@@ -258,8 +279,8 @@ function _removeAllOverlays(token) {
 
 export function broadcastOverlayRedraw(token) {
   // Need to broadcast to other users to re-draw the overlay
-  if (token.object) drawOverlays(token.object);
-  const actorId = token.actorLink ? token.actor?.id : null;
+  if (token) drawOverlays(token);
+  const actorId = token.document?.actorLink ? token.actor?.id : null;
   const message = {
     handlerName: 'drawOverlays',
     args: { tokenId: token.id, actorId },
