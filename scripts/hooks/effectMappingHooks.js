@@ -92,15 +92,19 @@ export function registerEffectMappingHooks() {
     const pf2e_feature_id = feature_id + '-pf2e';
     // Want to track condition/effect previous name so that the config can be reverted for it
     registerHook(pf2e_feature_id, 'preUpdateItem', (item, change, options, userId) => {
-      if (game.user.id === userId && PF2E_ITEM_TYPES.includes(item.type) && 'name' in change) {
+      if (game.user.id === userId && PF2E_ITEM_TYPES.includes(item.type)) {
         options['token-variants-old-name'] = item.name;
       }
     });
 
     registerHook(pf2e_feature_id, 'updateItem', (item, change, options, userId) => {
       // Handle condition/effect name change
-      if (game.user.id === userId && PF2E_ITEM_TYPES.includes(item.type) && 'name' in change) {
-        _updateImageOnMultiEffectChange(item.parent, [change.name], [options['token-variants-old-name']]);
+      if (options['token-variants-old-name'] !== item.name) {
+        _updateImageOnMultiEffectChange(
+          item.parent,
+          [item.name],
+          [options['token-variants-old-name']]
+        );
       }
     });
 
@@ -110,7 +114,13 @@ export function registerEffectMappingHooks() {
     });
 
     registerHook(pf2e_feature_id, 'deleteItem', (item, options, userId) => {
-      if (game.userId !== userId || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent || item.disabled) return;
+      if (
+        game.userId !== userId ||
+        !PF2E_ITEM_TYPES.includes(item.type) ||
+        !item.parent ||
+        item.disabled
+      )
+        return;
       _updateImageOnEffectChange(item.name, item.parent, false);
     });
   }
@@ -289,7 +299,7 @@ function _updateCombat(combat, round, options, userId) {
 
   if (previousCombatantId !== currentCombatantId) {
     if (previousCombatantId) updateCombatant(previousCombatantId, [], ['combat-turn']);
-    if (currentCombatantId) updateCombatant(previousCombatantId, ['combat-turn'], []);
+    if (currentCombatantId) updateCombatant(currentCombatantId, ['combat-turn'], []);
   }
   if (previousNextCombatantId !== currentNextCombatantId) {
     if (previousNextCombatantId) updateCombatant(previousNextCombatantId, [], ['combat-turn-next']);
@@ -321,28 +331,31 @@ function _updateItem(item, change, options, userId) {
   }
 }
 
-const EFFECT_M_QUEUES = {};
+let EFFECT_M_QUEUES = {};
+let EFFECT_M_TIMER;
 
 export async function updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
-  const callUpdateWithEffectMapping = function (tokenId) {
-    const m = EFFECT_M_QUEUES[tokenId];
-    _updateWithEffectMapping(m.token, m.opts);
-    delete EFFECT_M_QUEUES[tokenId];
+  const callUpdateWithEffectMapping = function () {
+    for (const id of Object.keys(EFFECT_M_QUEUES)) {
+      const m = EFFECT_M_QUEUES[id];
+      _updateWithEffectMapping(m.token, m.opts);
+    }
+    EFFECT_M_QUEUES = {};
   };
+
+  clearTimeout(EFFECT_M_TIMER);
 
   if (token.id in EFFECT_M_QUEUES) {
     const m = EFFECT_M_QUEUES[token.id];
-    clearTimeout(m.timer);
     m.opts.added = m.opts.added.concat(added);
     m.opts.removed = m.opts.removed.concat(removed);
-    m.timer = setTimeout(() => callUpdateWithEffectMapping(token.id), 100);
   } else {
     EFFECT_M_QUEUES[token.id] = {
       token,
       opts: { added, removed },
     };
-    EFFECT_M_QUEUES[token.id].timer = setTimeout(() => callUpdateWithEffectMapping(token.id), 100);
   }
+  EFFECT_M_TIMER = setTimeout(callUpdateWithEffectMapping, 100);
 }
 
 async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
@@ -354,9 +367,10 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
   const animate = !TVA_CONFIG.disableTokenUpdateAnimation;
   const tokenUpdateObj = {};
   const hadActiveHUD = token.object?.hasActiveHUD;
-  const toggleStatus = canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
+  const toggleStatus =
+    canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
 
-  let effects = getTokenEffects(token, true);
+  let effects = getTokenEffects(token);
 
   // If effect is included in `added` or `removed` we need to:
   // 1. Insert it into `effects` if it's not there in case of 'added' and place it on top of the list
@@ -378,6 +392,14 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
   }
 
   const mappings = getAllEffectMappings(token);
+
+  // 3. Configurations may contain effect names in a form of a logical expressions
+  //    We need to evaluate them and insert them into effects/added/removed if needed
+  for (const key of Object.keys(mappings)) {
+    evaluateEffectAsExpression(key, effects, added, removed);
+  }
+
+  // console.log(token.name, { added, removed, effects });
 
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
@@ -489,7 +511,13 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
         token,
         imgName: newImg.imgName ? newImg.imgName : tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
         config: config,
         animate,
       });
@@ -506,7 +534,13 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
         token,
         imgName: tokenDefaultImg.imgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
         animate,
       });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
@@ -517,7 +551,13 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
         token,
         imgName: tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
         animate,
       });
   }
@@ -577,10 +617,14 @@ export function getAllEffectMappings(token = null, includeDisabled = false) {
   }
 
   if (token) {
-    allMappings = mergeObject(applicableGlobal, token.actor?.getFlag('token-variants', 'effectMappings') || {}, {
-      inplace: false,
-      recursive: false,
-    });
+    allMappings = mergeObject(
+      applicableGlobal,
+      token.actor?.getFlag('token-variants', 'effectMappings') || {},
+      {
+        inplace: false,
+        recursive: false,
+      }
+    );
   } else {
     allMappings = applicableGlobal;
   }
@@ -617,6 +661,7 @@ export function getTokenEffects(token, includeExpressions = false) {
   if (data.inCombat) {
     effects.push('token-variants-combat');
   }
+
   if (game.combat?.started) {
     if (game.combat?.combatant?.token?.id === token.id) {
       effects.push('combat-turn');
@@ -630,7 +675,7 @@ export function getTokenEffects(token, includeExpressions = false) {
 
   if (game.system.id === 'pf2e') {
     if (data.actorLink) {
-      effects = getEffectsFromActor(token.actor);
+      getEffectsFromActor(token.actor, effects);
     } else {
       if (isNewerVersion('11', game.version)) {
         (data.actorData?.items || [])
@@ -646,7 +691,9 @@ export function getTokenEffects(token, includeExpressions = false) {
     if (data.actorLink && token.actor) {
       getEffectsFromActor(token.actor, effects);
     } else {
-      (data.effects || []).filter((ef) => !ef.disabled && !ef.isSuppressed).forEach((ef) => effects.push(ef.label));
+      (data.effects || [])
+        .filter((ef) => !ef.disabled && !ef.isSuppressed)
+        .forEach((ef) => effects.push(ef.label));
       getEffectsFromActor(token.actor, effects);
     }
   }
@@ -683,7 +730,8 @@ export function getEffectsFromActor(actor, effects = []) {
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.name ?? activeEffect.label);
+      if (!activeEffect.disabled && !activeEffect.isSuppressed)
+        effects.push(activeEffect.name ?? activeEffect.label);
     });
   }
 
@@ -814,10 +862,10 @@ function _testRegExEffect(effect, effects) {
     .replaceAll('\\\\\\{', '[')
     .replaceAll('\\\\\\}', ']');
   re = new RegExp('^' + re + '$');
-  return effects.some((ef) => re.test(ef));
+  return effects.find((ef) => re.test(ef));
 }
 
-export function evaluateEffectAsExpression(effect, effects) {
+export function evaluateEffectAsExpression(effect, effects, added = [], removed = []) {
   let arrExpression = effect
     .split(EXPRESSION_MATCH_RE)
     .filter(Boolean)
@@ -825,29 +873,51 @@ export function evaluateEffectAsExpression(effect, effects) {
     .filter(Boolean);
 
   if (arrExpression.length === 1 && /\\\*|\\{.*\\}/g.test(arrExpression[0])) {
-    return _testRegExEffect(arrExpression[0], effects);
-  }
-
-  // Not an expression, return as false
-  if (arrExpression.length < 2) {
+  } else if (arrExpression.length < 2) {
     return false;
   }
 
   let temp = '';
-  for (const exp of arrExpression) {
+  let hasAdded = false;
+  let hasRemoved = false;
+  for (let exp of arrExpression) {
     if (EXPRESSION_OPERATORS.includes(exp)) {
       temp += exp.replace('\\', '');
-    } else if (/\\\*|\\{.*\\}/g.test(exp)) {
-      temp += _testRegExEffect(exp, effects) ? 'true' : 'false';
+      continue;
+    }
+
+    if (/\\\*|\\{.*\\}/g.test(exp)) {
+      let rExp = _testRegExEffect(exp, effects);
+      if (rExp) {
+        temp += 'true';
+      } else {
+        temp += 'false';
+      }
+
+      if (_testRegExEffect(exp, added)) hasAdded = true;
+      else if (_testRegExEffect(exp, removed)) hasRemoved = true;
+      continue;
     } else if (effects.includes(exp)) {
       temp += 'true';
     } else {
       temp += 'false';
     }
+
+    if (!hasAdded && added.includes(exp)) hasAdded = true;
+    if (!hasRemoved && removed.includes(exp)) hasRemoved = true;
   }
 
   try {
-    return eval(temp);
+    let evaluation = eval(temp);
+    if (evaluation) {
+      if (hasAdded || hasRemoved) {
+        added.push(effect);
+        effects.push(effect);
+      } else effects.unshift(effect);
+    } else if (hasRemoved || hasAdded) {
+      removed.push(effect);
+    }
+    return evaluation;
   } catch (e) {}
   return false;
 }
@@ -856,10 +926,10 @@ function _getTokenHPv11(token) {
   let attributes;
 
   if (token.actorLink) {
-    attributes = mergeObject(getProperty(token.actor.system, TVA_CONFIG.systemHpPath));
+    attributes = mergeObject(getProperty(token.actor?.system, TVA_CONFIG.systemHpPath));
   } else {
     attributes = mergeObject(
-      getProperty(token.actor.system, TVA_CONFIG.systemHpPath) || {},
+      getProperty(token.actor?.system, TVA_CONFIG.systemHpPath) || {},
       getProperty(token.delta?.system) || {},
       {
         inplace: false,

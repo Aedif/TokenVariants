@@ -1,3 +1,9 @@
+# 4.42.2
+
+- Various `Effect Mapping` fixes for PF2e system
+- New template: `Disposition Markers`
+  - Displays circles underneath tokens coloured based on their disposition.
+
 # 4.42.1
 
 - The module will now batch Active Effect/Item changes to prevent rapid updates of the token

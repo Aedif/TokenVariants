@@ -1,4 +1,9 @@
-import { registerSettings, TVA_CONFIG, exportSettingsToJSON, updateSettings } from './scripts/settings.js';
+import {
+  registerSettings,
+  TVA_CONFIG,
+  exportSettingsToJSON,
+  updateSettings,
+} from './scripts/settings.js';
 import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
 import {
   SEARCH_TYPE,
@@ -9,7 +14,7 @@ import {
   waitForTokenTexture,
 } from './scripts/utils.js';
 import { drawOverlays } from './scripts/token/overlay.js';
-import { updateWithEffectMapping } from './scripts/hooks/effectMappingHooks.js';
+import { getTokenEffects, updateWithEffectMapping } from './scripts/hooks/effectMappingHooks.js';
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
 import { REGISTERED_HOOKS, registerAllHooks, registerHook } from './scripts/hooks/hooks.js';
 import { REGISTERED_WRAPPERS, registerAllWrappers } from './scripts/wrappers/wrappers.js';
@@ -192,6 +197,7 @@ registerHook('main', 'init', function () {
     cacheImages,
     doImageSearch,
     doRandomSearch,
+    getTokenEffects,
     showArtSelect,
     updateTokenImage,
     exportSettingsToJSON,
