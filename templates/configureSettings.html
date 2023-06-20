@@ -523,7 +523,7 @@
           <div class="form-group">
             <label>Token Animation</label>
             <div class="form-fields">
-              <input type="checkbox" name="worldHud.animate" data-dtype="Boolean" {{#if worldHud.animate}}checked{{/if}} {{#unless worldHud.animate}}disabled{{/unless}}>
+              <input type="checkbox" name="worldHud.animate" data-dtype="Boolean" {{checked worldHud.animate}}>
             </div>
             <p class="notes">Apply core foundry animations on image change.</p>
           </div>
@@ -651,6 +651,21 @@
           </div>
           {{/unless}}
           <hr>
+
+          <fieldset>
+            <legend>Internal Effects</legend>
+            <div class="form-group slim">
+              <label>HP Change (hp-- hp++)</label>
+              <div class="form-fields">
+                <label>Enabled</label>
+                <input type="checkbox" name="internalEffects.hpChange.enabled" data-dtype="Boolean" {{checked internalEffects.hpChange.enabled}}>
+                <label>Duration <span class="units">(seconds)</span></label>
+                <input type="number" name="internalEffects.hpChange.duration" data-dtype="Number" value="{{internalEffects.hpChange.duration}}" min="0.001" max="50" step="any" placeholder="infinite">
+              </div>
+              <p class="notes">Flags will be stored on tokens to allow the use of `hp--` (decreased) and `hp++` (increased) expressions in effect mappings.</p>
+            </div>
+          </fieldset>
+
         </div>
         {{/if}}
 

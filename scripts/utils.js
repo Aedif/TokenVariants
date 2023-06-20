@@ -116,11 +116,9 @@ export async function updateTokenImage(
     const images = await wildcardImageSearch(imgSrc);
     if (images.length) {
       imgSrc = images[Math.floor(Math.random() * images.length)];
-      imgName = getFileName(imgSrc);
     }
   }
 
-  if (imgSrc && !imgName) imgName = getFileName(imgSrc);
   if (!actor && token.actor) {
     actor = game.actors.get(token.actor.id);
   }
@@ -159,7 +157,8 @@ export async function updateTokenImage(
   let tokenUpdateObj = tokenUpdate;
   if (imgSrc) {
     tokenUpdateObj.img = imgSrc;
-    tokenUpdateObj['flags.token-variants.name'] = imgName;
+    if (imgName && getFileName(imgSrc) === imgName) tokenUpdateObj['flags.token-variants.-=name'] = null;
+    else tokenUpdateObj['flags.token-variants.name'] = imgName;
   }
 
   const tokenCustomConfig = mergeObject(getTokenConfigForUpdate(imgSrc || token?.texture.src, imgName), config ?? {});
@@ -438,6 +437,7 @@ export function registerKeybinds() {
  * Retrieves a custom token configuration if one exists for the given image
  */
 export function getTokenConfig(imgSrc, imgName) {
+  if (!imgName) imgName = getFileName(imgSrc);
   const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
   return tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName) ?? {};
 }
@@ -776,9 +776,7 @@ export async function applyTMFXPreset(tokenDoc, presetName, action = 'apply') {
       if (action === 'apply') {
         await TokenMagic.addUpdateFilters(tokenDoc.object, preset);
       } else if (action === 'remove') {
-        for (const filter of preset) {
-          if (filter?.filterId) await TokenMagic.deleteFilters(tokenDoc.object, filter.filterId);
-        }
+        await TokenMagic.deleteFilters(tokenDoc.object, presetName);
       }
     }
   }

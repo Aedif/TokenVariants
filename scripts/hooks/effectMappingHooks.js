@@ -100,11 +100,7 @@ export function registerEffectMappingHooks() {
     registerHook(pf2e_feature_id, 'updateItem', (item, change, options, userId) => {
       // Handle condition/effect name change
       if (options['token-variants-old-name'] !== item.name) {
-        _updateImageOnMultiEffectChange(
-          item.parent,
-          [item.name],
-          [options['token-variants-old-name']]
-        );
+        _updateImageOnMultiEffectChange(item.parent, [item.name], [options['token-variants-old-name']]);
       }
     });
 
@@ -114,13 +110,7 @@ export function registerEffectMappingHooks() {
     });
 
     registerHook(pf2e_feature_id, 'deleteItem', (item, options, userId) => {
-      if (
-        game.userId !== userId ||
-        !PF2E_ITEM_TYPES.includes(item.type) ||
-        !item.parent ||
-        item.disabled
-      )
-        return;
+      if (game.userId !== userId || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent || item.disabled) return;
       _updateImageOnEffectChange(item.name, item.parent, false);
     });
   }
@@ -170,23 +160,77 @@ function _preUpdateToken(token, change, options, userId) {
   if (game.user.id !== userId) return;
 
   const preUpdateEffects = evaluateComparatorEffects(token);
+
+  if (TVA_CONFIG.internalEffects.hpChange.enabled) {
+    getHPChangeEffect(token, preUpdateEffects);
+  }
+
   if (preUpdateEffects.length) {
-    if (!options['token-variants']) options['token-variants'] = {};
-    options['token-variants'].preUpdateEffects = preUpdateEffects;
+    setProperty(options, 'token-variants.preUpdateEffects', preUpdateEffects);
   }
 
   // System specific effects
   const stateEffects = [];
   evaluateStateEffects(token, stateEffects);
   if (stateEffects.length) {
-    if (!options['token-variants']) options['token-variants'] = {};
-    options['token-variants']['system'] = stateEffects;
+    setProperty(options, 'token-variants.system', stateEffects);
   }
 
   if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
-    options['token-variants'] = {
-      wasPolymorphed: true,
-    };
+    setProperty(options, 'token-variants.wasPolymorphed', true);
+  }
+}
+
+async function _updateToken(token, change, options, userId) {
+  if (game.user.id !== userId) return;
+
+  const addedEffects = [];
+  const removedEffects = [];
+  const postUpdateEffects = evaluateComparatorEffects(token);
+  if (TVA_CONFIG.internalEffects.hpChange.enabled) {
+    getHPChangeEffect(token, postUpdateEffects);
+  }
+  const preUpdateEffects = getProperty(options, 'token-variants.preUpdateEffects') || [];
+  determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
+
+  const newStateEffects = [];
+  evaluateStateEffects(token, newStateEffects);
+  const oldStateEffects = getProperty(options, 'token-variants.system') || [];
+  determineAddedRemovedEffects(addedEffects, removedEffects, newStateEffects, oldStateEffects);
+
+  if (addedEffects.length || removedEffects.length || 'actorLink' in change) {
+    updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
+  } else if (getProperty(options, 'token-variants.wasPolymorphed') && !token.actor?.isPolymorphed) {
+    updateWithEffectMapping(token);
+  }
+
+  if (game.userId === userId && 'hidden' in change) {
+    updateWithEffectMapping(token, {
+      added: change.hidden ? ['token-variants-visibility'] : [],
+      removed: !change.hidden ? ['token-variants-visibility'] : [],
+    });
+  }
+}
+
+function _preUpdateActor(actor, change, options, userId) {
+  if (game.user.id !== userId) return;
+
+  // Determine which comparators are applicable so that we can compare after the
+  // actor update
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  if (TVA_CONFIG.internalEffects.hpChange.enabled && tokens.length) {
+    applyHpChangeEffect(actor, change, tokens);
+  }
+  for (const tkn of tokens) {
+    const preUpdateEffects = evaluateComparatorEffects(tkn);
+
+    if (TVA_CONFIG.internalEffects.hpChange.enabled) {
+      getHPChangeEffect(tkn, preUpdateEffects);
+    }
+
+    if (preUpdateEffects.length) {
+      setProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects', preUpdateEffects);
+    }
   }
 }
 
@@ -206,59 +250,20 @@ async function _updateActor(actor, change, options, userId) {
     }
   }
 
-  const tokens = getAllActorTokens(actor, true, true);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
   for (const tkn of tokens) {
     // Check if effects changed by comparing them against the ones calculated in preUpdateActor
     const added = [];
     const removed = [];
     const postUpdateEffects = evaluateComparatorEffects(tkn);
-    const preUpdateEffects = [...(options['token-variants']?.[tkn.id]?.preUpdateEffects || [])];
+    if (TVA_CONFIG.internalEffects.hpChange.enabled) {
+      getHPChangeEffect(tkn, postUpdateEffects);
+    }
+
+    const preUpdateEffects = getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
 
     determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
     if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
-  }
-}
-
-function _preUpdateActor(actor, change, options, userId) {
-  if (game.user.id !== userId) return;
-
-  // Determine which comparators are applicable so that we can compare after the
-  // actor update
-  const tokens = actor.getActiveTokens();
-  for (const tkn of tokens) {
-    const preUpdateEffects = evaluateComparatorEffects(tkn);
-    if (preUpdateEffects.length) {
-      if (!options['token-variants']) options['token-variants'] = {};
-      options['token-variants'][tkn.id] = { preUpdateEffects };
-    }
-  }
-}
-
-async function _updateToken(token, change, options, userId) {
-  if (game.user.id !== userId) return;
-
-  const addedEffects = [];
-  const removedEffects = [];
-  const postUpdateEffects = evaluateComparatorEffects(token);
-  const preUpdateEffects = options['token-variants']?.preUpdateEffects || [];
-  determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
-
-  const newStateEffects = [];
-  evaluateStateEffects(token, newStateEffects);
-  const oldStateEffects = options['token-variants']?.['system'] || [];
-  determineAddedRemovedEffects(addedEffects, removedEffects, newStateEffects, oldStateEffects);
-
-  if (addedEffects.length || removedEffects.length || 'actorLink' in change) {
-    updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
-  } else if (options['token-variants']?.wasPolymorphed && !token.actor?.isPolymorphed) {
-    updateWithEffectMapping(token);
-  }
-
-  if (game.userId === userId && 'hidden' in change) {
-    updateWithEffectMapping(token, {
-      added: change.hidden ? ['token-variants-visibility'] : [],
-      removed: !change.hidden ? ['token-variants-visibility'] : [],
-    });
   }
 }
 
@@ -338,7 +343,7 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
   const callUpdateWithEffectMapping = function () {
     for (const id of Object.keys(EFFECT_M_QUEUES)) {
       const m = EFFECT_M_QUEUES[id];
-      _updateWithEffectMapping(m.token, m.opts);
+      _updateWithEffectMapping(m.token, m.opts.added, m.opts.removed);
     }
     EFFECT_M_QUEUES = {};
   };
@@ -346,19 +351,19 @@ export async function updateWithEffectMapping(token, { added = [], removed = [] 
   clearTimeout(EFFECT_M_TIMER);
 
   if (token.id in EFFECT_M_QUEUES) {
-    const m = EFFECT_M_QUEUES[token.id];
-    m.opts.added = m.opts.added.concat(added);
-    m.opts.removed = m.opts.removed.concat(removed);
+    const opts = EFFECT_M_QUEUES[token.id].opts;
+    added.forEach((a) => opts.added.add(a));
+    removed.forEach((a) => opts.removed.add(a));
   } else {
     EFFECT_M_QUEUES[token.id] = {
       token,
-      opts: { added, removed },
+      opts: { added: new Set(added), removed: new Set(removed) },
     };
   }
   EFFECT_M_TIMER = setTimeout(callUpdateWithEffectMapping, 100);
 }
 
-async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}) {
+async function _updateWithEffectMapping(token, added, removed) {
   const placeable = token.object ?? token._object ?? token;
   token = token.document ?? token;
 
@@ -367,8 +372,7 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
   const animate = !TVA_CONFIG.disableTokenUpdateAnimation;
   const tokenUpdateObj = {};
   const hadActiveHUD = token.object?.hasActiveHUD;
-  const toggleStatus =
-    canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
+  const toggleStatus = canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
 
   let effects = getTokenEffects(token);
 
@@ -464,7 +468,7 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
           let iSrc = effects[i].imgSrc;
           if (iSrc.includes('*') || (iSrc.includes('{') && iSrc.includes('}'))) {
             // wildcard image, if this effect hasn't been newly applied we do not want to randomize the image again
-            if (!added.includes(effects[i].overlayConfig?.effect)) {
+            if (!added.has(effects[i].overlayConfig?.effect)) {
               newImg.imgSrc = token.texture.src;
               newImg.imgName = getFileName(newImg.imgSrc);
               break;
@@ -511,13 +515,7 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
         token,
         imgName: newImg.imgName ? newImg.imgName : tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
+        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
         config: config,
         animate,
       });
@@ -534,13 +532,7 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
         token,
         imgName: tokenDefaultImg.imgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
+        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
         animate,
       });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
@@ -551,13 +543,7 @@ async function _updateWithEffectMapping(token, { added = [], removed = [] } = {}
         token,
         imgName: tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
+        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
         animate,
       });
   }
@@ -617,14 +603,10 @@ export function getAllEffectMappings(token = null, includeDisabled = false) {
   }
 
   if (token) {
-    allMappings = mergeObject(
-      applicableGlobal,
-      token.actor?.getFlag('token-variants', 'effectMappings') || {},
-      {
-        inplace: false,
-        recursive: false,
-      }
-    );
+    allMappings = mergeObject(applicableGlobal, token.actor?.getFlag('token-variants', 'effectMappings') || {}, {
+      inplace: false,
+      recursive: false,
+    });
   } else {
     allMappings = applicableGlobal;
   }
@@ -653,6 +635,49 @@ export function fixEffectMappings(mappings) {
   return mappings;
 }
 
+function getHPChangeEffect(token, effects) {
+  const internals = token.actor?.getFlag('token-variants', 'internalEffects') || {};
+  const delta = getProperty(
+    token,
+    `${isNewerVersion('11', game.version) ? 'actorData' : 'delta'}.flags.token-variants.internalEffects`
+  );
+  if (delta) mergeObject(internals, delta);
+  if (internals['hp--']) effects.push('hp--');
+  if (internals['hp++']) effects.push('hp++');
+}
+
+function applyHpChangeEffect(actor, change, tokens) {
+  let duration = Number(TVA_CONFIG.internalEffects.hpChange.duration);
+
+  const newHpValue = getProperty(change, `system.${TVA_CONFIG.systemHpPath}.value`);
+  if (newHpValue != null) {
+    const [currentHpVal, _] = _getTokenHP(tokens[0]);
+    if (currentHpVal !== newHpValue) {
+      if (currentHpVal < newHpValue) {
+        setProperty(change, 'flags.token-variants.internalEffects.-=hp--', null);
+        setProperty(change, 'flags.token-variants.internalEffects.hp++', true);
+        if (duration) {
+          setTimeout(() => {
+            actor.update({
+              'flags.token-variants.internalEffects.-=hp++': null,
+            });
+          }, duration * 1000);
+        }
+      } else {
+        setProperty(change, 'flags.token-variants.internalEffects.-=hp++', null);
+        setProperty(change, 'flags.token-variants.internalEffects.hp--', true);
+        if (duration) {
+          setTimeout(() => {
+            actor.update({
+              'flags.token-variants.internalEffects.-=hp--': null,
+            });
+          }, duration * 1000);
+        }
+      }
+    }
+  }
+}
+
 export function getTokenEffects(token, includeExpressions = false) {
   const data = token.document ?? token;
   let effects = [];
@@ -673,6 +698,10 @@ export function getTokenEffects(token, includeExpressions = false) {
     effects.push('token-variants-visibility');
   }
 
+  if (TVA_CONFIG.internalEffects.hpChange.enabled) {
+    getHPChangeEffect(data, effects);
+  }
+
   if (game.system.id === 'pf2e') {
     if (data.actorLink) {
       getEffectsFromActor(token.actor, effects);
@@ -691,9 +720,7 @@ export function getTokenEffects(token, includeExpressions = false) {
     if (data.actorLink && token.actor) {
       getEffectsFromActor(token.actor, effects);
     } else {
-      (data.effects || [])
-        .filter((ef) => !ef.disabled && !ef.isSuppressed)
-        .forEach((ef) => effects.push(ef.label));
+      (data.effects || []).filter((ef) => !ef.disabled && !ef.isSuppressed).forEach((ef) => effects.push(ef.label));
       getEffectsFromActor(token.actor, effects);
     }
   }
@@ -730,8 +757,7 @@ export function getEffectsFromActor(actor, effects = []) {
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.disabled && !activeEffect.isSuppressed)
-        effects.push(activeEffect.name ?? activeEffect.label);
+      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.name ?? activeEffect.label);
     });
   }
 
@@ -856,16 +882,13 @@ function _findReplaceBracketWildcard(exp) {
 }
 
 function _testRegExEffect(effect, effects) {
-  let re = effect
-    .replace(/[/\-\\^$+?.()|[\]{}]/g, '\\$&')
-    .replaceAll('\\\\*', '.*')
-    .replaceAll('\\\\\\{', '[')
-    .replaceAll('\\\\\\}', ']');
+  let re = effect.replace(/[/\-\\^$+?.()|[\]{}]/g, '\\$&').replaceAll('\\\\*', '.*');
+  re = _findReplaceBracketWildcard(re);
   re = new RegExp('^' + re + '$');
   return effects.find((ef) => re.test(ef));
 }
 
-export function evaluateEffectAsExpression(effect, effects, added = [], removed = []) {
+export function evaluateEffectAsExpression(effect, effects, added = new Set(), removed = new Set()) {
   let arrExpression = effect
     .split(EXPRESSION_MATCH_RE)
     .filter(Boolean)
@@ -903,19 +926,19 @@ export function evaluateEffectAsExpression(effect, effects, added = [], removed 
       temp += 'false';
     }
 
-    if (!hasAdded && added.includes(exp)) hasAdded = true;
-    if (!hasRemoved && removed.includes(exp)) hasRemoved = true;
+    if (!hasAdded && added.has(exp)) hasAdded = true;
+    if (!hasRemoved && removed.has(exp)) hasRemoved = true;
   }
 
   try {
     let evaluation = eval(temp);
     if (evaluation) {
       if (hasAdded || hasRemoved) {
-        added.push(effect);
+        added.add(effect);
         effects.push(effect);
       } else effects.unshift(effect);
     } else if (hasRemoved || hasAdded) {
-      removed.push(effect);
+      removed.add(effect);
     }
     return evaluation;
   } catch (e) {}
@@ -926,7 +949,7 @@ function _getTokenHPv11(token) {
   let attributes;
 
   if (token.actorLink) {
-    attributes = mergeObject(getProperty(token.actor?.system, TVA_CONFIG.systemHpPath));
+    attributes = getProperty(token.actor?.system, TVA_CONFIG.systemHpPath);
   } else {
     attributes = mergeObject(
       getProperty(token.actor?.system, TVA_CONFIG.systemHpPath) || {},
@@ -946,7 +969,7 @@ function _getTokenHP(token) {
   let attributes;
 
   if (token.actorLink) {
-    attributes = mergeObject(getProperty(token.actor.system, TVA_CONFIG.systemHpPath));
+    attributes = getProperty(token.actor.system, TVA_CONFIG.systemHpPath);
   } else {
     attributes = mergeObject(
       getProperty(token.actor.system, TVA_CONFIG.systemHpPath) || {},

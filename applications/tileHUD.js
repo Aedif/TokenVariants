@@ -308,7 +308,7 @@ async function _onImageClick(event, tile) {
     canvas.tiles.hud.clear();
     await tile.document.update({ img: imgSrc });
     try {
-      await tile.document.setFlag('token-variants', 'name', name);
+      if (getFileName(imgSrc) !== name) await tile.document.setFlag('token-variants', 'name', name);
     } catch (e) {}
   }
 }

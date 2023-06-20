@@ -133,6 +133,9 @@ export default class ConfigureSettings extends FormApplication {
     data.worldHud = deepClone(settings.worldHud);
     data.worldHud.tokenHUDWildcardActive = game.modules.get('token-hud-wildcard')?.active;
 
+    // === Internal Effects ===
+    data.internalEffects = deepClone(settings.internalEffects);
+
     // === Misc ===
     data.keywordSearch = settings.keywordSearch;
     data.excludedKeywords = settings.excludedKeywords;
@@ -611,6 +614,9 @@ export default class ConfigureSettings extends FormApplication {
 
     // Token HUD
     mergeObject(settings.worldHud, formData.worldHud);
+
+    // Internal Effects
+    mergeObject(settings.internalEffects, formData.internalEffects);
 
     // Misc
     mergeObject(settings, {

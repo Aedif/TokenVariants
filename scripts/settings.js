@@ -139,6 +139,9 @@ export const TVA_CONFIG = {
   disableTokenUpdateAnimation: false,
   invisibleImage: '',
   systemHpPath: '',
+  internalEffects: {
+    hpChange: { enabled: false, duration: null },
+  },
 };
 
 export const FEATURE_CONTROL = {

@@ -1,3 +1,14 @@
+# 4.43.0
+
+- New setting: `Token HUD` > `Token Animation`
+  - Controls whether core Foundry's animation should be applied on image change via Token HUD
+- `name` flags will now only be added to tokens if the image name differs from the file name
+- New setting: `Active Effects` > `Internal Effects` > `HP Change`
+  - When enabled flags will be stored on tokens/actors to allow the use of `hp--` and `hp++` expressions in effects mappings
+    - `hp--` - hp has decreased
+    - `hp++` - hp has increased
+  - Duration can be optionally provided to remove the flag after some number of seconds
+
 # 4.42.2
 
 - Various `Effect Mapping` fixes for PF2e system
