@@ -857,7 +857,7 @@ export default class EffectMappingForm extends FormApplication {
 function highlightOperators(text) {
   text = text.replaceAll(FAUX_DOT, '.');
 
-  const re = new RegExp('([a-zA-Z\\.\\-\\|]+)([><=]+)(".*"|\\d+)(%{0,1})', `gi`);
+  const re = new RegExp('([a-zA-Z\\.\\-\\|\\+]+)([><=]+)(".*?"|-?\\d+)(%{0,1})', `gi`);
   text = text.replace(re, function replace(match) {
     return '<span class="hp-expression">' + match + '</span>';
   });

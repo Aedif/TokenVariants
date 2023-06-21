@@ -642,8 +642,8 @@ function getHPChangeEffect(token, effects) {
     `${isNewerVersion('11', game.version) ? 'actorData' : 'delta'}.flags.token-variants.internalEffects`
   );
   if (delta) mergeObject(internals, delta);
-  if (internals['hp--']) effects.push('hp--');
-  if (internals['hp++']) effects.push('hp++');
+  if (internals['hp--'] != null) effects.push('hp--');
+  if (internals['hp++'] != null) effects.push('hp++');
 }
 
 function applyHpChangeEffect(actor, change, tokens) {
@@ -655,7 +655,7 @@ function applyHpChangeEffect(actor, change, tokens) {
     if (currentHpVal !== newHpValue) {
       if (currentHpVal < newHpValue) {
         setProperty(change, 'flags.token-variants.internalEffects.-=hp--', null);
-        setProperty(change, 'flags.token-variants.internalEffects.hp++', true);
+        setProperty(change, 'flags.token-variants.internalEffects.hp++', newHpValue - currentHpVal);
         if (duration) {
           setTimeout(() => {
             actor.update({
@@ -665,7 +665,7 @@ function applyHpChangeEffect(actor, change, tokens) {
         }
       } else {
         setProperty(change, 'flags.token-variants.internalEffects.-=hp++', null);
-        setProperty(change, 'flags.token-variants.internalEffects.hp--', true);
+        setProperty(change, 'flags.token-variants.internalEffects.hp--', newHpValue - currentHpVal);
         if (duration) {
           setTimeout(() => {
             actor.update({
@@ -764,7 +764,7 @@ export function getEffectsFromActor(actor, effects = []) {
   return effects;
 }
 
-export const VALID_EXPRESSION = new RegExp('([a-zA-Z\\-\\.]+)([><=]+)(".*"|\\d+)(%{0,1})');
+export const VALID_EXPRESSION = new RegExp('([a-zA-Z\\-\\.\\+]+)([><=]+)(".*"|-?\\d+)(%{0,1})');
 
 export function evaluateComparator(token, expression) {
   const exp = expression.replaceAll(FAUX_DOT, '.');
@@ -776,6 +776,9 @@ export function evaluateComparator(token, expression) {
     let maxVal;
     if (property === 'hp') {
       [currVal, maxVal] = _getTokenHP(token);
+    } else if (property === 'hp++' || property === 'hp--') {
+      [currVal, maxVal] = _getTokenHP(token);
+      currVal = getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
     } else currVal = getProperty(token, property);
     if (currVal == null) currVal = 0;
 

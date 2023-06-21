@@ -1,3 +1,11 @@
+# 4.44.0
+
+- Negative values are now accepted in comparators
+  - e.g. `disposition=-1`
+- HP Decrease (`hp--`), and HP Increase (`hp++`) effects can now be used as properties in comparator expressions
+  - `hp++>4`, `hp++>=50%`, `hp--<-4`, `hp--<=-50%`
+- Fixed `Effect Names` containing composite expressions with multiple quotes resulting in an incorrect caret position
+
 # 4.43.0
 
 - New setting: `Token HUD` > `Token Animation`
