@@ -186,6 +186,13 @@ export function registerSettings() {
   };
   TVA_CONFIG.systemHpPath = systemHpPaths[game.system.id] ?? 'attributes.hp';
 
+  game.settings.register('token-variants', 'effectMappingToggleGroups', {
+    scope: 'world',
+    config: false,
+    type: Object,
+    default: { Default: true },
+  });
+
   game.settings.register('token-variants', 'settings', {
     scope: 'world',
     config: false,

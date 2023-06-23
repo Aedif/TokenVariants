@@ -11,7 +11,7 @@ import { fixEffectMappings, updateWithEffectMapping } from '../scripts/hooks/eff
 import { drawOverlays } from '../scripts/token/overlay.js';
 
 // Persist group toggles across forms
-const TOGGLED_GROUPS = { Default: true };
+let TOGGLED_GROUPS;
 
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
@@ -23,6 +23,9 @@ export default class EffectMappingForm extends FormApplication {
     }
     if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
     this.callback = callback;
+    TOGGLED_GROUPS = game.settings.get('token-variants', 'effectMappingToggleGroups') || {
+      Default: true,
+    };
     this.createMapping = createMapping;
   }
 
@@ -206,6 +209,7 @@ export default class EffectMappingForm extends FormApplication {
       group.find('i').removeClass('fa-rotate-180');
       TOGGLED_GROUPS[groupName] = true;
     }
+    game.settings.set('token-variants', 'effectMappingToggleGroups', TOGGLED_GROUPS);
     this.setPosition({ height: 'auto' });
   }
 

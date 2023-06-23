@@ -1,6 +1,6 @@
 import { TVA_CONFIG } from '../settings.js';
 import { TVASprite } from '../sprite/TVASprite.js';
-import { string2Hex, waitForTokenTexture } from '../utils.js';
+import { colorAsProperty, string2Hex, waitForTokenTexture } from '../utils.js';
 import { getAllEffectMappings, getTokenEffects } from '../hooks/effectMappingHooks.js';
 
 export async function drawOverlays(token) {
@@ -125,8 +125,8 @@ export async function generateShapeTexture(token, conf) {
   let graphics = new PIXI.Graphics();
 
   for (const obj of conf.shapes) {
-    graphics.beginFill(string2Hex(obj.fill.color), obj.fill.alpha);
-    graphics.lineStyle(obj.line.width, string2Hex(obj.line.color), obj.line.alpha);
+    graphics.beginFill(string2Hex(colorAsProperty(obj.fill.color, token)), obj.fill.alpha);
+    graphics.lineStyle(obj.line.width, string2Hex(colorAsProperty(obj.line.color, token)), obj.line.alpha);
     const shape = obj.shape;
     if (shape.type === 'rectangle') {
       graphics.drawRoundedRect(shape.x, shape.y, shape.width, shape.height, shape.radius);
@@ -184,7 +184,12 @@ export async function generateTextTexture(token, conf) {
 
   let text = new PreciseText(
     label,
-    PreciseText.getTextStyle({ ...conf.text, fontFamily: [conf.text.fontFamily, 'fontAwesome'] })
+    PreciseText.getTextStyle({
+      ...conf.text,
+      fill: colorAsProperty(conf.text.fill, token),
+      stroke: colorAsProperty(conf.text.stroke, token),
+      fontFamily: [conf.text.fontFamily, 'fontAwesome'],
+    })
   );
   text.updateText(false);
 

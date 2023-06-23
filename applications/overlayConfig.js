@@ -204,6 +204,14 @@ export default class OverlayConfig extends FormApplication {
     // Shape Controls
     html.find('.addShape').on('click', this._onAddShape.bind(this));
     html.find('.deleteShape').on('click', this._onDeleteShape.bind(this));
+
+    // Insert color picker tooltip
+    let tooltip = game.i18n.localize('token-variants.windows.overlay-config.color-tooltip');
+    html
+      .find('input[type="color"]')
+      .closest('.form-group')
+      .find('label')
+      .append(` <i title="${tooltip}" class="fas fa-question-circle"></i>`);
   }
 
   _onAddShape(event) {
