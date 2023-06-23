@@ -194,7 +194,7 @@ export async function updateTokenImage(
 
     tokenUpdateObj = modMergeObject(tokenUpdateObj, tokenCustomConfig);
   } else if (usingCustomConfig) {
-    tokenUpdateObj['flags.token-variants.usingCustomConfig'] = false;
+    tokenUpdateObj['flags.token-variants.-=usingCustomConfig'] = null;
     delete tokenUpdateObj['flags.token-variants.defaultConfig'];
     tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
   }

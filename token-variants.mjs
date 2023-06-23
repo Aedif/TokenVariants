@@ -1,9 +1,4 @@
-import {
-  registerSettings,
-  TVA_CONFIG,
-  exportSettingsToJSON,
-  updateSettings,
-} from './scripts/settings.js';
+import { registerSettings, TVA_CONFIG, exportSettingsToJSON, updateSettings } from './scripts/settings.js';
 import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
 import {
   SEARCH_TYPE,

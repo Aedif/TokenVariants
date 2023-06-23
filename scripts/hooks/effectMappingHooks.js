@@ -19,7 +19,7 @@ const feature_id = 'EffectMappings';
 export function registerEffectMappingHooks() {
   if (!FEATURE_CONTROL[feature_id]) {
     [
-      'renderCombatTracker',
+      'canvasReady',
       'createActiveEffect',
       'deleteActiveEffect',
       'preUpdateActiveEffect',
@@ -46,11 +46,8 @@ export function registerEffectMappingHooks() {
   }
 
   if (game.user.isGM) {
-    registerHook(feature_id, 'renderCombatTracker', async function () {
-      for (const tkn of canvas.tokens.placeables) {
-        await updateWithEffectMapping(tkn);
-      }
-    });
+    registerHook(feature_id, 'canvasReady', _refreshTokenMappings);
+    _refreshTokenMappings();
   }
 
   registerHook(feature_id, 'createActiveEffect', (activeEffect, options, userId) => {
@@ -116,6 +113,12 @@ export function registerEffectMappingHooks() {
   }
   // Status Effects can be applied "stealthily" on item equip/un-equip
   registerHook(feature_id, 'updateItem', _updateItem);
+}
+
+async function _refreshTokenMappings() {
+  for (const tkn of canvas.tokens.placeables) {
+    await updateWithEffectMapping(tkn);
+  }
 }
 
 function _createCombatant(combatant, options, userId) {
@@ -683,7 +686,11 @@ export function getTokenEffects(token, includeExpressions = false) {
   let effects = [];
 
   // Special Effects
-  if (data.inCombat) {
+
+  const tokenInCombat = game.combats.some((combat) => {
+    return combat.combatants.some((c) => c.tokenId === token.id);
+  });
+  if (tokenInCombat) {
     effects.push('token-variants-combat');
   }
 
