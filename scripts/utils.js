@@ -161,7 +161,10 @@ export async function updateTokenImage(
     else tokenUpdateObj['flags.token-variants.name'] = imgName;
   }
 
-  const tokenCustomConfig = mergeObject(getTokenConfigForUpdate(imgSrc || token?.texture.src, imgName), config ?? {});
+  const tokenCustomConfig = mergeObject(
+    getTokenConfigForUpdate(imgSrc || token?.texture.src, imgName, token),
+    config ?? {}
+  );
   const usingCustomConfig = token?.getFlag('token-variants', 'usingCustomConfig');
   const defaultConfig = getDefaultConfig(token);
   if (!isEmpty(tokenCustomConfig) || usingCustomConfig) {
@@ -446,7 +449,7 @@ export function getTokenConfig(imgSrc, imgName) {
  * Retrieves a custom token configuration if one exists for the given image and removes control keys
  * returning a clean config that can be used in token update.
  */
-export function getTokenConfigForUpdate(imgSrc, imgName) {
+export function getTokenConfigForUpdate(imgSrc, imgName, token) {
   if (!imgSrc) return {};
   let tokenConfig = getTokenConfig(imgSrc, imgName ?? getFileName(imgSrc));
   if (!isEmpty(tokenConfig)) {
@@ -458,6 +461,8 @@ export function getTokenConfigForUpdate(imgSrc, imgName) {
         delete tokenConfig[key];
       }
     }
+
+    if (token) TokenDataAdapter.formToData(token, tokenConfig);
   }
 
   if (TVA_CONFIG.imgNameContainsDimensions) {

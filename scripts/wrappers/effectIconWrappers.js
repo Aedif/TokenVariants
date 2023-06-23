@@ -53,11 +53,11 @@ async function _drawEffects(...args) {
       });
       if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
     }
-    actorEffects = actorEffects.filter((ef) => !restrictedEffects.includes(ef.label));
+    actorEffects = actorEffects.filter((ef) => !restrictedEffects.includes(ef.name ?? ef.label));
     tokenEffects = tokenEffects.filter(
       // check if it's a string here
       // for tokens without representing actors effects are just stored as paths to icons
-      (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.label)
+      (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.name ?? ef.label)
     );
   }
   // End of modifications
