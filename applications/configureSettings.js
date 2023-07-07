@@ -2,7 +2,7 @@ import { cacheImages } from '../scripts/search.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { getFileName } from '../scripts/utils.js';
 import EffectMappingForm from './effectMappingForm.js';
-import { showPathSelectCategoryDialog } from './dialogs.js';
+import { showPathSelectCategoryDialog, showPathSelectConfigForm } from './dialogs.js';
 
 export default class ConfigureSettings extends FormApplication {
   constructor(
@@ -68,6 +68,7 @@ export default class ConfigureSettings extends FormApplication {
       r.cache = path.cache;
       r.source = path.source || '';
       r.types = path.types.join(',');
+      r.config = JSON.stringify(path.config ?? {});
       return r;
     });
     data.searchPaths = paths;
@@ -184,6 +185,7 @@ export default class ConfigureSettings extends FormApplication {
     $(html).on('click', 'a.convert-json', this._onConvertJsonPath.bind(this));
     $(html).on('click', '.path-image.source-icon a', this._onBrowseFolder.bind(this));
     $(html).on('click', 'a.select-category', showPathSelectCategoryDialog.bind(this));
+    $(html).on('click', 'a.select-config', showPathSelectConfigForm.bind(this));
 
     // Search Filters
     html.on('input', 'input.filterRegex', this._validateRegex.bind(this));
@@ -486,6 +488,10 @@ export default class ConfigureSettings extends FormApplication {
             <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
             <input type="hidden" name="searchPaths.types" value="Portrait,Token,PortraitAndToken">
         </div>
+        <div class="path-config">
+          <a class="select-config" title="Apply configuration to images under this path."><i class="fas fa-cog fa-lg"></i></a>
+          <input type="hidden" name="searchPaths.config" value="{}">
+         </div>
         <div class="path-cache">
             <input type="checkbox" name="searchPaths.cache" data-dtype="Boolean" checked/>
         </div>
@@ -527,6 +533,12 @@ export default class ConfigureSettings extends FormApplication {
       .find('input')
       .each(function (index) {
         $(this).attr('name', `searchPaths.${index}.types`);
+      });
+    table
+      .find('.path-config')
+      .find('input')
+      .each(function (index) {
+        $(this).attr('name', `searchPaths.${index}.config`);
       });
   }
 
@@ -589,6 +601,13 @@ export default class ConfigureSettings extends FormApplication {
       if (!path.source) path.source = 'data';
       if (path.types) path.types = path.types.split(',');
       else path.types = [];
+      if (path.config) {
+        try {
+          path.config = JSON.parse(path.config);
+        } catch (e) {
+          delete path.config;
+        }
+      } else delete path.config;
     });
 
     // Search Filters

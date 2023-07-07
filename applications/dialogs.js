@@ -1,5 +1,6 @@
 import { TVA_CONFIG } from '../scripts/settings.js';
 import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
+import TokenCustomConfig from './tokenCustomConfig.js';
 
 // Edit overlay configuration as a json string
 export function showOverlayJsonConfigDialog(overlayConfig, callback) {
@@ -97,6 +98,34 @@ export async function showPathSelectCategoryDialog(event) {
     },
     default: 'yes',
   }).render(true);
+}
+
+// Change configs assigned to a path
+export async function showPathSelectConfigForm(event) {
+  event.preventDefault();
+  const configInput = $(event.target).closest('.path-config').find('input');
+  let config = {};
+  try {
+    config = JSON.parse(configInput.val());
+  } catch (e) {}
+
+  const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
+  const data = new foundry.data.PrototypeToken(setting);
+  const token = new TokenDocument(data, { actor: null });
+  new TokenCustomConfig(
+    token,
+    {},
+    null,
+    null,
+    (conf) => {
+      if (!conf) conf = {};
+      if (conf.flags == null || isEmpty(conf.flags)) delete conf.flags;
+      console.log(conf);
+      configInput.val(JSON.stringify(conf));
+      console.log(configInput.val());
+    },
+    config
+  ).render(true);
 }
 
 export async function showTokenCaptureDialog(token) {

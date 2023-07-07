@@ -27,6 +27,7 @@
                   <div class="path-source"><label>Source</label></div>
                   <div class="path-text"><label>Path</label></div>
                   <div class="path-category"><label>Category</label></div>
+                  <div class="path-config"><label>Config</label></div>
                   <div class="path-cache"><label>Cache</label></div>
                   <div class="path-controls"></div>
                 </li>
@@ -55,6 +56,10 @@
                   <div class="path-category">
                     <a class="select-category" title="Select image categories/filters"><i class="fas fa-swatchbook"></i></a>
                     <input type="hidden" name="searchPaths.{{index}}.types" value="{{path.types}}">
+                  </div>
+                  <div class="path-config">
+                    <a class="select-config" title="Apply configuration to images under this path."><i class="fas fa-cog fa-lg"></i></a>
+                    <input type="hidden" name="searchPaths.{{index}}.config" value="{{path.config}}">
                   </div>
                   <div class="path-cache">
                     <input type="checkbox" name="searchPaths.{{index}}.cache" data-dtype="Boolean" {{#if path.cache}}checked{{/if}}/>

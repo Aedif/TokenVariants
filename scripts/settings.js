@@ -338,45 +338,6 @@ export function registerSettings() {
     });
   }
 
-  // 16/06/2022
-  // Perform searchPaths and forgeSearchPaths conversions to new format if needed
-  TVA_CONFIG.searchPaths = TVA_CONFIG.searchPaths.map((p) => {
-    if (typeof p === 'string') {
-      p = { text: p };
-    }
-    if (!p.source) {
-      if (p.text.startsWith('s3:')) {
-        const parts = p.text.split(':');
-        if (parts.length > 2) {
-          p.text = parts[2];
-          p.source = 's3:' + parts[1];
-        } else {
-          p.source = 's3:';
-          p.text = p.text.replace('s3:', '');
-        }
-      } else if (p.text.startsWith('rolltable:')) {
-        p.text = p.text.split(':')[1];
-        p.source = 'rolltable';
-      } else if (p.text.startsWith('json:')) {
-        p.text = p.text.split(':')[1];
-        p.source = 'json';
-      } else if (p.text.startsWith('forgevtt:')) {
-        p.text = p.text.split(':')[1];
-        p.source = 'forgevtt';
-      } else if (p.text.startsWith('imgur:')) {
-        p.text = p.text.split(':')[1];
-        p.source = 'imgur';
-      } else {
-        p.source = 'data';
-      }
-    }
-    if (!p.types) {
-      if (p.tiles) p.types = ['Tile'];
-      else p.types = ['Portrait', 'Token', 'PortraitAndToken'];
-    }
-    return p;
-  });
-
   for (let uid in TVA_CONFIG.forgeSearchPaths) {
     TVA_CONFIG.forgeSearchPaths[uid].paths = TVA_CONFIG.forgeSearchPaths[uid].paths.map((p) => {
       if (!p.source) {
@@ -435,47 +396,6 @@ export function exportSettingsToJSON() {
 
 export async function importSettingsFromJSON(json) {
   if (typeof json === 'string') json = JSON.parse(json);
-
-  // 16/06/2022
-  // Perform searchPaths and forgeSearchPaths conversions to new format if needed
-  if (json.searchPaths)
-    json.searchPaths = json.searchPaths.map((p) => {
-      if (typeof p === 'string') {
-        p = { text: p };
-      }
-      if (!p.source) {
-        if (p.text.startsWith('s3:')) {
-          const parts = p.text.split(':');
-          if (parts.length > 2) {
-            p.text = parts[2];
-            p.source = 's3:' + parts[1];
-          } else {
-            p.source = 's3:';
-            p.text = p.text.replace('s3:', '');
-          }
-        } else if (p.text.startsWith('rolltable:')) {
-          p.text = p.text.split(':')[1];
-          p.source = 'rolltable';
-        } else if (p.text.startsWith('json:')) {
-          p.text = p.text.split(':')[1];
-          p.source = 'json';
-        } else if (p.text.startsWith('forgevtt:')) {
-          p.text = p.text.split(':')[1];
-          p.source = 'forgevtt';
-        } else if (p.text.startsWith('imgur:')) {
-          p.text = p.text.split(':')[1];
-          p.source = 'imgur';
-        } else {
-          p.source = 'data';
-        }
-
-        if (!p.types) {
-          if (p.tiles) p.types = ['Tile'];
-          else p.types = ['Portrait', 'Token', 'PortraitAndToken'];
-        }
-      }
-      return p;
-    });
 
   if (json.forgeSearchPaths)
     for (let uid in json.forgeSearchPaths) {

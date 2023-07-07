@@ -451,18 +451,26 @@ export function getTokenConfig(imgSrc, imgName) {
  */
 export function getTokenConfigForUpdate(imgSrc, imgName, token) {
   if (!imgSrc) return {};
-  let tokenConfig = getTokenConfig(imgSrc, imgName ?? getFileName(imgSrc));
-  if (!isEmpty(tokenConfig)) {
-    tokenConfig = deepClone(tokenConfig);
-    delete tokenConfig.tvImgSrc;
-    delete tokenConfig.tvImgName;
-    for (var key in tokenConfig) {
-      if (key.startsWith('tvTab_')) {
-        delete tokenConfig[key];
+
+  let tokenConfig = {};
+  for (const path of TVA_CONFIG.searchPaths) {
+    if (path.config && imgSrc.startsWith(path.text)) {
+      mergeObject(tokenConfig, path.config);
+    }
+  }
+
+  let imgConfig = getTokenConfig(imgSrc, imgName ?? getFileName(imgSrc));
+  if (!isEmpty(imgConfig)) {
+    imgConfig = deepClone(imgConfig);
+    delete imgConfig.tvImgSrc;
+    delete imgConfig.tvImgName;
+    if (token) TokenDataAdapter.formToData(token, imgConfig);
+
+    for (var key in imgConfig) {
+      if (!key.startsWith('tvTab_')) {
+        tokenConfig[key] = imgConfig[key];
       }
     }
-
-    if (token) TokenDataAdapter.formToData(token, tokenConfig);
   }
 
   if (TVA_CONFIG.imgNameContainsDimensions) {

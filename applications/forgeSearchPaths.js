@@ -1,5 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
-import { showPathSelectCategoryDialog } from './dialogs.js';
+import { showPathSelectCategoryDialog, showPathSelectConfigForm } from './dialogs.js';
 
 export class ForgeSearchPaths extends FormApplication {
   constructor() {
@@ -31,6 +31,7 @@ export class ForgeSearchPaths extends FormApplication {
       r.cache = path.cache;
       r.share = path.share;
       r.types = path.types.join(',');
+      r.config = JSON.stringify(path.config ?? {});
       return r;
     });
 
@@ -54,6 +55,7 @@ export class ForgeSearchPaths extends FormApplication {
     super.activateListeners(html);
     html.find('a.create-path').click(this._onCreatePath.bind(this));
     $(html).on('click', 'a.select-category', showPathSelectCategoryDialog.bind(this));
+    $(html).on('click', 'a.select-config', showPathSelectConfigForm.bind(this));
     html.find('a.delete-path').click(this._onDeletePath.bind(this));
     html.find('button.reset').click(this._onReset.bind(this));
     html.find('button.update').click(this._onUpdate.bind(this));
@@ -125,6 +127,14 @@ export class ForgeSearchPaths extends FormApplication {
         source: path.source,
         types: path.types.split(','),
       };
+      if (path.config) {
+        try {
+          path.config = JSON.parse(path.config);
+          if (!isEmpty(path.config)) {
+            this.object.paths[index].config = path.config;
+          }
+        } catch (e) {}
+      }
     });
     this.apiKey = expanded.apiKey;
   }
