@@ -339,8 +339,60 @@ export default class CompendiumMapConfig extends FormApplication {
     });
 
     if (formData.autoApply) {
-      const starterPromise = Promise.resolve(null);
-      allItems.reduce((p, item) => p.then(() => processItem(item)), starterPromise).then(() => renderFromQueue());
+      let processing = true;
+      let stopProcessing = false;
+      let processed = 0;
+      let counter;
+      let d;
+
+      const startProcessing = async function () {
+        while (processing && processed < allItems.length) {
+          await processItem(allItems[processed]);
+          processed++;
+          if (counter) counter.html(`${processed}/${allItems.length}`);
+        }
+        if (stopProcessing || processed === allItems.length) {
+          d?.close(true);
+          renderFromQueue();
+        }
+      };
+
+      d = new Dialog({
+        title: `Mapping: ${compendium.title}`,
+        content: `
+        <div style="text-align:center;" class="fa-3x"><i class="fas fa-spinner fa-pulse"></i></div>
+        <div style="text-align:center;" class="counter"></div>
+        <button style="width:100%;" class="pause"><i class="fas fa-play-circle"></i> Pause/Start</button>`,
+        buttons: {
+          cancel: {
+            icon: '<i class="fas fa-stop-circle"></i>',
+            label: 'Cancel',
+            callback: () => {
+              processing = false;
+              stopProcessing = true;
+            },
+          },
+        },
+        default: 'cancel',
+        render: (html) => {
+          counter = $(`<p></p>`);
+          html.find('.counter').append(counter);
+          const spinner = html.find('.fa-spinner');
+          html.find('.pause').on('click', () => {
+            console.log('CLICK');
+            if (processing) {
+              processing = false;
+              spinner.removeClass('fa-pulse');
+            } else {
+              processing = true;
+              startProcessing();
+              spinner.addClass('fa-pulse');
+            }
+          });
+          startProcessing();
+        },
+      });
+      d.render(true);
     } else {
       const tasks = allItems.map(processItem);
       Promise.all(tasks).then(() => {
