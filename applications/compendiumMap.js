@@ -41,7 +41,11 @@ async function autoApply(actor, image1, image2, formData, typeOverride) {
 
       if ((results ?? []).length != 0) {
         tokenFound = true;
-        updateTokenImage(results[0], { actor: actor, pack: formData.compendium });
+        updateTokenImage(results[0], {
+          actor: actor,
+          pack: formData.compendium,
+          applyDefaultConfig: false,
+        });
       }
     }
   } else {
@@ -57,6 +61,7 @@ async function autoApply(actor, image1, image2, formData, typeOverride) {
         actor: actor,
         actorUpdate: { img: results[0] },
         pack: formData.compendium,
+        applyDefaultConfig: false,
       });
     }
   }
@@ -91,6 +96,7 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
               updateTokenImage(imgSrc, {
                 actor: actor,
                 imgName: name,
+                applyDefaultConfig: false,
               }),
           });
         },
@@ -107,6 +113,7 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
           updateTokenImage(imgSrc, {
             actor: actor,
             imgName: name,
+            applyDefaultConfig: false,
           });
         },
       });
@@ -136,6 +143,7 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
         updateTokenImage(imgSrc, {
           actor: actor,
           imgName: name,
+          applyDefaultConfig: false,
         });
       },
     });
@@ -148,6 +156,9 @@ export default class CompendiumMapConfig extends FormApplication {
     let searchOptions = deepClone(TVA_CONFIG.compendiumMapper.searchOptions);
     if (!searchOptions) {
       searchOptions = deepClone(getSearchOptions());
+    }
+    if (!searchOptions.searchPaths || !searchOptions.searchPaths.length) {
+      searchOptions.searchPaths = deepClone(TVA_CONFIG.searchPaths);
     }
     this.searchOptions = searchOptions;
   }
@@ -224,7 +235,7 @@ export default class CompendiumMapConfig extends FormApplication {
 
   async _onSearchOptions(event) {
     new ConfigureSettings(this.searchOptions, {
-      searchPaths: false,
+      searchPaths: true,
       searchFilters: true,
       searchAlgorithm: true,
       randomizer: false,
@@ -246,9 +257,21 @@ export default class CompendiumMapConfig extends FormApplication {
       return;
     }
 
-    if (formData.cache || !userRequiresImageCache()) {
+    const originalSearchPaths = TVA_CONFIG.searchPaths;
+    if (formData.searchOptions.searchPaths) {
+      TVA_CONFIG.searchPaths = formData.searchOptions.searchPaths;
+    }
+
+    if (formData.cache || !userRequiresImageCache() || formData.searchOptions.searchPaths) {
       await cacheImages();
     }
+
+    const endMapping = function () {
+      if (formData.searchOptions.searchPaths) {
+        TVA_CONFIG.searchPaths = originalSearchPaths;
+        cacheImages();
+      }
+    };
 
     const compendium = game.packs.get(formData.compendium);
     let missingImageList = TVA_CONFIG.compendiumMapper.missingImages
@@ -269,7 +292,7 @@ export default class CompendiumMapConfig extends FormApplication {
           !missingImageList.includes(actor.prototypeToken.texture.src);
         if (formData.syncImages && hasPortrait !== hasToken) {
           if (hasPortrait) {
-            await updateTokenImage(actor.img, { actor: actor });
+            await updateTokenImage(actor.img, { actor: actor, applyDefaultConfig: false });
           } else {
             await updateActorImage(actor, actor.prototypeToken.texture.src);
           }
@@ -353,6 +376,7 @@ export default class CompendiumMapConfig extends FormApplication {
         }
         if (stopProcessing || processed === allItems.length) {
           d?.close(true);
+          addToQueue('DUMMY', { execute: endMapping });
           renderFromQueue();
         }
       };
@@ -396,6 +420,7 @@ export default class CompendiumMapConfig extends FormApplication {
     } else {
       const tasks = allItems.map(processItem);
       Promise.all(tasks).then(() => {
+        addToQueue('DUMMY', { execute: endMapping });
         renderFromQueue();
         if (formData.missingOnly && !artSelectDisplayed) {
           ui.notifications.warn('Token Variant Art: No documents found containing missing images.');
@@ -409,7 +434,13 @@ export default class CompendiumMapConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
+    // If search paths are the same, remove them from searchOptions
+    if (isEmpty(diffObject(this.searchOptions.searchPaths, TVA_CONFIG.searchPaths))) {
+      delete this.searchOptions.searchPaths;
+    }
+
     formData.searchOptions = this.searchOptions;
+
     updateSettings({ compendiumMapper: formData });
     if (formData.compendium) {
       this.startMapping(formData);

@@ -102,6 +102,7 @@ export async function updateTokenImage(
     config = undefined,
     animate = true,
     update = null,
+    applyDefaultConfig = true,
   } = {}
 ) {
   if (!(token || actor)) {
@@ -194,6 +195,12 @@ export async function updateTokenImage(
 
     tokenUpdateObj = modMergeObject(tokenUpdateObj, tokenCustomConfig);
   } else if (usingCustomConfig) {
+    tokenUpdateObj['flags.token-variants.-=usingCustomConfig'] = null;
+    delete tokenUpdateObj['flags.token-variants.defaultConfig'];
+    tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
+  }
+
+  if (!applyDefaultConfig) {
     tokenUpdateObj['flags.token-variants.-=usingCustomConfig'] = null;
     delete tokenUpdateObj['flags.token-variants.defaultConfig'];
     tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;

@@ -33,6 +33,10 @@ export function renderFromQueue(force = false) {
   }
 
   let callData = ART_SELECT_QUEUE.queue.shift();
+  if (callData?.options.execute) {
+    callData.options.execute();
+    callData = ART_SELECT_QUEUE.queue.shift();
+  }
   if (callData) {
     showArtSelect(callData.search, callData.options);
   }
@@ -326,7 +330,7 @@ export class ArtSelect extends FormApplication {
     );
 
     html.find(`button#token-variant-art-clear-queue`).on('click', (event) => {
-      ART_SELECT_QUEUE.queue = [];
+      ART_SELECT_QUEUE.queue = ART_SELECT_QUEUE.queue.filter((callData) => callData.options.execute);
       $(event.target).hide();
     });
 
@@ -409,6 +413,10 @@ export class ArtSelect extends FormApplication {
 
   async close(options = {}) {
     let callData = ART_SELECT_QUEUE.queue.shift();
+    if (callData?.options.execute) {
+      callData.options.execute();
+      callData = ART_SELECT_QUEUE.queue.shift();
+    }
     if (callData) {
       callData.options.force = true;
       showArtSelect(callData.search, callData.options);
