@@ -339,6 +339,9 @@ ol.token-variant-table .table-row .path-config {
   flex: 0 0 50px;
   text-align: center;
 }
+ol.token-variant-table .table-row .path-config .select-config.active {
+  color: orange;
+}
 ol.token-variant-table .table-row .path-share {
   flex: 0 0 50px;
   text-align: center;

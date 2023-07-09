@@ -58,7 +58,7 @@
                     <input type="hidden" name="searchPaths.{{index}}.types" value="{{path.types}}">
                   </div>
                   <div class="path-config">
-                    <a class="select-config" title="Apply configuration to images under this path."><i class="fas fa-cog fa-lg"></i></a>
+                    <a class="select-config {{#if path.hasConfig}}active{{/if}}" title="Apply configuration to images under this path."><i class="fas fa-cog fa-lg"></i></a>
                     <input type="hidden" name="searchPaths.{{index}}.config" value="{{path.config}}">
                   </div>
                   <div class="path-cache">

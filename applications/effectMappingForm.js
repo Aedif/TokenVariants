@@ -137,7 +137,7 @@ export default class EffectMappingForm extends FormApplication {
     html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
     html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
-    html.find('.div-input').on('input paste', this._onEffectNameChange);
+    html.find('.div-input').on('input paste focus click', this._onEffectNameChange);
     const app = this;
     html
       .find('.group-toggle > a')
@@ -860,6 +860,7 @@ export default class EffectMappingForm extends FormApplication {
 // Insert <span/> around operators
 function highlightOperators(text) {
   text = text.replaceAll(FAUX_DOT, '.');
+  // text = text.replaceAll(' ', '&nbsp;');
 
   const re = new RegExp('([a-zA-Z\\.\\-\\|\\+]+)([><=]+)(".*?"|-?\\d+)(%{0,1})', `gi`);
   text = text.replace(re, function replace(match) {

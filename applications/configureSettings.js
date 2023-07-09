@@ -69,6 +69,7 @@ export default class ConfigureSettings extends FormApplication {
       r.source = path.source || '';
       r.types = path.types.join(',');
       r.config = JSON.stringify(path.config ?? {});
+      r.hasConfig = path.config && !isEmpty(path.config);
       return r;
     });
     data.searchPaths = paths;

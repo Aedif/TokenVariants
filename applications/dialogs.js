@@ -120,9 +120,10 @@ export async function showPathSelectConfigForm(event) {
     (conf) => {
       if (!conf) conf = {};
       if (conf.flags == null || isEmpty(conf.flags)) delete conf.flags;
-      console.log(conf);
       configInput.val(JSON.stringify(conf));
-      console.log(configInput.val());
+      const cog = configInput.siblings('.select-config');
+      if (isEmpty(conf)) cog.removeClass('active');
+      else cog.addClass('active');
     },
     config
   ).render(true);
