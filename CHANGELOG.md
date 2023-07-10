@@ -1,7 +1,12 @@
+# 4.45.1
+
+- Fixed tokens not reverting to default image
+
 # 4.45.0
 
+- Token Configurations can now be attached to `Search Paths`
 - Fixed tokens not being identified as in-combat when GM is on another scene
-- Overlay color fields now support expressions in the form of {{path.to.property}} allowing colors to be sourced from token/actor properties
+- Overlay color fields now support expressions in the form of `{{path.to.property}}` allowing colors to be sourced from token/actor properties
   - e.g. `{{actor.folder.color}}`
 - `Effect Mapping` group toggles will now be remembered even if the world is re-loaded
 - v11 Warning fixes

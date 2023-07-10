@@ -500,15 +500,15 @@ async function _updateWithEffectMapping(token, added, removed) {
 
     // Use or update the default (original) token image
     if (!newImg.imgSrc && tokenDefaultImg) {
-      delete tokenUpdateObj['flags.token-variants.defaultImg'];
-      tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
+      delete tokenUpdateObj.flags?.['token-variants']?.defaultImg;
+      setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultImg', null);
       newImg.imgSrc = tokenDefaultImg.imgSrc;
       newImg.imgName = tokenDefaultImg.imgName;
     } else if (!tokenDefaultImg && newImg.imgSrc) {
-      tokenUpdateObj['flags.token-variants.defaultImg'] = {
+      setProperty(tokenUpdateObj, 'flags.token-variants.defaultImg', {
         imgSrc: token.texture.src,
         imgName: tokenImgName,
-      };
+      });
     }
 
     updateCall = () =>
@@ -525,8 +525,8 @@ async function _updateWithEffectMapping(token, added, removed) {
   // If no mapping has been found and the default image (image prior to effect triggered update) is different from current one
   // reset the token image back to default
   if (effects.length === 0 && tokenDefaultImg) {
-    delete tokenUpdateObj['flags.token-variants.defaultImg'];
-    tokenUpdateObj['flags.token-variants.-=defaultImg'] = null;
+    delete tokenUpdateObj.flags?.['token-variants']?.defaultImg;
+    setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultImg', null);
 
     updateCall = () =>
       updateTokenImage(tokenDefaultImg.imgSrc, {
