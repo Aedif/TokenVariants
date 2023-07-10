@@ -406,8 +406,6 @@ async function _updateWithEffectMapping(token, added, removed) {
     evaluateEffectAsExpression(key, effects, added, removed);
   }
 
-  // console.log(token.name, { added, removed, effects });
-
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
   const deferredUpdateScripts = [];

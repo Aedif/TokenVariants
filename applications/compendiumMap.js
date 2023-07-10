@@ -157,10 +157,8 @@ export default class CompendiumMapConfig extends FormApplication {
     if (!searchOptions) {
       searchOptions = deepClone(getSearchOptions());
     }
-    if (!searchOptions.searchPaths || !searchOptions.searchPaths.length) {
-      searchOptions.searchPaths = deepClone(TVA_CONFIG.searchPaths);
-    }
     this.searchOptions = searchOptions;
+    this._fixSearchPaths();
   }
 
   static get defaultOptions() {
@@ -233,7 +231,14 @@ export default class CompendiumMapConfig extends FormApplication {
     }
   }
 
+  _fixSearchPaths() {
+    if (!this.searchOptions.searchPaths?.length) {
+      this.searchOptions.searchPaths = deepClone(TVA_CONFIG.searchPaths);
+    }
+  }
+
   async _onSearchOptions(event) {
+    this._fixSearchPaths();
     new ConfigureSettings(this.searchOptions, {
       searchPaths: true,
       searchFilters: true,
@@ -258,16 +263,16 @@ export default class CompendiumMapConfig extends FormApplication {
     }
 
     const originalSearchPaths = TVA_CONFIG.searchPaths;
-    if (formData.searchOptions.searchPaths) {
+    if (formData.searchOptions.searchPaths?.length) {
       TVA_CONFIG.searchPaths = formData.searchOptions.searchPaths;
     }
 
-    if (formData.cache || !userRequiresImageCache() || formData.searchOptions.searchPaths) {
+    if (formData.cache || !userRequiresImageCache() || formData.searchOptions.searchPaths?.length) {
       await cacheImages();
     }
 
     const endMapping = function () {
-      if (formData.searchOptions.searchPaths) {
+      if (formData.searchOptions.searchPaths?.length) {
         TVA_CONFIG.searchPaths = originalSearchPaths;
         cacheImages();
       }
@@ -365,14 +370,19 @@ export default class CompendiumMapConfig extends FormApplication {
       let processing = true;
       let stopProcessing = false;
       let processed = 0;
-      let counter;
+      let counter = $(`<p>CACHING 0/${allItems.length}</p>`);
       let d;
 
       const startProcessing = async function () {
         while (processing && processed < allItems.length) {
-          await processItem(allItems[processed]);
+          await new Promise((resolve, reject) => {
+            setTimeout(async () => {
+              await processItem(allItems[processed]);
+              resolve();
+            }, 10);
+          });
           processed++;
-          if (counter) counter.html(`${processed}/${allItems.length}`);
+          counter.html(`${processed}/${allItems.length}`);
         }
         if (stopProcessing || processed === allItems.length) {
           d?.close(true);
@@ -391,19 +401,13 @@ export default class CompendiumMapConfig extends FormApplication {
           cancel: {
             icon: '<i class="fas fa-stop-circle"></i>',
             label: 'Cancel',
-            callback: () => {
-              processing = false;
-              stopProcessing = true;
-            },
           },
         },
         default: 'cancel',
         render: (html) => {
-          counter = $(`<p></p>`);
           html.find('.counter').append(counter);
           const spinner = html.find('.fa-spinner');
           html.find('.pause').on('click', () => {
-            console.log('CLICK');
             if (processing) {
               processing = false;
               spinner.removeClass('fa-pulse');
@@ -413,7 +417,14 @@ export default class CompendiumMapConfig extends FormApplication {
               spinner.addClass('fa-pulse');
             }
           });
-          startProcessing();
+          setTimeout(async () => startProcessing(), 1000);
+        },
+        close: () => {
+          if (!stopProcessing) {
+            stopProcessing = true;
+            if (!processing) startProcessing();
+            else processing = false;
+          }
         },
       });
       d.render(true);
@@ -435,13 +446,16 @@ export default class CompendiumMapConfig extends FormApplication {
    */
   async _updateObject(event, formData) {
     // If search paths are the same, remove them from searchOptions
-    if (isEmpty(diffObject(this.searchOptions.searchPaths, TVA_CONFIG.searchPaths))) {
-      delete this.searchOptions.searchPaths;
+    if (
+      !this.searchOptions.searchPaths?.length ||
+      isEmpty(diffObject(this.searchOptions.searchPaths, TVA_CONFIG.searchPaths))
+    ) {
+      this.searchOptions.searchPaths = [];
     }
 
     formData.searchOptions = this.searchOptions;
 
-    updateSettings({ compendiumMapper: formData });
+    await updateSettings({ compendiumMapper: formData });
     if (formData.compendium) {
       this.startMapping(formData);
     }

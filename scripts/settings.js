@@ -467,7 +467,7 @@ export async function updateSettings(newSettings) {
       TVA_CONFIG.compendiumMapper.searchOptions.searchFilters = settings.compendiumMapper.searchOptions.searchFilters;
     }
   }
-  game.settings.set('token-variants', 'settings', settings);
+  await game.settings.set('token-variants', 'settings', settings);
 }
 
 export function _arrayAwareDiffObject(original, other, { inner = false } = {}) {

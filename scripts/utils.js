@@ -157,9 +157,9 @@ export async function updateTokenImage(
 
   let tokenUpdateObj = tokenUpdate;
   if (imgSrc) {
-    tokenUpdateObj.img = imgSrc;
-    if (imgName && getFileName(imgSrc) === imgName) tokenUpdateObj['flags.token-variants.-=name'] = null;
-    else tokenUpdateObj['flags.token-variants.name'] = imgName;
+    setProperty(tokenUpdateObj, 'texture.src', imgSrc);
+    if (imgName && getFileName(imgSrc) === imgName) setProperty(tokenUpdateObj, 'flags.token-variants.-=name', null);
+    else setProperty(tokenUpdateObj, 'flags.token-variants.name', imgName);
   }
 
   const tokenCustomConfig = mergeObject(
@@ -174,17 +174,17 @@ export async function updateTokenImage(
 
   if (!isEmpty(tokenCustomConfig)) {
     if (token) {
-      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
+      setProperty(tokenUpdateObj, 'flags.token-variants.usingCustomConfig', true);
       let doc = token.document ?? token;
       const tokenData = doc.toObject ? doc.toObject() : deepClone(doc);
 
       const defConf = constructDefaultConfig(mergeObject(tokenData, defaultConfig), tokenCustomConfig);
-      tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
+      setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
     } else if (actor && !token) {
-      tokenUpdateObj['flags.token-variants.usingCustomConfig'] = true;
+      setProperty(tokenUpdateObj, 'flags.token-variants.usingCustomConfig', true);
       const tokenData = actor.prototypeToken instanceof Object ? actor.prototypeToken : actor.prototypeToken.toObject();
       const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
-      tokenUpdateObj['flags.token-variants.defaultConfig'] = defConf;
+      setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
     }
 
     // Fix, an empty flag may be passed which would overwrite any current flags in the updateObj
@@ -195,15 +195,15 @@ export async function updateTokenImage(
 
     tokenUpdateObj = modMergeObject(tokenUpdateObj, tokenCustomConfig);
   } else if (usingCustomConfig) {
-    tokenUpdateObj['flags.token-variants.-=usingCustomConfig'] = null;
-    delete tokenUpdateObj['flags.token-variants.defaultConfig'];
-    tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
+    setProperty(tokenUpdateObj, 'flags.token-variants.-=usingCustomConfig', null);
+    delete tokenUpdateObj?.flags?.['token-variants']?.defaultConfig;
+    setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultConfig', null);
   }
 
   if (!applyDefaultConfig) {
-    tokenUpdateObj['flags.token-variants.-=usingCustomConfig'] = null;
-    delete tokenUpdateObj['flags.token-variants.defaultConfig'];
-    tokenUpdateObj['flags.token-variants.-=defaultConfig'] = null;
+    setProperty(tokenUpdateObj, 'flags.token-variants.-=usingCustomConfig', null);
+    delete tokenUpdateObj?.flags?.['token-variants']?.defaultConfig;
+    setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultConfig', null);
   }
 
   if (!isEmpty(tokenUpdateObj)) {
@@ -821,8 +821,8 @@ export class TokenDataAdapter {
       if (!('scale' in formData)) formData.scale = Math.abs(doc.texture.scaleX);
       if (!('mirrorX' in formData)) formData.mirrorX = doc.texture.scaleX < 0;
       if (!('mirrorY' in formData)) formData.mirrorY = doc.texture.scaleY < 0;
-      formData['texture.scaleX'] = formData.scale * (formData.mirrorX ? -1 : 1);
-      formData['texture.scaleY'] = formData.scale * (formData.mirrorY ? -1 : 1);
+      setProperty(formData, 'texture.scaleX', formData.scale * (formData.mirrorX ? -1 : 1));
+      setProperty(formData, 'texture.scaleY', formData.scale * (formData.mirrorY ? -1 : 1));
       ['scale', 'mirrorX', 'mirrorY'].forEach((k) => delete formData[k]);
     }
   }

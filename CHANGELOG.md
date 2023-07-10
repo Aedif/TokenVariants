@@ -1,3 +1,16 @@
+# 4.45.0
+
+- Fixed tokens not being identified as in-combat when GM is on another scene
+- Overlay color fields now support expressions in the form of {{path.to.property}} allowing colors to be sourced from token/actor properties
+  - e.g. `{{actor.folder.color}}`
+- `Effect Mapping` group toggles will now be remembered even if the world is re-loaded
+- v11 Warning fixes
+- `usingCustomConfig` flag will now only be applied when needed
+- `Compendium Mapper`
+  - Now displays a dialog showing mapping progress when `Auto-apply` is selected
+  - Now allows `Search Paths` to be defined specifically for it
+    - Note that if `Compendium Mapper`s search paths differ from your main paths then caching will be performed before and after mapping finishes
+
 # 4.44.0
 
 - Negative values are now accepted in comparators
