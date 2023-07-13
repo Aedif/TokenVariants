@@ -1,3 +1,7 @@
+# 4.45.2
+
+- Fixed `Compendium Mapper`'s search settings not saving
+
 # 4.45.1
 
 - Fixed tokens not reverting to default image

@@ -153,11 +153,8 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
 export default class CompendiumMapConfig extends FormApplication {
   constructor() {
     super({}, {});
-    let searchOptions = deepClone(TVA_CONFIG.compendiumMapper.searchOptions);
-    if (!searchOptions) {
-      searchOptions = deepClone(getSearchOptions());
-    }
-    this.searchOptions = searchOptions;
+    this.searchOptions = deepClone(getSearchOptions());
+    mergeObject(this.searchOptions, deepClone(TVA_CONFIG.compendiumMapper.searchOptions));
     this._fixSearchPaths();
   }
 
