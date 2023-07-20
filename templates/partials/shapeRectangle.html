@@ -1,34 +1,34 @@
 <fieldset>
     <input type="text" name="shapes.{{@index}}.shape.type" value="{{shape.type}}" hidden>
     <legend><b>RECTANGLE</b> <a class="deleteShape" data-index="{{@index}}"><i class="fas fa-trash-alt"></i></a></legend>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>X</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.x" type="number" step="1"  min="0" max="2000" value="{{shape.x}}"></input>
+            <input name="shapes.{{@index}}.shape.x" type="text" value="{{shape.x}}"></input>
         </div>
     </div>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>Y</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.y" type="number" step="1"  min="0" max="2000" value="{{shape.y}}"></input>
+            <input name="shapes.{{@index}}.shape.y" type="text" value="{{shape.y}}"></input>
         </div>
     </div>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>Width</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.width" type="number" step="1"  min="1" max="2000" value="{{shape.width}}"></input>
+            <input name="shapes.{{@index}}.shape.width" type="text" value="{{shape.width}}"></input>
         </div>
     </div>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>Height</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.height" type="number" step="1"  min="1" max="2000" value="{{shape.height}}"></input>
+            <input name="shapes.{{@index}}.shape.height" type="text" value="{{shape.height}}"></input>
         </div>
     </div>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>Corner Radius</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.radius" type="number" step="1"  min="0" max="360" value="{{shape.radius}}"></input>
+            <input name="shapes.{{@index}}.shape.radius" type="text" value="{{shape.radius}}"></input>
         </div>
     </div>
 </fieldset>

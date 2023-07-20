@@ -1,16 +1,16 @@
 <fieldset>
     <input type="text" name="shapes.{{@index}}.shape.type" value="{{shape.type}}" hidden>
     <legend><b>POLYGON</b> <a class="deleteShape" data-index="{{@index}}"><i class="fas fa-trash-alt"></i></a></legend>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>X</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.x" type="number" step="1"  min="0" max="2000" value="{{shape.x}}"></input>
+            <input name="shapes.{{@index}}.shape.x" type="text" value="{{shape.x}}"></input>
         </div>
     </div>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>Y</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.y" type="number" step="1"  min="0" max="2000" value="{{shape.y}}"></input>
+            <input name="shapes.{{@index}}.shape.y" type="text" value="{{shape.y}}"></input>
         </div>
     </div>
     <div class="form-group">
@@ -19,10 +19,10 @@
             <input name="shapes.{{@index}}.shape.points" type="text" value="{{shape.points}}"></input>
         </div>
     </div>
-    <div class="form-group slim">
+    <div class="form-group">
         <label>Scale</label>
         <div class="form-fields">
-            <input name="shapes.{{@index}}.shape.scale" type="number" max="2000" value="{{shape.scale}}"></input>
+            <input name="shapes.{{@index}}.shape.scale" type="text" value="{{shape.scale}}"></input>
         </div>
     </div>
 </fieldset>

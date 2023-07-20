@@ -1,6 +1,6 @@
 import { CORE_SHAPE, DEFAULT_OVERLAY_CONFIG, OVERLAY_SHAPES } from '../scripts/models.js';
 import { VALID_EXPRESSION, fixEffectMappings, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
-import { genTexture } from '../scripts/token/overlay.js';
+import { evaluateObjExpressions, genTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { sortMappingsToGroups } from './effectMappingForm.js';
@@ -266,17 +266,17 @@ export default class OverlayConfig extends FormApplication {
     for (const tkn of tokens) {
       if (tkn.tva_sprites) {
         for (const c of tkn.tva_sprites) {
-          if (c.tvaOverlayConfig && c.tvaOverlayConfig.effect === this.config.effect) {
+          if (c.overlayConfig && c.overlayConfig.effect === this.config.effect) {
             // Effect icon found, however if we're in global preview then we need to take into account
             // a token/actor specific mapping which may override the global one
             if (this.token) {
-              previewIcons.push(c);
+              previewIcons.push({ token: tkn, icon: c });
             } else if (
               !(tkn.actor ? fixEffectMappings(tkn.actor.getFlag('token-variants', 'effectMappings') || {}) : {})[
                 this.config.effect
               ]
             ) {
-              previewIcons.push(c);
+              previewIcons.push({ token: tkn, icon: c });
             }
           }
         }
@@ -286,17 +286,20 @@ export default class OverlayConfig extends FormApplication {
   }
 
   async _applyPreviews() {
-    const icons = this.getPreviewIcons();
-    const preview = this.previewConfig;
-    for (const icon of icons) {
-      icon.refresh(preview, { preview: true, previewTexture: await genTexture(icon, preview) });
+    const targets = this.getPreviewIcons();
+    for (const target of targets) {
+      const preview = evaluateObjExpressions(deepClone(this.previewConfig), target.token, this.previewConfig);
+      target.icon.refresh(preview, {
+        preview: true,
+        previewTexture: await genTexture(target.token, preview),
+      });
     }
   }
 
   async _removePreviews() {
-    const icons = this.getPreviewIcons();
-    for (const icon of icons) {
-      icon.refresh();
+    const targets = this.getPreviewIcons();
+    for (const target of targets) {
+      target.icon.refresh();
     }
   }
 

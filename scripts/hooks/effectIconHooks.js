@@ -16,11 +16,11 @@ export function registerEffectIconHooks() {
   }
 
   if (FEATURE_CONTROL[feature_id] && TVA_CONFIG.displayEffectIconsOnHover) {
-    registerHook(feature_id, 'highlightObjects', () => {
+    registerHook(feature_id, 'highlightObjects', (active) => {
       if (canvas.tokens.active) {
         for (const tkn of canvas.tokens.placeables) {
           if (tkn.effects) {
-            tkn.effects.visible = tkn.hover;
+            tkn.effects.visible = active || tkn.hover;
           }
         }
       }

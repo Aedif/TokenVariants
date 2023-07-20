@@ -652,7 +652,7 @@ function applyHpChangeEffect(actor, change, tokens) {
 
   const newHpValue = getProperty(change, `system.${TVA_CONFIG.systemHpPath}.value`);
   if (newHpValue != null) {
-    const [currentHpVal, _] = _getTokenHP(tokens[0]);
+    const [currentHpVal, _] = getTokenHP(tokens[0]);
     if (currentHpVal !== newHpValue) {
       if (currentHpVal < newHpValue) {
         setProperty(change, 'flags.token-variants.internalEffects.-=hp--', null);
@@ -780,9 +780,9 @@ export function evaluateComparator(token, expression) {
     let currVal;
     let maxVal;
     if (property === 'hp') {
-      [currVal, maxVal] = _getTokenHP(token);
+      [currVal, maxVal] = getTokenHP(token);
     } else if (property === 'hp++' || property === 'hp--') {
-      [currVal, maxVal] = _getTokenHP(token);
+      [currVal, maxVal] = getTokenHP(token);
       currVal = getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
     } else currVal = getProperty(token, property);
     if (currVal == null) currVal = 0;
@@ -971,7 +971,7 @@ function _getTokenHPv11(token) {
   return [attributes?.value, attributes?.max];
 }
 
-function _getTokenHP(token) {
+export function getTokenHP(token) {
   if (!isNewerVersion('11', game.version)) return _getTokenHPv11(token);
 
   let attributes;
