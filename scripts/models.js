@@ -1,5 +1,6 @@
 export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
-  effectName: '',
+  label: '',
+  expression: '',
   imgName: '',
   imgSrc: '',
   priority: 50,

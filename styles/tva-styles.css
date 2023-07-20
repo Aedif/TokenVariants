@@ -420,23 +420,27 @@ ol.token-variant-table .group-toggle a.active {
 }
 
 /* ---------------------------------------- */
-/* Active Effect Config List                */
+/* Mapping Config List                */
 /* ---------------------------------------- */
-ol.token-variant-table .table-row .effect-priority {
+ol.token-variant-table .table-row .mapping-priority {
   flex: 0.1;
 }
 
-ol.token-variant-table .table-row .effect-target {
+ol.token-variant-table .table-row .mapping-label {
+  flex: 0.4;
+}
+
+ol.token-variant-table .table-row .mapping-target {
   flex: 0.12;
   text-align: center;
 }
 
-ol.token-variant-table .table-row .effect-group {
+ol.token-variant-table .table-row .mapping-group {
   flex: 0.2;
   text-align: center;
 }
 
-ol.token-variant-table .table-row .effect-group > input {
+ol.token-variant-table .table-row .mapping-group > input {
   width: 80px;
 }
 
@@ -445,7 +449,7 @@ ol.token-variant-table .table-row .effect-image {
   text-align: center;
 }
 
-ol.token-variant-table .table-row .effect-config {
+ol.token-variant-table .table-row .mapping-config {
   flex: 0.12;
   text-align: center;
 }
@@ -478,37 +482,33 @@ ol.token-variant-table .table-row .effect-disable {
   text-align: center;
 }
 
-ol.token-variant-table .table-row .effect-config i.active {
+ol.token-variant-table .table-row .mapping-config i.active {
   color: orange;
 }
 
-ol.token-variant-table .table-row .effect-config.active {
+ol.token-variant-table .table-row .mapping-config.active {
   color: orange;
 }
 
-ol.token-variant-table .table-row .effect-config-edit.active {
+ol.token-variant-table .table-row .mapping-config-edit.active {
   color: orange;
 }
 
-ol.token-variant-table .table-row .effect-config-script.active {
-  color: orange;
-}
-
-ol.token-variant-table .table-row .effect-name {
+ol.token-variant-table .table-row .mapping-expression {
   flex: 0.5;
   margin-top: 5px;
 }
 
-ol.token-variant-table .table-row .effect-name .div-input span {
+ol.token-variant-table .table-row .mapping-expression .div-input span {
   color: green;
 }
 
-ol.token-variant-table .table-row .effect-name .div-input span.hp-expression {
+ol.token-variant-table .table-row .mapping-expression .div-input span.hp-expression {
   color: blue;
 }
 
 /* Copied from input[type="text"] with some adjustments */
-ol.token-variant-table .table-row .effect-name .div-input {
+ol.token-variant-table .table-row .mapping-expression .div-input {
   white-space: nowrap;
   overflow: hidden;
 
@@ -525,6 +525,7 @@ ol.token-variant-table .table-row .effect-name .div-input {
   border-width: 2px;
   border-style: inset;
   border-image: initial;
+  border-color: red !important;
 
   min-width: 215px;
   max-width: 215px;
@@ -546,15 +547,7 @@ ol.token-variant-table .table-row .effect-name .div-input {
 /* Active Effect Config                     */
 /* ---------------------------------------- */
 
-#token-variants-active-effect-config .effect-config.active {
-  color: orange;
-}
-
-#token-variants-active-effect-config .effect-config-edit.active {
-  color: orange;
-}
-
-#token-variants-active-effect-config .effect-config-script.active {
+#token-variants-active-effect-config .mapping-config.active {
   color: orange;
 }
 

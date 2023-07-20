@@ -123,7 +123,7 @@ export const TVA_CONFIG = {
       4: true,
     },
   },
-  globalMappings: {},
+  globalMappings: [],
   customImageCategories: [],
   displayEffectIconsOnHover: false,
   disableEffectIcons: false,
@@ -351,41 +351,28 @@ export function registerSettings() {
     });
   }
 
-  // 07/07/2022 Convert filters to new format if old one is still in use
-  if (settings.searchFilters.portraitFilterInclude != null) {
-    const filters = settings.searchFilters;
-    TVA_CONFIG.searchFilters = {
-      Portrait: {
-        include: filters.portraitFilterInclude,
-        exclude: filters.portraitFilterExclude,
-        regex: filters.portraitFilterRegex,
-      },
-      Token: {
-        include: filters.tokenFilterInclude,
-        exclude: filters.tokenFilterExclude,
-        regex: filters.tokenFilterRegex,
-      },
-      PortraitAndToken: {
-        include: filters.generalFilterInclude,
-        exclude: filters.generalFilterExclude,
-        regex: filters.generalFilterRegex,
-      },
-    };
-    BASE_IMAGE_CATEGORIES.forEach((category) => {
-      if (!(category in TVA_CONFIG.searchFilters)) {
-        TVA_CONFIG.searchFilters[category] = {
-          include: '',
-          exclude: '',
-          regex: '',
-        };
-      }
-    });
-    delete TVA_CONFIG.compendiumMapper.searchFilters;
-    updateSettings(TVA_CONFIG);
+  // 20/07/2023 Convert globalMappings to a new format
+  if (getType(settings.globalMappings) === 'Object') {
+    TVA_CONFIG.globalMappings = migrateMappings(settings.globalMappings);
   }
 
   // Read client settings
   TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
+}
+
+export function migrateMappings(mappings) {
+  if (!mappings) return [];
+  if (getType(mappings) === 'Object') {
+    let nMappings = [];
+    for (const [effect, mapping] of Object.entries(mappings)) {
+      if (!mapping.label) mapping.label = effect.replaceAll('¶', '.');
+      if (!mapping.expression) mapping.expression = effect.replaceAll('¶', '.');
+      delete mapping.effect;
+      nMappings.push(mapping);
+    }
+    return nMappings;
+  }
+  return mappings;
 }
 
 export function exportSettingsToJSON() {

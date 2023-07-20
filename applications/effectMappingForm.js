@@ -1,13 +1,13 @@
 import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName, isVideo, keyPressed, FAUX_DOT } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
+import { TVA_CONFIG, migrateMappings, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
 import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG, EFFECT_TEMPLATES } from '../scripts/models.js';
-import { fixEffectMappings, updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
+import { updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 import { drawOverlays } from '../scripts/token/overlay.js';
 
 // Persist group toggles across forms
@@ -34,39 +34,40 @@ export default class EffectMappingForm extends FormApplication {
       id: 'token-variants-active-effect-config',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/effectMappingForm.html',
-      resizable: false,
+      resizable: true,
       minimizable: false,
       closeOnSubmit: false,
-      width: 845,
+      width: 1000,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
     });
   }
 
-  _processConfig(effectName, attrs, index) {
-    if (!attrs.config) attrs.config = {};
-    let hasTokenConfig = Object.keys(attrs.config).filter((k) => attrs.config[k]).length;
-    if (attrs.config.flags) hasTokenConfig--;
-    if (attrs.config.tv_script) hasTokenConfig--;
+  _processConfig(mapping) {
+    if (!mapping.config) mapping.config = {};
+    let hasTokenConfig = Object.keys(mapping.config).filter((k) => mapping.config[k]).length;
+    if (mapping.config.flags) hasTokenConfig--;
+    if (mapping.config.tv_script) hasTokenConfig--;
 
     return {
-      effectName: effectName,
-      highlightedEffectName: highlightOperators(effectName),
-      imgName: attrs.imgName,
-      imgSrc: attrs.imgSrc,
-      isVideo: attrs.imgSrc ? isVideo(attrs.imgSrc) : false,
-      priority: attrs.priority,
-      hasConfig: attrs.config ? !isEmpty(attrs.config) : false,
-      hasScript: attrs.config && attrs.config.tv_script,
+      label: mapping.label,
+      expression: mapping.expression,
+      highlightedExpression: highlightOperators(mapping.expression),
+      imgName: mapping.imgName,
+      imgSrc: mapping.imgSrc,
+      isVideo: mapping.imgSrc ? isVideo(mapping.imgSrc) : false,
+      priority: mapping.priority,
+      hasConfig: mapping.config ? !isEmpty(mapping.config) : false,
+      hasScript: mapping.config && mapping.config.tv_script,
       hasTokenConfig: hasTokenConfig > 0,
-      config: attrs.config,
-      overlay: attrs.overlay,
-      alwaysOn: attrs.alwaysOn,
-      disabled: attrs.disabled,
-      overlayConfig: attrs.overlayConfig,
-      targetActors: attrs.targetActors,
-      group: attrs.group,
-      parent: attrs.overlayConfig?.parent,
+      config: mapping.config,
+      overlay: mapping.overlay,
+      alwaysOn: mapping.alwaysOn,
+      disabled: mapping.disabled,
+      overlayConfig: mapping.overlayConfig,
+      targetActors: mapping.targetActors,
+      group: mapping.group,
+      parent: mapping.overlayConfig?.parent,
     };
   }
 
@@ -75,17 +76,12 @@ export default class EffectMappingForm extends FormApplication {
 
     let mappings = [];
     if (this.object.mappings) {
-      for (const mapping of this.object.mappings) {
-        mappings.push(this._processConfig(mapping.effectName, mapping));
-      }
+      mappings = this.object.mappings.map(this._processConfig);
     } else {
       const effectMappings = this.globalMappings
         ? this.globalMappings
-        : this.objectToFlag.getFlag('token-variants', 'effectMappings') || {};
-      fixEffectMappings(effectMappings);
-      for (const [effectName, attrs] of Object.entries(effectMappings)) {
-        mappings.push(this._processConfig(effectName, attrs));
-      }
+        : migrateMappings(this.objectToFlag.getFlag('token-variants', 'effectMappings'));
+      mappings = effectMappings.map(this._processConfig);
 
       if (this.createMapping && !(this.createMapping in effectMappings)) {
         mappings.push(this._getNewEffectConfig(this.createMapping, true));
@@ -94,14 +90,14 @@ export default class EffectMappingForm extends FormApplication {
     }
 
     mappings = mappings.sort((m1, m2) => {
-      if (!m1.effectName && m2.effectName) return -1;
-      else if (m1.effectName && !m2.effectName) return 1;
+      if (!m1.label && m2.label) return -1;
+      else if (m1.label && !m2.label) return 1;
 
       if (!m1.overlayConfig?.parent && m2.overlayConfig?.parent) return -1;
       else if (m1.overlayConfig?.parent && !m2.overlayConfig?.parent) return 1;
 
       let priorityDiff = m1.priority - m2.priority;
-      if (priorityDiff === 0) return m1.effectName.localeCompare(m2.effectName);
+      if (priorityDiff === 0) return m1.label.localeCompare(m2.label);
       return priorityDiff;
     });
 
@@ -127,13 +123,13 @@ export default class EffectMappingForm extends FormApplication {
       html.find('.effect-image img').click(this._onImageClick.bind(this));
       html.find('.effect-image img').mousedown(this._onImageMouseDown.bind(this));
       html.find('.effect-image video').click(this._onImageClick.bind(this));
-      html.find('.effect-target').click(this._onConfigureApplicableActors.bind(this));
+      html.find('.mapping-target').click(this._onConfigureApplicableActors.bind(this));
     }
     html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
     html.find('.effect-image video').contextmenu(this._onImageRightClick.bind(this));
-    html.find('.effect-config i.config').click(this._onConfigClick.bind(this));
-    html.find('.effect-config i.config-edit').click(this._onConfigEditClick.bind(this));
-    html.find('.effect-config i.config-script').click(this._onConfigScriptClick.bind(this));
+    html.find('.mapping-config i.config').click(this._onConfigClick.bind(this));
+    html.find('.mapping-config i.config-edit').click(this._onConfigEditClick.bind(this));
+    html.find('.mapping-config i.config-script').click(this._onConfigScriptClick.bind(this));
     html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
     html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
@@ -149,10 +145,10 @@ export default class EffectMappingForm extends FormApplication {
           $(this).trigger('click');
         }
       });
-    this.setPosition({ width: 845 });
+    this.setPosition({ width: 1000 });
     html.find('.effect-disable > input').on('change', this._onDisable.bind(this));
     html.find('.group-disable > a').on('click', this._onGroupDisable.bind(this));
-    html.find('.effect-group > input').on('change', this._onGroupChange.bind(this));
+    html.find('.mapping-group > input').on('change', this._onGroupChange.bind(this));
   }
 
   async _onDisable(event) {
@@ -266,7 +262,7 @@ export default class EffectMappingForm extends FormApplication {
           gear.attr('title', '');
         }
       },
-      mapping.effectName,
+      mapping.label,
       this.token
     ).render(true);
   }
@@ -280,9 +276,9 @@ export default class EffectMappingForm extends FormApplication {
   async _toggleActiveControls(event) {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
-    const tokenConfig = $(event.target).closest('.effect-config').find('.config');
-    const configEdit = $(event.target).closest('.effect-config').find('.config-edit');
-    const scriptEdit = $(event.target).closest('.effect-config').find('.config-script');
+    const tokenConfig = $(event.target).closest('.mapping-config').find('.config');
+    const configEdit = $(event.target).closest('.mapping-config').find('.config-edit');
+    const scriptEdit = $(event.target).closest('.mapping-config').find('.config-script');
 
     let hasTokenConfig = Object.keys(mapping.config).filter((k) => mapping.config[k]).length;
     if (mapping.config.flags) hasTokenConfig--;
@@ -367,7 +363,7 @@ export default class EffectMappingForm extends FormApplication {
     if (search === 'Unknown') {
       const li = event.currentTarget.closest('.table-row');
       const mapping = this.object.mappings[li.dataset.index];
-      search = mapping.effectName;
+      search = mapping.label;
     }
 
     showArtSelect(search, {
@@ -431,7 +427,7 @@ export default class EffectMappingForm extends FormApplication {
     await this._onSubmit(event);
     const li = event.currentTarget.closest('.table-row');
     const clone = deepClone(this.object.mappings[li.dataset.index]);
-    clone.effectName = clone.effectName + ' - Copy';
+    clone.label = clone.label + ' - Copy';
     this.object.mappings.push(clone);
     this.render();
   }
@@ -443,12 +439,13 @@ export default class EffectMappingForm extends FormApplication {
     this.render();
   }
 
-  _getNewEffectConfig(name, textOverlay = false) {
+  _getNewEffectConfig(label, textOverlay = false) {
     if (textOverlay) {
       TOGGLED_GROUPS['Text Overlays'] = true;
       return {
-        effectName: name,
-        highlightedEffectName: highlightOperators(name),
+        label: label,
+        expression: label,
+        highlightedExpression: highlightOperators(label),
         imgName: '',
         imgSrc: '',
         priority: 50,
@@ -523,7 +520,7 @@ export default class EffectMappingForm extends FormApplication {
           buttons[i++] = {
             label: k,
             callback: () => {
-              this._insertMappings(ev, EFFECT_TEMPLATES[k].config);
+              this._insertMappings(ev, migrateMappings(EFFECT_TEMPLATES[k].config));
             },
           };
         }
@@ -614,15 +611,17 @@ export default class EffectMappingForm extends FormApplication {
                   }
 
                   const mappings = this.object.mappings;
-                  for (const key of Object.keys(json.globalMappings)) {
-                    const processedMapping = this._processConfig(key, json.globalMappings[key]);
-                    const i = mappings.findIndex((m) => m.effectName === key);
+
+                  migrateMappings(json.globalMappings).forEach((mapping) => {
+                    const processedMapping = this._processConfig(mapping);
+                    const i = mappings.findIndex((m) => m.label === mapping.label);
                     if (i === -1) {
                       mappings.push(processedMapping);
                     } else {
                       mappings[i] = processedMapping;
                     }
-                  }
+                  });
+
                   this.render();
                   resolve(true);
                 });
@@ -646,7 +645,7 @@ export default class EffectMappingForm extends FormApplication {
 
   _copyGlobalConfig(event) {
     const mappings = TVA_CONFIG.globalMappings;
-    if (!mappings || isEmpty(mappings)) return;
+    if (!mappings || !mappings.length) return;
 
     let content = '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
 
@@ -657,9 +656,9 @@ export default class EffectMappingForm extends FormApplication {
         for (const mapping of obj.list) {
           content += `
           <div class="form-group">
-            <label>${mapping.effectName.replaceAll(FAUX_DOT, '.')}</label>
+            <label>${mapping.label}</label>
             <div class="form-fields">
-                <input type="checkbox" name="${mapping.effectName}" data-dtype="Boolean">
+                <input type="checkbox" name="${mapping.label}" data-dtype="Boolean">
             </div>
           </div>
           `;
@@ -700,18 +699,33 @@ export default class EffectMappingForm extends FormApplication {
   async _insertMappings(event, mappings) {
     const cMappings = deepClone(mappings);
     await this._onSubmit(event);
-    for (const effect of Object.keys(cMappings)) {
-      cMappings[effect].effectName = effect;
 
-      const found = this.object.mappings.find((m) => m.effectName === effect);
+    for (const m of cMappings) {
+      const found = this.object.mappings.find((mapping) => mapping.label === m.label);
       if (found) {
         this.object.mappings.splice(found, 1);
       }
-      this.object.mappings.push(cMappings[effect]);
-      if (cMappings[effect].group) {
-        TOGGLED_GROUPS[cMappings[effect].group] = true;
+
+      this.object.mappings.push(m);
+      if (m.group) {
+        TOGGLED_GROUPS[m.group] = true;
       }
     }
+
+    // TODO
+
+    // for (const effect of Object.keys(cMappings)) {
+    //   cMappings[effect].effectName = effect;
+
+    //   const found = this.object.mappings.find((m) => m.effectName === effect);
+    //   if (found) {
+    //     this.object.mappings.splice(found, 1);
+    //   }
+    //   this.object.mappings.push(cMappings[effect]);
+    //   if (cMappings[effect].group) {
+    //     TOGGLED_GROUPS[cMappings[effect].group] = true;
+    //   }
+    // }
     this.render();
   }
 
@@ -774,32 +788,23 @@ export default class EffectMappingForm extends FormApplication {
     if (this.objectToFlag || this.globalMappings) {
       // First filter out empty mappings
       let mappings = this.object.mappings;
-      mappings = mappings.filter(function (mapping) {
-        return Boolean(mapping.effectName?.trim());
-      });
+      mappings = mappings.filter((m) => Boolean(m.label?.trim()) || Boolean(m.expression?.trim()));
 
       // Make sure a priority is assigned
       for (const mapping of mappings) {
         mapping.priority = mapping.priority ? mapping.priority : 50;
+        mapping.overlayConfig = mapping.overlayConfig ?? {};
+        mapping.overlayConfig.label = mapping.label;
       }
 
       if (mappings.length !== 0) {
-        const effectMappings = {};
-        for (const mapping of mappings) {
-          effectMappings[mapping.effectName] = {
-            imgName: mapping.imgName,
-            imgSrc: mapping.imgSrc,
-            priority: mapping.priority,
-            config: mapping.config,
-            overlay: mapping.overlay,
-            alwaysOn: mapping.alwaysOn,
-            disabled: mapping.disabled,
-            overlayConfig: mapping.overlayConfig || {},
-            targetActors: mapping.targetActors,
-            group: mapping.group,
-          };
-          effectMappings[mapping.effectName].overlayConfig.effect = mapping.effectName;
-        }
+        const effectMappings = mappings.map((m) =>
+          mergeObject(DEFAULT_ACTIVE_EFFECT_CONFIG, m, {
+            inplace: false,
+            insertKeys: false,
+            recursive: false,
+          })
+        );
         if (this.globalMappings) {
           _setGlobalEffectMappings(effectMappings);
           updateSettings({ globalMappings: effectMappings });
@@ -809,7 +814,7 @@ export default class EffectMappingForm extends FormApplication {
         }
       } else if (this.globalMappings) {
         _setGlobalEffectMappings(null);
-        updateSettings({ globalMappings: {} });
+        updateSettings({ globalMappings: [] });
       } else {
         await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
       }
@@ -840,15 +845,18 @@ export default class EffectMappingForm extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    const expanded = expandObject(formData);
-    const mappings = expanded.hasOwnProperty('mappings') ? Object.values(expanded.mappings) : [];
-    for (let i = 0; i < mappings.length; i++) {
+    const mappings = expandObject(formData).mappings ?? {};
+    console.log('updateObject', mappings);
+
+    // Merge form data with internal mappings
+    for (let i = 0; i < this.object.mappings.length; i++) {
       const m1 = mappings[i];
       const m2 = this.object.mappings[i];
+      m2.label = m1.label.replaceAll(String.fromCharCode(160), ' ');
+      m2.expression = m1.expression.replaceAll(String.fromCharCode(160), ' ');
       m2.imgSrc = m1.imgSrc;
       m2.imgName = m1.imgName;
       m2.priority = m1.priority;
-      m2.effectName = m1.effectName.replaceAll('.', FAUX_DOT).replaceAll(String.fromCharCode(160), ' ');
       m2.overlay = m1.overlay;
       m2.alwaysOn = m1.alwaysOn;
       m2.disabled = m1.disabled;
@@ -917,23 +925,15 @@ async function _setGlobalEffectMappings(mappings) {
 }
 
 export function sortMappingsToGroups(mappings) {
-  if (!Array.isArray(mappings)) {
-    let tempMappings = [];
-    for (const [effectName, attrs] of Object.entries(mappings)) {
-      tempMappings.push({ effectName, ...attrs });
-    }
-    mappings = tempMappings;
-  }
-
   mappings.sort((m1, m2) => {
-    if (!m1.effectName && m2.effectName) return -1;
-    else if (m1.effectName && !m2.effectName) return 1;
+    if (!m1.label && m2.label) return -1;
+    else if (m1.label && !m2.label) return 1;
 
     if (!m1.overlayConfig?.parent && m2.overlayConfig?.parent) return -1;
     else if (m1.overlayConfig?.parent && !m2.overlayConfig?.parent) return 1;
 
     let priorityDiff = m1.priority - m2.priority;
-    if (priorityDiff === 0) return m1.effectName.localeCompare(m2.effectName);
+    if (priorityDiff === 0) return m1.label.localeCompare(m2.label);
     return priorityDiff;
   });
 

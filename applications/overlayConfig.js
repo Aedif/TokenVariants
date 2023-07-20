@@ -1,15 +1,16 @@
 import { CORE_SHAPE, DEFAULT_OVERLAY_CONFIG, OVERLAY_SHAPES } from '../scripts/models.js';
-import { VALID_EXPRESSION, fixEffectMappings, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
+import { VALID_EXPRESSION, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
 import { evaluateObjExpressions, genTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { sortMappingsToGroups } from './effectMappingForm.js';
+import { migrateMappings } from '../scripts/settings.js';
 
 export default class OverlayConfig extends FormApplication {
-  constructor(config, callback, effectName, token) {
+  constructor(config, callback, label, token) {
     super({}, {});
     this.config = config ?? {};
-    this.config.effect = effectName;
+    this.config.label = label;
     this.callback = callback;
     this.token = canvas.tokens.get(token._id);
     this.previewConfig = deepClone(this.config);
@@ -260,21 +261,21 @@ export default class OverlayConfig extends FormApplication {
   }
 
   getPreviewIcons() {
-    if (!this.config.effect) return [];
+    if (!this.config.label) return [];
     const tokens = this.token ? [this.token] : canvas.tokens.placeables;
     const previewIcons = [];
     for (const tkn of tokens) {
       if (tkn.tva_sprites) {
         for (const c of tkn.tva_sprites) {
-          if (c.overlayConfig && c.overlayConfig.effect === this.config.effect) {
+          if (c.overlayConfig && c.overlayConfig.label === this.config.label) {
             // Effect icon found, however if we're in global preview then we need to take into account
             // a token/actor specific mapping which may override the global one
             if (this.token) {
               previewIcons.push({ token: tkn, icon: c });
             } else if (
-              !(tkn.actor ? fixEffectMappings(tkn.actor.getFlag('token-variants', 'effectMappings') || {}) : {})[
-                this.config.effect
-              ]
+              !(tkn.actor ? migrateMappings(tkn.actor.getFlag('token-variants', 'effectMappings')) : []).find(
+                (m) => m.label === this.config.label
+              )
             ) {
               previewIcons.push({ token: tkn, icon: c });
             }
@@ -331,8 +332,7 @@ export default class OverlayConfig extends FormApplication {
 
     data.fonts = Object.keys(CONFIG.fontDefinitions);
 
-    const allMappings = getAllEffectMappings(this.token, true);
-    delete allMappings[this.config.effect];
+    const allMappings = getAllEffectMappings(this.token, true).filter((m) => m.label !== this.config.label);
     const [_, groupedMappings] = sortMappingsToGroups(allMappings);
 
     data.parents = groupedMappings;

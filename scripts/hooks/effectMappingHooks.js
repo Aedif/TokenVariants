@@ -1,4 +1,4 @@
-import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG, migrateMappings } from '../settings.js';
 import {
   applyTMFXPreset,
   determineAddedRemovedEffects,
@@ -588,52 +588,29 @@ async function _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scr
 }
 
 export function getAllEffectMappings(token = null, includeDisabled = false) {
-  let allMappings;
+  let allMappings = migrateMappings(token?.actor?.getFlag('token-variants', 'effectMappings'));
+  const unique = new Set();
+
+  // TODO: replace with a setting
+  const mergeOnLabel = true;
+  allMappings.forEach((m) => unique.add(mergeOnLabel ? m.label : m.group));
 
   // Sort out global mappings that do not apply to this actor
-  let applicableGlobal = {};
+  let applicableGlobal = TVA_CONFIG.globalMappings;
   if (token?.actor?.type) {
     const actorType = token.actor.type;
-    for (const [k, v] of Object.entries(TVA_CONFIG.globalMappings)) {
-      if (!v.targetActors || v.targetActors.includes(actorType)) {
-        applicableGlobal[k] = v;
+    applicableGlobal = applicableGlobal.filter((m) => {
+      if (!m.targetActors || m.targetActors.includes(actorType)) {
+        return !unique.has(mergeOnLabel ? m.label : m.group);
       }
-    }
-  } else {
-    applicableGlobal = { ...TVA_CONFIG.globalMappings };
-  }
-
-  if (token) {
-    allMappings = mergeObject(applicableGlobal, token.actor?.getFlag('token-variants', 'effectMappings') || {}, {
-      inplace: false,
-      recursive: false,
+      return false;
     });
-  } else {
-    allMappings = applicableGlobal;
   }
+  allMappings = allMappings.concat(applicableGlobal);
 
-  if (!includeDisabled)
-    for (const [k, v] of Object.entries(allMappings)) {
-      if (v.disabled) delete allMappings[k];
-    }
-
-  fixEffectMappings(allMappings);
+  if (!includeDisabled) allMappings = allMappings.filter((m) => !m.disabled);
 
   return allMappings;
-}
-
-// 19/01/2023
-// The same mapping can now apply both an image change as well as an overlay
-// We need to adjust old configs to account for this
-export function fixEffectMappings(mappings) {
-  for (const v of Object.values(mappings)) {
-    if (v.overlay && !v.overlayConfig.img && !v.overlayConfig.text) {
-      v.overlayConfig.img = v.imgSrc;
-      v.imgSrc = null;
-      v.imgName = null;
-    }
-  }
-  return mappings;
 }
 
 function getHPChangeEffect(token, effects) {
