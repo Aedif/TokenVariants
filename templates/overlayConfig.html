@@ -94,10 +94,13 @@
                     </div>
                 </div>
 
-                <div class="form-group token-specific-fields">
+                <div class="form-group slim token-specific-fields">
                     <label>Dimensions</label>
                     <div class="form-fields">
-                        <input type="checkbox" name="linkDimensions" data-dtype="Boolean" value="{{linkDimensions}}" {{#if linkDimensions}}checked{{/if}}>
+                        <label>Width</label>
+                        <input type="checkbox" name="linkDimensionsX" data-dtype="Boolean" value="{{linkDimensionsX}}" {{#if linkDimensionsX}}checked{{/if}}>
+                        <label>Height</label>
+                        <input type="checkbox" name="linkDimensionsY" data-dtype="Boolean" value="{{linkDimensionsY}}" {{#if linkDimensionsY}}checked{{/if}}>
                     </div>
                 </div>
     
@@ -307,7 +310,7 @@
                 <div class="form-group">
                     <label>Effect Name</label>
                     <div class="form-fields">
-                        <input type="text" name="limitOnEffect" value="{{limitOnEffect}}">
+                        <input type="text" name="limitOnEffect" value="{{limitOnEffect}}" placeholder="Reveal: Overlay">
                     </div>
                     <p class="notes">Overlay will only be visible to Tokens with this effect applied to them.</p>
                 </div>

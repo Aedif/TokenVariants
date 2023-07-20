@@ -163,7 +163,7 @@ export default class OverlayConfig extends FormApplication {
     });
 
     const linkScale = html.find('[name="linkScale"]');
-    const linkDimensions = html.find('[name="linkDimensions"]');
+    const linkDimensions = html.find('[name="linkDimensionsX"], [name="linkDimensionsY"]');
     const linkStageScale = html.find('[name="linkStageScale"]');
     linkScale.change(function () {
       if (this.checked) {
@@ -345,6 +345,14 @@ export default class OverlayConfig extends FormApplication {
     }
 
     data.allShapes = Object.keys(OVERLAY_SHAPES);
+
+    // linkDimensions has been converted to linkDimensionsX and linkDimensionsY
+    // Make sure we're using the latest fields
+    // 20/07/2023
+    if (!('linkDimensionsX' in settings) && settings.linkDimensions) {
+      settings.linkDimensionsX = true;
+      settings.linkDimensionsY = true;
+    }
 
     return mergeObject(data, settings);
   }

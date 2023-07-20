@@ -70,6 +70,14 @@ export class TVASprite extends TokenMesh {
 
     this.overlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
 
+    // linkDimensions has been converted to linkDimensionsX and linkDimensionsY
+    // Make sure we're using the latest fields
+    // 20/07/2023
+    if (!('linkDimensionsX' in this.overlayConfig) && this.overlayConfig.linkDimensions) {
+      this.overlayConfig.linkDimensionsX = true;
+      this.overlayConfig.linkDimensionsY = true;
+    }
+
     this._registerHooks(this.overlayConfig);
     this._tvaPlay().then(() => this.refresh());
 
@@ -210,12 +218,16 @@ export class TVASprite extends TokenMesh {
         this.height = this.object.h * this.object.document.texture.scaleY;
         scale.x = Number(scale.y);
       }
-    } else if (config.linkDimensions) {
-      this.scale.x = this.object.document.width;
-      this.scale.y = this.object.document.height;
     } else if (config.linkStageScale) {
       this.scale.x = 1 / canvas.stage.scale.x;
       this.scale.y = 1 / canvas.stage.scale.y;
+    } else if (config.linkDimensionsX || config.linkDimensionsY) {
+      if (config.linkDimensionsX) {
+        this.scale.x = this.object.document.width;
+      }
+      if (config.linkDimensionsY) {
+        this.scale.y = this.object.document.height;
+      }
     } else {
       this.width = tex.width;
       this.height = tex.height;
