@@ -149,6 +149,7 @@ export default class ConfigureSettings extends FormApplication {
     data.staticCache = settings.staticCache;
     data.staticCacheFile = settings.staticCacheFile;
     data.stackStatusConfig = settings.stackStatusConfig;
+    data.mergeGroup = settings.mergeGroup;
     data.customImageCategories = settings.customImageCategories.join(',');
     data.disableEffectIcons = settings.disableEffectIcons;
     data.displayEffectIconsOnHover = settings.displayEffectIconsOnHover;
@@ -651,6 +652,7 @@ export default class ConfigureSettings extends FormApplication {
       staticCacheFile: formData.staticCacheFile,
       tilesEnabled: formData.tilesEnabled,
       stackStatusConfig: formData.stackStatusConfig,
+      mergeGroup: formData.mergeGroup,
       customImageCategories: (formData.customImageCategories || '')
         .split(',')
         .map((t) => t.trim())

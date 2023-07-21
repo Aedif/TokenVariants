@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, keyPressed, FAUX_DOT } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo, keyPressed } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import { TVA_CONFIG, migrateMappings, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
@@ -37,7 +37,7 @@ export default class EffectMappingForm extends FormApplication {
       resizable: true,
       minimizable: false,
       closeOnSubmit: false,
-      width: 1000,
+      width: 1020,
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
     });
@@ -133,7 +133,7 @@ export default class EffectMappingForm extends FormApplication {
     html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
     html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
     html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
-    html.find('.div-input').on('input paste focus click', this._onEffectNameChange);
+    html.find('.div-input').on('input paste focus click', this._onExpressionChange);
     const app = this;
     html
       .find('.group-toggle > a')
@@ -145,7 +145,7 @@ export default class EffectMappingForm extends FormApplication {
           $(this).trigger('click');
         }
       });
-    this.setPosition({ width: 1000 });
+    this.setPosition({ width: 1020 });
     html.find('.effect-disable > input').on('change', this._onDisable.bind(this));
     html.find('.group-disable > a').on('click', this._onGroupDisable.bind(this));
     html.find('.mapping-group > input').on('change', this._onGroupChange.bind(this));
@@ -209,7 +209,7 @@ export default class EffectMappingForm extends FormApplication {
     this.setPosition({ height: 'auto' });
   }
 
-  async _onEffectNameChange(event) {
+  async _onExpressionChange(event) {
     var el = event.target;
 
     // Update the hidden input field so that the text entered in the div will be submitted via the form
@@ -711,21 +711,6 @@ export default class EffectMappingForm extends FormApplication {
         TOGGLED_GROUPS[m.group] = true;
       }
     }
-
-    // TODO
-
-    // for (const effect of Object.keys(cMappings)) {
-    //   cMappings[effect].effectName = effect;
-
-    //   const found = this.object.mappings.find((m) => m.effectName === effect);
-    //   if (found) {
-    //     this.object.mappings.splice(found, 1);
-    //   }
-    //   this.object.mappings.push(cMappings[effect]);
-    //   if (cMappings[effect].group) {
-    //     TOGGLED_GROUPS[cMappings[effect].group] = true;
-    //   }
-    // }
     this.render();
   }
 
@@ -846,7 +831,6 @@ export default class EffectMappingForm extends FormApplication {
    */
   async _updateObject(event, formData) {
     const mappings = expandObject(formData).mappings ?? {};
-    console.log('updateObject', mappings);
 
     // Merge form data with internal mappings
     for (let i = 0; i < this.object.mappings.length; i++) {
@@ -867,7 +851,6 @@ export default class EffectMappingForm extends FormApplication {
 
 // Insert <span/> around operators
 function highlightOperators(text) {
-  text = text.replaceAll(FAUX_DOT, '.');
   // text = text.replaceAll(' ', '&nbsp;');
 
   const re = new RegExp('([a-zA-Z\\.\\-\\|\\+]+)([><=]+)(".*?"|-?\\d+)(%{0,1})', `gi`);

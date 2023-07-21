@@ -7,7 +7,6 @@ const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
 export const SUPPORTED_COMP_ATTRIBUTES = ['rotation', 'elevation'];
 export const EXPRESSION_OPERATORS = ['\\(', '\\)', '&&', '||', '\\!'];
-export const FAUX_DOT = '¶';
 
 // Types of searches
 export const SEARCH_TYPE = {
@@ -995,13 +994,4 @@ export function extractDimensionsFromImgName(img, dimensions = {}) {
 
 export function string2Hex(hexString) {
   return PIXI.utils.string2hex(hexString);
-}
-
-export function colorAsProperty(color, token, defaultColor = '#ffffff') {
-  if (!color) return defaultColor;
-
-  const match = color.match(/{{(.+)}}/);
-  if (!match) return color;
-  let val = getProperty(token.document ?? token, match[1]);
-  return val ? val : defaultColor;
 }

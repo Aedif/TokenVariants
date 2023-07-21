@@ -555,12 +555,22 @@
         <!-- Active Effects -->
         {{#if enabledTabs.activeEffects}}
         <div class="tab" data-tab="activeEffects" data-group="primary-tabs">
+
           <div class="form-group">
-            <label>Stack Configurations</label>
+            <label>Merge Global and Actor mappings based on Groups</label>
+            <div class="form-fields">
+              <input type="checkbox" name="mergeGroup" data-dtype="Boolean" {{#if mergeGroup}}checked{{/if}}>
+            </div>
+            <p class="notes">Instead of comparing `Labels` Actor mappings will take precedent over Global ones if they belong to the same group.</p>
+          </div>
+
+
+          <div class="form-group">
+            <label>Stack Effect Mapping Token Configs and Overlays</label>
             <div class="form-fields">
               <input type="checkbox" name="stackStatusConfig" data-dtype="Boolean" {{#if stackStatusConfig}}checked{{/if}}>
             </div>
-            <p class="notes">Active Effect custom configurations will stack on top of one another instead of overriding each other.</p>
+            <p class="notes">When multiple Effect Mappings are active Token Configurations and Overlays will accumulate on the token instead of overriding each other.</p>
           </div>
 
           {{#if dnd5e}}

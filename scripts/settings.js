@@ -70,6 +70,7 @@ export const TVA_CONFIG = {
   },
   imgurClientId: '',
   stackStatusConfig: true,
+  mergeGroup: false,
   staticCache: false,
   staticCacheFile: 'modules/token-variants/token-variants-cache.json',
   tilesEnabled: true,
@@ -368,6 +369,8 @@ export function migrateMappings(mappings) {
       if (!mapping.label) mapping.label = effect.replaceAll('¶', '.');
       if (!mapping.expression) mapping.expression = effect.replaceAll('¶', '.');
       delete mapping.effect;
+      if (mapping.overlayConfig) mapping.overlayConfig.label = effect.replaceAll('¶', '.');
+      delete mapping.overlayConfig?.effect;
       nMappings.push(mapping);
     }
     return nMappings;

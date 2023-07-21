@@ -21,7 +21,7 @@
                     {{#each parents as |parent group|}}
                     <optgroup label="{{group}}">
                         {{#each parent.list as |mapping|}}
-                        <option value="{{mapping.effectName}}" {{#if (eq ../../parent mapping.effectName)}}selected="selected"{{/if}}>{{mapping.effectName}}</option>
+                        <option value="{{mapping.label}}" {{#if (eq ../../parent mapping.label)}}selected="selected"{{/if}}>{{mapping.label}}</option>
                         {{/each}}
                     </optgroup>
                     {{/each}}
