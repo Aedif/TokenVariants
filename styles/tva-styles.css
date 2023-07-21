@@ -347,7 +347,7 @@ ol.token-variant-table .table-row .path-share {
   text-align: center;
 }
 ol.token-variant-table .table-row .path-controls,
-ol.token-variant-table .table-row .effect-controls,
+ol.token-variant-table .table-row .mapping-controls,
 ol.token-variant-table .table-row .imgur-control,
 ol.token-variant-table .table-row .json-control {
   flex: 0 0 44px;
@@ -363,7 +363,7 @@ ol.token-variant-table .table-row .json-control.active {
   display: block;
 }
 ol.token-variant-table .table-row .path-controls i,
-ol.token-variant-table .table-row .effect-controls i,
+ol.token-variant-table .table-row .mapping-controls i,
 ol.token-variant-table .table-row .imgur-control i,
 ol.token-variant-table .table-row .json-control i {
   width: 20px;
@@ -392,7 +392,7 @@ ol.token-variant-table .group-title > p {
 ol.token-variant-table .group-disable {
   flex: 0.1;
   text-align: right;
-  margin-right: 10px;
+  margin-right: -14px;
   margin-top: 7px;
   color: red;
 }
@@ -444,7 +444,7 @@ ol.token-variant-table .table-row .mapping-group > input {
   width: 80px;
 }
 
-ol.token-variant-table .table-row .effect-image {
+ol.token-variant-table .table-row .mapping-image {
   flex: 0.2;
   text-align: center;
 }
@@ -454,30 +454,30 @@ ol.token-variant-table .table-row .mapping-config {
   text-align: center;
 }
 
-ol.token-variant-table .table-row .effect-overlay {
+ol.token-variant-table .table-row .mapping-overlay {
   flex: 0.2;
   text-align: center;
 }
 
-ol.token-variant-table .table-row .effect-overlay > input {
+ol.token-variant-table .table-row .mapping-overlay > input {
   vertical-align: top;
   width: 36%;
 }
 
-ol.token-variant-table .table-row .effect-overlay > a {
+ol.token-variant-table .table-row .mapping-overlay > a {
   vertical-align: middle;
 }
 
-ol.token-variant-table .table-row .effect-overlay > a.child {
+ol.token-variant-table .table-row .mapping-overlay > a.child {
   color: rgb(252, 30, 252);
 }
 
-ol.token-variant-table .table-row .effect-alwaysOn {
+ol.token-variant-table .table-row .mapping-alwaysOn {
   flex: 0 0 80px;
   text-align: center;
 }
 
-ol.token-variant-table .table-row .effect-disable {
+ol.token-variant-table .table-row .mapping-disable {
   flex: 0 0 60px;
   text-align: center;
 }

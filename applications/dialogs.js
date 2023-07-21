@@ -1,5 +1,6 @@
 import { TVA_CONFIG } from '../scripts/settings.js';
 import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
+import { sortMappingsToGroups } from './effectMappingForm.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 
 // Edit overlay configuration as a json string
@@ -197,5 +198,63 @@ export async function showTokenCaptureDialog(token) {
       });
     },
     default: 'yes',
+  }).render(true);
+}
+
+export function showMappingSelectDialog(
+  mappings,
+  { title1 = 'Mappings', title2 = 'Select Mappings', buttonTitle = 'Confirm', callback = null } = {}
+) {
+  if (!mappings || !mappings.length) return;
+
+  let content = `<form style="overflow-y: scroll; height:400px;"><h2>${title2}</h2>`;
+
+  const [_, mappingGroups] = sortMappingsToGroups(mappings);
+  for (const [group, obj] of Object.entries(mappingGroups)) {
+    if (obj.list.length) {
+      content += `<h4 style="text-align:center;"><b>${group}</b></h4>`;
+      for (const mapping of obj.list) {
+        content += `
+        <div class="form-group">
+          <label>${mapping.label}</label>
+          <div class="form-fields">
+              <input type="checkbox" name="${mapping.label}" data-dtype="Boolean">
+          </div>
+        </div>
+        `;
+      }
+    }
+  }
+
+  content += `</form><div class="form-group"><button type="button" class="select-all">Select all</div>`;
+
+  new Dialog({
+    title: title1,
+    content: content,
+    buttons: {
+      Ok: {
+        label: buttonTitle,
+        callback: async (html) => {
+          if (!callback) return;
+          const selectedMappings = [];
+          html.find('input[type="checkbox"]').each(function () {
+            if (this.checked) {
+              const mapping = mappings.find((m) => m.label === this.name);
+              if (mapping) {
+                const cMapping = deepClone(mapping);
+                selectedMappings.push(cMapping);
+                delete cMapping.targetActors;
+              }
+            }
+          });
+          callback(selectedMappings);
+        },
+      },
+    },
+    render: (html) => {
+      html.find('.select-all').click(() => {
+        html.find('input[type="checkbox"]').prop('checked', true);
+      });
+    },
   }).render(true);
 }

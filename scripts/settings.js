@@ -125,6 +125,7 @@ export const TVA_CONFIG = {
     },
   },
   globalMappings: [],
+  templateMappings: [],
   customImageCategories: [],
   displayEffectIconsOnHover: false,
   disableEffectIcons: false,
@@ -447,6 +448,17 @@ function _refreshFilters(filters, customCategories, updateTVAConfig = false) {
 }
 
 export async function updateSettings(newSettings) {
+  // Global Mappings need special merge
+  if (newSettings.globalMappings) {
+    const nMappings = migrateMappings(newSettings.globalMappings);
+    for (const m of nMappings) {
+      const i = TVA_CONFIG.globalMappings.findIndex((mapping) => m.label === mapping.label);
+      if (i === -1) TVA_CONFIG.globalMappings.push(m);
+      else TVA_CONFIG.globalMappings[i] = m;
+    }
+    newSettings.globalMappings = TVA_CONFIG.globalMappings;
+  }
+
   const settings = mergeObject(deepClone(TVA_CONFIG), newSettings, { insertKeys: false });
   // Custom image categories might have changed, meaning we may have filters that are no longer relevant
   // or need to be added

@@ -9,21 +9,21 @@
 
     <ol class="token-variant-table" style="overflow-x: hidden;">
       <li class="table-row table-header flexrow">
-        <div class="effect-controls">
+        <div class="mapping-controls">
           <a class="create-mapping" title="Add new mapping"> <i class="fas fa-plus"></i></a>
         </div>
-        <div class="mapping-label"><label>Label</label></div>
+        <div class="mapping-label" title="Optional description for the mapping. Actor mappings will override Global ones if their Labels match."><label>Label</label></div>
         <div class="mapping-expression"><label>Expression</label>&nbsp;&nbsp;<i class="fas fa-question-circle" title="Accepted Operators:&#013;• && ( logical AND)&#013;• || (logical OR)&#013;• \! (escaped logical NOT)&#013;• \( (escaped open bracket to group expressions)&#013;• \) (escaped closed bracket to group expressions)&#013;&#013;Accepted hp and Token property Comparators:&#013;• = (equal)&#013;• < (less than)&#013;• > (greater than)&#013;• <= (less than or equal)&#013;• >= (greater than or equal)&#013;• <> (lesser or greater than)&#013;&#013;Accepted wildcards&#013;• \*&#013;• \{  \}&#013;&#013;Examples of valid expressions:&#013;• Flying&#013;• Dead && Burning&#013;• Flying && \! \( Prone || Dead \)&#013;• hp<=50%&#013;• name=&ldquo;Raging Barbarian&ldquo;&#013;• lockRotation=&ldquo;true&ldquo;&#013;• flags.token-variants.test=&ldquo;true&ldquo;&#013;• Exhaustion \*&#013;• Exhaustion \{1,2,3\}&#013;&#013;Special Effect Names:&#013;• token-variants-combat : Actives when Token is in combat&#013;• combat-turn : Activates when it's Token's turn in combat&#013;• combat-turn-next : Actives when Token is next in the initiative order"></i></div>
-        <div class="mapping-priority"><label>Priority</label></div>
-        <div class="effect-image"><label title="Token Image">Image</label></div>
-        <div class="mapping-config"><label>Config</label></div>
-        <div class="effect-overlay"><label>Overlay</label></div>
-        <div class="effect-alwaysOn"><label>Always On</label></div>
-        <div class="effect-disable"><label>Disable</label></div>
+        <div class="mapping-priority" title="The order in which mappings are to be resolved. Which scripts are run first, token configs are prioritized, and overlay display order will all be based off of this value."><label>Priority</label></div>
+        <div class="mapping-image" title="Image to be applied to the token."><label>Image</label></div>
+        <div class="mapping-config" title="Token Configuration and Scripts"><label>Config</label></div>
+        <div class="mapping-overlay" title="Image, text, or shapes to be shown on the token."><label>Overlay</label></div>
+        <div class="mapping-alwaysOn" title="If checked mapping will always be treated as active, regardless whether the Expression is true or not."><label>Always On</label></div>
+        <div class="mapping-disable" title="If checked mapping will never be activated regardless of whether the Expression is true or not."><label>Disable</label></div>
         {{#if global}}
-        <div class="mapping-target"><i class="fas fa-users" title="Configure Applicable actors"></i></div>
+        <div class="mapping-target" title="Actor types that this mapping is applicable to."><i class="fas fa-users"></i></div>
         {{/if}}
-        <div class="mapping-group"><label>Group</label></div>
+        <div class="mapping-group" title="Mappings sharing Group names will be displayed under the same header."><label>Group</label></div>
       </li>
 
     {{#each groupedMappings as |mappings group|}}
@@ -34,7 +34,7 @@
       </div>
       {{#each mappings.list as |mapping|}}
       <li class="table-row flexrow" data-group="{{group}}" data-index="{{mapping.i}}">
-        <div class="effect-controls">
+        <div class="mapping-controls">
           <a class="clone-mapping" title="Clone mapping"><i class="fas fa-clone"></i></a>
           <a class="delete-mapping" title="Delete mapping"><i class="fas fa-trash"></i></a>
         </div>
@@ -61,7 +61,7 @@
             placeholder="priority"
           />
         </div>
-        <div class="effect-image">
+        <div class="mapping-image">
           <video
             height="32" width="32"
             src="{{mapping.imgSrc}}"
@@ -92,14 +92,14 @@
           <a><i class="fas fa-play config-script {{#if mapping.hasScript}}active{{/if}}"></i></a>
           <input class="config" type="hidden" name="mappings.{{mapping.i}}.config" value="{{mapping.config}}">
         </div>
-        <div class="effect-overlay">
+        <div class="mapping-overlay">
           <input type="checkbox" name="mappings.{{mapping.i}}.overlay" {{#if mapping.overlay}}checked{{/if}}/>
           <a {{#if mapping.parent}}class="child" title="Child Of: {{mapping.parent}}"{{/if}}><i class="fas fa-cog fa-lg overlay-config"></i></a>
         </div>
-        <div class="effect-alwaysOn">
+        <div class="mapping-alwaysOn">
           <input type="checkbox" name="mappings.{{mapping.i}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>
         </div>
-        <div class="effect-disable">
+        <div class="mapping-disable">
           <input type="checkbox" name="mappings.{{mapping.i}}.disabled" {{#if mapping.disabled}}checked{{/if}}/>
         </div>
         {{#if ../../global}}

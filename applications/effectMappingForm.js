@@ -5,7 +5,7 @@ import { TVA_CONFIG, migrateMappings, updateSettings } from '../scripts/settings
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
-import { showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
+import { showMappingSelectDialog, showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG, EFFECT_TEMPLATES } from '../scripts/models.js';
 import { updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 import { drawOverlays } from '../scripts/token/overlay.js';
@@ -120,19 +120,19 @@ export default class EffectMappingForm extends FormApplication {
     html.find('.create-mapping').click(this._onCreate.bind(this));
     html.find('.save-mappings').click(this._onSaveMappings.bind(this));
     if (TVA_CONFIG.permissions.image_path_button[game.user.role]) {
-      html.find('.effect-image img').click(this._onImageClick.bind(this));
-      html.find('.effect-image img').mousedown(this._onImageMouseDown.bind(this));
-      html.find('.effect-image video').click(this._onImageClick.bind(this));
+      html.find('.mapping-image img').click(this._onImageClick.bind(this));
+      html.find('.mapping-image img').mousedown(this._onImageMouseDown.bind(this));
+      html.find('.mapping-image video').click(this._onImageClick.bind(this));
       html.find('.mapping-target').click(this._onConfigureApplicableActors.bind(this));
     }
-    html.find('.effect-image img').contextmenu(this._onImageRightClick.bind(this));
-    html.find('.effect-image video').contextmenu(this._onImageRightClick.bind(this));
+    html.find('.mapping-image img').contextmenu(this._onImageRightClick.bind(this));
+    html.find('.mapping-image video').contextmenu(this._onImageRightClick.bind(this));
     html.find('.mapping-config i.config').click(this._onConfigClick.bind(this));
     html.find('.mapping-config i.config-edit').click(this._onConfigEditClick.bind(this));
     html.find('.mapping-config i.config-script').click(this._onConfigScriptClick.bind(this));
-    html.find('.effect-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
-    html.on('contextmenu', '.effect-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
-    html.find('.effect-overlay input').on('change', this._onOverlayChange).trigger('change');
+    html.find('.mapping-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
+    html.on('contextmenu', '.mapping-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
+    html.find('.mapping-overlay input').on('change', this._onOverlayChange).trigger('change');
     html.find('.div-input').on('input paste focus click', this._onExpressionChange);
     const app = this;
     html
@@ -146,7 +146,7 @@ export default class EffectMappingForm extends FormApplication {
         }
       });
     this.setPosition({ width: 1020 });
-    html.find('.effect-disable > input').on('change', this._onDisable.bind(this));
+    html.find('.mapping-disable > input').on('change', this._onDisable.bind(this));
     html.find('.group-disable > a').on('click', this._onGroupDisable.bind(this));
     html.find('.mapping-group > input').on('change', this._onGroupChange.bind(this));
   }
@@ -159,7 +159,7 @@ export default class EffectMappingForm extends FormApplication {
 
     const checkboxes = $(event.target)
       .closest('.token-variant-table')
-      .find(`[data-group="${groupName}"] > .effect-disable`);
+      .find(`[data-group="${groupName}"] > .mapping-disable`);
     const numChecked = checkboxes.find('input:checked').length;
 
     if (checkboxes.length !== numChecked) {
@@ -170,7 +170,7 @@ export default class EffectMappingForm extends FormApplication {
   async _onGroupDisable(event) {
     const group = $(event.target).closest('.group-disable');
     const groupName = group.data('group');
-    const chks = $(event.target).closest('form').find(`[data-group="${groupName}"]`).find('.effect-disable > input');
+    const chks = $(event.target).closest('form').find(`[data-group="${groupName}"]`).find('.mapping-disable > input');
 
     if (group.hasClass('active')) {
       group.removeClass('active');
@@ -253,7 +253,7 @@ export default class EffectMappingForm extends FormApplication {
       mapping.overlayConfig,
       (config) => {
         mapping.overlayConfig = config;
-        const gear = $(li).find('.effect-overlay > a');
+        const gear = $(li).find('.mapping-overlay > a');
         if (config?.parent && config.parent !== 'Token (Placeable)') {
           gear.addClass('child');
           gear.attr('title', 'Child Of: ' + config.parent);
@@ -338,8 +338,8 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   _removeImage(event) {
-    const vid = $(event.target).closest('.effect-image').find('video');
-    const img = $(event.target).closest('.effect-image').find('img');
+    const vid = $(event.target).closest('.mapping-image').find('video');
+    const img = $(event.target).closest('.mapping-image').find('img');
     vid.add(img).attr('src', '').attr('title', '');
     vid.hide();
     img.show();
@@ -369,8 +369,8 @@ export default class EffectMappingForm extends FormApplication {
     showArtSelect(search, {
       searchType: SEARCH_TYPE.TOKEN,
       callback: (imgSrc, imgName) => {
-        const vid = $(event.target).closest('.effect-image').find('video');
-        const img = $(event.target).closest('.effect-image').find('img');
+        const vid = $(event.target).closest('.mapping-image').find('video');
+        const img = $(event.target).closest('.mapping-image').find('img');
         vid.add(img).attr('src', imgSrc).attr('title', imgName);
         if (isVideo(imgSrc)) {
           vid.show();
@@ -398,8 +398,8 @@ export default class EffectMappingForm extends FormApplication {
       type: 'imagevideo',
       current: mapping.imgSrc,
       callback: (path) => {
-        const vid = $(event.target).closest('.effect-image').find('video');
-        const img = $(event.target).closest('.effect-image').find('img');
+        const vid = $(event.target).closest('.mapping-image').find('video');
+        const img = $(event.target).closest('.mapping-image').find('img');
         vid.add(img).attr('src', path).attr('title', getFileName(path));
         if (isVideo(path)) {
           vid.show();
@@ -644,56 +644,14 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   _copyGlobalConfig(event) {
-    const mappings = TVA_CONFIG.globalMappings;
-    if (!mappings || !mappings.length) return;
-
-    let content = '<form style="overflow-y: scroll; height:400px;"><h2>Select effects to copy:</h2>';
-
-    const [_, mappingGroups] = sortMappingsToGroups(mappings);
-    for (const [group, obj] of Object.entries(mappingGroups)) {
-      if (obj.list.length) {
-        content += `<h4 style="text-align:center;"><b>${group}</b></h4>`;
-        for (const mapping of obj.list) {
-          content += `
-          <div class="form-group">
-            <label>${mapping.label}</label>
-            <div class="form-fields">
-                <input type="checkbox" name="${mapping.label}" data-dtype="Boolean">
-            </div>
-          </div>
-          `;
-        }
-      }
-    }
-
-    content += `</form><div class="form-group"><button type="button" class="select-all">Select all</div>`;
-
-    new Dialog({
-      title: `Global Effect Mappings`,
-      content: content,
-      buttons: {
-        Ok: {
-          label: `Copy`,
-          callback: async (html) => {
-            const toCopy = {};
-            html.find('input[type="checkbox"]').each(function () {
-              if (this.checked && mappings[this.name]) {
-                toCopy[this.name] = deepClone(mappings[this.name]);
-                delete toCopy[this.name].targetActors;
-              }
-            });
-            if (!isEmpty(toCopy)) {
-              this._insertMappings(event, toCopy);
-            }
-          },
-        },
+    showMappingSelectDialog(TVA_CONFIG.globalMappings, {
+      title1: 'Global Mappings',
+      title2: 'Select Mappings to Copy:',
+      buttonTitle: 'Copy',
+      callback: (mappings) => {
+        this._insertMappings(event, mappings);
       },
-      render: (html) => {
-        html.find('.select-all').click(() => {
-          html.find('input[type="checkbox"]').prop('checked', true);
-        });
-      },
-    }).render(true);
+    });
   }
 
   async _insertMappings(event, mappings) {
@@ -701,12 +659,9 @@ export default class EffectMappingForm extends FormApplication {
     await this._onSubmit(event);
 
     for (const m of cMappings) {
-      const found = this.object.mappings.find((mapping) => mapping.label === m.label);
-      if (found) {
-        this.object.mappings.splice(found, 1);
-      }
-
-      this.object.mappings.push(m);
+      const i = this.object.mappings.findIndex((mapping) => mapping.label === m.label);
+      if (i === -1) this.object.mappings.push(m);
+      else this.object.mappings[i] = m;
       if (m.group) {
         TOGGLED_GROUPS[m.group] = true;
       }
