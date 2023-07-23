@@ -369,12 +369,30 @@ export function migrateMappings(mappings) {
     for (const [effect, mapping] of Object.entries(mappings)) {
       if (!mapping.label) mapping.label = effect.replaceAll('¶', '.');
       if (!mapping.expression) mapping.expression = effect.replaceAll('¶', '.');
+      if (!mapping.id) mapping.id = randomID(8);
       delete mapping.effect;
       if (mapping.overlayConfig) mapping.overlayConfig.label = effect.replaceAll('¶', '.');
       delete mapping.overlayConfig?.effect;
       nMappings.push(mapping);
     }
     return nMappings;
+  }
+  return mappings;
+}
+
+export function getFlagMappings(object) {
+  if (!object) return [];
+  let doc = object.document ?? object;
+  if (doc.actorId) {
+    doc = game.actors.get(doc.actorId);
+    if (!doc) return [];
+  }
+
+  // 23/07/2023
+  let mappings = doc.getFlag('token-variants', 'effectMappings') ?? [];
+  if (getType(mappings) === 'Object') {
+    mappings = migrateMappings(mappings);
+    doc.setFlag('token-variants', 'effectMappings', mappings);
   }
   return mappings;
 }
@@ -425,6 +443,17 @@ export async function importSettingsFromJSON(json) {
     if (json.compendiumMapper) delete json.compendiumMapper.searchFilters;
   }
 
+  // Global Mappings need special merge
+  if (json.globalMappings) {
+    const nMappings = migrateMappings(json.globalMappings);
+    for (const m of nMappings) {
+      const i = TVA_CONFIG.globalMappings.findIndex((mapping) => m.label === mapping.label);
+      if (i === -1) TVA_CONFIG.globalMappings.push(m);
+      else TVA_CONFIG.globalMappings[i] = m;
+    }
+    json.globalMappings = TVA_CONFIG.globalMappings;
+  }
+
   updateSettings(json);
 }
 
@@ -448,17 +477,6 @@ function _refreshFilters(filters, customCategories, updateTVAConfig = false) {
 }
 
 export async function updateSettings(newSettings) {
-  // Global Mappings need special merge
-  if (newSettings.globalMappings) {
-    const nMappings = migrateMappings(newSettings.globalMappings);
-    for (const m of nMappings) {
-      const i = TVA_CONFIG.globalMappings.findIndex((mapping) => m.label === mapping.label);
-      if (i === -1) TVA_CONFIG.globalMappings.push(m);
-      else TVA_CONFIG.globalMappings[i] = m;
-    }
-    newSettings.globalMappings = TVA_CONFIG.globalMappings;
-  }
-
   const settings = mergeObject(deepClone(TVA_CONFIG), newSettings, { insertKeys: false });
   // Custom image categories might have changed, meaning we may have filters that are no longer relevant
   // or need to be added

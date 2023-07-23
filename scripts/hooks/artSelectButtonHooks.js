@@ -32,6 +32,7 @@ export function registerArtSelectButtonHooks() {
     registerHook(feature_id, 'renderDrawingConfig', _modDrawingConfig);
     registerHook(feature_id, 'renderNoteConfig', _modNoteConfig);
     registerHook(feature_id, 'renderSceneConfig', _modSceneConfig);
+    registerHook(feature_id, 'renderMacroConfig', _modMacroConfig);
     registerHook(feature_id, 'renderActiveEffectConfig', _modActiveEffectConfig);
   } else {
     [
@@ -111,6 +112,16 @@ function _modItemSheet(itemSheet, html, options) {
         callback: (imgSrc) => item.update({ img: imgSrc }),
       });
     });
+}
+
+function _modMacroConfig(macroConfig, html, options) {
+  const img = $(html).find('.sheet-header > img');
+  img.on('contextmenu', () => {
+    showArtSelect(macroConfig.object?.name ?? 'Macro', {
+      searchType: TVA_CONFIG.customImageCategories.includes('Macro') ? 'Macro' : SEARCH_TYPE.ITEM,
+      callback: (imgSrc) => img.attr('src', imgSrc),
+    });
+  });
 }
 
 function _modJournalSheet(journalSheet, html, options) {

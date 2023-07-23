@@ -1,4 +1,5 @@
 export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
+  id: '',
   label: '',
   expression: '',
   imgName: '',

@@ -1,7 +1,7 @@
 import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName, isVideo, keyPressed } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import { TVA_CONFIG, migrateMappings, updateSettings } from '../scripts/settings.js';
+import { TVA_CONFIG, getFlagMappings, migrateMappings, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
@@ -50,6 +50,7 @@ export default class EffectMappingForm extends FormApplication {
     if (mapping.config.tv_script) hasTokenConfig--;
 
     return {
+      id: mapping.id || randomID(8),
       label: mapping.label,
       expression: mapping.expression,
       highlightedExpression: highlightOperators(mapping.expression),
@@ -78,13 +79,11 @@ export default class EffectMappingForm extends FormApplication {
     if (this.object.mappings) {
       mappings = this.object.mappings.map(this._processConfig);
     } else {
-      const effectMappings = this.globalMappings
-        ? this.globalMappings
-        : migrateMappings(this.objectToFlag.getFlag('token-variants', 'effectMappings'));
+      const effectMappings = this.globalMappings ? this.globalMappings : getFlagMappings(this.objectToFlag);
       mappings = effectMappings.map(this._processConfig);
 
-      if (this.createMapping && !(this.createMapping in effectMappings)) {
-        mappings.push(this._getNewEffectConfig(this.createMapping, true));
+      if (this.createMapping && !effectMappings.find((m) => m.label === this.createMapping)) {
+        mappings.push(this._processConfig(this._getNewEffectConfig(this.createMapping)));
       }
       this.createMapping = null;
     }
@@ -428,6 +427,7 @@ export default class EffectMappingForm extends FormApplication {
     const li = event.currentTarget.closest('.table-row');
     const clone = deepClone(this.object.mappings[li.dataset.index]);
     clone.label = clone.label + ' - Copy';
+    clone.id = randomID(8);
     this.object.mappings.push(clone);
     this.render();
   }
@@ -440,57 +440,62 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   _getNewEffectConfig(label, textOverlay = false) {
-    if (textOverlay) {
-      TOGGLED_GROUPS['Text Overlays'] = true;
-      return {
-        label: label,
-        expression: label,
-        highlightedExpression: highlightOperators(label),
-        imgName: '',
-        imgSrc: '',
-        priority: 50,
-        overlay: false,
-        alwaysOn: false,
-        disabled: false,
-        group: 'Text Overlays',
-        overlay: true,
-        overlayConfig: mergeObject(
-          DEFAULT_OVERLAY_CONFIG,
-          {
-            img: '',
-            linkScale: false,
-            linkRotation: false,
-            linkMirror: false,
-            offsetY: 0.5 + Math.round(Math.random() * 0.3 * 100) / 100,
-            offsetX: 0,
-            scaleX: 0.68,
-            scaleY: 0.68,
-            text: {
-              text: '{{effect}}',
-              fontFamily: CONFIG.defaultFontFamily,
-              fontSize: 36,
-              fill: new Color(Math.round(Math.random() * 16777215)).toString(),
-              stroke: '#000000',
-              strokeThickness: 2,
-              dropShadow: false,
-              curve: {
-                radius: 160,
-                invert: false,
-              },
-            },
-            animation: {
-              rotate: true,
-              duration: 10000 + Math.round(Math.random() * 14000) + 10000,
-              clockwise: true,
-            },
-          },
-          { inplace: false }
-        ),
-      };
-    } else {
-      TOGGLED_GROUPS['Default'] = true;
-      return deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG);
-    }
+    // if (textOverlay) {
+    //   TOGGLED_GROUPS['Text Overlays'] = true;
+    //   return {
+    //     id: randomID(8),
+    //     label: label,
+    //     expression: label,
+    //     highlightedExpression: highlightOperators(label),
+    //     imgName: '',
+    //     imgSrc: '',
+    //     priority: 50,
+    //     overlay: false,
+    //     alwaysOn: false,
+    //     disabled: false,
+    //     group: 'Text Overlays',
+    //     overlay: true,
+    //     overlayConfig: mergeObject(
+    //       DEFAULT_OVERLAY_CONFIG,
+    //       {
+    //         img: '',
+    //         linkScale: false,
+    //         linkRotation: false,
+    //         linkMirror: false,
+    //         offsetY: 0.5 + Math.round(Math.random() * 0.3 * 100) / 100,
+    //         offsetX: 0,
+    //         scaleX: 0.68,
+    //         scaleY: 0.68,
+    //         text: {
+    //           text: '{{effect}}',
+    //           fontFamily: CONFIG.defaultFontFamily,
+    //           fontSize: 36,
+    //           fill: new Color(Math.round(Math.random() * 16777215)).toString(),
+    //           stroke: '#000000',
+    //           strokeThickness: 2,
+    //           dropShadow: false,
+    //           curve: {
+    //             radius: 160,
+    //             invert: false,
+    //           },
+    //         },
+    //         animation: {
+    //           rotate: true,
+    //           duration: 10000 + Math.round(Math.random() * 14000) + 10000,
+    //           clockwise: true,
+    //         },
+    //       },
+    //       { inplace: false }
+    //     ),
+    //   };
+    // } else {
+    TOGGLED_GROUPS['Default'] = true;
+    return mergeObject(deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG), {
+      label,
+      expression: label,
+      id: randomID(8),
+    });
+    // }
   }
 
   _getHeaderButtons() {
@@ -574,7 +579,7 @@ export default class EffectMappingForm extends FormApplication {
       filename = 'token-variants-global-mappings.json';
     } else {
       mappings = {
-        globalMappings: deepClone(this.objectToFlag.getFlag('token-variants', 'effectMappings') || {}),
+        globalMappings: deepClone(getFlagMappings(this.objectToFlag)),
       };
 
       let actorName = this.objectToFlag.name ?? 'Actor';
@@ -791,6 +796,7 @@ export default class EffectMappingForm extends FormApplication {
     for (let i = 0; i < this.object.mappings.length; i++) {
       const m1 = mappings[i];
       const m2 = this.object.mappings[i];
+      m2.id = m1.id;
       m2.label = m1.label.replaceAll(String.fromCharCode(160), ' ');
       m2.expression = m1.expression.replaceAll(String.fromCharCode(160), ' ');
       m2.imgSrc = m1.imgSrc;

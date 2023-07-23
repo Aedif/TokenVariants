@@ -1,4 +1,4 @@
-import { FEATURE_CONTROL, TVA_CONFIG, migrateMappings } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG, getFlagMappings, migrateMappings } from '../settings.js';
 import {
   applyTMFXPreset,
   determineAddedRemovedEffects,
@@ -402,34 +402,34 @@ async function _updateWithEffectMapping(token, added, removed) {
   // 3. Configurations may contain effect names in a form of a logical expressions
   //    We need to evaluate them and insert them into effects/added/removed if needed
   for (const mapping of mappings) {
-    evaluateEffectAsExpression(mapping.expression, effects, added, removed);
+    evaluateMappingExpression(mapping, effects, added, removed);
   }
 
   // Accumulate all scripts that will need to be run after the update
   const executeOnCallback = [];
   const deferredUpdateScripts = [];
   for (const ef of removed) {
-    const onRemove = mappings.find((m) => m.expression === ef)?.config?.tv_script?.onRemove;
+    const onRemove = mappings.find((m) => m.id === ef)?.config?.tv_script?.onRemove;
     if (onRemove) {
       if (onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(onRemove);
       else executeOnCallback.push({ script: onRemove, token });
     }
-    const tmfxPreset = mappings.find((m) => m.expression === ef)?.config?.tv_script?.tmfxPreset;
+    const tmfxPreset = mappings.find((m) => m.id === ef)?.config?.tv_script?.tmfxPreset;
     if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
   }
   for (const ef of added) {
-    const onApply = mappings.find((m) => m.expression === ef)?.config?.tv_script?.onApply;
+    const onApply = mappings.find((m) => m.id === ef)?.config?.tv_script?.onApply;
     if (onApply) {
       if (onApply.includes('tvaUpdate')) deferredUpdateScripts.push(onApply);
       else executeOnCallback.push({ script: onApply, token });
     }
-    const tmfxPreset = mappings.find((m) => m.expression === ef)?.config?.tv_script?.tmfxPreset;
+    const tmfxPreset = mappings.find((m) => m.id === ef)?.config?.tv_script?.tmfxPreset;
     if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
   }
 
   // Next we're going to determine what configs need to be applied and in what order
   // Filter effects that do not have a mapping and sort based on priority
-  effects = mappings.filter((m) => effects.includes(m.expression)).sort((ef1, ef2) => ef1.priority - ef2.priority);
+  effects = mappings.filter((m) => effects.includes(m.id)).sort((ef1, ef2) => ef1.priority - ef2.priority);
 
   // Check if image update should be prevented based on module settings
   let disableImageUpdate = false;
@@ -584,7 +584,7 @@ async function _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scr
 }
 
 export function getAllEffectMappings(token = null, includeDisabled = false) {
-  let allMappings = migrateMappings(token?.actor?.getFlag('token-variants', 'effectMappings'));
+  let allMappings = getFlagMappings(token);
   const unique = new Set();
 
   // TODO: replace with a setting
@@ -710,10 +710,10 @@ export function getTokenEffects(token, includeExpressions = false) {
   const mappings = getAllEffectMappings(token);
 
   for (const m of mappings) {
-    if (m.alwaysOn) effects.unshift(m.expression);
+    if (m.alwaysOn) effects.unshift(m.id);
     else if (includeExpressions) {
-      const evaluation = evaluateEffectAsExpression(m.expression, effects);
-      if (evaluation) effects.unshift(m.expression);
+      const evaluation = evaluateMappingExpression(m, effects);
+      if (evaluation) effects.unshift(m.id);
     }
   }
 
@@ -815,6 +815,7 @@ export function evaluateComparatorEffects(token, effects = []) {
     for (let i = 0; i < expressions.length; i++) {
       if (evaluateComparator(token, expressions[i])) {
         matched.add(expressions[i]);
+        if (expressions.length === 1) effects.unshift(m.id);
       }
     }
   }
@@ -869,8 +870,8 @@ function _testRegExEffect(effect, effects) {
   return effects.find((ef) => re.test(ef));
 }
 
-export function evaluateEffectAsExpression(effect, effects, added = new Set(), removed = new Set()) {
-  let arrExpression = effect
+export function evaluateMappingExpression(mapping, effects, added = new Set(), removed = new Set()) {
+  let arrExpression = mapping.expression
     .split(EXPRESSION_MATCH_RE)
     .filter(Boolean)
     .map((s) => s.trim())
@@ -915,11 +916,11 @@ export function evaluateEffectAsExpression(effect, effects, added = new Set(), r
     let evaluation = eval(temp);
     if (evaluation) {
       if (hasAdded || hasRemoved) {
-        added.add(effect);
-        effects.push(effect);
-      } else effects.unshift(effect);
+        added.add(mapping.id);
+        effects.push(mapping.id);
+      } else effects.unshift(mapping.id);
     } else if (hasRemoved || hasAdded) {
-      removed.add(effect);
+      removed.add(mapping.id);
     }
     return evaluation;
   } catch (e) {}

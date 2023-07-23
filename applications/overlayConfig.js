@@ -4,7 +4,7 @@ import { evaluateObjExpressions, genTexture } from '../scripts/token/overlay.js'
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { sortMappingsToGroups } from './effectMappingForm.js';
-import { migrateMappings } from '../scripts/settings.js';
+import { getFlagMappings } from '../scripts/settings.js';
 
 export default class OverlayConfig extends FormApplication {
   constructor(config, callback, label, token) {
@@ -272,11 +272,7 @@ export default class OverlayConfig extends FormApplication {
             // a token/actor specific mapping which may override the global one
             if (this.token) {
               previewIcons.push({ token: tkn, icon: c });
-            } else if (
-              !(tkn.actor ? migrateMappings(tkn.actor.getFlag('token-variants', 'effectMappings')) : []).find(
-                (m) => m.label === this.config.label
-              )
-            ) {
+            } else if (!getFlagMappings(tkn).find((m) => m.label === this.config.label)) {
               previewIcons.push({ token: tkn, icon: c });
             }
           }

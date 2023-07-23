@@ -10,7 +10,7 @@ export async function drawOverlays(token) {
   const mappings = getAllEffectMappings(token);
   let filteredOverlays = getTokenEffects(token, true);
   filteredOverlays = mappings
-    .filter((m) => m.overlay && filteredOverlays.includes(m.expression))
+    .filter((m) => m.overlay && filteredOverlays.includes(m.id))
     .sort(
       (m1, m2) =>
         (m1.priority - m1.overlayConfig?.parent ? 0 : 999) - (m2.priority - m2.overlayConfig?.parent ? 0 : 999)
