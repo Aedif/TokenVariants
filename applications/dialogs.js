@@ -304,24 +304,25 @@ export function showMappingTemplateDialog(mappings, callback) {
   let user_t = `<tr><th>USER Templates</th></tr>`;
   for (const template of TVA_CONFIG.templateMappings) {
     if (!template.id) template.id = randomID(8);
-    user_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td>${
+    user_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td class="template">${
       template.name
-    }</td></tr>`;
+    }</td><td style="text-align:center;"><a class="delete-template"><i class="fa-solid fa-trash"></i></a></td></tr>`;
   }
   user_t = '<table>' + user_t + '</table>';
 
-  user_t += '<button class="create-template">Create User Template</button>';
+  user_t += `<button class="create-template" ${mappings.length ? '' : 'disabled'}>Create Template</button>'`;
 
   let core_t = `<tr><th>CORE Templates</th></tr>`;
   for (const template of CORE_TEMPLATES) {
     if (!template.id) template.id = randomID(8);
-    core_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td>${
+    core_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td class="template">${
       template.name
     }</td></tr>`;
   }
   core_t = '<table>' + core_t + '</table>';
 
-  let content = user_t + '<hr>' + core_t;
+  let content =
+    '<style>.template:hover {background-color: rgba(39, 245, 101, 0.55);}</style>' + user_t + '<hr>' + core_t;
 
   let dialog;
   dialog = new Dialog({
@@ -329,12 +330,23 @@ export function showMappingTemplateDialog(mappings, callback) {
     content,
     buttons: {},
     render: (html) => {
-      html.find('tr').on('click', (event) => {
+      html.find('.template').on('click', (event) => {
         let id = $(event.target).closest('tr').data('id');
         if (id) {
           let template =
             CORE_TEMPLATES.find((t) => t.id === id) || TVA_CONFIG.templateMappings.find((t) => t.id === id);
           callback(template);
+        }
+      });
+      html.find('.delete-template').on('click', (event) => {
+        const row = $(event.target).closest('tr');
+        const id = row.data('id');
+        if (id) {
+          let i = TVA_CONFIG.templateMappings.findIndex((t) => t.id === id);
+          if (i !== -1) {
+            updateSettings({ templateMappings: TVA_CONFIG.templateMappings.splice(i, 1) });
+            row.remove();
+          }
         }
       });
       html.find('.create-template').on('click', () => {
