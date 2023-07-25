@@ -801,6 +801,24 @@ export async function applyTMFXPreset(tokenDoc, presetName, action = 'apply') {
   }
 }
 
+export async function applyCEEffect(tokenDoc, effectName, action = 'apply') {
+  if (game.modules.get('dfreds-convenient-effects')?.active) {
+    let uuid = tokenDoc.actor?.uuid;
+    if (uuid) {
+      if (action === 'apply') {
+        await game.dfreds.effectInterface.addEffect({
+          effectName,
+          uuid,
+          origin: 'token-variants',
+          overlay: false,
+        });
+      } else {
+        await game.dfreds.effectInterface.removeEffect({ effectName, uuid });
+      }
+    }
+  }
+}
+
 export class TokenDataAdapter {
   static dataToForm(data) {
     if ('texture.scaleX' in data) {

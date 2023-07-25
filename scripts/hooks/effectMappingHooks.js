@@ -1,5 +1,6 @@
 import { FEATURE_CONTROL, TVA_CONFIG, getFlagMappings, migrateMappings } from '../settings.js';
 import {
+  applyCEEffect,
   applyTMFXPreset,
   determineAddedRemovedEffects,
   EXPRESSION_OPERATORS,
@@ -416,6 +417,8 @@ async function _updateWithEffectMapping(token, added, removed) {
     }
     const tmfxPreset = mappings.find((m) => m.id === ef)?.config?.tv_script?.tmfxPreset;
     if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
+    const ceEffect = mappings.find((m) => m.id === ef)?.config?.tv_script?.ceEffect;
+    if (ceEffect) executeOnCallback.push({ ceEffect, token, action: 'remove' });
   }
   for (const ef of added) {
     const onApply = mappings.find((m) => m.id === ef)?.config?.tv_script?.onApply;
@@ -425,6 +428,8 @@ async function _updateWithEffectMapping(token, added, removed) {
     }
     const tmfxPreset = mappings.find((m) => m.id === ef)?.config?.tv_script?.tmfxPreset;
     if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
+    const ceEffect = mappings.find((m) => m.id === ef)?.config?.tv_script?.ceEffect;
+    if (ceEffect) executeOnCallback.push({ ceEffect, token, action: 'apply' });
   }
 
   // Next we're going to determine what configs need to be applied and in what order
@@ -579,6 +584,8 @@ async function _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scr
       await tv_executeScript(scr.script, { token: scr.token });
     } else if (scr.tmfxPreset) {
       await applyTMFXPreset(scr.token, scr.tmfxPreset, scr.action);
+    } else if (scr.ceEffect) {
+      await applyCEEffect(scr.token, scr.ceEffect, scr.action);
     }
   }
 }

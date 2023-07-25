@@ -383,8 +383,9 @@ export function migrateMappings(mappings) {
 export function getFlagMappings(object) {
   if (!object) return [];
   let doc = object.document ?? object;
-  if (doc.actorId) {
-    doc = game.actors.get(doc.actorId);
+  const actorId = doc.actor?.id;
+  if (actorId) {
+    doc = game.actors.get(actorId);
     if (!doc) return [];
   }
 

@@ -32,6 +32,12 @@ export default class EditScriptConfig extends FormApplication {
       data.tmfxPresets = TokenMagic.getPresets().map((p) => p.name);
     }
 
+    data.ceEffect = script.ceEffect;
+    data.ceActive = game.modules.get('dfreds-convenient-effects')?.active;
+    if (data.ceActive) {
+      data.ceEffects = game.dfreds.effects.all.map((ef) => ef.name);
+    }
+
     return data;
   }
 
@@ -67,7 +73,7 @@ export default class EditScriptConfig extends FormApplication {
   async _updateObject(event, formData) {
     formData.onApply = formData.onApply.trim();
     formData.onRemove = formData.onRemove.trim();
-    if (!formData.onApply && !formData.onRemove && !formData.tmfxPreset) {
+    if (!formData.onApply && !formData.onRemove && !formData.tmfxPreset && !formData.ceEffect) {
       if (this.callback) this.callback(null);
     } else {
       if (this.callback)
@@ -75,6 +81,7 @@ export default class EditScriptConfig extends FormApplication {
           onApply: formData.onApply,
           onRemove: formData.onRemove,
           tmfxPreset: formData.tmfxPreset,
+          ceEffect: formData.ceEffect,
         });
     }
   }
