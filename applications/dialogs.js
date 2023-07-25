@@ -1,4 +1,5 @@
-import { TVA_CONFIG } from '../scripts/settings.js';
+import { CORE_TEMPLATES } from '../scripts/mappingTemplates.js';
+import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
 import { sortMappingsToGroups } from './effectMappingForm.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
@@ -257,4 +258,95 @@ export function showMappingSelectDialog(
       });
     },
   }).render(true);
+}
+
+function showUserTemplateCreateDialog(mappings) {
+  let content = `
+<div class="form-group">
+  <label>Template Name</label>
+  <div class="form-fields">
+    <input type="text" name="templateName" data-dtype="String" value="">
+  </div>
+</div>
+<div class="form-group">
+  <label>Hover Text (optional)</label>
+  <div class="form-fields">
+    <input type="text" name="templateHint" data-dtype="String" value="">
+  </div>
+</div>`;
+
+  let dialog;
+  dialog = new Dialog({
+    title: 'Mapping Templates',
+    content,
+    buttons: {
+      create: {
+        label: 'Create Template',
+        callback: (html) => {
+          const name = html.find('[name="templateName"]').val();
+          const hint = html.find('[name="templateHint"]').val();
+          if (name.trim()) {
+            TVA_CONFIG.templateMappings.push({ name, hint, mappings: deepClone(mappings) });
+            updateSettings({ templateMappings: TVA_CONFIG.templateMappings });
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancel',
+      },
+    },
+    default: 'cancel',
+  });
+  dialog.render(true);
+}
+
+export function showMappingTemplateDialog(mappings, callback) {
+  let user_t = `<tr><th>USER Templates</th></tr>`;
+  for (const template of TVA_CONFIG.templateMappings) {
+    if (!template.id) template.id = randomID(8);
+    user_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td>${
+      template.name
+    }</td></tr>`;
+  }
+  user_t = '<table>' + user_t + '</table>';
+
+  user_t += '<button class="create-template">Create User Template</button>';
+
+  let core_t = `<tr><th>CORE Templates</th></tr>`;
+  for (const template of CORE_TEMPLATES) {
+    if (!template.id) template.id = randomID(8);
+    core_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td>${
+      template.name
+    }</td></tr>`;
+  }
+  core_t = '<table>' + core_t + '</table>';
+
+  let content = user_t + '<hr>' + core_t;
+
+  let dialog;
+  dialog = new Dialog({
+    title: 'Mapping Templates',
+    content,
+    buttons: {},
+    render: (html) => {
+      html.find('tr').on('click', (event) => {
+        let id = $(event.target).closest('tr').data('id');
+        if (id) {
+          let template =
+            CORE_TEMPLATES.find((t) => t.id === id) || TVA_CONFIG.templateMappings.find((t) => t.id === id);
+          callback(template);
+        }
+      });
+      html.find('.create-template').on('click', () => {
+        showMappingSelectDialog(mappings, {
+          title1: 'Create Template',
+          callback: (selectedMappings) => {
+            if (selectedMappings.length) showUserTemplateCreateDialog(selectedMappings);
+          },
+        });
+        dialog.close();
+      });
+    },
+  });
+  dialog.render(true);
 }

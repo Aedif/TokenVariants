@@ -5,8 +5,13 @@ import { TVA_CONFIG, getFlagMappings, migrateMappings, updateSettings } from '..
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import OverlayConfig from './overlayConfig.js';
-import { showMappingSelectDialog, showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
-import { DEFAULT_ACTIVE_EFFECT_CONFIG, DEFAULT_OVERLAY_CONFIG, EFFECT_TEMPLATES } from '../scripts/models.js';
+import {
+  showMappingSelectDialog,
+  showMappingTemplateDialog,
+  showOverlayJsonConfigDialog,
+  showTokenCaptureDialog,
+} from './dialogs.js';
+import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
 import { updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 import { drawOverlays } from '../scripts/token/overlay.js';
 
@@ -79,7 +84,7 @@ export default class EffectMappingForm extends FormApplication {
     if (this.object.mappings) {
       mappings = this.object.mappings.map(this._processConfig);
     } else {
-      const effectMappings = this.globalMappings ? this.globalMappings : getFlagMappings(this.objectToFlag);
+      const effectMappings = this.globalMappings ?? getFlagMappings(this.objectToFlag);
       mappings = effectMappings.map(this._processConfig);
 
       if (this.createMapping && !effectMappings.find((m) => m.label === this.createMapping)) {
@@ -519,28 +524,9 @@ export default class EffectMappingForm extends FormApplication {
       class: 'token-variants-templates',
       icon: 'fa-solid fa-book',
       onclick: async (ev) => {
-        const buttons = {};
-        let i = 0;
-        for (const k of Object.keys(EFFECT_TEMPLATES)) {
-          buttons[i++] = {
-            label: k,
-            callback: () => {
-              this._insertMappings(ev, migrateMappings(EFFECT_TEMPLATES[k].config));
-            },
-          };
-        }
-
-        let dialog;
-        dialog = new Dialog({
-          title: 'Mapping Templates',
-          content:
-            '<a href="https://github.com/Aedif/TokenVariants/wiki/Templates">https://github.com/Aedif/TokenVariants/wiki/Templates</a><hr>',
-          buttons,
-          render: (html) => {
-            html.find('.dialog-button').parent().css('display', 'block');
-          },
+        showMappingTemplateDialog(this.globalMappings ?? getFlagMappings(this.objectToFlag), (template) => {
+          this._insertMappings(ev, template.mappings);
         });
-        dialog.render(true);
       },
     });
 
