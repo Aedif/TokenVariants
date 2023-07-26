@@ -15,6 +15,8 @@ import FlagsConfig from './flagsConfig.js';
 import RandomizerConfig from './randomizerConfig.js';
 import { doImageSearch, findImagesFuzzy } from '../scripts/search.js';
 
+export const TOKEN_HUD_VARIANTS = { variants: null, actor: null };
+
 export async function renderTokenHUD(hud, html, token, searchText = '', fp_files = null) {
   activateStatusEffectListeners(token);
 
@@ -193,7 +195,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
     }
   };
 
-  actorVariants = tokenActor?.getFlag('token-variants', 'variants') || [];
+  actorVariants = getVariants(tokenActor);
 
   if (!fp_files) {
     if (!searchText) {
@@ -504,17 +506,7 @@ async function _onImageRightClick(event, tokenId) {
     new UserList(token, imgSrc, regenStyle).render(true);
   } else if (token.actor) {
     let tokenActor = game.actors.get(token.actor.id);
-    let variants = tokenActor.getFlag('token-variants', 'variants') || [];
-
-    // To maintain compatibility with previous versions
-    if (!(variants instanceof Array)) {
-      variants = [];
-    } else if (variants.length != 0 && !(variants[0] instanceof Object)) {
-      variants.forEach((src, i) => {
-        variants[i] = { imgSrc: src, names: [getFileName(src)] };
-      });
-    }
-    // end of compatibility code
+    let variants = getVariants(tokenActor);
 
     // Remove selected variant if present in the flag, add otherwise
     let del = false;
@@ -536,10 +528,7 @@ async function _onImageRightClick(event, tokenId) {
     else if (!updated) variants.push({ imgSrc: imgSrc, names: [name] });
 
     // Set shared variants as an actor flag
-    tokenActor.unsetFlag('token-variants', 'variants');
-    if (variants.length > 0) {
-      tokenActor.setFlag('token-variants', 'variants', variants);
-    }
+    setVariants(tokenActor, variants);
     imgButton.find('.fa-share').toggleClass('active'); // Display green arrow
   }
 }
@@ -618,7 +607,9 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new EffectMappingForm(token, { createMapping: 'token-variants-visibility' }).render(true);
+          new EffectMappingForm(token, {
+            createMapping: { label: 'In Combat', expression: 'token-variants-visibility' },
+          }).render(true);
         }
       });
 
@@ -628,7 +619,9 @@ function activateStatusEffectListeners(token) {
         event.preventDefault();
         if (keyPressed('config')) {
           event.stopPropagation();
-          new EffectMappingForm(token, { createMapping: 'token-variants-combat' }).render(true);
+          new EffectMappingForm(token, {
+            createMapping: { label: 'In Combat', expression: 'token-variants-combat' },
+          }).render(true);
         }
       });
 
@@ -643,8 +636,20 @@ function activateStatusEffectListeners(token) {
           if (game.system.id === 'pf2e') {
             effectName = $(event.target).closest('picture').attr('title');
           }
-          new EffectMappingForm(token, { createMapping: effectName }).render(true);
+          new EffectMappingForm(token, {
+            createMapping: { label: effectName, expression: effectName },
+          }).render(true);
         }
       });
   }
+}
+
+function getVariants(actor) {
+  if (TOKEN_HUD_VARIANTS.variants) return TOKEN_HUD_VARIANTS.variants;
+  else return actor?.getFlag('token-variants', 'variants') || [];
+}
+
+function setVariants(actor, variants) {
+  TOKEN_HUD_VARIANTS.variants = variants;
+  TOKEN_HUD_VARIANTS.actor = actor;
 }

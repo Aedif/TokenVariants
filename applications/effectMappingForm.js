@@ -87,7 +87,7 @@ export default class EffectMappingForm extends FormApplication {
       const effectMappings = this.globalMappings ?? getFlagMappings(this.objectToFlag);
       mappings = effectMappings.map(this._processConfig);
 
-      if (this.createMapping && !effectMappings.find((m) => m.label === this.createMapping)) {
+      if (this.createMapping && !effectMappings.find((m) => m.label === this.createMapping.label)) {
         mappings.push(this._processConfig(this._getNewEffectConfig(this.createMapping)));
       }
       this.createMapping = null;
@@ -440,11 +440,11 @@ export default class EffectMappingForm extends FormApplication {
   async _onCreate(event) {
     event.preventDefault();
     await this._onSubmit(event);
-    this.object.mappings.push(this._getNewEffectConfig(''));
+    this.object.mappings.push(this._getNewEffectConfig());
     this.render();
   }
 
-  _getNewEffectConfig(label, textOverlay = false) {
+  _getNewEffectConfig({ label = '', expression = '' } = {}) {
     // if (textOverlay) {
     //   TOGGLED_GROUPS['Text Overlays'] = true;
     //   return {
@@ -497,7 +497,7 @@ export default class EffectMappingForm extends FormApplication {
     TOGGLED_GROUPS['Default'] = true;
     return mergeObject(deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG), {
       label,
-      expression: label,
+      expression,
       id: randomID(8),
     });
     // }

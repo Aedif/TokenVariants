@@ -160,7 +160,7 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
   };
 
   if (!fp_files) {
-    if (searchText !== null && searchText < 3) return;
+    if (searchText !== null && !searchText) return;
 
     if (!searchText) {
       variants = tile.document.getFlag('token-variants', 'variants') || [];

@@ -410,26 +410,26 @@ async function _updateWithEffectMapping(token, added, removed) {
   const executeOnCallback = [];
   const deferredUpdateScripts = [];
   for (const ef of removed) {
-    const onRemove = mappings.find((m) => m.id === ef)?.config?.tv_script?.onRemove;
-    if (onRemove) {
-      if (onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(onRemove);
-      else executeOnCallback.push({ script: onRemove, token });
+    const script = mappings.find((m) => m.id === ef)?.config?.tv_script;
+    if (script) {
+      if (script.onRemove) {
+        if (script.onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(script.onRemove);
+        else executeOnCallback.push({ script: script.onRemove, token });
+      }
+      if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'remove' });
+      if (script.ceEffect) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
     }
-    const tmfxPreset = mappings.find((m) => m.id === ef)?.config?.tv_script?.tmfxPreset;
-    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'remove' });
-    const ceEffect = mappings.find((m) => m.id === ef)?.config?.tv_script?.ceEffect;
-    if (ceEffect) executeOnCallback.push({ ceEffect, token, action: 'remove' });
   }
   for (const ef of added) {
-    const onApply = mappings.find((m) => m.id === ef)?.config?.tv_script?.onApply;
-    if (onApply) {
-      if (onApply.includes('tvaUpdate')) deferredUpdateScripts.push(onApply);
-      else executeOnCallback.push({ script: onApply, token });
+    const script = mappings.find((m) => m.id === ef)?.config?.tv_script;
+    if (script) {
+      if (script.onApply) {
+        if (script.onApply.includes('tvaUpdate')) deferredUpdateScripts.push(script.onApply);
+        else executeOnCallback.push({ script: script.onApply, token });
+      }
+      if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'apply' });
+      if (script.ceEffect) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
     }
-    const tmfxPreset = mappings.find((m) => m.id === ef)?.config?.tv_script?.tmfxPreset;
-    if (tmfxPreset) executeOnCallback.push({ tmfxPreset, token, action: 'apply' });
-    const ceEffect = mappings.find((m) => m.id === ef)?.config?.tv_script?.ceEffect;
-    if (ceEffect) executeOnCallback.push({ ceEffect, token, action: 'apply' });
   }
 
   // Next we're going to determine what configs need to be applied and in what order
