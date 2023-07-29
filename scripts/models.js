@@ -94,5 +94,5 @@ export const CORE_SHAPE = {
     color: '#000000',
     alpha: 1,
   },
-  fill: { color: '#ffffff', alpha: 1 },
+  fill: { color: '#ffffff', color2: '', prc: '', alpha: 1 },
 };

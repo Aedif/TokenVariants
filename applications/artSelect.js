@@ -452,5 +452,7 @@ export function insertArtSelectButton(html, target, { search = '', searchType = 
       searchType,
     });
   });
-  html.find(`[name="${target}"]`).after(button);
+  const input = html.find(`[name="${target}"]`);
+  input.after(button);
+  return Boolean(input.length);
 }

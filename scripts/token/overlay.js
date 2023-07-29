@@ -122,7 +122,13 @@ export async function generateShapeTexture(token, conf) {
   let graphics = new PIXI.Graphics();
 
   for (const obj of conf.shapes) {
-    graphics.beginFill(string2Hex(obj.fill.color), obj.fill.alpha);
+    let fillColor;
+    if (obj.fill.color2 && getType(obj.fill.prc) === 'number') {
+      fillColor = interpolateColor(obj.fill.color, obj.fill.color2, obj.fill.prc);
+    } else {
+      fillColor = string2Hex(obj.fill.color);
+    }
+    graphics.beginFill(fillColor, obj.fill.alpha);
     graphics.lineStyle(obj.line.width, string2Hex(obj.line.color), obj.line.alpha);
     const shape = obj.shape;
     if (shape.type === 'rectangle') {
@@ -162,6 +168,35 @@ export async function generateShapeTexture(token, conf) {
 
   renderTexture.shapes = deepClone(conf.shapes);
   return renderTexture;
+}
+
+function interpolateColor(minColor, maxColor, percentage) {
+  minColor = new PIXI.Color(minColor);
+  maxColor = new PIXI.Color(maxColor);
+
+  let minHsv = rgb2hsv(minColor.red, minColor.green, minColor.blue);
+  let maxHsv = rgb2hsv(maxColor.red, maxColor.green, maxColor.blue);
+
+  let deltaHue = maxHsv[0] - minHsv[0];
+  let deltaAngle = deltaHue + (Math.abs(deltaHue) > 180 ? (deltaHue < 0 ? 360 : -360) : 0);
+
+  let targetHue = minHsv[0] + deltaAngle * percentage;
+  let targetSaturation = (1 - percentage) * minHsv[1] + percentage * maxHsv[1];
+  let targetValue = (1 - percentage) * minHsv[2] + percentage * maxHsv[2];
+
+  let result = new PIXI.Color({ h: targetHue, s: targetSaturation * 100, v: targetValue * 100 });
+  return result.toNumber();
+}
+
+/**
+ * Converts a color from RGB to HSV space.
+ * Source: https://stackoverflow.com/questions/8022885/rgb-to-hsv-color-in-javascript/54070620#54070620
+ */
+function rgb2hsv(r, g, b) {
+  let v = Math.max(r, g, b),
+    c = v - Math.min(r, g, b);
+  let h = c && (v == r ? (g - b) / c : v == g ? 2 + (b - r) / c : 4 + (r - g) / c);
+  return [60 * (h < 0 ? h + 6 : h), v && c / v, v];
 }
 
 function _evaluateString(str, token, conf = null) {

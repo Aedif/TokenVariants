@@ -191,9 +191,6 @@
       },
       "status-config": {
         "hint": "Order in which the image will be updated if multiple effects/status are applied. If they have same priority recency will be used instead."
-      },
-      "overlay-config": {
-        "color-tooltip": "Supports expressions in the form of {{path.to.property}}&#013;e.g. {{actor.folder.color}}"
       }
     },
     "notifications": {

@@ -95,10 +95,19 @@ function _modTileConfig(tileConfig, html) {
 }
 
 function _modActiveEffectConfig(effectConfig, html) {
-  insertArtSelectButton(html, 'icon', {
+  const inserted = insertArtSelectButton(html, 'icon', {
     search: effectConfig.object.name || 'Active Effect',
     searchType: TVA_CONFIG.customImageCategories.includes('Active Effect') ? 'Active Effect' : SEARCH_TYPE.ITEM,
   });
+  if (!inserted) {
+    const img = $(html).find('.effect-icon');
+    img.on('contextmenu', () => {
+      showArtSelect(effectConfig.object?.name ?? 'Active Effect', {
+        searchType: SEARCH_TYPE.ITEM,
+        callback: (imgSrc) => img.attr('src', imgSrc),
+      });
+    });
+  }
 }
 
 function _modItemSheet(itemSheet, html, options) {
