@@ -803,7 +803,7 @@ ol.token-variant-table .table-row .mapping-expression .div-input {
 }
 
 /* ---------------------------------------- */
-/* Overlay Config Select                    */
+/* Overlay Config                           */
 /* ---------------------------------------- */
 
 .limited-user-select option {
@@ -812,6 +812,12 @@ ol.token-variant-table .table-row .mapping-expression .div-input {
 
 .limited-user-select option:checked {
   background: lightgreen;
+}
+
+.shape-legend-input {
+  width: 200px !important;
+  margin-left: 15px !important;
+  border: none !important;
 }
 
 /* ---------------------------------------- */

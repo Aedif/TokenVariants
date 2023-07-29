@@ -35,6 +35,40 @@ export default class OverlayConfig extends FormApplication {
    */
   activateListeners(html) {
     super.activateListeners(html);
+
+    // Insert Controls to the Shape Legend
+    const shapeLegends = html.find('.shape-legend');
+    let config = this.config;
+    shapeLegends.each(function (i) {
+      const legend = $(this);
+      legend.append(
+        `&nbsp;<a class="cloneShape" data-index="${i}" title="Clone"><i class="fas fa-clone"></i></a>
+         &nbsp;<a class="deleteShape" data-index="${i}" title="Remove"><i class="fas fa-trash-alt"></i></a>`
+      );
+      if (i != 0) {
+        legend.append(
+          `&nbsp;<a class="moveShapeUp" data-index="${i}" title="Move Up"><i class="fas fa-arrow-up"></i></a>`
+        );
+      }
+      if (i != shapeLegends.length - 1) {
+        legend.append(
+          `&nbsp;<a class="moveShapeDown" data-index="${i}" title="Move Down"><i class="fas fa-arrow-down"></i></a>`
+        );
+      }
+      legend.append(
+        `<input class="shape-legend-input" type="text" name="shapes.${i}.label" value="${
+          config.shapes?.[i]?.label ?? ''
+        }">`
+      );
+    });
+
+    // Shape listeners
+    html.find('.addShape').on('click', this._onAddShape.bind(this));
+    html.find('.deleteShape').on('click', this._onDeleteShape.bind(this));
+    html.find('.moveShapeUp').on('click', this._onMoveShapeUp.bind(this));
+    html.find('.moveShapeDown').on('click', this._onMoveShapeDown.bind(this));
+    html.find('.cloneShape').on('click', this._onCloneShape.bind(this));
+
     html.find('input,select').on('change', this._onInputChange.bind(this));
     html.find('textarea').on('input', this._onInputChange.bind(this));
     html.find('[name="parent"]').on('change', (event) => {
@@ -201,10 +235,6 @@ export default class OverlayConfig extends FormApplication {
       }
     });
     limitOnProperty.trigger('input');
-
-    // Shape Controls
-    html.find('.addShape').on('click', this._onAddShape.bind(this));
-    html.find('.deleteShape').on('click', this._onDeleteShape.bind(this));
   }
 
   _onAddShape(event) {
@@ -229,6 +259,49 @@ export default class OverlayConfig extends FormApplication {
     this.config.shapes.splice(index, 1);
 
     this.render(true);
+  }
+
+  _onCloneShape(event) {
+    const index = $(event.target).closest('.cloneShape').data('index');
+    if (!index && index != 0) return;
+
+    this.config = this._getSubmitData();
+    if (!this.config.shapes) return;
+    const nShape = deepClone(this.config.shapes[index]);
+    if (nShape.label) {
+      nShape.label = nShape.label + ' - Copy';
+    }
+    this.config.shapes.push(nShape);
+
+    this.render(true);
+  }
+
+  _onMoveShapeUp(event) {
+    const index = $(event.target).closest('.moveShapeUp').data('index');
+    if (!index) return;
+
+    this.config = this._getSubmitData();
+    if (!this.config.shapes) this.config.shapes = [];
+    if (this.config.shapes.length >= 2) this._swapShapes(index, index - 1);
+
+    this.render(true);
+  }
+
+  _onMoveShapeDown(event) {
+    const index = $(event.target).closest('.moveShapeDown').data('index');
+    if (!index && index != 0) return;
+
+    this.config = this._getSubmitData();
+    if (!this.config.shapes) this.config.shapes = [];
+    if (this.config.shapes.length >= 2) this._swapShapes(index, index + 1);
+
+    this.render(true);
+  }
+
+  _swapShapes(i1, i2) {
+    let temp = this.config.shapes[i1];
+    this.config.shapes[i1] = this.config.shapes[i2];
+    this.config.shapes[i2] = temp;
   }
 
   _convertColor(colString) {
