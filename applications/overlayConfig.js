@@ -366,6 +366,7 @@ export default class OverlayConfig extends FormApplication {
       formData.shapes = Object.values(formData.shapes);
     }
     if (formData.limitedUsers) {
+      if (getType(formData.limitedUsers) === 'string') formData.limitedUsers = [formData.limitedUsers];
       formData.limitedUsers = formData.limitedUsers.filter((uid) => uid);
     } else {
       formData.limitedUsers = [];

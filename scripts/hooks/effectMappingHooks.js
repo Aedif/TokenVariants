@@ -884,11 +884,6 @@ export function evaluateMappingExpression(mapping, effects, added = new Set(), r
     .map((s) => s.trim())
     .filter(Boolean);
 
-  if (arrExpression.length === 1 && /\\\*|\\{.*\\}/g.test(arrExpression[0])) {
-  } else if (arrExpression.length < 2) {
-    return false;
-  }
-
   let temp = '';
   let hasAdded = false;
   let hasRemoved = false;

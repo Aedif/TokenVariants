@@ -312,7 +312,7 @@ export function showMappingTemplateDialog(mappings, callback) {
 
   user_t += `<button class="create-template" ${mappings.length ? '' : 'disabled'}>Create Template</button>'`;
 
-  let core_t = `<tr><th>CORE Templates</th></tr>`;
+  let core_t = `<tr><th><a href="https://github.com/Aedif/TokenVariants/wiki/Templates">CORE Templates</a></th></tr>`;
   for (const template of CORE_TEMPLATES) {
     if (!template.id) template.id = randomID(8);
     core_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td class="template">${
@@ -347,6 +347,8 @@ export function showMappingTemplateDialog(mappings, callback) {
             updateSettings({ templateMappings: TVA_CONFIG.templateMappings.splice(i, 1) });
             row.remove();
           }
+          dialog.close();
+          showMappingTemplateDialog(mappings, callback);
         }
       });
       html.find('.create-template').on('click', () => {

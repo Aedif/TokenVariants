@@ -118,7 +118,7 @@ function _modMacroConfig(macroConfig, html, options) {
   const img = $(html).find('.sheet-header > img');
   img.on('contextmenu', () => {
     showArtSelect(macroConfig.object?.name ?? 'Macro', {
-      searchType: TVA_CONFIG.customImageCategories.includes('Macro') ? 'Macro' : SEARCH_TYPE.ITEM,
+      searchType: SEARCH_TYPE.MACRO,
       callback: (imgSrc) => img.attr('src', imgSrc),
     });
   });

@@ -16,6 +16,7 @@ export const SEARCH_TYPE = {
   TILE: 'Tile',
   ITEM: 'Item',
   JOURNAL: 'JournalEntry',
+  MACRO: 'Macro',
 };
 
 export const BASE_IMAGE_CATEGORIES = [

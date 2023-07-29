@@ -89,31 +89,29 @@ export class TVASprite extends TokenMesh {
   }
 
   _customVisible() {
-    if (!this.ready || !(this.object.visible || this.overlayConfig.alwaysVisible)) return false;
+    const ov = this.overlayConfig;
+    if (!this.ready || !(this.object.visible || ov.alwaysVisible)) return false;
 
-    if (this.overlayConfig.limitedUsers?.length && !this.overlayConfig.limitedUsers.includes(game.user.id))
-      return false;
+    if (ov.limitedUsers?.length && !ov.limitedUsers.includes(game.user.id)) return false;
 
-    if (this.overlayConfig.limitOnEffect || this.overlayConfig.limitOnProperty) {
+    if (ov.limitOnEffect || ov.limitOnProperty) {
       const speaker = ChatMessage.getSpeaker();
       let token = canvas.ready ? canvas.tokens.get(speaker.token) : null;
       if (!token) return false;
-      if (this.overlayConfig.limitOnEffect) {
-        if (!getTokenEffects(token).includes(this.overlayConfig.limitOnEffect)) return false;
+      if (ov.limitOnEffect) {
+        if (!getTokenEffects(token).includes(ov.limitOnEffect)) return false;
       }
-      if (this.overlayConfig.limitOnProperty) {
-        if (!evaluateComparator(token.document, this.overlayConfig.limitOnProperty)) return false;
+      if (ov.limitOnProperty) {
+        if (!evaluateComparator(token.document, ov.limitOnProperty)) return false;
       }
     }
 
-    if (this.overlayConfig.limitOnHover || this.overlayConfig.limitOnControl) {
+    if (ov.limitOnHover || ov.limitOnControl || ov.limitOnHighlight) {
       let visible = false;
-      if (
-        this.overlayConfig.limitOnHover &&
-        (this.object.hover || (canvas.tokens.highlightObjects ?? canvas.tokens._highlight))
-      )
+      if (ov.limitOnHover && canvas.controls.ruler._state === Ruler.STATES.INACTIVE && this.object.hover)
         visible = true;
-      if (this.overlayConfig.limitOnControl && this.object.controlled) visible = true;
+      if (ov.limitOnControl && this.object.controlled) visible = true;
+      if (ov.limitOnHighlight && (canvas.tokens.highlightObjects ?? canvas.tokens._highlight)) visible = true;
       return visible;
     }
     return true;
