@@ -86,6 +86,15 @@ export const OVERLAY_SHAPES = {
     points: '0,1,0.95,0.31,0.59,-0.81,-0.59,-0.81,-0.95,0.31',
     scale: 50,
   },
+  Torus: {
+    type: 'torus',
+    x: 0,
+    y: 0,
+    innerRadius: 50,
+    outerRadius: 100,
+    startAngle: 0,
+    endAngle: 180,
+  },
 };
 
 export const CORE_SHAPE = {

@@ -439,6 +439,8 @@
                 {{~>modules/token-variants/templates/partials/shapeEllipse.html shape}}
             {{else if (eq shape.shape.type "polygon")}}
                 {{~>modules/token-variants/templates/partials/shapePolygon.html shape}}
+            {{else if (eq shape.shape.type "torus")}}
+                {{~>modules/token-variants/templates/partials/shapeTorus.html shape}}
             {{/if}}
 
             <fieldset>

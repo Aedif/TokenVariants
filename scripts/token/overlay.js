@@ -139,6 +139,16 @@ export async function generateShapeTexture(token, conf) {
       graphics.drawPolygon(
         shape.points.split(',').map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
       );
+    } else if (shape.type === 'torus') {
+      drawTorus(
+        graphics,
+        shape.x,
+        shape.y,
+        shape.innerRadius,
+        shape.outerRadius,
+        Math.toRadians(shape.startAngle),
+        shape.endAngle >= 360 ? Math.PI * 2 : Math.toRadians(shape.endAngle)
+      );
     }
   }
 
@@ -168,6 +178,15 @@ export async function generateShapeTexture(token, conf) {
 
   renderTexture.shapes = deepClone(conf.shapes);
   return renderTexture;
+}
+
+function drawTorus(graphics, x, y, innerRadius, outerRadius, startArc = 0, endArc = Math.PI * 2) {
+  if (Math.abs(endArc - startArc) >= Math.PI * 2) {
+    return graphics.drawCircle(x, y, outerRadius).beginHole().drawCircle(x, y, innerRadius).endHole();
+  }
+
+  graphics.finishPoly();
+  graphics.arc(x, y, innerRadius, endArc, startArc, true).arc(x, y, outerRadius, startArc, endArc, false).finishPoly();
 }
 
 function interpolateColor(minColor, maxColor, percentage) {
