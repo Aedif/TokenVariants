@@ -258,14 +258,21 @@ export function evaluateObjExpressions(obj, token, conf = null) {
 
 export async function generateTextTexture(token, conf) {
   let label = conf.text.text;
-
-  let text = new PreciseText(
-    label,
-    PreciseText.getTextStyle({
-      ...conf.text,
-      fontFamily: [conf.text.fontFamily, 'fontAwesome'],
-    })
-  );
+  // TODO Font Awesome fonts are not being picked up properly in browsers
+  let style = PreciseText.getTextStyle({
+    ...conf.text,
+    fontFamily: [
+      conf.text.fontFamily,
+      'fontAwesome',
+      '"Font Awesome 6 Brands"',
+      '"Font Awesome 6 Duotone"',
+      '"Font Awesome 6 Pro"',
+      '"Font Awesome 5 Brands"',
+      '"Font Awesome 5 Pro"',
+      '"Font Awesome 5 Duotone"',
+    ].join(','),
+  });
+  let text = new PreciseText(label, style);
   text.updateText(false);
 
   if (!conf.text.curve?.radius) {
