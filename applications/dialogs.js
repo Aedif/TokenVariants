@@ -219,7 +219,7 @@ export function showMappingSelectDialog(
         <div class="form-group">
           <label>${mapping.label}</label>
           <div class="form-fields">
-              <input type="checkbox" name="${mapping.label}" data-dtype="Boolean">
+              <input type="checkbox" name="${mapping.id}" data-dtype="Boolean">
           </div>
         </div>
         `;
@@ -240,7 +240,7 @@ export function showMappingSelectDialog(
           const selectedMappings = [];
           html.find('input[type="checkbox"]').each(function () {
             if (this.checked) {
-              const mapping = mappings.find((m) => m.label === this.name);
+              const mapping = mappings.find((m) => m.id === this.name);
               if (mapping) {
                 const cMapping = deepClone(mapping);
                 selectedMappings.push(cMapping);

@@ -356,13 +356,14 @@ export function registerSettings() {
   // 20/07/2023 Convert globalMappings to a new format
   if (getType(settings.globalMappings) === 'Object') {
     TVA_CONFIG.globalMappings = migrateMappings(settings.globalMappings);
+    setTimeout(() => updateSettings({ globalMappings: TVA_CONFIG.globalMappings }), 10000);
   }
 
   // Read client settings
   TVA_CONFIG.hud = game.settings.get('token-variants', 'hudSettings');
 }
 
-export function migrateMappings(mappings) {
+export function migrateMappings(mappings, globalMappings = []) {
   if (!mappings) return [];
   if (getType(mappings) === 'Object') {
     let nMappings = [];
@@ -371,9 +372,23 @@ export function migrateMappings(mappings) {
       if (!mapping.expression) mapping.expression = effect.replaceAll('¶', '.');
       if (!mapping.id) mapping.id = randomID(8);
       delete mapping.effect;
-      if (mapping.overlayConfig) mapping.overlayConfig.label = effect.replaceAll('¶', '.');
+      if (mapping.overlayConfig) mapping.overlayConfig.id = mapping.id;
       delete mapping.overlayConfig?.effect;
       nMappings.push(mapping);
+    }
+    // Convert parents to parentIDs
+    let combMappings = nMappings.concat(globalMappings);
+    for (const mapping of nMappings) {
+      if (mapping.overlayConfig?.parent) {
+        if (mapping.overlayConfig.parent === 'Token (Placeable)') {
+          mapping.overlayConfig.parentID = 'TOKEN';
+        } else {
+          const parent = combMappings.find((m) => m.label === mapping.overlayConfig.parent);
+          if (parent) mapping.overlayConfig.parentID = parent.id;
+          else mapping.overlayConfig.parentID = '';
+        }
+        delete mapping.overlayConfig.parent;
+      }
     }
     return nMappings;
   }
@@ -392,7 +407,7 @@ export function getFlagMappings(object) {
   // 23/07/2023
   let mappings = doc.getFlag('token-variants', 'effectMappings') ?? [];
   if (getType(mappings) === 'Object') {
-    mappings = migrateMappings(mappings);
+    mappings = migrateMappings(mappings, TVA_CONFIG.globalMappings);
     doc.setFlag('token-variants', 'effectMappings', mappings);
   }
   return mappings;

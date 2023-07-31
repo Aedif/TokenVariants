@@ -8,27 +8,23 @@ export async function drawOverlays(token) {
   token.tva_drawing_overlays = true;
 
   const mappings = getAllEffectMappings(token);
-  let filteredOverlays = getTokenEffects(token, true);
-  filteredOverlays = mappings
-    .filter((m) => m.overlay && filteredOverlays.includes(m.id))
+  const effects = getTokenEffects(token, true);
+  let processedMappings = mappings
+    .filter((m) => m.overlay && effects.includes(m.id))
     .sort(
       (m1, m2) =>
-        (m1.priority - m1.overlayConfig?.parent ? 0 : 999) - (m2.priority - m2.overlayConfig?.parent ? 0 : 999)
-    )
-    .map((m) => {
-      const overlayConfig = m.overlayConfig ?? {};
-      overlayConfig.label = m.label;
-      return overlayConfig;
-    });
+        (m1.priority - m1.overlayConfig?.parentID ? 0 : 999) - (m2.priority - m2.overlayConfig?.parentID ? 0 : 999)
+    );
 
   // See if the whole stack or just top of the stack should be used according to settings
-  let overlays = [];
-  if (filteredOverlays.length) {
-    overlays = TVA_CONFIG.stackStatusConfig ? filteredOverlays : [filteredOverlays[filteredOverlays.length - 1]];
+  if (processedMappings.length) {
+    processedMappings = TVA_CONFIG.stackStatusConfig
+      ? processedMappings
+      : [processedMappings[processedMappings.length - 1]];
   }
 
   // Process strings as expressions
-  overlays = overlays.map((ov) => evaluateObjExpressions(deepClone(ov), token, ov));
+  const overlays = processedMappings.map((m) => evaluateObjExpressions(deepClone(m.overlayConfig), token, m));
 
   if (overlays.length) {
     waitForTokenTexture(token, async (token) => {
@@ -41,7 +37,7 @@ export async function drawOverlays(token) {
       let overlaySort = 0;
       let underlaySort = 0;
       for (const ov of overlays) {
-        let sprite = _findTVASprite(ov.label, token);
+        let sprite = _findTVASprite(ov.id, token);
         if (sprite) {
           const diff = diffObject(sprite.overlayConfig, ov);
 
@@ -51,7 +47,7 @@ export async function drawOverlays(token) {
               sprite.refresh(ov);
             } else if (diff.img || diff.text || diff.shapes) {
               sprite.setTexture(await genTexture(token, ov), { configuration: ov });
-            } else if (diff.parent) {
+            } else if (diff.parentID) {
               sprite.parent?.removeChild(sprite)?.destroy();
               sprite = null;
             } else {
@@ -62,8 +58,8 @@ export async function drawOverlays(token) {
           }
         }
         if (!sprite) {
-          if (ov.parent) {
-            const parent = _findTVASprite(ov.parent, token);
+          if (ov.parentID) {
+            const parent = _findTVASprite(ov.parentID, token);
             if (parent) sprite = parent.addChild(new TVASprite(await genTexture(token, ov), token, ov));
           } else {
             sprite = canvas.primary.addChild(new TVASprite(await genTexture(token, ov), token, ov));
@@ -223,8 +219,11 @@ function _evaluateString(str, token, conf = null) {
   return str
     .replace(re, function replace(match) {
       const property = match.substring(2, match.length - 2);
-      if (conf && property === 'effect') return conf.label;
-      else if (token && property === 'hp') return getTokenHP(token)?.[0];
+      if (conf) {
+        if (property === 'label') return conf.label;
+        else if (property === 'effect') return conf.expression;
+      }
+      if (token && property === 'hp') return getTokenHP(token)?.[0];
       else if (token && property === 'hpMax') return getTokenHP(token)?.[1];
       const val = getProperty(token.document ?? token, property);
       return val === undefined ? match : val;
@@ -347,9 +346,9 @@ export function removeMarkedOverlays(token) {
   token.tva_sprites = sprites;
 }
 
-function _findTVASprite(label, token) {
+function _findTVASprite(id, token) {
   for (const child of token.tva_sprites) {
-    if (child.overlayConfig?.label === label) {
+    if (child.overlayConfig?.id === id) {
       return child;
     }
   }

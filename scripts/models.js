@@ -58,7 +58,8 @@ export const DEFAULT_OVERLAY_CONFIG = {
     curve: { radius: 0, invert: false },
     letterSpacing: CONFIG.canvasTextStyle.letterSpacing,
   },
-  parent: '',
+  parentID: '',
+  id: null,
   anchor: { x: 0.5, y: 0.5 },
   shapes: [],
 };

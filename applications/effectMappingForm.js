@@ -73,7 +73,7 @@ export default class EffectMappingForm extends FormApplication {
       overlayConfig: mapping.overlayConfig,
       targetActors: mapping.targetActors,
       group: mapping.group,
-      parent: mapping.overlayConfig?.parent,
+      parentID: mapping.overlayConfig?.parentID,
     };
   }
 
@@ -87,7 +87,7 @@ export default class EffectMappingForm extends FormApplication {
       const effectMappings = this.globalMappings ?? getFlagMappings(this.objectToFlag);
       mappings = effectMappings.map(this._processConfig);
 
-      if (this.createMapping && !effectMappings.find((m) => m.label === this.createMapping.label)) {
+      if (this.createMapping && !effectMappings.find((m) => m.expression === this.createMapping.expression)) {
         mappings.push(this._processConfig(this._getNewEffectConfig(this.createMapping)));
       }
       this.createMapping = null;
@@ -97,8 +97,8 @@ export default class EffectMappingForm extends FormApplication {
       if (!m1.label && m2.label) return -1;
       else if (m1.label && !m2.label) return 1;
 
-      if (!m1.overlayConfig?.parent && m2.overlayConfig?.parent) return -1;
-      else if (m1.overlayConfig?.parent && !m2.overlayConfig?.parent) return 1;
+      if (!m1.overlayConfig?.parentID && m2.overlayConfig?.parentID) return -1;
+      else if (m1.overlayConfig?.parentID && !m2.overlayConfig?.parentID) return 1;
 
       let priorityDiff = m1.priority - m2.priority;
       if (priorityDiff === 0) return m1.label.localeCompare(m2.label);
@@ -258,15 +258,15 @@ export default class EffectMappingForm extends FormApplication {
       (config) => {
         mapping.overlayConfig = config;
         const gear = $(li).find('.mapping-overlay > a');
-        if (config?.parent && config.parent !== 'Token (Placeable)') {
+        if (config?.parentID && config.parentID !== 'TOKEN') {
           gear.addClass('child');
-          gear.attr('title', 'Child Of: ' + config.parent);
+          gear.attr('title', 'Child Of: ' + config.parentID);
         } else {
           gear.removeClass('child');
           gear.attr('title', '');
         }
       },
-      mapping.label,
+      mapping.id,
       this.token
     ).render(true);
   }
@@ -601,19 +601,7 @@ export default class EffectMappingForm extends FormApplication {
                     return ui.notifications?.error('No mappings found within the file!');
                   }
 
-                  const mappings = this.object.mappings;
-
-                  migrateMappings(json.globalMappings).forEach((mapping) => {
-                    const processedMapping = this._processConfig(mapping);
-                    const i = mappings.findIndex((m) => m.label === mapping.label);
-                    if (i === -1) {
-                      mappings.push(processedMapping);
-                    } else {
-                      mappings[i] = processedMapping;
-                    }
-                  });
-
-                  this.render();
+                  this._insertMappings(event, migrateMappings(json.globalMappings));
                   resolve(true);
                 });
               },
@@ -646,17 +634,30 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   async _insertMappings(event, mappings) {
-    const cMappings = deepClone(mappings);
+    const cMappings = deepClone(mappings).map(this._processConfig);
     await this._onSubmit(event);
 
+    const changedIDs = {};
+
     for (const m of cMappings) {
-      const i = this.object.mappings.findIndex((mapping) => mapping.label === m.label);
+      const i = this.object.mappings.findIndex((mapping) => mapping.label === m.label && mapping.group === m.group);
       if (i === -1) this.object.mappings.push(m);
-      else this.object.mappings[i] = m;
+      else {
+        changedIDs[this.object.mappings.id] = m.id;
+        this.object.mappings[i] = m;
+      }
       if (m.group) {
         TOGGLED_GROUPS[m.group] = true;
       }
     }
+
+    // If parent's id has been changed we need to update all the children
+    this.object.mappings.forEach((m) => {
+      let pID = m.overlayConfig?.parentID;
+      if (pID && pID in changedIDs) {
+        m.overlayConfig.parentID = changedIDs[pID];
+      }
+    });
     this.render();
   }
 
@@ -859,8 +860,8 @@ export function sortMappingsToGroups(mappings) {
     if (!m1.label && m2.label) return -1;
     else if (m1.label && !m2.label) return 1;
 
-    if (!m1.overlayConfig?.parent && m2.overlayConfig?.parent) return -1;
-    else if (m1.overlayConfig?.parent && !m2.overlayConfig?.parent) return 1;
+    if (!m1.overlayConfig?.parentID && m2.overlayConfig?.parentID) return -1;
+    else if (m1.overlayConfig?.parentID && !m2.overlayConfig?.parentID) return 1;
 
     let priorityDiff = m1.priority - m2.priority;
     if (priorityDiff === 0) return m1.label.localeCompare(m2.label);

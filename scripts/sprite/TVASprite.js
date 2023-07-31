@@ -205,7 +205,7 @@ export class TVASprite extends TokenMesh {
 
     // Scale the image using the same logic as the token
     const tex = this.texture;
-    if (config.linkScale && !config.parent) {
+    if (config.linkScale && !config.parentID) {
       let aspect = tex.width / tex.height;
       const scale = this.scale;
       if (aspect >= 1) {
@@ -237,7 +237,7 @@ export class TVASprite extends TokenMesh {
     this.scale.y = this.scale.y * config.scaleY;
 
     // Check if mirroring should be inherited from the token and if so apply it
-    if (config.linkMirror && !config.parent) {
+    if (config.linkMirror && !config.parentID) {
       this.scale.x = Math.abs(this.scale.x) * (this.object.document.texture.scaleX < 0 ? -1 : 1);
       this.scale.y = Math.abs(this.scale.y) * (this.object.document.texture.scaleY < 0 ? -1 : 1);
     }
@@ -248,7 +248,7 @@ export class TVASprite extends TokenMesh {
     }
 
     // Position
-    if (config.parent && this.parent?.anchor) {
+    if (config.parentID && this.parent?.anchor) {
       const pWidth = this.parent.width / this.parent.scale.x;
       const pHeight = this.parent.height / this.parent.scale.y;
       this.position.set(

@@ -1,4 +1,4 @@
-import { FEATURE_CONTROL, TVA_CONFIG, getFlagMappings, migrateMappings } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG, getFlagMappings } from '../settings.js';
 import {
   applyCEEffect,
   applyTMFXPreset,

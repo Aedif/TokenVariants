@@ -8,13 +8,13 @@
 
 Improve management of Token art in-session and during prep.
 
-This module searches a customisable list of directories and makes found art available through vairous convenient means such as pop-ups and a new Token HUD button.
+This module searches a customizable list of directories and makes found art available through various convenient means such as pop-ups and a new Token HUD button.
 
 Main features include:
 
 - Sourcing images from local folders, rolltables, Imgur galleries, and s3 buckets
 - Pop-ups on Actor/Token create to select images found based on Actor/Token name
-- Overlaying images/videos on top or bellow the token
+- Overlaying images/videos on top or bellow the token ([examples](https://github.com/Aedif/TokenVariants/wiki/Templates))
 - Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
 - Displaying different images for the same token for each user
 - Image filtering based on identifiers e.g. when selecting a portrait only showing images containing 'PRT': Bob[PRT].png, Tom[PRT].png
@@ -30,15 +30,11 @@ Watch a short feature showcase on YouTube:
 [![Watch the video](https://img.youtube.com/vi/S1O8CDksagM/hqdefault.jpg)](https://youtu.be/S1O8CDksagM)
 
 Watch a video guide to help setup main module features:
-https://youtu.be/r3bK0UEBAL4 
+https://youtu.be/r3bK0UEBAL4
 
 You can support me on [Patreon](https://www.patreon.com/Aedif). In addition to helping me to continue working on FoundryVTT modules you will be granted access to a selection of pre-configured animated overlays to be used along with this module:
 
 !["Animated Overlays"](./docs/animated_overlays.gif)
-
-Higher tiers will also grant you condition rings (v10 exclusive):
-
-!["Condition Ring Overlays"](./docs/condition_rings.gif)
 
 ## Image to User mappings
 

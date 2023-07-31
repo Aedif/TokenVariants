@@ -95,7 +95,7 @@
         </div>
         <div class="mapping-overlay">
           <input type="checkbox" name="mappings.{{mapping.i}}.overlay" {{#if mapping.overlay}}checked{{/if}}/>
-          <a {{#if mapping.parent}}class="child" title="Child Of: {{mapping.parent}}"{{/if}}><i class="fas fa-cog fa-lg overlay-config"></i></a>
+          <a {{#if mapping.parentID}}class="child" title="Child Of: {{mapping.parentID}}"{{/if}}><i class="fas fa-cog fa-lg overlay-config"></i></a>
         </div>
         <div class="mapping-alwaysOn">
           <input type="checkbox" name="mappings.{{mapping.i}}.alwaysOn" {{#if mapping.alwaysOn}}checked{{/if}} title="Enabling will not trigger scripts."/>

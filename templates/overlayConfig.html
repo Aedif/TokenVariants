@@ -10,7 +10,7 @@
         <a class="item" data-tab="shapes"><i class="fas fa-shapes"></i> Shapes</a>
     </nav>
 
-    <input class="image" type="text" name="label" value="{{label}}" hidden>
+    <input type="text" name="id" value="{{id}}" hidden>
 
     <section class = "content">
         <div class="tab active" data-group="main" data-tab="misc">
@@ -18,12 +18,12 @@
             <div class="form-group">
                 <label>Parent</label>
                 <div class="form-fields">
-                <select name="parent">
-                    <option value="Token (Placeable)" {{#if (eq ../../parent "Token (Placeable)")}}selected="selected"{{/if}}>Token (Placeable)</option>
+                <select name="parentID">
+                    <option value="TOKEN" {{#if (eq ../../parent "TOKEN")}}selected="selected"{{/if}}>Token (Placeable)</option>
                     {{#each parents as |parent group|}}
                     <optgroup label="{{group}}">
                         {{#each parent.list as |mapping|}}
-                        <option value="{{mapping.label}}" {{#if (eq ../../parent mapping.label)}}selected="selected"{{/if}}>{{mapping.label}}</option>
+                        <option value="{{mapping.id}}" {{#if (eq ../../parentID mapping.id)}}selected="selected"{{/if}}>{{mapping.label}}</option>
                         {{/each}}
                     </optgroup>
                     {{/each}}
