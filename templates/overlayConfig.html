@@ -352,6 +352,8 @@
                 <p class="notes">Similarly the effect name can be insert with: <b>&#123;&#123;effect&#125;&#125;</b></p>
             </div>
 
+            {{~>modules/token-variants/templates/partials/repeating.html repeating=text.repeating root="text" repeat=text.repeat}}
+
             <div class="form-group">
                 <label>{{localize "DRAWING.FontFamily"}}</label>
                 <div class="form-fields">
@@ -363,6 +365,13 @@
                 </div>
             </div>
             <div class="form-group">
+                <label>{{localize "DRAWING.FillColor"}}</label>
+                <div class="form-fields">
+                    <input class="color" type="text" name="text.fill" value="{{text.fill}}">
+                    <input type="color" value="{{text.fill}}" data-edit="text.fill">
+                </div>
+            </div>
+            <div class="form-group">
                 <label>Font Size</label>
                 <div class="form-fields">
                     <input type="range" name="text.fontSize" value="{{text.fontSize}}" min="24" max="100" step="1">
@@ -370,17 +379,20 @@
                 </div>
             </div>
             <div class="form-group">
+                <label>Align</label>
+                <div class="form-fields">
+                <select name="text.align">
+                    {{#each textAlignmentOptions as |option|}}
+                    <option value="{{option.value}}" {{#if (eq text.align options.value)}}selected="selected"{{/if}}>{{option.label}}</option>
+                    {{/each}}
+                </select>
+                </div>
+            </div>
+            <div class="form-group">
                 <label>Letter Spacing</label>
                 <div class="form-fields">
                     <input type="range" name="text.letterSpacing" value="{{text.letterSpacing}}" min="0" max="25" step="0.1">
                     <span class="range-value">{{text.letterSpacing}}</span>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>{{localize "DRAWING.FillColor"}}</label>
-                <div class="form-fields">
-                    <input class="color" type="text" name="text.fill" value="{{text.fill}}">
-                    <input type="color" value="{{text.fill}}" data-edit="text.fill">
                 </div>
             </div>
             <div class="form-group">
@@ -497,6 +509,8 @@
                     </div>
                 </div>
             </fieldset>
+
+            {{~>modules/token-variants/templates/partials/repeating.html repeating=shape.repeating root=(concat "shapes." @index) repeat=shape.repeat}}
 
             <hr><hr>
             {{/each}}

@@ -36,6 +36,13 @@ export default class OverlayConfig extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
 
+    html.find('.repeat').on('change', (event) => {
+      const content = $(event.target).closest('fieldset').find('.content');
+      if (event.target.checked) content.show();
+      else content.hide();
+      this.setPosition();
+    });
+
     // Insert Controls to the Shape Legend
     const shapeLegends = html.find('.shape-legend');
     let config = this.config;
@@ -426,8 +433,15 @@ export default class OverlayConfig extends FormApplication {
     for (const shapeName of Object.keys(OVERLAY_SHAPES)) {
       await getTemplate(`modules/token-variants/templates/partials/shape${shapeName}.html`);
     }
+    await getTemplate('modules/token-variants/templates/partials/repeating.html');
 
     data.allShapes = Object.keys(OVERLAY_SHAPES);
+    data.textAlignmentOptions = [
+      { value: 'left', label: 'Left' },
+      { value: 'center', label: 'Center' },
+      { value: 'right', label: 'Right' },
+      { value: 'justify', label: 'Justify' },
+    ];
 
     // linkDimensions has been converted to linkDimensionsX and linkDimensionsY
     // Make sure we're using the latest fields
@@ -449,8 +463,13 @@ export default class OverlayConfig extends FormApplication {
     let formData = super._getSubmitData();
     formData = expandObject(formData);
 
+    if (!formData.text.repeating) delete formData.text.repeat;
+
     if (formData.shapes) {
       formData.shapes = Object.values(formData.shapes);
+      formData.shapes.forEach((shape) => {
+        if (!shape.repeating) delete shape.repeat;
+      });
     }
     if (formData.variables) {
       formData.variables = Object.values(formData.variables);

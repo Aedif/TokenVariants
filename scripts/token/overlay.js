@@ -270,6 +270,19 @@ export function evaluateObjExpressions(obj, token, conf) {
 
 export async function generateTextTexture(token, conf) {
   let label = conf.text.text;
+
+  // Repeating the string if necessary
+  if (conf.text.repeating && conf.text.repeat) {
+    let tmp = '';
+    const repeat = conf.text.repeat;
+    let numRepeats = Math.floor(repeat.value / repeat.increment);
+    while (numRepeats > 0) {
+      tmp += label;
+      numRepeats--;
+    }
+    label = tmp;
+  }
+
   // TODO Font Awesome fonts are not being picked up properly in browsers
   let style = PreciseText.getTextStyle({
     ...conf.text,

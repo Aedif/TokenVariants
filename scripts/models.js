@@ -49,6 +49,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
   alwaysVisible: false,
   text: {
     text: '',
+    align: CONFIG.canvasTextStyle.align,
     fontSize: CONFIG.canvasTextStyle.fontSize,
     fontFamily: CONFIG.canvasTextStyle.fontFamily,
     fill: CONFIG.canvasTextStyle.fill,
@@ -57,6 +58,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
     stroke: CONFIG.canvasTextStyle.stroke,
     curve: { radius: 0, invert: false },
     letterSpacing: CONFIG.canvasTextStyle.letterSpacing,
+    repeating: false,
   },
   parentID: '',
   id: null,
@@ -73,6 +75,7 @@ export const OVERLAY_SHAPES = {
     width: 100,
     height: 100,
     radius: 0,
+    repeating: false,
   },
   Ellipse: {
     type: 'ellipse',
@@ -80,6 +83,7 @@ export const OVERLAY_SHAPES = {
     y: 50,
     width: 50,
     height: 50,
+    repeating: false,
   },
   Polygon: {
     type: 'polygon',
@@ -87,6 +91,7 @@ export const OVERLAY_SHAPES = {
     y: 0,
     points: '0,1,0.95,0.31,0.59,-0.81,-0.59,-0.81,-0.95,0.31',
     scale: 50,
+    repeating: false,
   },
   Torus: {
     type: 'torus',
@@ -96,6 +101,7 @@ export const OVERLAY_SHAPES = {
     outerRadius: 100,
     startAngle: 0,
     endAngle: 180,
+    repeating: false,
   },
 };
 
