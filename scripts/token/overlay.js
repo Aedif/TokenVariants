@@ -214,9 +214,19 @@ function rgb2hsv(r, g, b) {
   return [60 * (h < 0 ? h + 6 : h), v && c / v, v];
 }
 
-function _evaluateString(str, token, conf = null) {
+function _evaluateString(str, token, conf) {
+  let variables = conf.overlayConfig?.variables;
+  if (variables?.length) {
+    const re = new RegExp('@\\w+', 'gi');
+    str = str.replace(re, function replace(match) {
+      let name = match.substr(1, match.length);
+      let v = variables.find((v) => v.name === name);
+      return v ? v.value : match;
+    });
+  }
+
   const re = new RegExp('{{.*?}}', 'gi');
-  return str
+  str = str
     .replace(re, function replace(match) {
       const property = match.substring(2, match.length - 2);
       if (conf) {
@@ -229,10 +239,12 @@ function _evaluateString(str, token, conf = null) {
       return val === undefined ? match : val;
     })
     .replace('\\n', '\n');
+
+  return str;
 }
 
 // Evaluate provided object values substituting in {{path.to.property}} with token properties, and performing eval() on strings
-export function evaluateObjExpressions(obj, token, conf = null) {
+export function evaluateObjExpressions(obj, token, conf) {
   const t = getType(obj);
   if (t === 'string') {
     const str = _evaluateString(obj, token, conf);
@@ -249,6 +261,7 @@ export function evaluateObjExpressions(obj, token, conf = null) {
       // Exception for text overlay
       if (k === 'text' && getType(v) === 'string' && v) {
         obj[k] = _evaluateString(v, token, conf);
+      } else if (k === 'variables') {
       } else obj[k] = evaluateObjExpressions(v, token, conf);
     }
   }

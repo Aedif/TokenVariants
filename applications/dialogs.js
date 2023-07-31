@@ -338,17 +338,14 @@ export function showMappingTemplateDialog(mappings, callback) {
           callback(template);
         }
       });
-      html.find('.delete-template').on('click', (event) => {
+      html.find('.delete-template').on('click', async (event) => {
         const row = $(event.target).closest('tr');
         const id = row.data('id');
         if (id) {
-          let i = TVA_CONFIG.templateMappings.findIndex((t) => t.id === id);
-          if (i !== -1) {
-            updateSettings({ templateMappings: TVA_CONFIG.templateMappings.splice(i, 1) });
-            row.remove();
-          }
-          dialog.close();
-          showMappingTemplateDialog(mappings, callback);
+          await updateSettings({
+            templateMappings: TVA_CONFIG.templateMappings.filter((m) => m.id !== id),
+          });
+          row.remove();
         }
       });
       html.find('.create-template').on('click', () => {

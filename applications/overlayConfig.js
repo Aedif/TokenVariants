@@ -235,6 +235,26 @@ export default class OverlayConfig extends FormApplication {
       }
     });
     limitOnProperty.trigger('input');
+
+    html.find('.create-variable').on('click', this._onCreateVariable.bind(this));
+    html.find('.delete-variable').on('click', this._onDeleteVariable.bind(this));
+  }
+
+  _onDeleteVariable(event) {
+    let index = $(event.target).closest('tr').data('index');
+    if (index != null) {
+      this.config = this._getSubmitData();
+      if (!this.config.variables) this.config.variables = [];
+      this.config.variables.splice(index, 1);
+      this.render(true);
+    }
+  }
+
+  _onCreateVariable(event) {
+    this.config = this._getSubmitData();
+    if (!this.config.variables) this.config.variables = [];
+    this.config.variables.push({ name: '', value: '' });
+    this.render(true);
   }
 
   _onAddShape(event) {
@@ -252,7 +272,7 @@ export default class OverlayConfig extends FormApplication {
 
   _onDeleteShape(event) {
     const index = $(event.target).closest('.deleteShape').data('index');
-    if (!index && index != 0) return;
+    if (index == null) return;
 
     this.config = this._getSubmitData();
     if (!this.config.shapes) this.config.shapes = [];
@@ -350,7 +370,9 @@ export default class OverlayConfig extends FormApplication {
   async _applyPreviews() {
     const targets = this.getPreviewIcons();
     for (const target of targets) {
-      const preview = evaluateObjExpressions(deepClone(this.previewConfig), target.token, this.previewConfig);
+      const preview = evaluateObjExpressions(deepClone(this.previewConfig), target.token, {
+        overlayConfig: this.previewConfig,
+      });
       target.icon.refresh(preview, {
         preview: true,
         previewTexture: await genTexture(target.token, preview),
@@ -429,6 +451,10 @@ export default class OverlayConfig extends FormApplication {
 
     if (formData.shapes) {
       formData.shapes = Object.values(formData.shapes);
+    }
+    if (formData.variables) {
+      formData.variables = Object.values(formData.variables);
+      formData.variables = formData.variables.filter((v) => v.name.trim() && v.value.trim());
     }
     if (formData.limitedUsers) {
       if (getType(formData.limitedUsers) === 'string') formData.limitedUsers = [formData.limitedUsers];

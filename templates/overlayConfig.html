@@ -8,6 +8,7 @@
         <a class="item" data-tab="visibility"><i class="fas fa-eye"></i> Visibility</a>
         <a class="item" data-tab="text"><i class="fas fa-text-size"></i> Text</a>
         <a class="item" data-tab="shapes"><i class="fas fa-shapes"></i> Shapes</a>
+        <a class="item" data-tab="variables"><i class="fas fa-shapes"></i> Variables</a>
     </nav>
 
     <input type="text" name="id" value="{{id}}" hidden>
@@ -501,6 +502,27 @@
             {{/each}}
         </div>
     </div>
+
+    <div class="tab" data-group="main" data-tab="variables">
+        <p class="notes">Define variables that you can insert into any overlay field. Useful when you have a constant value you want to re-use; for example multiple shapes that all share the same width</p>
+        <p class="notes">e.g. @shapeWidth</p>
+        <table>
+            <tr>
+                <th></th>
+                <th>Name</th><th>Value</th>
+                <th><a class="create-variable" title="Add a new variable."><i class="fas fa-plus"></i></a></th>
+            </tr>
+        {{#each variables as |variable|}}
+        <tr data-index="{{@index}}">
+            <td>@</td>
+            <td><input type="text" name="variables.{{@index}}.name" value="{{variable.name}}"></td>
+            <td><input type="text" name="variables.{{@index}}.value" value="{{variable.value}}"></td>
+            <td> <a class="delete-variable" title="Delete variable."><i class="fa-solid fa-trash"></i></a></td>
+        </tr>
+        {{/each}}
+        </table>
+    </div>
+
     </section>
 
     <input type="hidden" name="effect" value="{{effect}}">
