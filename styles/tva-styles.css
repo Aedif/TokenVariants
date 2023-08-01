@@ -806,18 +806,14 @@ ol.token-variant-table .table-row .mapping-expression .div-input {
 /* Overlay Config                           */
 /* ---------------------------------------- */
 
-.limited-user-select option {
-  background: lightcoral;
-}
-
-.limited-user-select option:checked {
-  background: lightgreen;
-}
-
-.shape-legend-input {
+.tva-overlay-form .shape-legend-input {
   width: 200px !important;
   margin-left: 15px !important;
   border: none !important;
+}
+
+.tva-overlay-form .non-empty-variables {
+  background-color: rgb(252, 168, 138);
 }
 
 /* ---------------------------------------- */

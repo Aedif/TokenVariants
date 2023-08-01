@@ -802,19 +802,26 @@ export async function applyTMFXPreset(tokenDoc, presetName, action = 'apply') {
   }
 }
 
-export async function applyCEEffect(tokenDoc, effectName, action = 'apply') {
+export async function applyCEEffect(tokenDoc, ceEffect, action = 'apply') {
   if (game.modules.get('dfreds-convenient-effects')?.active) {
+    if (!ceEffect.apply && !ceEffect.remove) return;
+    else if (!ceEffect.apply || !ceEffect.remove) {
+      if (action === 'apply') {
+        if (ceEffect.remove) action = 'remove';
+      } else return;
+    }
+
     let uuid = tokenDoc.actor?.uuid;
     if (uuid) {
       if (action === 'apply') {
         await game.dfreds.effectInterface.addEffect({
-          effectName,
+          effectName: ceEffect.name,
           uuid,
           origin: 'token-variants',
           overlay: false,
         });
       } else {
-        await game.dfreds.effectInterface.removeEffect({ effectName, uuid });
+        await game.dfreds.effectInterface.removeEffect({ effectName: ceEffect.name, uuid });
       }
     }
   }

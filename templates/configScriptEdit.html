@@ -36,14 +36,23 @@
     <fieldset>
         <legend>DFreds Convenient Effects</legend>
         <div class="form-group">
-            <label>Apply Effect</label>
+            <label>Effect</label>
             <div class="form-fields">
               <datalist id="ceEffects">
               {{#each ceEffects }}
               <option value="{{this}}"></option>
               {{/each}}
                </datalist>
-              <input list="ceEffects" name="ceEffect" value="{{ceEffect}}">
+              <input list="ceEffects" name="ceEffect.name" value="{{ceEffect.name}}">
+            </div>
+        </div>
+        <div class="form-group slim">
+            <label>Actions</label>
+            <div class="form-fields">
+                <label>Apply</label>
+                <input type="checkbox" name="ceEffect.apply" {{#if ceEffect.apply}}checked{{/if}}>
+                <label>Remove</label>
+                <input type="checkbox" name="ceEffect.remove" {{#if ceEffect.remove}}checked{{/if}}>
             </div>
         </div>
     </fieldset>
