@@ -463,6 +463,7 @@ export default class OverlayConfig extends FormApplication {
     let formData = super._getSubmitData();
     formData = expandObject(formData);
 
+    if (!formData.repeating) delete formData.repeat;
     if (!formData.text.repeating) delete formData.text.repeat;
 
     if (formData.shapes) {

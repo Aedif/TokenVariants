@@ -3,6 +3,8 @@ import { TVASprite } from '../sprite/TVASprite.js';
 import { string2Hex, waitForTokenTexture } from '../utils.js';
 import { getAllEffectMappings, getTokenEffects, getTokenHP } from '../hooks/effectMappingHooks.js';
 
+export const FONT_LOADING = {};
+
 export async function drawOverlays(token) {
   if (token.tva_drawing_overlays) return;
   token.tva_drawing_overlays = true;
@@ -45,7 +47,7 @@ export async function drawOverlays(token) {
           if (!isEmpty(diff)) {
             if (ov.img?.includes('*') || (ov.img?.includes('{') && ov.img?.includes('}'))) {
               sprite.refresh(ov);
-            } else if (diff.img || diff.text || diff.shapes) {
+            } else if (diff.img || diff.text || diff.shapes || diff.repeat) {
               sprite.setTexture(await genTexture(token, ov), { configuration: ov });
             } else if (diff.parentID) {
               sprite.parent?.removeChild(sprite)?.destroy();
@@ -92,25 +94,121 @@ export async function drawOverlays(token) {
 
 export async function genTexture(token, conf) {
   if (conf.img?.trim()) {
-    let img = conf.img;
-    if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
-      const images = await wildcardImageSearch(conf.img);
-      if (images.length) {
-        if (images.length) {
-          img = images[Math.floor(Math.random() * images.length)];
-        }
-      }
-    }
-
-    return await loadTexture(img, {
-      fallback: 'modules/token-variants/img/token-images.svg',
-    });
+    return await generateImage(token, conf);
   } else if (conf.text?.text != null) {
     return await generateTextTexture(token, conf);
   } else if (conf.shapes?.length) {
     return await generateShapeTexture(token, conf);
   } else {
     return await loadTexture('modules/token-variants/img/token-images.svg');
+  }
+}
+
+async function generateImage(token, conf) {
+  let img = conf.img;
+  if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
+    const images = await wildcardImageSearch(conf.img);
+    if (images.length) {
+      if (images.length) {
+        img = images[Math.floor(Math.random() * images.length)];
+      }
+    }
+  }
+
+  let texture = await loadTexture(img, {
+    fallback: 'modules/token-variants/img/token-images.svg',
+  });
+
+  // Repeat image if needed
+  // Repeating the shape if necessary
+  if (conf.repeating && conf.repeat) {
+    const repeat = conf.repeat;
+    let numRepeats;
+    if (repeat.isPercentage) {
+      numRepeats = Math.ceil(repeat.value / repeat.maxValue / (repeat.increment / 100));
+    } else {
+      numRepeats = Math.ceil(repeat.value / repeat.increment);
+    }
+    let n = 0;
+    let rows = 0;
+    const maxRows = repeat.maxRows ?? Infinity;
+    let xOffset = 0;
+    let yOffset = 0;
+    const paddingX = repeat.paddingX ?? 0;
+    const paddingY = repeat.paddingY ?? 0;
+    let container = new PIXI.Container();
+    while (numRepeats > 0) {
+      let img = new PIXI.Sprite(texture);
+      img.x = xOffset;
+      img.y = yOffset;
+      container.addChild(img);
+      xOffset += texture.width + paddingX;
+      numRepeats--;
+      n++;
+      if (numRepeats != 0 && n >= repeat.perRow) {
+        rows += 1;
+        if (rows >= maxRows) break;
+        yOffset += texture.height + paddingY;
+        xOffset = 0;
+        n = 0;
+      }
+    }
+
+    return _renderContainer(container, texture.resolution);
+  }
+
+  return texture;
+}
+
+function _renderContainer(container, resolution) {
+  const bounds = container.getLocalBounds();
+  const matrix = new PIXI.Matrix();
+  matrix.tx = -bounds.x;
+  matrix.ty = -bounds.y;
+
+  const renderTexture = PIXI.RenderTexture.create({
+    width: bounds.width,
+    height: bounds.height,
+    resolution: resolution,
+  });
+
+  if (isNewerVersion('11', game.version)) {
+    canvas.app.renderer.render(container, renderTexture, true, matrix, false);
+  } else {
+    canvas.app.renderer.render(container, {
+      renderTexture,
+      clear: true,
+      transform: matrix,
+      skipUpdateTransform: false,
+    });
+  }
+  renderTexture.destroyable = true;
+  return renderTexture;
+}
+
+// Return width and height of the drawn shape
+function _drawShape(graphics, shape, xOffset = 0, yOffset = 0) {
+  if (shape.type === 'rectangle') {
+    graphics.drawRoundedRect(shape.x + xOffset, shape.y + yOffset, shape.width, shape.height, shape.radius);
+    return [shape.width, shape.height];
+  } else if (shape.type === 'ellipse') {
+    graphics.drawEllipse(shape.x + xOffset, shape.y + yOffset, shape.width, shape.height);
+    return [shape.width * 2, shape.height * 2];
+  } else if (shape.type === 'polygon') {
+    graphics.drawPolygon(
+      shape.points.split(',').map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
+    );
+  } else if (shape.type === 'torus') {
+    drawTorus(
+      graphics,
+      shape.x + xOffset,
+      shape.y + yOffset,
+      shape.innerRadius,
+      shape.outerRadius,
+      Math.toRadians(shape.startAngle),
+      shape.endAngle >= 360 ? Math.PI * 2 : Math.toRadians(shape.endAngle)
+    );
+    return [shape.outerRadius * 2, shape.outerRadius * 2];
   }
 }
 
@@ -126,51 +224,47 @@ export async function generateShapeTexture(token, conf) {
     }
     graphics.beginFill(fillColor, obj.fill.alpha);
     graphics.lineStyle(obj.line.width, string2Hex(obj.line.color), obj.line.alpha);
+
     const shape = obj.shape;
-    if (shape.type === 'rectangle') {
-      graphics.drawRoundedRect(shape.x, shape.y, shape.width, shape.height, shape.radius);
-    } else if (shape.type === 'ellipse') {
-      graphics.drawEllipse(shape.x, shape.y, shape.width, shape.height);
-    } else if (shape.type === 'polygon') {
-      graphics.drawPolygon(
-        shape.points.split(',').map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
-      );
-    } else if (shape.type === 'torus') {
-      drawTorus(
-        graphics,
-        shape.x,
-        shape.y,
-        shape.innerRadius,
-        shape.outerRadius,
-        Math.toRadians(shape.startAngle),
-        shape.endAngle >= 360 ? Math.PI * 2 : Math.toRadians(shape.endAngle)
-      );
+
+    // Repeating the shape if necessary
+    if (obj.repeating && obj.repeat) {
+      const repeat = obj.repeat;
+      let numRepeats;
+      if (repeat.isPercentage) {
+        numRepeats = Math.ceil(repeat.value / repeat.maxValue / (repeat.increment / 100));
+      } else {
+        numRepeats = Math.ceil(repeat.value / repeat.increment);
+      }
+      let n = 0;
+      let rows = 0;
+      const maxRows = repeat.maxRows ?? Infinity;
+      let xOffset = 0;
+      let yOffset = 0;
+      const paddingX = repeat.paddingX ?? 0;
+      const paddingY = repeat.paddingY ?? 0;
+      while (numRepeats > 0) {
+        const [width, height] = _drawShape(graphics, shape, xOffset, yOffset);
+        xOffset += width + paddingX;
+        numRepeats--;
+        n++;
+        if (numRepeats != 0 && n >= repeat.perRow) {
+          rows += 1;
+          if (rows >= maxRows) break;
+          yOffset += height + paddingY;
+          xOffset = 0;
+          n = 0;
+        }
+      }
+    } else {
+      _drawShape(graphics, shape);
     }
   }
 
   const container = new PIXI.Container();
   container.addChild(graphics);
-  const bounds = container.getLocalBounds();
-  const matrix = new PIXI.Matrix();
-  matrix.tx = -bounds.x;
-  matrix.ty = -bounds.y;
 
-  const renderTexture = PIXI.RenderTexture.create({
-    width: bounds.width,
-    height: bounds.height,
-    resolution: 2,
-  });
-
-  if (isNewerVersion('11', game.version)) {
-    canvas.app.renderer.render(container, renderTexture, true, matrix, false);
-  } else {
-    canvas.app.renderer.render(container, {
-      renderTexture,
-      clear: true,
-      transform: matrix,
-      skipUpdateTransform: false,
-    });
-  }
+  const renderTexture = _renderContainer(container, 2);
 
   renderTexture.shapes = deepClone(conf.shapes);
   return renderTexture;
@@ -269,16 +363,32 @@ export function evaluateObjExpressions(obj, token, conf) {
 }
 
 export async function generateTextTexture(token, conf) {
+  await FONT_LOADING.loading;
   let label = conf.text.text;
 
   // Repeating the string if necessary
   if (conf.text.repeating && conf.text.repeat) {
     let tmp = '';
     const repeat = conf.text.repeat;
-    let numRepeats = Math.floor(repeat.value / repeat.increment);
+    let numRepeats;
+    if (repeat.isPercentage) {
+      numRepeats = Math.ceil(repeat.value / repeat.maxValue / (repeat.increment / 100));
+    } else {
+      numRepeats = Math.ceil(repeat.value / repeat.increment);
+    }
+    let n = 0;
+    let rows = 0;
+    let maxRows = repeat.maxRows ?? Infinity;
     while (numRepeats > 0) {
       tmp += label;
       numRepeats--;
+      n++;
+      if (numRepeats != 0 && n >= repeat.perRow) {
+        rows += 1;
+        if (rows >= maxRows) break;
+        tmp += '\n';
+        n = 0;
+      }
     }
     label = tmp;
   }
@@ -286,16 +396,7 @@ export async function generateTextTexture(token, conf) {
   // TODO Font Awesome fonts are not being picked up properly in browsers
   let style = PreciseText.getTextStyle({
     ...conf.text,
-    fontFamily: [
-      conf.text.fontFamily,
-      'fontAwesome',
-      '"Font Awesome 6 Brands"',
-      '"Font Awesome 6 Duotone"',
-      '"Font Awesome 6 Pro"',
-      '"Font Awesome 5 Brands"',
-      '"Font Awesome 5 Pro"',
-      '"Font Awesome 5 Duotone"',
-    ].join(','),
+    fontFamily: [conf.text.fontFamily, 'fontAwesome'].join(','),
   });
   let text = new PreciseText(label, style);
   text.updateText(false);
@@ -324,28 +425,8 @@ export async function generateTextTexture(token, conf) {
   const container = new PIXI.Container();
   const rope = new PIXI.SimpleRope(text.texture, points);
   container.addChild(rope);
-  const bounds = container.getLocalBounds();
-  const matrix = new PIXI.Matrix();
-  matrix.tx = -bounds.x;
-  matrix.ty = -bounds.y;
 
-  const renderTexture = PIXI.RenderTexture.create({
-    width: bounds.width,
-    height: bounds.height,
-    resolution: 2,
-  });
-  // const renderTexture = PIXI.RenderTexture.create(bounds.width, bounds.height);
-
-  if (isNewerVersion('11', game.version)) {
-    canvas.app.renderer.render(container, renderTexture, true, matrix, false);
-  } else {
-    canvas.app.renderer.render(container, {
-      renderTexture,
-      clear: true,
-      transform: matrix,
-      skipUpdateTransform: false,
-    });
-  }
+  const renderTexture = _renderContainer(container, 2);
   text.destroy();
 
   renderTexture.textLabel = label;

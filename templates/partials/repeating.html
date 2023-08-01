@@ -1,11 +1,11 @@
 <fieldset>
-    <legend >Repeating <input class="repeat" type="checkbox" name="{{root}}.repeating" {{#if repeating}}checked{{/if}}></legend>
+    <legend >Repeating <input class="repeat" type="checkbox" name="{{root}}repeating" {{#if repeating}}checked{{/if}}></legend>
     
     <div class="content" {{#unless repeating}}style="display: none;"{{/unless}}>
         <div class="form-group">
             <label>Value</label>
             <div class="form-fields">
-                <input name="{{root}}.repeat.value" type="text" value="{{repeat.value}}"></input>
+                <input name="{{root}}repeat.value" type="text" value="{{repeat.value}}"></input>
             </div>
             <p class="notes">Value that will be divided by the increment to determine the number of repeats.</p>
         </div>
@@ -14,16 +14,16 @@
             <label>Increment</label>
             <div class="form-fields">
                 <label>Value</label>
-                <input name="{{root}}.repeat.increment"type="text" value="{{repeat.increment}}"></input>
+                <input name="{{root}}repeat.increment"type="text" value="{{repeat.increment}}"></input>
                 <label>Percentage</label>
-                <input type="checkbox" data-dtype="Boolean" name="{{root}}.repeat.isPercentage" value="{{repeat.isPercentage}}"></input>
+                <input type="checkbox" data-dtype="Boolean" name="{{root}}repeat.isPercentage" {{#if repeat.isPercentage}}checked{{/if}}></input>
             </div>
         </div>
 
         <div class="form-group">
             <label>Max Value (optional)</label>
             <div class="form-fields">
-                <input name="{{root}}.repeat.maxValue" type="text" value="{{repeat.maxValue}}"></input>
+                <input name="{{root}}repeat.maxValue" type="text" value="{{repeat.maxValue}}"></input>
             </div>
             <p class="notes">Max value only required if increment is a percentage.</p>
         </div>
@@ -31,7 +31,7 @@
         <div class="form-group">
             <label>Repeats per row (optional)</label>
             <div class="form-fields">
-                <input name="{{root}}.repeat.rows" type="text" value="{{repeat.rows}}"></input>
+                <input name="{{root}}repeat.perRow" type="text" value="{{repeat.perRow}}"></input>
             </div>
             <p class="notes">How many repeats should be rendered before proceeding to the next row.</p>
         </div>
@@ -39,9 +39,22 @@
         <div class="form-group">
             <label>Max Rows (optional)</label>
             <div class="form-fields">
-                <input name="{{root}}.repeat.maxRows" type="text" value="{{repeat.maxRows}}"></input>
+                <input name="{{root}}repeat.maxRows" type="text" value="{{repeat.maxRows}}"></input>
             </div>
             <p class="notes">Limit repeats to this number of rows.</p>
         </div>
+
+        {{#if padding}}
+        <div class="form-group slim">
+            <label>Padding (optional)</label>
+            <div class="form-fields">
+                <label>Horizontal</label>
+                <input name="{{root}}repeat.paddingX" type="text" value="{{repeat.paddingX}}"></input>
+                <label>Vertical</label>
+                <input name="{{root}}repeat.paddingY" type="text" value="{{repeat.paddingY}}"></input>
+            </div>
+            <p class="notes">Insert empty pixels in-between the repeating shapes.</p>
+        </div>
+        {{/if}}
     </div>
 </fieldset>

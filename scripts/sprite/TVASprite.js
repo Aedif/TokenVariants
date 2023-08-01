@@ -388,7 +388,7 @@ export class TVASprite extends TokenMesh {
   }
 
   _destroyTexture(texture) {
-    if (texture.textLabel || texture.shapes) {
+    if (texture.textLabel || texture.shapes || texture.destroyable) {
       this.texture.destroy(true);
     }
   }
@@ -404,7 +404,7 @@ export class TVASprite extends TokenMesh {
       removeMarkedOverlays(this.object);
     }
 
-    if (this.texture.textLabel || this.texture.shapes) {
+    if (this.texture.textLabel || this.texture.shapes || this.texture.destroyable) {
       return super.destroy(true);
     } else if (this.texture?.baseTexture.resource?.source?.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();

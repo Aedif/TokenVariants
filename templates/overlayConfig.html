@@ -154,6 +154,8 @@
                 <button type="button" title="Select variant" class="token-variants-image-select-button" tabindex="-1" data-type="imagevideo" data-target="img"><i class="fas fa-images"></i></button></div>
             </div>
 
+            {{~>modules/token-variants/templates/partials/repeating.html repeating=repeating root="" repeat=repeat padding="true"}}
+
             <div class="form-group">
                 <label>Opacity</label>
                 <div class="form-fields">
@@ -352,7 +354,7 @@
                 <p class="notes">Similarly the effect name can be insert with: <b>&#123;&#123;effect&#125;&#125;</b></p>
             </div>
 
-            {{~>modules/token-variants/templates/partials/repeating.html repeating=text.repeating root="text" repeat=text.repeat}}
+            {{~>modules/token-variants/templates/partials/repeating.html repeating=text.repeating root="text." repeat=text.repeat}}
 
             <div class="form-group">
                 <label>{{localize "DRAWING.FontFamily"}}</label>
@@ -383,7 +385,7 @@
                 <div class="form-fields">
                 <select name="text.align">
                     {{#each textAlignmentOptions as |option|}}
-                    <option value="{{option.value}}" {{#if (eq text.align options.value)}}selected="selected"{{/if}}>{{option.label}}</option>
+                    <option value="{{option.value}}" {{#if (eq text.align option.value)}}selected="selected"{{/if}}>{{option.label}}</option>
                     {{/each}}
                 </select>
                 </div>
@@ -510,7 +512,7 @@
                 </div>
             </fieldset>
 
-            {{~>modules/token-variants/templates/partials/repeating.html repeating=shape.repeating root=(concat "shapes." @index) repeat=shape.repeat}}
+            {{~>modules/token-variants/templates/partials/repeating.html repeating=shape.repeating root=(concat "shapes." @index ".") repeat=shape.repeat padding="true"}}
 
             <hr><hr>
             {{/each}}

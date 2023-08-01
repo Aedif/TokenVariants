@@ -8,7 +8,7 @@ import {
   userRequiresImageCache,
   waitForTokenTexture,
 } from './scripts/utils.js';
-import { drawOverlays } from './scripts/token/overlay.js';
+import { FONT_LOADING, drawOverlays } from './scripts/token/overlay.js';
 import { getTokenEffects, updateWithEffectMapping } from './scripts/hooks/effectMappingHooks.js';
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
 import { REGISTERED_HOOKS, registerAllHooks, registerHook } from './scripts/hooks/hooks.js';
@@ -35,6 +35,12 @@ async function initialize() {
   if (MODULE_INITIALIZED) {
     return;
   }
+
+  // Font Awesome need to be loaded manually on FireFox
+  FONT_LOADING.loading = FontConfig.loadFont('fontAwesome', {
+    editor: false,
+    fonts: [{ urls: ['fonts/fontawesome/webfonts/fa-solid-900.ttf'] }],
+  });
 
   // Want this to be executed once the module has initialized
   onInit.push(() => {
