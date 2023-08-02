@@ -1,3 +1,47 @@
+# 4.46.0
+
+Effect Mappings
+
+- `Effect` has been renamed to `Expression`
+- New field: `Label`
+  - The module will no longer use the `Effect` field to merge global and actor specific mappings and will instead use the `Label`
+  - The same `Label` can be re-used multiple times within the same form
+- New setting: `Active Effects` > `Merge Global and Actor mappings based on Groups`
+  - Instead of comparing `Labels` Actor mappings will take precedent over Global ones if they belong to the same group
+- Users can now create their own Templates
+- Scripts now support `DFreds Convenient Effects` allowing you to apply and remove CEs
+- New templates
+  - Health Bar/Ring/Hearts/Squares
+
+Overlays
+
+- All text fields in `Overlay Config` form now support expressions
+  - e.g. `{{texture.tint}}`, `{{width}} * 100`
+- `Appearance > Tint`, `Text > Fill`, & `Shapes > Fill` can now be interpolated between 2 colors
+- Overlay's parent now works off of an internal ID system allowing parent's `Label` and `Expression` to be changed without the parent-child link being broken
+- New setting: `Limit Visibility to State` -> `Highlight`
+  - Hover and Highlight are now treated as separate states
+- New setting: `Variables`
+  - Allows creation of variables that can be re-used within the overlay form
+- New setting: `Text` > `Align`
+- Shapes
+  - New shape: Torus
+  - New controls added: Label, Clone, Move Up/Down
+- Overlays set to display on hover will not if the ruler is active
+- Image/Overlay Shapes/Text
+  - Now support `Repeating`, allowing the same shape, text or image to be rendered multiple in a sequence
+  - e.g. a FontAwesome heart shape can be setup to be rendered once per 10hp increment creating a heart based health bar
+
+Macro Configuration form
+
+- `Art Select` will now be opened upon Right-Click of the icon
+
+Bug Fixes:
+
+- Fixed Token HUD art menu closing when an image has been `Shared`/`Right-Clicked`
+- Fixed `FontAwesome` glyphs not rendering on FireFox
+- Fixed overlay preview breaking when adding/removing shapes
+
 # 4.45.2
 
 - Fixed `Compendium Mapper`'s search settings not saving
