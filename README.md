@@ -48,41 +48,66 @@ By Shift+Left-clicking the Token HUD button you are able to override certain mod
 
 !["Setting Override"](./docs/override.png)
 
-## Status Config
+### Global and Actor Mappings
 
-Allows to map images to Visibility/Combat status and Active Effects.
+The module allows for application of token configurations, running of scripts, display of overlays, and more based on conditions defined via expressions. The mapping menu is accessed by:
 
-!["Status Configuration"](./docs/status_config.png)
+Actor Mappings
+- Shift-Left Clicking the `Toggle Visibility State`, `Assign Status Effects`, or `Toggle Combat State` buttons on the Token HUD
+- Right-clicking the newly added TVA button on the Token HUD and selecting `Effect Config`
 
-The window is accessed by Shift+Left-Clicking on the status buttons or the Active Effects in the Token HUD.
+Global Mappings
+- Using the `Shift+G` shortcut
+- Going to module settings and selecting `Global Effect Configurations` under `Active Effects`
+- Selecting `Open Global` header button from the `Actor Mappings` form
 
-### HP/Rotation/Elevation Based Effects
+![image](https://github.com/Aedif/TokenVariants/assets/7693704/7f5f25e3-a7c7-4582-9f73-e6c3dc9d4e8f)
 
-Instead of effect names the module also allows to enter hp, rotation, and elevation comparisons into these fields allowing you to apply images and configuration based on the current health of the token:
+- `Label` is just a descriptor for your benefit
+- `Expression` is the condition that will trigger configurations on the right-side of the entry to be executed:
+  - `Image` if set will update the token image
+  - `Config` will apply `Token Configuration` or `Run a Script`
+  - `Overlay` will display and Image, Text, or Shape on the token
+- `Always On` will make the `Expression` always evaluate as true
+- `Disable` will make the `Expression` always evaluate as false
+- `Group` places mappings under the same header allowing them to be `Disable`d en masse and collapsed.
 
-![HP Effects](https://user-images.githubusercontent.com/7693704/202446190-3ed56f37-3ad8-438d-a700-b3b18f25d2c6.png)
+#### Expressions
 
-- Accepts both percentages and exact values (e.g. `hp<=15`, `hp=100%`)
-- Accepted signs: `<, >, =, <=, >=`
+- Accepted Operators:
+  - `&&` ( logical AND)
+  - `||` (logical OR)
+  - `\!` (escaped logical NOT)
+  - `\(` (escaped open bracket to group expressions)
+  - `\)` (escaped closed bracket to group expressions)
 
-### Logical Expression Based Effects
+- Accepted hp and Token property Comparators:
+  - `=` (equal)
+  - `<` (less than)
+  - `>` (greater than)
+  - `<=` (less than or equal)
+  - `>=` (greater than or equal)
+  - `<>` (lesser or greater than)
 
-On top of comparators effect configs also support logical expressions.
+- Accepted wildcards
+  - `\*`
+  - `\{  \}`
 
-Accepted Operators:
+##### Examples of valid expressions:
+- `Flying`
+- `Dead && Burning`
+- `Flying && \! \( Prone || Dead \)`
+- `hp<=50%`
+- `name="Raging Barbarian"`
+- `lockRotation="true"`
+- `flags.token-variants.test="true"`
+- `Exhaustion \*`
+- `Exhaustion \{1,2,3\}`
 
-- `&&` ( logical AND)
-- `||` (logical OR)
-- `\!` (escaped logical NOT)
-- `\(` (escaped open bracket to group expressions)
-- `\)` (escaped closed bracket to group expressions)
-
-Examples:
-
-- Flying `&&` `\!` Prone
-  - Config will be applied if the token has the effect `Flying` and does not have `Prone`
-- Raging || Burning
-  - Config will be applied of the token has either the effect `Raging` or `Burning` or both.
+##### Special Effect Names:
+- `token-variants-combat` : Actives when Token is in combat
+- `combat-turn` : Activates when it's Token's turn in combat
+- `combat-turn-next` : Actives when Token is next in the initiative order
 
 ## Installation
 
