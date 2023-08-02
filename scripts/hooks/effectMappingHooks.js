@@ -417,7 +417,7 @@ async function _updateWithEffectMapping(token, added, removed) {
         else executeOnCallback.push({ script: script.onRemove, token });
       }
       if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'remove' });
-      if (script.ceEffect) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
+      if (script.ceEffect?.name) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
     }
   }
   for (const ef of added) {
@@ -428,7 +428,7 @@ async function _updateWithEffectMapping(token, added, removed) {
         else executeOnCallback.push({ script: script.onApply, token });
       }
       if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'apply' });
-      if (script.ceEffect) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
+      if (script.ceEffect?.name) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
     }
   }
 

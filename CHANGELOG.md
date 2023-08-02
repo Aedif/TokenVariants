@@ -1,3 +1,7 @@
+# 4.46.1
+
+- Fixed errors thrown when DFreds Convenient Effect is left empty in the mapping script
+
 # 4.46.0
 
 Effect Mappings
