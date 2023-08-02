@@ -2,7 +2,7 @@ import { FILTERS } from '../../applications/overlayConfig.js';
 import { evaluateComparator, getTokenEffects } from '../hooks/effectMappingHooks.js';
 import { registerOverlayRefreshHook, unregisterOverlayRefreshHooks } from '../hooks/overlayHooks.js';
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
-import { removeMarkedOverlays } from '../token/overlay.js';
+import { interpolateColor, removeMarkedOverlays } from '../token/overlay.js';
 
 class OutlineFilter extends OutlineOverlayFilter {
   /** @inheritdoc */
@@ -286,7 +286,9 @@ export class TVASprite extends TokenMesh {
     }
 
     // Apply color tinting
-    const tint = config.inheritTint ? this.object.document.texture.tint : config.tint;
+    const tint = config.inheritTint
+      ? this.object.document.texture.tint
+      : interpolateColor(config.tint, config.interpolateColor, true);
     this.tint = tint ? Color.from(tint) : 0xffffff;
 
     if (fullRefresh) {

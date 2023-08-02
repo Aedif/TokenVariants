@@ -816,6 +816,18 @@ ol.token-variant-table .table-row .mapping-expression .div-input {
   background-color: rgb(252, 168, 138);
 }
 
+.tva-overlay-form .repeat-fieldset {
+  border-style: hidden;
+}
+
+.tva-overlay-form .repeat-fieldset.active {
+  border-style: inset;
+}
+
+.tva-overlay-form .text-field {
+  font-family: Signika, 'FontAwesome';
+}
+
 /* ---------------------------------------- */
 /* Token Config                             */
 /* ---------------------------------------- */

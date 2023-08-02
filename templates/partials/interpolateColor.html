@@ -1,0 +1,17 @@
+<fieldset>
+    <legend>Interpolate: {{label}}</legend>
+    <div class="form-group">
+        <label>Color 2</label>
+        <div class="form-fields">
+            {{ colorPicker name=(concat root "interpolateColor.color2") value=interpolateColor.color2 }}
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Distance</label>
+        <div class="form-fields">
+            <input type="text" name="{{root}}interpolateColor.prc" value="{{interpolateColor.prc}}">
+        </div>
+        <p class="notes">Point between first color and Color 2 as a value between 0.0 and 1.0</p>
+    </div>
+</fieldset>

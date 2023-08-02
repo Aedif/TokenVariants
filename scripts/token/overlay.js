@@ -216,13 +216,7 @@ export async function generateShapeTexture(token, conf) {
   let graphics = new PIXI.Graphics();
 
   for (const obj of conf.shapes) {
-    let fillColor;
-    if (obj.fill.color2 && getType(obj.fill.prc) === 'number') {
-      fillColor = interpolateColor(obj.fill.color, obj.fill.color2, obj.fill.prc);
-    } else {
-      fillColor = string2Hex(obj.fill.color);
-    }
-    graphics.beginFill(fillColor, obj.fill.alpha);
+    graphics.beginFill(interpolateColor(obj.fill.color, obj.fill.interpolateColor), obj.fill.alpha);
     graphics.lineStyle(obj.line.width, string2Hex(obj.line.color), obj.line.alpha);
 
     const shape = obj.shape;
@@ -279,9 +273,12 @@ function drawTorus(graphics, x, y, innerRadius, outerRadius, startArc = 0, endAr
   graphics.arc(x, y, innerRadius, endArc, startArc, true).arc(x, y, outerRadius, startArc, endArc, false).finishPoly();
 }
 
-function interpolateColor(minColor, maxColor, percentage) {
+export function interpolateColor(minColor, interpolate, rString = false) {
+  if (!interpolate || !interpolate.color2 || !interpolate.prc) return rString ? minColor : string2Hex(minColor);
+
+  const percentage = interpolate.prc;
   minColor = new PIXI.Color(minColor);
-  maxColor = new PIXI.Color(maxColor);
+  const maxColor = new PIXI.Color(interpolate.color2);
 
   let minHsv = rgb2hsv(minColor.red, minColor.green, minColor.blue);
   let maxHsv = rgb2hsv(maxColor.red, maxColor.green, maxColor.blue);
@@ -294,7 +291,7 @@ function interpolateColor(minColor, maxColor, percentage) {
   let targetValue = (1 - percentage) * minHsv[2] + percentage * maxHsv[2];
 
   let result = new PIXI.Color({ h: targetHue, s: targetSaturation * 100, v: targetValue * 100 });
-  return result.toNumber();
+  return rString ? result.toHex() : result.toNumber();
 }
 
 /**
@@ -397,6 +394,7 @@ export async function generateTextTexture(token, conf) {
   let style = PreciseText.getTextStyle({
     ...conf.text,
     fontFamily: [conf.text.fontFamily, 'fontAwesome'].join(','),
+    fill: interpolateColor(conf.text.fill, conf.text.interpolateColor, true),
   });
   let text = new PreciseText(label, style);
   text.updateText(false);

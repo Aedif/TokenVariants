@@ -20,7 +20,7 @@ let TOGGLED_GROUPS;
 
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
-    super({}, { title: (globalMappings ? 'GLOBAL ' : '') + 'Effect Config' });
+    super({}, { title: (globalMappings ? 'GLOBAL ' : 'ACTOR  ') + 'Mappings' });
 
     this.token = token;
     if (globalMappings) {

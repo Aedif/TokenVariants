@@ -1,4 +1,4 @@
-<fieldset>
+<fieldset class="repeat-fieldset {{#if repeating}}active{{/if}}">
     <legend >Repeating <input class="repeat" type="checkbox" name="{{root}}repeating" {{#if repeating}}checked{{/if}}></legend>
     
     <div class="content" {{#unless repeating}}style="display: none;"{{/unless}}>

@@ -37,9 +37,15 @@ export default class OverlayConfig extends FormApplication {
     super.activateListeners(html);
 
     html.find('.repeat').on('change', (event) => {
-      const content = $(event.target).closest('fieldset').find('.content');
-      if (event.target.checked) content.show();
-      else content.hide();
+      const fieldset = $(event.target).closest('fieldset');
+      const content = fieldset.find('.content');
+      if (event.target.checked) {
+        content.show();
+        fieldset.addClass('active');
+      } else {
+        content.hide();
+        fieldset.removeClass('active');
+      }
       this.setPosition();
     });
 
@@ -434,6 +440,7 @@ export default class OverlayConfig extends FormApplication {
       await getTemplate(`modules/token-variants/templates/partials/shape${shapeName}.html`);
     }
     await getTemplate('modules/token-variants/templates/partials/repeating.html');
+    await getTemplate('modules/token-variants/templates/partials/interpolateColor.html');
 
     data.allShapes = Object.keys(OVERLAY_SHAPES);
     data.textAlignmentOptions = [
