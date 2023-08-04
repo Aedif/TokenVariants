@@ -2,12 +2,12 @@
 
     <nav class="sheet-tabs tabs" data-group="main" aria-role="Form Tab Navigation">
         <a class="item active" data-tab="misc"><i class="fas fa-wrench"></i> Misc</a>
-        <a class="item" data-tab="appearance"><i class="fas fa-expand"></i> Appearance</a>
-        <a class="item" data-tab="filter"><i class="fas fa-paint-roller"></i> Filter</a>
-        <a class="item" data-tab="animation"><i class="fas fa-camera-movie"></i> Animation</a>
-        <a class="item" data-tab="visibility"><i class="fas fa-eye"></i> Visibility</a>
+        <a class="item" data-tab="image"><i class="fas fa-expand"></i> Image</a>
         <a class="item" data-tab="text"><i class="fas fa-text-size"></i> Text</a>
         <a class="item" data-tab="shapes"><i class="fas fa-shapes"></i> Shapes</a>
+        <a class="item" data-tab="filter"><i class="fas fa-paint-roller"></i> Filter</a>
+        <a class="item" data-tab="visibility"><i class="fas fa-eye"></i> Visibility</a>
+        <a class="item" data-tab="animation"><i class="fas fa-camera-movie"></i> Animation</a>
         <a class="item {{#if variables}}non-empty-variables{{/if}}" data-tab="variables"><i class="fas fa-superscript"></i> Variables</a>
     </nav>
 
@@ -143,7 +143,7 @@
             </fieldset>
         </div>
 
-        <div class="tab active" data-group="main" data-tab="appearance">
+        <div class="tab active" data-group="main" data-tab="image">
             <div class="form-group">
                 <label>Image Path</label>
                 <div class="form-fields">
@@ -156,80 +156,105 @@
 
             {{~>modules/token-variants/templates/partials/repeating.html repeating=repeating root="" repeat=repeat padding="true"}}
 
-            <div class="form-group">
-                <label>Opacity</label>
-                <div class="form-fields">
-                    <input type="range" name="alpha" value="{{alpha}}" min="0" max="1" step="0.05">
-                    <span class="range-value">{{alpha}}</span>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Tint Color</label>
-                <div class="form-fields">
-                    <input class="color" type="text" name="tint" value="{{tint}}">
-                    <input type="color" value="{{tint}}" data-edit="tint">
-                </div>
-            </div>
-
-            {{~>modules/token-variants/templates/partials/interpolateColor.html root="" interpolateColor=interpolateColor label="Tint Color"}}
-
-            <hr>
-
-            <div class="form-group">
-                <label>Horizontal Offset</label>
-                <div class="form-fields">
-                    <input class="offsetX" type="range" value="{{offsetX}}" min="-3" max="3" step="0.01">
-                    <input name="offsetX" class="range-value" type="number" step="any" value="{{offsetX}}"></input>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Vertical Offset</label>
-                <div class="form-fields">
-                    <input class="offsetY" type="range" value="{{offsetY}}" min="-3" max="3" step="0.01">
-                    <input name="offsetY" class="range-value" type="number" step="any" value="{{offsetY}}"></input>
-                </div>
-            </div>
-
-            <div>
-                <div class="form-group">
-                    <label>Scale Width</label>
-                    <div class="form-fields">
-                        <input class="scaleX" type="range" value="{{scaleX}}" min="0.01" max="6" step="0.01">
-                        <input name="scaleX" class="range-value" type="number" step="any" value="{{scaleX}}" min="0.01"></input>
-                    </div>
-                    <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
-                </div>
+            <fieldset>
+                <legend>Appearance</legend>
 
                 <div class="form-group">
-                    <label>Scale Height</label>
+                    <label>Opacity</label>
                     <div class="form-fields">
-                        <input class="scaleY" type="range" value="{{scaleY}}" min="0.01" max="6" step="0.01">
-                        <input name="scaleY" class="range-value" type="number" step="any" value="{{scaleY}}" min="0.01"></input>
+                        <input type="range" value="{{alpha}}" min="0" max="1" step="0.05">
+                        <input name="alpha" class="range-value" type="text" value="{{alpha}}"></input>
                     </div>
-                    <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
                 </div>
-            </div>
+    
+                <div class="form-group">
+                    <label>Tint Color</label>
+                    <div class="form-fields">
+                        <input class="color" type="text" name="tint" value="{{tint}}">
+                        <input type="color" value="{{tint}}" data-edit="tint">
+                    </div>
+                </div>
 
-            <div class="form-group">
-                <label>Rotation</label>
-                <div class="form-fields">
-                    <input type="range" name="angle" value="{{angle}}" min="-360" max="360" step="1">
-                    <span class="range-value">{{angle}}</span>
-                </div>
-            </div>
+                {{~>modules/token-variants/templates/partials/interpolateColor.html root="" interpolateColor=interpolateColor label="Tint Color"}}
+            </fieldset>
 
-            <div class="form-group">
-                <label>Anchor</label>
-                <div class="form-fields">
-                    <label>X</label>
-                    <input name="anchor.x" type="number" step="any" value="{{anchor.x}}" min="0" max="1"></input>
-                    <label>Y</label>
-                    <input name="anchor.y" type="number" step="any" value="{{anchor.y}}" min="0" max="1"></input>
+            <fieldset>
+                <legend>Dimensions</legend>
+
+                <div class="form-group">
+                    <label>Width <i class="fas fa-question-circle" title="Set exact image width.&#013; *To take effect requires Scale and Dimension linking under Misc to be disabled.*"></i></label>
+                    <div class="form-fields">
+                        <input name="width" type="text" value="{{width}}" min="0"></input>
+                    </div>
+                </div> 
+    
+                <div class="form-group">
+                    <label>Height <i class="fas fa-question-circle" title="Set exact image height.&#013; *To take effect requires Scale and Dimension linking under Misc to be disabled.*"></i></label>
+                    <div class="form-fields">
+                        <input name="height" type="text" value="{{height}}" min="0"></input>
+                    </div>
+                </div> 
+    
+                <div>
+                    <div class="form-group">
+                        <label>Scale Width</label>
+                        <div class="form-fields">
+                            <input class="scaleX" type="range" value="{{scaleX}}" min="0.01" max="6" step="0.01">
+                            <input name="scaleX" class="range-value" type="text" value="{{scaleX}}"></input>
+                        </div>
+                        <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
+                    </div>
+    
+                    <div class="form-group">
+                        <label>Scale Height</label>
+                        <div class="form-fields">
+                            <input class="scaleY" type="range" value="{{scaleY}}" min="0.01" max="6" step="0.01">
+                            <input name="scaleY" class="range-value" type="text" value="{{scaleY}}"></input>
+                        </div>
+                        <div class="scaleLock" style="flex: 0 !important;margin-left: 3px;"><a><i class="fas fa-link"></i></a></div>
+                    </div>
                 </div>
-                <p class="notes">Set the point on an overlay to be used to anchor it to the center of the parent.</p>
-            </div>
+    
+                <div class="form-group">
+                    <label>Rotation</label>
+                    <div class="form-fields">
+                        <input type="range" value="{{angle}}" min="-360" max="360" step="1">
+                        <input name="angle" class="range-value" type="text" value="{{angle}}"></input>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset>
+                <legend>Positioning</legend>
+
+                <div class="form-group">
+                    <label>Horizontal Offset</label>
+                    <div class="form-fields">
+                        <input class="offsetX" type="range" value="{{offsetX}}" min="-3" max="3" step="0.01">
+                        <input name="offsetX" type="text" class="range-value" value="{{offsetX}}"></input>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Vertical Offset</label>
+                    <div class="form-fields">
+                        <input class="offsetY" type="range" value="{{offsetY}}" min="-3" max="3" step="0.01">
+                        <input name="offsetY" type="text" class="range-value" value="{{offsetY}}"></input>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Anchor</label>
+                    <div class="form-fields">
+                        <label>X</label>
+                        <input name="anchor.x" type="number" step="any" value="{{anchor.x}}" min="0" max="1"></input>
+                        <label>Y</label>
+                        <input name="anchor.y" type="number" step="any" value="{{anchor.y}}" min="0" max="1"></input>
+                    </div>
+                    <p class="notes">Set the point on an overlay to be used to anchor it to the center of the parent.</p>
+                </div>
+
+            </fieldset>
 
             <img src="modules/token-variants/img/anchor_diagram.webp" width="200" height="200" style="margin: auto;display: block;border: none;"/>
         </div>
@@ -262,8 +287,8 @@
             <div class="form-group">
                 <label>Duration (ms)</label>
                 <div class="form-fields">
-                    <input type="range" name="animation.duration" value="{{animation.duration}}" min="100" max="30000" step="100">
-                    <span class="range-value">{{animation.duration}}</span>
+                    <input type="range" value="{{animation.duration}}" min="100" max="30000" step="100">
+                    <input name="animation.duration" class="range-value" type="text" value="{{animation.duration}}"></input>
                 </div>
             </div>
 
@@ -380,8 +405,8 @@
             <div class="form-group">
                 <label>Font Size</label>
                 <div class="form-fields">
-                    <input type="range" name="text.fontSize" value="{{text.fontSize}}" min="24" max="100" step="1">
-                    <span class="range-value">{{text.fontSize}}</span>
+                    <input type="range" value="{{text.fontSize}}" min="24" max="100" step="1">
+                    <input name="text.fontSize" class="range-value" type="text" value="{{text.fontSize}}"></input>
                 </div>
             </div>
             <div class="form-group">
@@ -397,8 +422,8 @@
             <div class="form-group">
                 <label>Letter Spacing</label>
                 <div class="form-fields">
-                    <input type="range" name="text.letterSpacing" value="{{text.letterSpacing}}" min="0" max="25" step="0.1">
-                    <span class="range-value">{{text.letterSpacing}}</span>
+                    <input type="range" value="{{text.letterSpacing}}" min="0" max="25" step="0.1">
+                    <input name="text.letterSpacing" class="range-value" type="text" value="{{text.letterSpacing}}"></input>
                 </div>
             </div>
             <div class="form-group">
@@ -410,8 +435,8 @@
             <div class="form-group">
                 <label>Stroke Thickness</label>
                 <div class="form-fields">
-                    <input type="range" name="text.strokeThickness" value="{{text.strokeThickness}}" min="0" max="25" step="1">
-                    <span class="range-value">{{text.strokeThickness}}</span>
+                    <input type="range" value="{{text.strokeThickness}}" min="0" max="25" step="1">
+                    <input name="text.strokeThickness" class="range-value" type="text" value="{{text.strokeThickness}}"></input>
                 </div>
             </div>
             <div class="form-group">
@@ -426,8 +451,8 @@
             <div class="form-group">
                 <label>Radius</label>
                 <div class="form-fields">
-                    <input type="range" name="text.curve.radius" value="{{text.curve.radius}}" min="0" max="450" step="5">
-                    <span class="range-value">{{text.curve.radius}}</span>
+                    <input type="range" value="{{text.curve.radius}}" min="0" max="450" step="5">
+                    <input name="text.curve.radius" class="range-value" type="text" value="{{text.curve.radius}}"></input>
                 </div>
             </div>
             <div class="form-group">
@@ -469,7 +494,8 @@
                 <div class="form-group">
                     <label>Width</label>
                     <div class="form-fields">
-                        {{ rangePicker name=(concat "shapes." @index ".line.width") value=shape.line.width min="0" max="100" step="1" }}
+                        <input type="range" value="{{shape.line.width}}" min="0" max="100" step="1">
+                        <input name="shapes.{{@index}}.line.width" class="range-value" type="text" value="{{shape.line.width}}"></input>
                     </div>
                 </div>
                 <div class="form-group">
@@ -481,7 +507,8 @@
                 <div class="form-group">
                     <label>Opacity</label>
                     <div class="form-fields">
-                        {{ rangePicker name=(concat "shapes." @index ".line.alpha") value=shape.line.alpha min="0" max="1" step="0.05" }}
+                        <input type="range" value="{{shape.line.alpha}}" min="0" max="1" step="0.05">
+                        <input name="shapes.{{@index}}.line.alpha" class="range-value" type="text" value="{{shape.line.alpha}}"></input>
                     </div>
                 </div>
             </fieldset>
@@ -497,7 +524,8 @@
                 <div class="form-group">
                     <label>Opacity</label>
                     <div class="form-fields">
-                        {{ rangePicker name=(concat "shapes." @index ".fill.alpha") value=shape.fill.alpha min="0" max="1" step="0.05" }}
+                        <input type="range" value="{{shape.fill.alpha}}" min="0" max="1" step="0.05">
+                        <input name="shapes.{{@index}}.fill.alpha" class="range-value" type="text" value="{{shape.fill.alpha}}"></input>
                     </div>
                 </div>
 

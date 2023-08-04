@@ -1,6 +1,9 @@
 import { FILTERS } from '../../applications/overlayConfig.js';
 import { evaluateComparator, getTokenEffects } from '../hooks/effectMappingHooks.js';
-import { registerOverlayRefreshHook, unregisterOverlayRefreshHooks } from '../hooks/overlayHooks.js';
+import {
+  registerOverlayRefreshHook,
+  unregisterOverlayRefreshHooks,
+} from '../hooks/overlayHooks.js';
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
 import { interpolateColor, removeMarkedOverlays } from '../token/overlay.js';
 
@@ -61,9 +64,13 @@ class OutlineFilter extends OutlineOverlayFilter {
 }
 
 export class TVASprite extends TokenMesh {
-  constructor(texture, token, config) {
+  constructor(pTexture, token, config) {
     super(token);
-    this.texture = texture;
+    if (pTexture.shapes) pTexture.shapes = this.addChild(pTexture.shapes);
+    this.pseudoTexture = pTexture;
+    this.texture = pTexture.texture;
+    //this.setTexture(pTexture, { refresh: false });
+
     this.ready = false;
     this.overlaySort = 0;
 
@@ -108,10 +115,15 @@ export class TVASprite extends TokenMesh {
 
     if (ov.limitOnHover || ov.limitOnControl || ov.limitOnHighlight) {
       let visible = false;
-      if (ov.limitOnHover && canvas.controls.ruler._state === Ruler.STATES.INACTIVE && this.object.hover)
+      if (
+        ov.limitOnHover &&
+        canvas.controls.ruler._state === Ruler.STATES.INACTIVE &&
+        this.object.hover
+      )
         visible = true;
       if (ov.limitOnControl && this.object.controlled) visible = true;
-      if (ov.limitOnHighlight && (canvas.tokens.highlightObjects ?? canvas.tokens._highlight)) visible = true;
+      if (ov.limitOnHighlight && (canvas.tokens.highlightObjects ?? canvas.tokens._highlight))
+        visible = true;
       return visible;
     }
     return true;
@@ -158,19 +170,40 @@ export class TVASprite extends TokenMesh {
     }
   }
 
-  setTexture(texture, { preview = false, refresh = true, configuration = null } = {}) {
+  addChildAuto(...children) {
+    if (this.pseudoTexture?.shapes) {
+      return this.pseudoTexture.shapes.addChild(...children);
+    } else {
+      return this.addChild(...children);
+    }
+  }
+
+  setTexture(pTexture, { preview = false, refresh = true, configuration = null } = {}) {
     // Text preview handling
     if (preview) {
-      if (this.originalTexture) this._destroyTexture(this.texture);
-      else this.originalTexture = this.texture;
-      this.texture = texture;
+      this._swapChildren(pTexture);
+      if (this.originalTexture) this._destroyTexture();
+      else {
+        this.originalTexture = this.pseudoTexture;
+        if (this.originalTexture.shapes) this.removeChild(this.originalTexture.shapes);
+      }
+      this.pseudoTexture = pTexture;
+      this.texture = pTexture.texture;
+      if (pTexture.shapes) pTexture.shapes = this.addChild(pTexture.shapes);
     } else if (this.originalTexture) {
-      this._destroyTexture(this.texture);
-      this.texture = this.originalTexture;
+      this._swapChildren(this.originalTexture);
+      this._destroyTexture();
+      this.pseudoTexture = this.originalTexture;
+      this.texture = this.originalTexture.texture;
+      if (this.originalTexture.shapes)
+        this.pseudoTexture.shapes = this.addChild(this.originalTexture.shapes);
       delete this.originalTexture;
     } else {
-      this._destroyTexture(this.texture);
-      this.texture = texture;
+      this._swapChildren(pTexture);
+      this._destroyTexture();
+      this.pseudoTexture = pTexture;
+      this.texture = pTexture.texture;
+      if (pTexture.shapes) this.pseudoTexture.shapes = this.addChild(pTexture.shapes);
     }
 
     if (refresh) this.refresh(configuration, { fullRefresh: !preview });
@@ -203,16 +236,18 @@ export class TVASprite extends TokenMesh {
       }
     }
 
+    const shapes = this.pseudoTexture.shapes;
+
     // Scale the image using the same logic as the token
-    const tex = this.texture;
+    const dimensions = shapes ?? this.texture;
     if (config.linkScale && !config.parentID) {
-      let aspect = tex.width / tex.height;
       const scale = this.scale;
+      const aspect = dimensions.width / dimensions.height;
       if (aspect >= 1) {
-        this.width = this.object.w * this.object.document.texture.scaleX;
+        scale.x = (this.object.w * this.object.document.texture.scaleX) / dimensions.width;
         scale.y = Number(scale.x);
       } else {
-        this.height = this.object.h * this.object.document.texture.scaleY;
+        scale.y = (this.object.h * this.object.document.texture.scaleY) / dimensions.height;
         scale.x = Number(scale.y);
       }
     } else if (config.linkStageScale) {
@@ -226,10 +261,8 @@ export class TVASprite extends TokenMesh {
         this.scale.y = this.object.document.height;
       }
     } else {
-      this.width = tex.width;
-      this.height = tex.height;
-      this.scale.x = 1;
-      this.scale.y = 1;
+      this.scale.x = config.width ? config.width / dimensions.width : 1;
+      this.scale.y = config.height ? config.height / dimensions.height : 1;
     }
 
     // Adjust scale according to config
@@ -247,23 +280,49 @@ export class TVASprite extends TokenMesh {
       else this.anchor.set(config.anchor.x, config.anchor.y);
     }
 
+    let xOff = 0;
+    let yOff = 0;
+    if (shapes) {
+      shapes.position.x = -this.anchor.x * shapes.width;
+      shapes.position.y = -this.anchor.y * shapes.height;
+      if (config.animation.relative) {
+        this.pivot.set(0, 0);
+        shapes.pivot.set(
+          (0.5 - this.anchor.x) * shapes.width,
+          (0.5 - this.anchor.y) * shapes.height
+        );
+        xOff = shapes.pivot.x * this.scale.x;
+        yOff = shapes.pivot.y * this.scale.y;
+      }
+    } else if (config.animation.relative) {
+      xOff = (0.5 - this.anchor.x) * this.width;
+      yOff = (0.5 - this.anchor.y) * this.height;
+      this.pivot.set(
+        (0.5 - this.anchor.x) * this.texture.width,
+        (0.5 - this.anchor.y) * this.texture.height
+      );
+    }
+
     // Position
-    if (config.parentID && this.parent?.anchor) {
+    if (config.parentID) {
+      const anchor = this.parent.anchor ?? { x: 0, y: 0 };
       const pWidth = this.parent.width / this.parent.scale.x;
       const pHeight = this.parent.height / this.parent.scale.y;
       this.position.set(
-        -config.offsetX * pWidth - this.parent.anchor.x * pWidth + pWidth / 2,
-        -config.offsetY * pHeight - this.parent.anchor.y * pHeight + pHeight / 2
+        -config.offsetX * pWidth - anchor.x * pWidth + pWidth / 2,
+        -config.offsetY * pHeight - anchor.y * pHeight + pHeight / 2
       );
     } else {
       if (config.animation.relative) {
-        this.pivot.set(0, 0);
         this.position.set(
-          this.object.document.x + this.object.w / 2 + -config.offsetX * this.object.w,
-          this.object.document.y + this.object.h / 2 + -config.offsetY * this.object.h
+          this.object.document.x + this.object.w / 2 + -config.offsetX * this.object.w + xOff,
+          this.object.document.y + this.object.h / 2 + -config.offsetY * this.object.h + yOff
         );
       } else {
-        this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
+        this.position.set(
+          this.object.document.x + this.object.w / 2,
+          this.object.document.y + this.object.h / 2
+        );
         this.pivot.set(
           (config.offsetX * this.object.w) / this.scale.x,
           (config.offsetY * this.object.h) / this.scale.y
@@ -389,9 +448,26 @@ export class TVASprite extends TokenMesh {
     else unregisterOverlayRefreshHooks(this, 'canvasPan');
   }
 
-  _destroyTexture(texture) {
-    if (texture.textLabel || texture.shapes || texture.destroyable) {
+  _swapChildren(to) {
+    const from = this.pseudoTexture;
+    if (from.shapes) {
+      this.removeChild(this.pseudoTexture.shapes);
+      const children = from.shapes.removeChildren();
+      if (to?.shapes) children.forEach((c) => to.shapes.addChild(c)?.refresh());
+      else children.forEach((c) => this.addChild(c)?.refresh());
+    } else if (to?.shapes) {
+      const children = this.removeChildren();
+      children.forEach((c) => to.shapes.addChild(c)?.refresh());
+    }
+  }
+
+  _destroyTexture() {
+    if (this.texture.textLabel || this.texture.destroyable) {
       this.texture.destroy(true);
+    }
+    if (this.pseudoTexture?.shapes) {
+      this.removeChild(this.pseudoTexture.shapes);
+      this.pseudoTexture.shapes.destroy();
     }
   }
 
@@ -404,9 +480,14 @@ export class TVASprite extends TokenMesh {
         if (ch instanceof TVASprite) ch.tvaRemove = true;
       }
       removeMarkedOverlays(this.object);
+      if (this.pseudoTexture.shapes) {
+        this.pseudoTexture.shapes.children.forEach((c) => c.destroy());
+        this.removeChild(this.pseudoTexture.shapes)?.destroy();
+        //  this.pseudoTexture.shapes.destroy();
+      }
     }
 
-    if (this.texture.textLabel || this.texture.shapes || this.texture.destroyable) {
+    if (this.texture.textLabel || this.texture.destroyable) {
       return super.destroy(true);
     } else if (this.texture?.baseTexture.resource?.source?.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();
@@ -436,7 +517,10 @@ async function constructTMFXFilters(paramsArray, sprite) {
 
   let filters = [];
   for (const params of paramsArray) {
-    if (!params.hasOwnProperty('filterType') || !TMFXFilterTypes.hasOwnProperty(params.filterType)) {
+    if (
+      !params.hasOwnProperty('filterType') ||
+      !TMFXFilterTypes.hasOwnProperty(params.filterType)
+    ) {
       // one invalid ? all rejected.
       return [];
     }

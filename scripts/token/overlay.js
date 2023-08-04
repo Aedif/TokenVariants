@@ -15,7 +15,8 @@ export async function drawOverlays(token) {
     .filter((m) => m.overlay && effects.includes(m.id))
     .sort(
       (m1, m2) =>
-        (m1.priority - m1.overlayConfig?.parentID ? 0 : 999) - (m2.priority - m2.overlayConfig?.parentID ? 0 : 999)
+        (m1.priority - m1.overlayConfig?.parentID ? 0 : 999) -
+        (m2.priority - m2.overlayConfig?.parentID ? 0 : 999)
     );
 
   // See if the whole stack or just top of the stack should be used according to settings
@@ -26,7 +27,9 @@ export async function drawOverlays(token) {
   }
 
   // Process strings as expressions
-  const overlays = processedMappings.map((m) => evaluateObjExpressions(deepClone(m.overlayConfig), token, m));
+  const overlays = processedMappings.map((m) =>
+    evaluateObjExpressions(deepClone(m.overlayConfig), token, m)
+  );
 
   if (overlays.length) {
     waitForTokenTexture(token, async (token) => {
@@ -62,7 +65,8 @@ export async function drawOverlays(token) {
         if (!sprite) {
           if (ov.parentID) {
             const parent = _findTVASprite(ov.parentID, token);
-            if (parent) sprite = parent.addChild(new TVASprite(await genTexture(token, ov), token, ov));
+            if (parent)
+              sprite = parent.addChildAuto(new TVASprite(await genTexture(token, ov), token, ov));
           } else {
             sprite = canvas.primary.addChild(new TVASprite(await genTexture(token, ov), token, ov));
           }
@@ -100,7 +104,9 @@ export async function genTexture(token, conf) {
   } else if (conf.shapes?.length) {
     return await generateShapeTexture(token, conf);
   } else {
-    return await loadTexture('modules/token-variants/img/token-images.svg');
+    return {
+      texture: await loadTexture('modules/token-variants/img/token-images.svg'),
+    };
   }
 }
 
@@ -154,10 +160,10 @@ async function generateImage(token, conf) {
       }
     }
 
-    return _renderContainer(container, texture.resolution);
+    texture = _renderContainer(container, texture.resolution);
   }
 
-  return texture;
+  return { texture };
 }
 
 function _renderContainer(container, resolution) {
@@ -189,20 +195,33 @@ function _renderContainer(container, resolution) {
 // Return width and height of the drawn shape
 function _drawShape(graphics, shape, xOffset = 0, yOffset = 0) {
   if (shape.type === 'rectangle') {
-    graphics.drawRoundedRect(shape.x + xOffset, shape.y + yOffset, shape.width, shape.height, shape.radius);
+    graphics.drawRoundedRect(
+      shape.x + xOffset,
+      shape.y + yOffset,
+      shape.width,
+      shape.height,
+      shape.radius
+    );
     return [shape.width, shape.height];
   } else if (shape.type === 'ellipse') {
-    graphics.drawEllipse(shape.x + xOffset, shape.y + yOffset, shape.width, shape.height);
+    graphics.drawEllipse(
+      shape.x + xOffset + shape.width,
+      shape.y + yOffset + shape.height,
+      shape.width,
+      shape.height
+    );
     return [shape.width * 2, shape.height * 2];
   } else if (shape.type === 'polygon') {
     graphics.drawPolygon(
-      shape.points.split(',').map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
+      shape.points
+        .split(',')
+        .map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
     );
   } else if (shape.type === 'torus') {
     drawTorus(
       graphics,
-      shape.x + xOffset,
-      shape.y + yOffset,
+      shape.x + xOffset + shape.outerRadius,
+      shape.y + yOffset + shape.outerRadius,
       shape.innerRadius,
       shape.outerRadius,
       Math.toRadians(shape.startAngle),
@@ -255,26 +274,32 @@ export async function generateShapeTexture(token, conf) {
     }
   }
 
-  const container = new PIXI.Container();
-  container.addChild(graphics);
+  // Store original graphics dimensions as these may change when children are added
+  graphics.shapesWidth = Number(graphics.width);
+  graphics.shapesHeight = Number(graphics.height);
 
-  const renderTexture = _renderContainer(container, 2);
-
-  renderTexture.shapes = deepClone(conf.shapes);
-  return renderTexture;
+  return { texture: PIXI.Texture.EMPTY, shapes: graphics };
 }
 
 function drawTorus(graphics, x, y, innerRadius, outerRadius, startArc = 0, endArc = Math.PI * 2) {
   if (Math.abs(endArc - startArc) >= Math.PI * 2) {
-    return graphics.drawCircle(x, y, outerRadius).beginHole().drawCircle(x, y, innerRadius).endHole();
+    return graphics
+      .drawCircle(x, y, outerRadius)
+      .beginHole()
+      .drawCircle(x, y, innerRadius)
+      .endHole();
   }
 
   graphics.finishPoly();
-  graphics.arc(x, y, innerRadius, endArc, startArc, true).arc(x, y, outerRadius, startArc, endArc, false).finishPoly();
+  graphics
+    .arc(x, y, innerRadius, endArc, startArc, true)
+    .arc(x, y, outerRadius, startArc, endArc, false)
+    .finishPoly();
 }
 
 export function interpolateColor(minColor, interpolate, rString = false) {
-  if (!interpolate || !interpolate.color2 || !interpolate.prc) return rString ? minColor : string2Hex(minColor);
+  if (!interpolate || !interpolate.color2 || !interpolate.prc)
+    return rString ? minColor : string2Hex(minColor);
 
   const percentage = interpolate.prc;
   minColor = new PIXI.Color(minColor);
@@ -305,24 +330,30 @@ function rgb2hsv(r, g, b) {
   return [60 * (h < 0 ? h + 6 : h), v && c / v, v];
 }
 
+const CORE_VARIABLES = {
+  '@hp': (token) => getTokenHP(token)?.[0],
+  '@hpMax': (token) => getTokenHP(token)?.[1],
+  '@gridSize': () => canvas.grid?.size,
+  '@label': (_, conf) => conf.label,
+};
+
 function _evaluateString(str, token, conf) {
   let variables = conf.overlayConfig?.variables;
-  if (variables?.length) {
-    const re = new RegExp('@\\w+', 'gi');
-    str = str.replace(re, function replace(match) {
-      let name = match.substr(1, match.length);
-      let v = variables.find((v) => v.name === name);
-      return v ? v.value : match;
-    });
-  }
+  const re2 = new RegExp('@\\w+', 'gi');
+  str = str.replace(re2, function replace(match) {
+    let name = match.substr(1, match.length);
+    let v = variables?.find((v) => v.name === name);
+    if (v) return v.value;
+    else if (match in CORE_VARIABLES) return CORE_VARIABLES[match](token, conf);
+    return match;
+  });
 
   const re = new RegExp('{{.*?}}', 'gi');
   str = str
     .replace(re, function replace(match) {
       const property = match.substring(2, match.length - 2);
-      if (conf) {
-        if (property === 'label') return conf.label;
-        else if (property === 'effect') return conf.expression;
+      if (conf && property === 'effect') {
+        return conf.expression;
       }
       if (token && property === 'hp') return getTokenHP(token)?.[0];
       else if (token && property === 'hpMax') return getTokenHP(token)?.[1];
@@ -340,7 +371,10 @@ export function evaluateObjExpressions(obj, token, conf) {
   if (t === 'string') {
     const str = _evaluateString(obj, token, conf);
     try {
-      return eval(str);
+      // return eval(str);
+      const result = eval(str);
+      if (getType(result) === 'Object') return str;
+      return result;
     } catch (e) {}
     return str;
   } else if (t === 'Array') {
@@ -350,7 +384,9 @@ export function evaluateObjExpressions(obj, token, conf) {
   } else if (t === 'Object') {
     for (const [k, v] of Object.entries(obj)) {
       // Exception for text overlay
-      if (k === 'text' && getType(v) === 'string' && v) {
+      if (k === 'label') {
+        // obj[k] = v;
+      } else if (k === 'text' && getType(v) === 'string' && v) {
         obj[k] = _evaluateString(v, token, conf);
       } else if (k === 'variables') {
       } else obj[k] = evaluateObjExpressions(v, token, conf);
@@ -401,7 +437,7 @@ export async function generateTextTexture(token, conf) {
 
   if (!conf.text.curve?.radius) {
     text.texture.textLabel = label;
-    return text.texture;
+    return { texture: text.texture };
   }
 
   // Curve
@@ -410,7 +446,8 @@ export async function generateTextTexture(token, conf) {
   const maxRopePoints = 100;
   const step = Math.PI / maxRopePoints;
 
-  let ropePoints = maxRopePoints - Math.round((text.texture.width / (radius * Math.PI)) * maxRopePoints);
+  let ropePoints =
+    maxRopePoints - Math.round((text.texture.width / (radius * Math.PI)) * maxRopePoints);
   ropePoints /= 2;
 
   const points = [];
@@ -428,7 +465,7 @@ export async function generateTextTexture(token, conf) {
   text.destroy();
 
   renderTexture.textLabel = label;
-  return renderTexture;
+  return { texture: renderTexture };
 }
 
 function _markAllOverlaysForRemoval(token) {

@@ -1,3 +1,15 @@
+# 4.47.0
+
+Overlays
+
+- Shapes will no longer be rendered as textures thus avoiding texture size limits when attempting to display extremely large shapes
+- Renamed `Appearance` tab to `Image`
+- New options: `Image` > `Width` and `Image` > `Height`
+  - Allows to circumvent various automatic scaling options and directly specify overlay dimensions
+- Every slider has been adjusted to display bigger text box inputs and support expressions
+- A set of "core" variables can now be accessed inside expression
+  - Refer to header button: `Core Variables`
+
 # 4.46.1
 
 - Fixed errors thrown when DFreds Convenient Effect is left empty in the mapping script

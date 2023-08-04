@@ -828,6 +828,10 @@ ol.token-variant-table .table-row .mapping-expression .div-input {
   font-family: Signika, 'FontAwesome';
 }
 
+.tva-overlay-form [type='range'] + .range-value {
+  flex: 0 1 200px;
+}
+
 /* ---------------------------------------- */
 /* Token Config                             */
 /* ---------------------------------------- */
