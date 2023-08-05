@@ -1,3 +1,10 @@
+# 4.48.0
+
+Overlays
+
+- New option: `Text` > `Curve` > `Angle`
+  - Curve text by defining an angle of a circle you want it to curve by
+
 # 4.47.0
 
 Overlays

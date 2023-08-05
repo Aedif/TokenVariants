@@ -56,7 +56,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
     dropShadow: CONFIG.canvasTextStyle.dropShadow,
     strokeThickness: CONFIG.canvasTextStyle.strokeThickness,
     stroke: CONFIG.canvasTextStyle.stroke,
-    curve: { radius: 0, invert: false },
+    curve: { angle: 0, radius: 0, invert: false },
     letterSpacing: CONFIG.canvasTextStyle.letterSpacing,
     repeating: false,
   },

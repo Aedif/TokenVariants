@@ -435,15 +435,18 @@ export async function generateTextTexture(token, conf) {
   let text = new PreciseText(label, style);
   text.updateText(false);
 
-  if (!conf.text.curve?.radius) {
+  const curve = conf.text.curve;
+  if (!curve?.radius && !curve?.angle) {
     text.texture.textLabel = label;
     return { texture: text.texture };
   }
 
-  // Curve
-  const curve = conf.text.curve;
-  const radius = curve.radius;
-  const maxRopePoints = 100;
+  // Curve the text
+  const letterSpacing = conf.text.letterSpacing ?? 0;
+  const radius = curve.angle
+    ? (text.texture.width + letterSpacing) / (Math.PI * 2) / (curve.angle / 360)
+    : curve.radius;
+  const maxRopePoints = 300;
   const step = Math.PI / maxRopePoints;
 
   let ropePoints =
