@@ -1,3 +1,18 @@
+# 4.49.0
+
+Mappings
+
+- `Weapons` and `Equipment` type item names can now be entered into the expression field to trigger when they are equipped and un-equipped
+- New control added to delete all mappings under the same group
+
+Overlays
+
+- New option: `Text` > `Word Wrap Width`
+- New option: `Text` > `Break Words`
+- New option: `Text` > `Max Height`
+- Complex expression support added to `Text` > `Text` field
+- Fixed color interpolation on v10
+
 # 4.48.0
 
 Overlays

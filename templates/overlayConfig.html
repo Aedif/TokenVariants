@@ -376,9 +376,8 @@
                 <div class="form-fields">
                     <input class="text-field" type="text" name="text.text" value="{{text.text}}">
                 </div>
-                <p class="notes"> For this text to show make sure that no image is assigned to this overlay.</p>
+                <p class="notes">For this text to show make sure that no image is assigned to this overlay.</p>
                 <p class="notes">Token attributes can be inserted as so: <b>&#123;&#123;name&#125;&#125;</b></p>
-                <p class="notes">Similarly the effect name can be insert with: <b>&#123;&#123;effect&#125;&#125;</b></p>
             </div>
 
             {{~>modules/token-variants/templates/partials/repeating.html repeating=text.repeating root="text." repeat=text.repeat}}
@@ -420,7 +419,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>Letter Spacing</label>
+                <label>Letter Spacing <span class="units">(Pixels)</span></label>
                 <div class="form-fields">
                     <input type="range" value="{{text.letterSpacing}}" min="0" max="25" step="0.1">
                     <input name="text.letterSpacing" class="range-value" type="text" value="{{text.letterSpacing}}"></input>
@@ -447,12 +446,47 @@
                 </div>
             </div>
 
+            <fieldset>
+                <legend>Wrapping</legend>
+
+                <div class="form-group">
+                    <label>Enabled</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="text.wordWrap" data-dtype="Boolean" {{#if text.wordWrap}}checked{{/if}}>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Word Wrap Width <span class="units">(Pixels)</span></label>
+                    <div class="form-fields">
+                        <input type="range" value="{{text.wordWrapWidth}}" min="0" max="1000" step="5">
+                        <input name="text.wordWrapWidth" class="range-value" type="text" value="{{text.wordWrapWidth}}"></input>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Break Words</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="text.breakWords" data-dtype="Boolean" {{#if text.breakWords}}checked{{/if}}>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Max Height <span class="units">(Pixels)</span></label>
+                    <div class="form-fields">
+                        <input type="range" value="{{text.maxHeight}}" min="0" max="1000" step="5">
+                        <input name="text.maxHeight" class="range-value" type="text" value="{{text.maxHeight}}"></input>
+                    </div>
+                </div>
+            </fieldset>
+
+
             <h2>Curve</h2>
 
             <p class="notes">Curve the text either by defining an angle in should bend by or a radius of an imaginary circle whose edge the text should sit on. </p>
 
             <div class="form-group">
-                <label>Angle</label>
+                <label>Angle <span class="units">(Degrees)</span></label>
                 <div class="form-fields">
                     <input type="range" value="{{text.curve.angle}}" min="0" max="360" step="0.5">
                     <input name="text.curve.angle" class="range-value" type="text" value="{{text.curve.angle}}"></input>
@@ -461,7 +495,7 @@
 
 
             <div class="form-group">
-                <label>Radius</label>
+                <label>Radius <span class="units">(Pixels)</span></label>
                 <div class="form-fields">
                     <input type="range" value="{{text.curve.radius}}" min="0" max="450" step="5">
                     <input name="text.curve.radius" class="range-value" type="text" value="{{text.curve.radius}}"></input>

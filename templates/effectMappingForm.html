@@ -28,7 +28,7 @@
 
     {{#each groupedMappings as |mappings group|}}
       <div class="group-title flexrow">
-        <p>{{group}}</p>
+        <p><a class="group-delete" data-group="{{group}}"><i class="fas fa-trash fa-xs"></i></a> {{group}}</p>
         <div class="group-disable {{#if mappings.active}}active{{/if}}" data-group="{{group}}"><a><i class="fas fa-power-off"></i></a></div>
         <div class="group-toggle active {{#if ../global}}global{{/if}}" data-group="{{group}}"><a><i class="fas fa-chevron-double-up"></i></a></div>
       </div>

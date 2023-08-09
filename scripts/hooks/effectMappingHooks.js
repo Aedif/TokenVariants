@@ -14,6 +14,7 @@ import { registerHook, unregisterHook } from './hooks.js';
 
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 const PF2E_ITEM_TYPES = ['condition', 'effect', 'weapon', 'equipment'];
+const ITEM_TYPES = ['equipment', 'weapon'];
 const feature_id = 'EffectMappings';
 
 export function registerEffectMappingHooks() {
@@ -24,7 +25,6 @@ export function registerEffectMappingHooks() {
       'deleteActiveEffect',
       'preUpdateActiveEffect',
       'updateActiveEffect',
-      'updateItem',
       'createCombatant',
       'deleteCombatant',
       'preUpdateCombat',
@@ -35,13 +35,11 @@ export function registerEffectMappingHooks() {
       'updateActor',
       'updateToken',
       'createToken',
+      'preUpdateItem',
+      'updateItem',
+      'createItem',
+      'deleteItem',
     ].forEach((name) => unregisterHook(feature_id, name));
-
-    if (game.system.id === 'pf2e') {
-      ['preUpdateItem', 'updateItem', 'createItem', 'deleteItem'].forEach((name) =>
-        unregisterHook(feature_id + '-pf2e', name)
-      );
-    }
     return;
   }
 
@@ -81,36 +79,32 @@ export function registerEffectMappingHooks() {
     });
   });
 
-  //
-  // PF2e hooks
-  //
+  const applicable_item_types = game.system.id === 'pf2e' ? PF2E_ITEM_TYPES : ITEM_TYPES;
+  // Want to track condition/effect previous name so that the config can be reverted for it
+  registerHook(feature_id, 'preUpdateItem', (item, change, options, userId) => {
+    if (game.user.id === userId && applicable_item_types.includes(item.type)) {
+      options['token-variants-old-name'] = item.name;
+    }
+    _preUpdateAssign(item.parent, change, options);
+  });
 
-  if (game.system.id === 'pf2e') {
-    const pf2e_feature_id = feature_id + '-pf2e';
-    // Want to track condition/effect previous name so that the config can be reverted for it
-    registerHook(pf2e_feature_id, 'preUpdateItem', (item, change, options, userId) => {
-      if (game.user.id === userId && PF2E_ITEM_TYPES.includes(item.type)) {
-        options['token-variants-old-name'] = item.name;
-      }
-    });
+  registerHook(feature_id, 'createItem', (item, options, userId) => {
+    if (game.userId !== userId || !applicable_item_types.includes(item.type) || !item.parent)
+      return;
+    _updateImageOnEffectChange(item.name, item.parent, true);
+  });
 
-    registerHook(pf2e_feature_id, 'updateItem', (item, change, options, userId) => {
-      // Handle condition/effect name change
-      if (options['token-variants-old-name'] !== item.name) {
-        _updateImageOnMultiEffectChange(item.parent, [item.name], [options['token-variants-old-name']]);
-      }
-    });
+  registerHook(feature_id, 'deleteItem', (item, options, userId) => {
+    if (
+      game.userId !== userId ||
+      !applicable_item_types.includes(item.type) ||
+      !item.parent ||
+      item.disabled
+    )
+      return;
+    _updateImageOnEffectChange(item.name, item.parent, false);
+  });
 
-    registerHook(pf2e_feature_id, 'createItem', (item, options, userId) => {
-      if (game.userId !== userId || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent) return;
-      _updateImageOnEffectChange(item.name, item.parent, true);
-    });
-
-    registerHook(pf2e_feature_id, 'deleteItem', (item, options, userId) => {
-      if (game.userId !== userId || !PF2E_ITEM_TYPES.includes(item.type) || !item.parent || item.disabled) return;
-      _updateImageOnEffectChange(item.name, item.parent, false);
-    });
-  }
   // Status Effects can be applied "stealthily" on item equip/un-equip
   registerHook(feature_id, 'updateItem', _updateItem);
 }
@@ -217,24 +211,7 @@ async function _updateToken(token, change, options, userId) {
 
 function _preUpdateActor(actor, change, options, userId) {
   if (game.user.id !== userId) return;
-
-  // Determine which comparators are applicable so that we can compare after the
-  // actor update
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
-  if (TVA_CONFIG.internalEffects.hpChange.enabled && tokens.length) {
-    applyHpChangeEffect(actor, change, tokens);
-  }
-  for (const tkn of tokens) {
-    const preUpdateEffects = evaluateComparatorEffects(tkn);
-
-    if (TVA_CONFIG.internalEffects.hpChange.enabled) {
-      getHPChangeEffect(tkn, preUpdateEffects);
-    }
-
-    if (preUpdateEffects.length) {
-      setProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects', preUpdateEffects);
-    }
-  }
+  _preUpdateAssign(actor, change, options);
 }
 
 async function _updateActor(actor, change, options, userId) {
@@ -253,17 +230,47 @@ async function _updateActor(actor, change, options, userId) {
     }
   }
 
+  _preUpdateCheck(actor, options);
+}
+
+function _preUpdateAssign(actor, change, options) {
+  if (!actor) return;
+
+  // Determine which comparators are applicable so that we can compare after the
+  // actor update
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  if (TVA_CONFIG.internalEffects.hpChange.enabled && tokens.length) {
+    applyHpChangeEffect(actor, change, tokens);
+  }
+  for (const tkn of tokens) {
+    const preUpdateEffects = getTokenEffects(tkn);
+    //const preUpdateEffects = evaluateComparatorEffects(tkn);
+
+    if (TVA_CONFIG.internalEffects.hpChange.enabled) {
+      getHPChangeEffect(tkn, preUpdateEffects);
+    }
+
+    if (preUpdateEffects.length) {
+      setProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects', preUpdateEffects);
+    }
+  }
+}
+
+function _preUpdateCheck(actor, options, pAdded = [], pRemoved = []) {
+  if (!actor) return;
   const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
   for (const tkn of tokens) {
-    // Check if effects changed by comparing them against the ones calculated in preUpdateActor
-    const added = [];
-    const removed = [];
-    const postUpdateEffects = evaluateComparatorEffects(tkn);
+    // Check if effects changed by comparing them against the ones calculated in preUpdate*
+    const added = [...pAdded];
+    const removed = [...pRemoved];
+    //const postUpdateEffects = evaluateComparatorEffects(tkn);
+    const postUpdateEffects = getTokenEffects(tkn);
     if (TVA_CONFIG.internalEffects.hpChange.enabled) {
       getHPChangeEffect(tkn, postUpdateEffects);
     }
 
-    const preUpdateEffects = getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
+    const preUpdateEffects =
+      getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
 
     determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
     if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
@@ -316,26 +323,17 @@ function _updateCombat(combat, round, options, userId) {
 }
 
 function _updateItem(item, change, options, userId) {
-  if (
-    game.user.id === userId &&
-    item.parent &&
-    change.system &&
-    'equipped' in change.system &&
-    item.effects &&
-    item.effects.size
-  ) {
-    const added = [];
-    const removed = [];
-    item.effects.forEach((effect) => {
-      if (!effect.disabled) {
-        if (change.system.equipped) added.push(effect.label);
-        else removed.push(effect.label);
-      }
-    });
+  const added = [];
+  const removed = [];
 
-    if (added.length || removed.length) {
-      _updateImageOnMultiEffectChange(item.parent, added, removed);
+  if (game.user.id === userId) {
+    // Handle condition/effect name change
+    if (options['token-variants-old-name'] !== item.name) {
+      added.push(item.name);
+      removed.push(options['token-variants-old-name']);
     }
+
+    _preUpdateCheck(item.parent, options, added, removed);
   }
 }
 
@@ -375,7 +373,8 @@ async function _updateWithEffectMapping(token, added, removed) {
   const animate = !TVA_CONFIG.disableTokenUpdateAnimation;
   const tokenUpdateObj = {};
   const hadActiveHUD = token.object?.hasActiveHUD;
-  const toggleStatus = canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
+  const toggleStatus =
+    canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
 
   let effects = getTokenEffects(token);
 
@@ -416,8 +415,10 @@ async function _updateWithEffectMapping(token, added, removed) {
         if (script.onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(script.onRemove);
         else executeOnCallback.push({ script: script.onRemove, token });
       }
-      if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'remove' });
-      if (script.ceEffect?.name) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
+      if (script.tmfxPreset)
+        executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'remove' });
+      if (script.ceEffect?.name)
+        executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
     }
   }
   for (const ef of added) {
@@ -427,14 +428,18 @@ async function _updateWithEffectMapping(token, added, removed) {
         if (script.onApply.includes('tvaUpdate')) deferredUpdateScripts.push(script.onApply);
         else executeOnCallback.push({ script: script.onApply, token });
       }
-      if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'apply' });
-      if (script.ceEffect?.name) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
+      if (script.tmfxPreset)
+        executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'apply' });
+      if (script.ceEffect?.name)
+        executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
     }
   }
 
   // Next we're going to determine what configs need to be applied and in what order
   // Filter effects that do not have a mapping and sort based on priority
-  effects = mappings.filter((m) => effects.includes(m.id)).sort((ef1, ef2) => ef1.priority - ef2.priority);
+  effects = mappings
+    .filter((m) => effects.includes(m.id))
+    .sort((ef1, ef2) => ef1.priority - ef2.priority);
 
   // Check if image update should be prevented based on module settings
   let disableImageUpdate = false;
@@ -517,7 +522,13 @@ async function _updateWithEffectMapping(token, added, removed) {
         token,
         imgName: newImg.imgName ? newImg.imgName : tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
         config: config,
         animate,
       });
@@ -534,7 +545,13 @@ async function _updateWithEffectMapping(token, added, removed) {
         token,
         imgName: tokenDefaultImg.imgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
         animate,
       });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
@@ -545,7 +562,13 @@ async function _updateWithEffectMapping(token, added, removed) {
         token,
         imgName: tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
+        callback: _postTokenUpdateProcessing.bind(
+          null,
+          token,
+          hadActiveHUD,
+          toggleStatus,
+          executeOnCallback
+        ),
         animate,
       });
   }
@@ -619,7 +642,9 @@ function getHPChangeEffect(token, effects) {
   const internals = token.actor?.getFlag('token-variants', 'internalEffects') || {};
   const delta = getProperty(
     token,
-    `${isNewerVersion('11', game.version) ? 'actorData' : 'delta'}.flags.token-variants.internalEffects`
+    `${
+      isNewerVersion('11', game.version) ? 'actorData' : 'delta'
+    }.flags.token-variants.internalEffects`
   );
   if (delta) mergeObject(internals, delta);
   if (internals['hp--'] != null) effects.push('hp--');
@@ -691,20 +716,28 @@ export function getTokenEffects(token, includeExpressions = false) {
       getEffectsFromActor(token.actor, effects);
     } else {
       if (isNewerVersion('11', game.version)) {
-        (data.actorData?.items || [])
-          .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
-          .forEach((item) => effects.push(item.name));
+        (data.actorData?.items || []).forEach((item) => {
+          if (PF2E_ITEM_TYPES.includes(item.type)) {
+            if (('active' in item && item.active) || ('isEquipped' in item && item.isEquipped))
+              effects.push(item.name);
+          }
+        });
       } else {
-        (data.delta?.items || [])
-          .filter((item) => PF2E_ITEM_TYPES.includes(item.type))
-          .forEach((item) => effects.push(item.name));
+        (data.delta?.items || []).forEach((item) => {
+          if (PF2E_ITEM_TYPES.includes(item.type)) {
+            if (('active' in item && item.active) || ('isEquipped' in item && item.isEquipped))
+              effects.push(item.name);
+          }
+        });
       }
     }
   } else {
     if (data.actorLink && token.actor) {
       getEffectsFromActor(token.actor, effects);
     } else {
-      (data.effects || []).filter((ef) => !ef.disabled && !ef.isSuppressed).forEach((ef) => effects.push(ef.label));
+      (data.effects || [])
+        .filter((ef) => !ef.disabled && !ef.isSuppressed)
+        .forEach((ef) => effects.push(ef.label));
       getEffectsFromActor(token.actor, effects);
     }
   }
@@ -735,14 +768,19 @@ export function getEffectsFromActor(actor, effects = []) {
       if (PF2E_ITEM_TYPES.includes(item.type)) {
         if ('active' in item) {
           if (item.active) effects.push(item.name);
-        } else {
-          effects.push(item.name);
+        } else if ('isEquipped' in item) {
+          if (item.isEquipped) effects.push(item.name);
         }
       }
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.name ?? activeEffect.label);
+      if (!activeEffect.disabled && !activeEffect.isSuppressed)
+        effects.push(activeEffect.name ?? activeEffect.label);
+    });
+    (actor.items || []).forEach((item) => {
+      if (ITEM_TYPES.includes(item.type) && item.system.equipped)
+        effects.push(item.name ?? item.label);
     });
   }
 
@@ -877,7 +915,12 @@ function _testRegExEffect(effect, effects) {
   return effects.find((ef) => re.test(ef));
 }
 
-export function evaluateMappingExpression(mapping, effects, added = new Set(), removed = new Set()) {
+export function evaluateMappingExpression(
+  mapping,
+  effects,
+  added = new Set(),
+  removed = new Set()
+) {
   let arrExpression = mapping.expression
     .split(EXPRESSION_MATCH_RE)
     .filter(Boolean)

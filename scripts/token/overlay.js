@@ -166,15 +166,15 @@ async function generateImage(token, conf) {
   return { texture };
 }
 
-function _renderContainer(container, resolution) {
+function _renderContainer(container, resolution, { width = null, height = null } = {}) {
   const bounds = container.getLocalBounds();
   const matrix = new PIXI.Matrix();
   matrix.tx = -bounds.x;
   matrix.ty = -bounds.y;
 
   const renderTexture = PIXI.RenderTexture.create({
-    width: bounds.width,
-    height: bounds.height,
+    width: width ?? bounds.width,
+    height: height ?? bounds.height,
     resolution: resolution,
   });
 
@@ -301,6 +301,8 @@ export function interpolateColor(minColor, interpolate, rString = false) {
   if (!interpolate || !interpolate.color2 || !interpolate.prc)
     return rString ? minColor : string2Hex(minColor);
 
+  if (!PIXI.Color) return _interpolateV10(minColor, interpolate, rString);
+
   const percentage = interpolate.prc;
   minColor = new PIXI.Color(minColor);
   const maxColor = new PIXI.Color(interpolate.color2);
@@ -317,6 +319,25 @@ export function interpolateColor(minColor, interpolate, rString = false) {
 
   let result = new PIXI.Color({ h: targetHue, s: targetSaturation * 100, v: targetValue * 100 });
   return rString ? result.toHex() : result.toNumber();
+}
+
+function _interpolateV10(minColor, interpolate, rString = false) {
+  const percentage = interpolate.prc;
+  minColor = PIXI.utils.hex2rgb(string2Hex(minColor));
+  const maxColor = PIXI.utils.hex2rgb(string2Hex(interpolate.color2));
+
+  let minHsv = rgb2hsv(minColor[0], minColor[1], minColor[2]);
+  let maxHsv = rgb2hsv(maxColor[0], maxColor[1], maxColor[2]);
+
+  let deltaHue = maxHsv[0] - minHsv[0];
+  let deltaAngle = deltaHue + (Math.abs(deltaHue) > 180 ? (deltaHue < 0 ? 360 : -360) : 0);
+
+  let targetHue = minHsv[0] + deltaAngle * percentage;
+  let targetSaturation = (1 - percentage) * minHsv[1] + percentage * maxHsv[1];
+  let targetValue = (1 - percentage) * minHsv[2] + percentage * maxHsv[2];
+
+  let result = Color.fromHSV([targetHue / 360, targetSaturation, targetValue]);
+  return rString ? result.toString() : Number(result);
 }
 
 /**
@@ -365,18 +386,24 @@ function _evaluateString(str, token, conf) {
   return str;
 }
 
+function _executeString(evalString, token) {
+  try {
+    const actor = token.actor; // So that actor is easily accessible within eval() scope
+    const result = eval(evalString);
+    if (getType(result) === 'Object') evalString;
+    return result;
+  } catch (e) {}
+  return evalString;
+}
+
+// return _executeString(_evaluateString(obj, token, conf), token);
+
 // Evaluate provided object values substituting in {{path.to.property}} with token properties, and performing eval() on strings
 export function evaluateObjExpressions(obj, token, conf) {
   const t = getType(obj);
   if (t === 'string') {
     const str = _evaluateString(obj, token, conf);
-    try {
-      // return eval(str);
-      const result = eval(str);
-      if (getType(result) === 'Object') return str;
-      return result;
-    } catch (e) {}
-    return str;
+    return _executeString(str, token);
   } else if (t === 'Array') {
     for (let i = 0; i < obj.length; i++) {
       obj[i] = evaluateObjExpressions(obj[i], token, conf);
@@ -387,7 +414,10 @@ export function evaluateObjExpressions(obj, token, conf) {
       if (k === 'label') {
         // obj[k] = v;
       } else if (k === 'text' && getType(v) === 'string' && v) {
-        obj[k] = _evaluateString(v, token, conf);
+        const evalString = _evaluateString(v, token, conf);
+        const result = _executeString(evalString, token);
+        if (getType(result) !== 'string') obj[k] = evalString;
+        else obj[k] = result;
       } else if (k === 'variables') {
       } else obj[k] = evaluateObjExpressions(v, token, conf);
     }
@@ -426,45 +456,51 @@ export async function generateTextTexture(token, conf) {
     label = tmp;
   }
 
-  // TODO Font Awesome fonts are not being picked up properly in browsers
   let style = PreciseText.getTextStyle({
     ...conf.text,
     fontFamily: [conf.text.fontFamily, 'fontAwesome'].join(','),
     fill: interpolateColor(conf.text.fill, conf.text.interpolateColor, true),
   });
-  let text = new PreciseText(label, style);
+  const text = new PreciseText(label, style);
   text.updateText(false);
 
+  const texture = text.texture;
+  const height = conf.text.maxHeight ? Math.min(texture.height, conf.text.maxHeight) : null;
   const curve = conf.text.curve;
-  if (!curve?.radius && !curve?.angle) {
-    text.texture.textLabel = label;
-    return { texture: text.texture };
-  }
 
-  // Curve the text
-  const letterSpacing = conf.text.letterSpacing ?? 0;
-  const radius = curve.angle
-    ? (text.texture.width + letterSpacing) / (Math.PI * 2) / (curve.angle / 360)
-    : curve.radius;
-  const maxRopePoints = 300;
-  const step = Math.PI / maxRopePoints;
-
-  let ropePoints =
-    maxRopePoints - Math.round((text.texture.width / (radius * Math.PI)) * maxRopePoints);
-  ropePoints /= 2;
-
-  const points = [];
-  for (let i = maxRopePoints - ropePoints; i > ropePoints; i--) {
-    const x = radius * Math.cos(step * i);
-    const y = radius * Math.sin(step * i);
-    points.push(new PIXI.Point(x, curve.invert ? y : -y));
+  if (!height && !curve?.radius && !curve?.angle) {
+    texture.textLabel = label;
+    return { texture };
   }
 
   const container = new PIXI.Container();
-  const rope = new PIXI.SimpleRope(text.texture, points);
-  container.addChild(rope);
 
-  const renderTexture = _renderContainer(container, 2);
+  if (curve?.radius || curve?.angle) {
+    // Curve the text
+    const letterSpacing = conf.text.letterSpacing ?? 0;
+    const radius = curve.angle
+      ? (texture.width + letterSpacing) / (Math.PI * 2) / (curve.angle / 360)
+      : curve.radius;
+    const maxRopePoints = 100;
+    const step = Math.PI / maxRopePoints;
+
+    let ropePoints =
+      maxRopePoints - Math.round((texture.width / (radius * Math.PI)) * maxRopePoints);
+    ropePoints /= 2;
+
+    const points = [];
+    for (let i = maxRopePoints - ropePoints; i > ropePoints; i--) {
+      const x = radius * Math.cos(step * i);
+      const y = radius * Math.sin(step * i);
+      points.push(new PIXI.Point(x, curve.invert ? y : -y));
+    }
+    const rope = new PIXI.SimpleRope(texture, points);
+    container.addChild(rope);
+  } else {
+    container.addChild(new PIXI.Sprite(texture));
+  }
+
+  const renderTexture = _renderContainer(container, 2, { height });
   text.destroy();
 
   renderTexture.textLabel = label;
