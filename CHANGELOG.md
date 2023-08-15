@@ -1,3 +1,33 @@
+# 4.49.1
+
+- Fixed setting: `Disable SOME Token Effect Icons` > `Effects with mappings`
+
+API
+
+All examples assume the following has been run first: `const api = game.modules.get('token-variants').api;`
+
+- New function: `assignUserSpecificImage`
+  - For the given token assign an image to be displayed for only the provided user (userName or userId)
+  - e.g. `api.assignUserSpecificImage(token, 'path/to/img.png', { userName: 'Azrael' });`
+  - If an image is not provided `unassignUserSpecificImage` will be called instead
+  - e.g. `api.assignUserSpecificImage(token, null, { userId: 'wqcg1nfJlbw2rYjn' });`
+- New function: `assignUserSpecificImageToSelected`
+  - Assign an image for the given user and all currently selected tokens
+  - e.g. `api.assignUserSpecificImageToSelected('path/to/img.png', { userName: 'Azrael' });`
+- New function: `unassignUserSpecificImage`
+  - For the given token un-assign any images assigned via `assignUserSpecificImage`
+  - e.g. `api.unassignUserSpecificImage(token, { userName: 'Azrael' });`
+  - If a name or id are not provided all images will be unassigned for all users
+  - e.g. `api.unassignUserSpecificImage(token);`
+- New function: `unassignUserSpecificImageFromSelected`
+  - Un-assign images set via `assignUserSpecificImage` for all currently selected tokens
+  - e.g. `api.unassignUserSpecificImageFromSelected({ userName: 'Azrael' });`
+
+`userName` and `userId` can also be provided as arrays
+
+- e.g. `api.assignUserSpecificImage(token, 'path/to/img.png', { userName: ['Azrael', 'Azulon'] });`
+- .e.g `api.unassignUserSpecificImage(token, 'path/to/img.png', { userId: ['wqcg1nfJlbw2rYjn', 'cDfy3cFieNjb5vsL'] });`
+
 # 4.49.0
 
 Mappings

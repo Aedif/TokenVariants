@@ -1,4 +1,9 @@
-import { registerSettings, TVA_CONFIG, exportSettingsToJSON, updateSettings } from './scripts/settings.js';
+import {
+  registerSettings,
+  TVA_CONFIG,
+  exportSettingsToJSON,
+  updateSettings,
+} from './scripts/settings.js';
 import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
 import {
   SEARCH_TYPE,
@@ -13,6 +18,12 @@ import { getTokenEffects, updateWithEffectMapping } from './scripts/hooks/effect
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
 import { REGISTERED_HOOKS, registerAllHooks, registerHook } from './scripts/hooks/hooks.js';
 import { REGISTERED_WRAPPERS, registerAllWrappers } from './scripts/wrappers/wrappers.js';
+import {
+  assignUserSpecificImage,
+  assignUserSpecificImageToSelected,
+  unassignUserSpecificImage,
+  unassignUserSpecificImageFromSelected,
+} from './scripts/wrappers/userMappingWrappers.js';
 
 // Tracks if module has been initialized
 let MODULE_INITIALIZED = false;
@@ -202,6 +213,10 @@ registerHook('main', 'init', function () {
     showArtSelect,
     updateTokenImage,
     exportSettingsToJSON,
+    assignUserSpecificImage,
+    assignUserSpecificImageToSelected,
+    unassignUserSpecificImage,
+    unassignUserSpecificImageFromSelected,
     TVA_CONFIG,
   };
 

@@ -8,10 +8,19 @@ export function registerEffectIconWrappers() {
   unregisterWrapper(feature_id, 'Token.prototype.drawEffects');
   if (!FEATURE_CONTROL[feature_id]) return;
 
-  if (!TVA_CONFIG.disableEffectIcons && TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
+  if (
+    !TVA_CONFIG.disableEffectIcons &&
+    TVA_CONFIG.filterEffectIcons &&
+    !['pf1e', 'pf2e'].includes(game.system.id)
+  ) {
     registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects, 'OVERRIDE');
   } else if (TVA_CONFIG.disableEffectIcons) {
-    registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects_fullReplace, 'OVERRIDE');
+    registerWrapper(
+      feature_id,
+      'Token.prototype.drawEffects',
+      _drawEffects_fullReplace,
+      'OVERRIDE'
+    );
   } else if (TVA_CONFIG.displayEffectIconsOnHover) {
     registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects_hoverOnly, 'WRAPPER');
   }
@@ -51,7 +60,7 @@ async function _drawEffects(...args) {
       const mappings = getAllEffectMappings({
         actor: this.actor ? this.actor : this.document,
       });
-      if (mappings) restrictedEffects = restrictedEffects.concat(Object.keys(mappings));
+      if (mappings) restrictedEffects = restrictedEffects.concat(mappings.map((m) => m.expression));
     }
     actorEffects = actorEffects.filter((ef) => !restrictedEffects.includes(ef.name ?? ef.label));
     tokenEffects = tokenEffects.filter(

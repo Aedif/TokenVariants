@@ -65,3 +65,86 @@ function _getIsVisibleDescriptor(obj) {
   }
   return descriptor;
 }
+
+/**
+ * Assign an image to be displayed to only that user.
+ * @param {*} token token the image is to be applied to
+ * @param {*} img image to be displayed, if no image is provided unassignUserSpecificImage(...) will be called
+ * @param {*} opts.userName name of the user that the image is to be displayed to
+ * @param {*} opts.id id of the user that the image is to be displayed to
+ * @returns
+ */
+export function assignUserSpecificImage(token, img, { userName = null, userId = null } = {}) {
+  if (!img) return unassignUserSpecificImage(token, { userName, userId });
+
+  if (userName instanceof Array) {
+    for (const name of userName) assignUserSpecificImage(token, img, { userName: name });
+    return;
+  }
+
+  if (userId instanceof Array) {
+    for (const id of userId) assignUserSpecificImage(token, img, { userId: id });
+    return;
+  }
+
+  let id = userId;
+  if (!id && userName) {
+    id = game.users.find((u) => u.name === userName)?.id;
+  }
+  if (!id) return;
+
+  const doc = token.document ?? token;
+  const mappings = doc.getFlag('token-variants', 'userMappings') || {};
+
+  mappings[id] = img;
+  doc.setFlag('token-variants', 'userMappings', mappings);
+}
+
+/**
+ * Calls assignUserSpecificImage passing in all currently selected tokens.
+ * @param {*} img image to be displayed
+ * @param {*} opts id or name of the user as per assignUserSpecificImage(...)
+ */
+export function assignUserSpecificImageToSelected(img, opts = {}) {
+  const selected = [...canvas.tokens.controlled];
+  for (const t of selected) assignUserSpecificImage(t, img, opts);
+}
+
+/**
+ * Un-assign image if one has been set to be displayed to a user.
+ * @param {*} token token the image is to be removed from
+ * @param {*} opts.userName name of the user that the image is to be removed for
+ * @param {*} opts.id id of the user that the image is to be removed for
+ */
+export function unassignUserSpecificImage(token, { userName = null, userId = null } = {}) {
+  if (userName instanceof Array) {
+    for (const name of userName) unassignUserSpecificImage(token, img, { userName: name });
+    return;
+  }
+
+  if (userId instanceof Array) {
+    for (const id of userId) unassignUserSpecificImage(token, img, { userId: id });
+    return;
+  }
+
+  let id = userId;
+  if (!id && userName) {
+    id = game.users.find((u) => u.name === userName)?.id;
+  }
+  if (!id) {
+    if (!userName && !userId) (token.document ?? token).unsetFlag('token-variants', 'userMappings');
+  } else {
+    const update = {};
+    update['flags.token-variants.userMappings.-=' + id] = null;
+    (token.document ?? token).update(update);
+  }
+}
+
+/**
+ * Calls unassignUserSpecificImage passing in all currently selected tokens.
+ * @param {*} opts id or name of the user as per unassignUserSpecificImage(...)
+ */
+export function unassignUserSpecificImageFromSelected(opts = {}) {
+  const selected = [...canvas.tokens.controlled];
+  for (const t of selected) unassignUserSpecificImage(t, opts);
+}
