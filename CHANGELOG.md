@@ -1,3 +1,9 @@
+# 4.49.2
+
+- The following settings will now also affect the combat tracker:
+  - `Disable ALL Effect Icons`
+  - `Disable SOME Effect Icons`
+
 # 4.49.1
 
 - Fixed setting: `Disable SOME Token Effect Icons` > `Effects with mappings`
