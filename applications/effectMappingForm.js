@@ -29,7 +29,7 @@ export default class EffectMappingForm extends FormApplication {
 
     this.token = token;
     if (globalMappings) {
-      this.globalMappings = deepClone(TVA_CONFIG.globalMappings);
+      this.globalMappings = deepClone(TVA_CONFIG.globalMappings).filter(Boolean);
     }
     if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
     this.callback = callback;
@@ -774,14 +774,12 @@ export default class EffectMappingForm extends FormApplication {
           })
         );
         if (this.globalMappings) {
-          _setGlobalEffectMappings(effectMappings);
           updateSettings({ globalMappings: effectMappings });
         } else {
           await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
           await this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
         }
       } else if (this.globalMappings) {
-        _setGlobalEffectMappings(null);
         updateSettings({ globalMappings: [] });
       } else {
         await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
@@ -874,23 +872,6 @@ function setCaretPosition(el, pos) {
     }
   }
   return pos;
-}
-
-async function _setGlobalEffectMappings(mappings) {
-  if (!mappings) {
-    for (const k of Object.keys(TVA_CONFIG.globalMappings)) {
-      delete TVA_CONFIG.globalMappings[k];
-    }
-    return;
-  }
-
-  const keys = Object.keys(TVA_CONFIG.globalMappings);
-  for (const key of keys) {
-    if (!(key in mappings)) {
-      delete TVA_CONFIG.globalMappings[key];
-    }
-  }
-  mergeObject(TVA_CONFIG.globalMappings, mappings, { recursive: false });
 }
 
 export function sortMappingsToGroups(mappings) {

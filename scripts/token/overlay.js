@@ -28,7 +28,7 @@ export async function drawOverlays(token) {
 
   // Process strings as expressions
   const overlays = processedMappings.map((m) =>
-    evaluateObjExpressions(deepClone(m.overlayConfig), token, m)
+    evaluateOverlayExpressions(deepClone(m.overlayConfig), token, m)
   );
 
   if (overlays.length) {
@@ -396,30 +396,38 @@ function _executeString(evalString, token) {
   return evalString;
 }
 
-// return _executeString(_evaluateString(obj, token, conf), token);
+export function evaluateOverlayExpressions(obj, token, conf) {
+  for (const [k, v] of Object.entries(obj)) {
+    if (
+      !['label', 'interactivity', 'variables', 'id', 'parentID', 'limitedUsers', 'filter'].includes(
+        k
+      )
+    ) {
+      obj[k] = _evaluateObjExpressions(v, token, conf);
+    }
+  }
+  return obj;
+}
 
 // Evaluate provided object values substituting in {{path.to.property}} with token properties, and performing eval() on strings
-export function evaluateObjExpressions(obj, token, conf) {
+function _evaluateObjExpressions(obj, token, conf) {
   const t = getType(obj);
   if (t === 'string') {
     const str = _evaluateString(obj, token, conf);
     return _executeString(str, token);
   } else if (t === 'Array') {
     for (let i = 0; i < obj.length; i++) {
-      obj[i] = evaluateObjExpressions(obj[i], token, conf);
+      obj[i] = _evaluateObjExpressions(obj[i], token, conf);
     }
   } else if (t === 'Object') {
     for (const [k, v] of Object.entries(obj)) {
       // Exception for text overlay
-      if (k === 'label') {
-        // obj[k] = v;
-      } else if (k === 'text' && getType(v) === 'string' && v) {
+      if (k === 'text' && getType(v) === 'string' && v) {
         const evalString = _evaluateString(v, token, conf);
         const result = _executeString(evalString, token);
         if (getType(result) !== 'string') obj[k] = evalString;
         else obj[k] = result;
-      } else if (k === 'variables') {
-      } else obj[k] = evaluateObjExpressions(v, token, conf);
+      } else obj[k] = _evaluateObjExpressions(v, token, conf);
     }
   }
   return obj;

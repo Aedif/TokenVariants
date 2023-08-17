@@ -80,7 +80,7 @@ function _onButtonRightClick(event, tile) {
       <div class="token-variants-context-menu active">
         <input class="token-variants-side-search" type="text" />
         <button class="flags" type="button"><i class="fab fa-font-awesome-flag"></i><label>Flags</label></button>
-        <button class="file-picker" type="button"><i class="fas fa-file-import fa-fw"></i><label>FilePicker</label></button>
+        <button class="file-picker" type="button"><i class="fas fa-file-import fa-fw"></i><label>Browse Folders</label></button>
       </div>
     </div>
       `);
@@ -289,7 +289,9 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
   sideSelect.find('.token-variants-button-select').click((event) => _onImageClick(event, tile));
 
   if (FULL_ACCESS) {
-    sideSelect.find('.token-variants-button-select').on('contextmenu', (event) => _onImageRightClick(event, tile));
+    sideSelect
+      .find('.token-variants-button-select')
+      .on('contextmenu', (event) => _onImageRightClick(event, tile));
   }
 
   return sideSelect;

@@ -1,6 +1,6 @@
 import { CORE_SHAPE, DEFAULT_OVERLAY_CONFIG, OVERLAY_SHAPES } from '../scripts/models.js';
 import { VALID_EXPRESSION, getAllEffectMappings } from '../scripts/hooks/effectMappingHooks.js';
-import { evaluateObjExpressions, genTexture } from '../scripts/token/overlay.js';
+import { evaluateOverlayExpressions, genTexture } from '../scripts/token/overlay.js';
 import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { sortMappingsToGroups } from './effectMappingForm.js';
@@ -77,7 +77,9 @@ export default class OverlayConfig extends FormApplication {
 
     // Shape listeners
     html.find('.addShape').on('click', this._onAddShape.bind(this));
+    html.find('.addEvent').on('click', this._onAddEvent.bind(this));
     html.find('.deleteShape').on('click', this._onDeleteShape.bind(this));
+    html.find('.deleteEvent').on('click', this._onDeleteEvent.bind(this));
     html.find('.moveShapeUp').on('click', this._onMoveShapeUp.bind(this));
     html.find('.moveShapeDown').on('click', this._onMoveShapeDown.bind(this));
     html.find('.cloneShape').on('click', this._onCloneShape.bind(this));
@@ -296,6 +298,16 @@ export default class OverlayConfig extends FormApplication {
     this.render(true);
   }
 
+  _onAddEvent(event) {
+    let listener = $(event.target).siblings('select').val();
+
+    this.config = this._getSubmitData();
+    if (!this.config.interactivity) this.config.interactivity = [];
+    this.config.interactivity.push({ listener, macro: '', script: '' });
+
+    this.render(true);
+  }
+
   _onDeleteShape(event) {
     const index = $(event.target).closest('.deleteShape').data('index');
     if (index == null) return;
@@ -303,6 +315,17 @@ export default class OverlayConfig extends FormApplication {
     this.config = this._getSubmitData();
     if (!this.config.shapes) this.config.shapes = [];
     this.config.shapes.splice(index, 1);
+
+    this.render(true);
+  }
+
+  _onDeleteEvent(event) {
+    const index = $(event.target).closest('.deleteEvent').data('index');
+    if (index == null) return;
+
+    this.config = this._getSubmitData();
+    if (!this.config.interactivity) this.config.interactivity = [];
+    this.config.interactivity.splice(index, 1);
 
     this.render(true);
   }
@@ -396,7 +419,7 @@ export default class OverlayConfig extends FormApplication {
   async _applyPreviews() {
     const targets = this.getPreviewIcons();
     for (const target of targets) {
-      const preview = evaluateObjExpressions(deepClone(this.previewConfig), target.token, {
+      const preview = evaluateOverlayExpressions(deepClone(this.previewConfig), target.token, {
         overlayConfig: this.previewConfig,
       });
       target.icon.refresh(preview, {
@@ -418,11 +441,19 @@ export default class OverlayConfig extends FormApplication {
     data.filters = Object.keys(PIXI.filters);
     data.filters.push('OutlineOverlayFilter');
     data.filters.sort();
-    if (typeof TokenMagic !== 'undefined') data.filters.unshift('Token Magic FX');
+    data.tmfxActive = game.modules.get('tokenmagic')?.active;
+    if (data.tmfxActive) {
+      data.tmfxPresets = TokenMagic.getPresets().map((p) => p.name);
+      data.filters.unshift('Token Magic FX');
+    }
     data.filters.unshift('NONE');
     const settings = mergeObject(DEFAULT_OVERLAY_CONFIG, this.config, {
       inplace: false,
     });
+    data.ceActive = game.modules.get('dfreds-convenient-effects')?.active;
+    if (data.ceActive) {
+      data.ceEffects = game.dfreds.effects.all.map((ef) => ef.name);
+    }
 
     if (settings.filter !== 'NONE') {
       const filterOptions = genFilterOptionControls(settings.filter, settings.filterOptions);
@@ -521,6 +552,19 @@ export default class OverlayConfig extends FormApplication {
         if (!shape.repeating) delete shape.repeat;
       });
     }
+
+    if (formData.interactivity) {
+      formData.interactivity = Object.values(formData.interactivity)
+        .map((e) => {
+          e.macro = e.macro.trim();
+          e.script = e.script.trim();
+          if (e.tmfxPreset) e.tmfxPreset = e.tmfxPreset.trim();
+          if (e.ceEffect) e.ceEffect = e.ceEffect.trim();
+          return e;
+        })
+        .filter((e) => e.macro || e.script || e.ceEffect || e.tmfxPreset);
+    }
+
     if (formData.variables) {
       formData.variables = Object.values(formData.variables);
       formData.variables = formData.variables.filter((v) => v.name.trim() && v.value.trim());
@@ -1124,15 +1168,11 @@ function genControl(control, values) {
 </div>
 `;
   } else if (type === 'tmfxPreset' && game.modules.get('tokenmagic')?.active) {
-    let content = '<datalist id="tmfxPresets">';
-    TokenMagic.getPresets().forEach((p) => (content += `<option value="${p.name}">`));
-    content += `</datalist><input list="tmfxPresets" class="tmfxPreset">`;
-
     return `
       <div class="form-group">
         <label>Preset <span class="units">(TMFX)</span></label>
         <div class="form-fields">
-          ${content}
+          <input list="tmfxPresets" class="tmfxPreset">
           <button type="button" class="presetImport"><i class="fas fa-download"></i></button>
         </div>
       `;

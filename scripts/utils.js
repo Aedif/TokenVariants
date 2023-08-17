@@ -799,8 +799,9 @@ export async function tv_executeScript(script, { actor, token, tvaUpdate } = {})
   // Add variables to the evaluation scope
   const speaker = ChatMessage.getSpeaker();
   const character = game.user.character;
-  actor = actor || game.actors.get(speaker.actor);
-  token = token.object || (canvas.ready ? canvas.tokens.get(speaker.token) : null);
+
+  token = token?.object || token || (canvas.ready ? canvas.tokens.get(speaker.token) : null);
+  actor = actor || token?.actor || game.actors.get(speaker.actor);
 
   // Attempt script execution
   const AsyncFunction = async function () {}.constructor;
@@ -815,15 +816,32 @@ export async function tv_executeScript(script, { actor, token, tvaUpdate } = {})
   }
 }
 
-export async function applyTMFXPreset(tokenDoc, presetName, action = 'apply') {
-  if (game.modules.get('tokenmagic')?.active && tokenDoc.object) {
+export async function executeMacro(macroName, token) {
+  token = token?.object || token;
+  game.macros.find((m) => m.name === macroName)?.execute({ token });
+}
+
+export async function applyTMFXPreset(token, presetName, action = 'apply') {
+  token = token.object ?? token;
+  if (game.modules.get('tokenmagic')?.active && token.document) {
     const preset = TokenMagic.getPreset(presetName);
     if (preset) {
       if (action === 'apply') {
-        await TokenMagic.addUpdateFilters(tokenDoc.object, preset);
+        await TokenMagic.addUpdateFilters(token, preset);
       } else if (action === 'remove') {
-        await TokenMagic.deleteFilters(tokenDoc.object, presetName);
+        await TokenMagic.deleteFilters(token, presetName);
       }
+    }
+  }
+}
+
+export async function toggleTMFXPreset(token, presetName) {
+  token = token.object ?? token;
+  if (game.modules.get('tokenmagic')?.active && token.document) {
+    if (TokenMagic.hasFilterId(_token, presetName)) {
+      applyTMFXPreset(token, presetName, 'remove');
+    } else {
+      applyTMFXPreset(token, presetName, 'apply');
     }
   }
 }
@@ -850,6 +868,16 @@ export async function applyCEEffect(tokenDoc, ceEffect, action = 'apply') {
         await game.dfreds.effectInterface.removeEffect({ effectName: ceEffect.name, uuid });
       }
     }
+  }
+}
+
+export async function toggleCEEffect(token, effectName) {
+  if (game.modules.get('dfreds-convenient-effects')?.active) {
+    let uuid = (token.document ?? token).actor?.uuid;
+    await game.dfreds.effectInterface.toggleEffect(effectName, {
+      uuids: [uuid],
+      overlay: false,
+    });
   }
 }
 

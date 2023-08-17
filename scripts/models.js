@@ -69,6 +69,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
   anchor: { x: 0.5, y: 0.5 },
   shapes: [],
   variables: [],
+  interactivity: [],
 };
 
 export const OVERLAY_SHAPES = {

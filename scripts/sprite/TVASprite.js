@@ -6,6 +6,7 @@ import {
 } from '../hooks/overlayHooks.js';
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
 import { interpolateColor, removeMarkedOverlays } from '../token/overlay.js';
+import { executeMacro, toggleCEEffect, toggleTMFXPreset, tv_executeScript } from '../utils.js';
 
 class OutlineFilter extends OutlineOverlayFilter {
   /** @inheritdoc */
@@ -93,6 +94,84 @@ export class TVASprite extends TokenMesh {
       set: function () {},
       configurable: true,
     });
+
+    this.enableInteractivity();
+  }
+
+  enableInteractivity() {
+    if (!this.overlayConfig.interactivity?.length) {
+      this.removeAllListeners();
+      this.mouseInteractionManager = null;
+      return;
+    }
+
+    if (this.mouseInteractionManager) return;
+
+    if (canvas.primary.eventMode === 'none') {
+      canvas.primary.eventMode = 'passive';
+    }
+
+    this.eventMode = 'static';
+    this.cursor = 'pointer';
+
+    const interactivity = this.overlayConfig.interactivity;
+    const token = this.object;
+
+    const runInteraction = function (event, listener) {
+      interactivity.forEach((i) => {
+        if (i.listener === listener) {
+          event.preventDefault();
+          event.stopPropagation();
+
+          if (i.script) tv_executeScript(i.script, { token });
+          if (i.macro) executeMacro(i.macro, token);
+          if (i.ceEffect) toggleCEEffect(token, i.ceEffect);
+          if (i.tmfxPreset) toggleTMFXPreset(token, i.tmfxPreset);
+        }
+      });
+    };
+
+    const permissions = {
+      hoverIn: () => true,
+      hoverOut: () => true,
+      clickLeft: () => true,
+      clickLeft2: () => false,
+      clickRight: () => false,
+      clickRight2: () => true,
+      dragStart: () => false,
+    };
+
+    const callbacks = {
+      hoverIn: (event) => {
+        runInteraction(event, 'hoverIn');
+      },
+      hoverOut: (event) => {
+        runInteraction(event, 'hoverOut');
+      },
+      clickLeft: (event) => {
+        runInteraction(event, 'clickLeft');
+      },
+      clickLeft2: null,
+      clickRight: null,
+      clickRight2: (event) => {
+        runInteraction(event, 'clickRight2');
+      },
+      dragLeftStart: null,
+      dragLeftMove: null,
+      dragLeftDrop: null,
+      dragLeftCancel: null,
+      dragRightStart: null,
+      dragRightMove: null,
+      dragRightDrop: null,
+      dragRightCancel: null,
+      longPress: null,
+    };
+
+    const options = { target: null };
+
+    // Create the interaction manager
+    const mgr = new MouseInteractionManager(this, canvas.stage, permissions, callbacks, options);
+    this.mouseInteractionManager = mgr.activate();
   }
 
   _customVisible() {
@@ -220,6 +299,7 @@ export class TVASprite extends TokenMesh {
     // Register/Unregister hooks that should refresh this overlay
     if (configuration) {
       this._registerHooks(configuration);
+      this.enableInteractivity();
     }
 
     const config = mergeObject(this.overlayConfig, configuration ?? {}, { inplace: !preview });

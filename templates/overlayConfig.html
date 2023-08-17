@@ -8,12 +8,86 @@
         <a class="item" data-tab="filter"><i class="fas fa-paint-roller"></i> Filter</a>
         <a class="item" data-tab="visibility"><i class="fas fa-eye"></i> Visibility</a>
         <a class="item" data-tab="animation"><i class="fas fa-camera-movie"></i> Animation</a>
+        <a class="item" data-tab="interactivity"><i class="fas fa-bolt"></i> Events</a>
         <a class="item {{#if variables}}non-empty-variables{{/if}}" data-tab="variables"><i class="fas fa-superscript"></i> Variables</a>
     </nav>
 
     <input type="text" name="id" value="{{id}}" hidden>
 
+    {{#if tmfxActive}}
+    <datalist id="tmfxPresets">
+        {{#each tmfxPresets }}
+        <option value="{{this}}"></option>
+        {{/each}}
+    </datalist>
+    {{/if}}
+
+    {{#if ceEffects}}
+    <datalist id="ceEffects">
+        {{#each ceEffects }}
+        <option value="{{this}}"></option>
+        {{/each}}
+    </datalist>
+    {{/if}}
+
     <section class = "content">
+
+        <div class="tab" data-group="main" data-tab="interactivity">
+            <div class="form-group">
+                <label>Event</label>
+                <div class="form-fields">
+                <select>
+                    <option value="clickLeft">Click Left</option>
+                    <option value="clickRight2">Double Click Right</option>
+                </select>
+                <button class="addEvent" type="button">Add</button>
+                </div>
+            </div>
+
+            {{#each interactivity as |event|}}
+
+            <fieldset>
+                <legend><b>{{event.listener}}</b> <a class="deleteEvent" data-index="{{@index}}" title="Remove"><i class="fas fa-trash-alt"></i></a></legend>
+                <input type="hidden" name="interactivity.{{@index}}.listener" value="{{event.listener}}">
+
+                <div class="form-group">
+                    <label>Macro</label>
+                    <div class="form-fields">
+                        <input name="interactivity.{{@index}}.macro" type="text" value="{{event.macro}}"></input>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Script</label>
+                    <div class="form-fields">
+                        <textarea name="interactivity.{{@index}}.script">{{event.script}}</textarea>
+                    </div>
+                </div>
+
+                {{#if ../ceActive}}
+                <div class="form-group">
+                    <label>DFreds Effect</label>
+                    <div class="form-fields">
+                      <input list="ceEffects" name="interactivity.{{@index}}.ceEffect" value="{{event.ceEffect}}">
+                    </div>
+                </div>
+                {{/if}}
+
+                {{#if ../tmfxActive}}
+                <div class="form-group">
+                    <label>TMFX (Preset)</label>
+                    <div class="form-fields">
+                      <input list="tmfxPresets" name="interactivity.{{@index}}.tmfxPreset" value="{{event.tmfxPreset}}">
+                    </div>
+                </div>
+                {{/if}}
+
+            </fieldset>
+
+            {{/each}}
+
+        </div>
+
         <div class="tab active" data-group="main" data-tab="misc">
 
             <div class="form-group">
