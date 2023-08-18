@@ -833,18 +833,6 @@ ol.token-variant-table .table-row .mapping-expression .div-input {
 }
 
 /* ---------------------------------------- */
-/* Token Config                             */
-/* ---------------------------------------- */
-
-.token-variants-randomImgDefault {
-  display: none;
-}
-
-.token-variants-randomImgDefault.active {
-  display: block;
-}
-
-/* ---------------------------------------- */
 /* Active Effect Scripts                    */
 /* ---------------------------------------- */
 

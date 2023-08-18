@@ -1,3 +1,29 @@
+# 4.50.0
+
+Prototype Token
+
+- New option: `Disable HUD Button`
+  - Prevents TVA button from being shown on the Token HUD
+  - The button can also be disabled by running the following:
+    - `_token.document.setFlag('token-variants', 'disableHUDButton', true)`
+- Fixed toggling of the `Randomize Wildcard Images` checkbox not updating form size when new TVA field is revealed or removed
+
+Overlays
+
+- New tab: `Triggers`
+  - Allows hover and mouse Click triggers to be assigned to overlays (hoverIn, hoverOut, clickLeft, clickLeft2, clickRight, clickRight2)
+  - Upon the trigger being met the module will; ` run a macro``,  `run a script`` , `toggle TMFX preset ``, and/or `toggle DFreds Convenient Effect`
+  - Both `token` and `actor` will be available within the context of the macro or script
+  - TMFX and DFreds toggles will apply to the Token/Actor the overlay is assigned to
+- New option: `Visibility` > `Limit Visibility to Owner`
+  - Limits visibility to users that own the token the overlay belongs to
+
+Mappings
+
+- New template: `Spell Slot Ring`
+  - Displays a ring overlay that indicates the remaining number of spell slots
+- Fixed a bug that under specific circumstances would prevent `Global Mappings` form from opening
+
 # 4.49.2
 
 - The following settings will now also affect the combat tracker:

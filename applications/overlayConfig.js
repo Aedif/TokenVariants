@@ -454,6 +454,7 @@ export default class OverlayConfig extends FormApplication {
     if (data.ceActive) {
       data.ceEffects = game.dfreds.effects.all.map((ef) => ef.name);
     }
+    data.macros = game.macros.map((m) => m.name);
 
     if (settings.filter !== 'NONE') {
       const filterOptions = genFilterOptionControls(settings.filter, settings.filterOptions);
@@ -563,6 +564,8 @@ export default class OverlayConfig extends FormApplication {
           return e;
         })
         .filter((e) => e.macro || e.script || e.ceEffect || e.tmfxPreset);
+    } else {
+      formData.interactivity = [];
     }
 
     if (formData.variables) {

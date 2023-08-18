@@ -838,7 +838,7 @@ export async function applyTMFXPreset(token, presetName, action = 'apply') {
 export async function toggleTMFXPreset(token, presetName) {
   token = token.object ?? token;
   if (game.modules.get('tokenmagic')?.active && token.document) {
-    if (TokenMagic.hasFilterId(_token, presetName)) {
+    if (TokenMagic.hasFilterId(token, presetName)) {
       applyTMFXPreset(token, presetName, 'remove');
     } else {
       applyTMFXPreset(token, presetName, 'apply');

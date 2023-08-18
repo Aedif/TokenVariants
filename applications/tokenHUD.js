@@ -25,7 +25,12 @@ export async function renderTokenHUD(hud, html, token, searchText = '', fp_files
   const PARTIAL_ACCESS = TVA_CONFIG.permissions.hud[game.user.role];
 
   // Check if the HUD button should be displayed
-  if (!hudSettings.enableSideMenu || (!PARTIAL_ACCESS && !FULL_ACCESS)) return;
+  if (
+    !hudSettings.enableSideMenu ||
+    (!PARTIAL_ACCESS && !FULL_ACCESS) ||
+    token.flags['token-variants']?.disableHUDButton
+  )
+    return;
 
   const tokenActor = game.actors.get(token.actorId);
 

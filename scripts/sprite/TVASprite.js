@@ -95,17 +95,16 @@ export class TVASprite extends TokenMesh {
       configurable: true,
     });
 
-    this.enableInteractivity();
+    this.enableInteractivity(this.overlayConfig);
   }
 
   enableInteractivity() {
-    if (!this.overlayConfig.interactivity?.length) {
+    if (this.mouseInteractionManager && !this.overlayConfig.interactivity?.length) {
       this.removeAllListeners();
       this.mouseInteractionManager = null;
+      this.cursor = null;
       return;
-    }
-
-    if (this.mouseInteractionManager) return;
+    } else if (this.mouseInteractionManager || !this.overlayConfig.interactivity?.length) return;
 
     if (canvas.primary.eventMode === 'none') {
       canvas.primary.eventMode = 'passive';
@@ -113,16 +112,14 @@ export class TVASprite extends TokenMesh {
 
     this.eventMode = 'static';
     this.cursor = 'pointer';
-
-    const interactivity = this.overlayConfig.interactivity;
     const token = this.object;
+    const sprite = this;
 
     const runInteraction = function (event, listener) {
-      interactivity.forEach((i) => {
+      sprite.overlayConfig.interactivity.forEach((i) => {
         if (i.listener === listener) {
           event.preventDefault();
           event.stopPropagation();
-
           if (i.script) tv_executeScript(i.script, { token });
           if (i.macro) executeMacro(i.macro, token);
           if (i.ceEffect) toggleCEEffect(token, i.ceEffect);
@@ -135,27 +132,19 @@ export class TVASprite extends TokenMesh {
       hoverIn: () => true,
       hoverOut: () => true,
       clickLeft: () => true,
-      clickLeft2: () => false,
-      clickRight: () => false,
+      clickLeft2: () => true,
+      clickRight: () => true,
       clickRight2: () => true,
       dragStart: () => false,
     };
 
     const callbacks = {
-      hoverIn: (event) => {
-        runInteraction(event, 'hoverIn');
-      },
-      hoverOut: (event) => {
-        runInteraction(event, 'hoverOut');
-      },
-      clickLeft: (event) => {
-        runInteraction(event, 'clickLeft');
-      },
-      clickLeft2: null,
-      clickRight: null,
-      clickRight2: (event) => {
-        runInteraction(event, 'clickRight2');
-      },
+      hoverIn: (event) => runInteraction(event, 'hoverIn'),
+      hoverOut: (event) => runInteraction(event, 'hoverOut'),
+      clickLeft: (event) => runInteraction(event, 'clickLeft'),
+      clickLeft2: (event) => runInteraction(event, 'clickLeft2'),
+      clickRight: (event) => runInteraction(event, 'clickRight'),
+      clickRight2: (event) => runInteraction(event, 'clickRight2'),
       dragLeftStart: null,
       dragLeftMove: null,
       dragLeftDrop: null,
@@ -178,6 +167,7 @@ export class TVASprite extends TokenMesh {
     const ov = this.overlayConfig;
     if (!this.ready || !(this.object.visible || ov.alwaysVisible)) return false;
 
+    if (ov.limitedToOwner && !this.object.owner) return false;
     if (ov.limitedUsers?.length && !ov.limitedUsers.includes(game.user.id)) return false;
 
     if (ov.limitOnEffect || ov.limitOnProperty) {
@@ -299,10 +289,11 @@ export class TVASprite extends TokenMesh {
     // Register/Unregister hooks that should refresh this overlay
     if (configuration) {
       this._registerHooks(configuration);
-      this.enableInteractivity();
     }
 
     const config = mergeObject(this.overlayConfig, configuration ?? {}, { inplace: !preview });
+
+    this.enableInteractivity(config);
 
     if (fullRefresh) {
       const source = foundry.utils.getProperty(this.texture, 'baseTexture.resource.source');

@@ -46,6 +46,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
     relative: false,
   },
   limitedUsers: [],
+  limitedToOwner: false,
   alwaysVisible: false,
   text: {
     text: '',

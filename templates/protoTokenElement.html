@@ -1,4 +1,4 @@
-<fieldset class="token-variants-randomImgDefault {{#if active}}active{{/if}}">
+<fieldset class="token-variants-proto">
     <legend>Token Variant Art</legend>
     <div class="form-group">
         <label for="texture">Default Wildcard Image</label>
@@ -10,4 +10,11 @@
         </div>
         <p class="hint">Rather than randomizing the image upon token creation this default image will be used instead.</p>
     </div>
+    <div class="form-group">
+        <label>Disable HUD Button</label>
+        <div class="form-fields">
+          <input type="checkbox" name="flags.token-variants.disableHUDButton" data-dtype="Boolean" {{#if disableHUDButton}}checked{{/if}}>
+        </div>
+        <p class="notes">Prevent the display of the Token HUD button..</p>
+      </div>
 </fieldset>

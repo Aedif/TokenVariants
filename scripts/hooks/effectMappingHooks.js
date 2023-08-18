@@ -154,7 +154,7 @@ function _updateActiveEffect(activeEffect, change, options, userId) {
 }
 
 function _preUpdateToken(token, change, options, userId) {
-  if (game.user.id !== userId) return;
+  if (game.user.id !== userId || change.actorId) return;
 
   const preUpdateEffects = evaluateComparatorEffects(token);
 
@@ -179,7 +179,7 @@ function _preUpdateToken(token, change, options, userId) {
 }
 
 async function _updateToken(token, change, options, userId) {
-  if (game.user.id !== userId) return;
+  if (game.user.id !== userId || change.actorId) return;
 
   const addedEffects = [];
   const removedEffects = [];

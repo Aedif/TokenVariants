@@ -1,5 +1,6 @@
+import { insertArtSelectButton } from '../../applications/artSelect.js';
 import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
-import { updateTokenImage } from '../utils.js';
+import { SEARCH_TYPE, updateTokenImage } from '../utils.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
 const feature_id = 'Wildcards';
@@ -19,33 +20,43 @@ export function registerWildcardHooks() {
 
 async function _renderTokenConfig(config, html) {
   const checkboxRandomize = html.find('input[name="randomImg"]');
-  if (checkboxRandomize.length && !html.find('.token-variants-randomImgDefault').length) {
+  if (checkboxRandomize.length && !html.find('.token-variants-proto').length) {
     const defaultImg =
       config.actor?.prototypeToken?.flags['token-variants']?.['randomImgDefault'] ||
       config.actor?.prototypeToken?.flags['token-hud-wildcard']?.['default'] ||
       '';
 
-    const field = await renderTemplate('/modules/token-variants/templates/randomImgDefault.html', {
+    const field = await renderTemplate('/modules/token-variants/templates/protoTokenElement.html', {
       defaultImg,
-      active: checkboxRandomize.is(':checked'),
+      disableHUDButton: config.object?.getFlag('token-variants', 'disableHUDButton'),
     });
     checkboxRandomize.closest('.form-group').after(field);
 
-    const tvaRngField = html.find('.token-variants-randomImgDefault');
+    const tvaFieldset = html.find('.token-variants-proto');
 
-    tvaRngField.find('button').click((event) => {
+    tvaFieldset.find('button').click((event) => {
       event.preventDefault();
-      const input = tvaRngField.find('input');
+      const input = tvaFieldset.find('input');
       new FilePicker({ current: input.val(), field: input[0] }).browse(defaultImg);
     });
 
-    checkboxRandomize.click((event) => {
-      if (event.target.checked) {
-        tvaRngField.addClass('active');
-      } else {
-        tvaRngField.removeClass('active');
-      }
+    insertArtSelectButton(tvaFieldset, 'flags.token-variants.randomImgDefault', {
+      search: config.object.name,
+      searchType: SEARCH_TYPE.TOKEN,
     });
+
+    // Hide/Show Default Img Form Group
+    const rdmImgFormGroup = tvaFieldset.find('.imagevideo').closest('.form-group');
+    checkboxRandomize
+      .click((event) => {
+        if (event.target.checked) {
+          rdmImgFormGroup.show();
+        } else {
+          rdmImgFormGroup.hide();
+        }
+        config.setPosition();
+      })
+      .trigger('click');
   }
 }
 
@@ -61,7 +72,10 @@ function _preCreateToken(tokenDocument, data, options, userId) {
   }
 
   if (TVA_CONFIG.imgNameContainsDimensions) {
-    updateTokenImage(update['texture.src'] ?? tokenDocument.texture.src, { token: tokenDocument, update });
+    updateTokenImage(update['texture.src'] ?? tokenDocument.texture.src, {
+      token: tokenDocument,
+      update,
+    });
   }
 
   if (!isEmpty(update)) tokenDocument.updateSource(update);
