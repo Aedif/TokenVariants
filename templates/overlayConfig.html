@@ -234,7 +234,7 @@
                         <i class="fas fa-file-import fa-fw"></i>
                     </button>
                     <input class="image" type="text" name="img" placeholder="path/image.png" value="{{img}}">
-                <button type="button" title="Select variant" class="token-variants-image-select-button" tabindex="-1" data-type="imagevideo" data-target="img"><i class="fas fa-images"></i></button></div>
+                <button type="button" title="Select Image" class="token-variants-image-select-button" tabindex="-1" data-type="imagevideo" data-target="img"><i class="fas fa-images"></i></button></div>
             </div>
 
             {{~>modules/token-variants/templates/partials/repeating.html repeating=repeating root="" repeat=repeat padding="true"}}
@@ -503,7 +503,7 @@
                 <div class="form-fields">
                 <select name="text.align">
                     {{#each textAlignmentOptions as |option|}}
-                    <option value="{{option.value}}" {{#if (eq text.align option.value)}}selected="selected"{{/if}}>{{option.label}}</option>
+                    <option value="{{option.value}}" {{#if (eq ../text.align option.value)}}selected="selected"{{/if}}>{{option.label}}</option>
                     {{/each}}
                 </select>
                 </div>

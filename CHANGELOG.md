@@ -1,3 +1,14 @@
+# 4.51.0
+
+Mappings
+
+- New option: `Scripts` > `Macro`
+  - If provided will find and execute macros by the given names
+
+Overlays
+
+- Fixed `Text` > `Align` select box not pre-selecting the saved value
+
 # 4.50.0
 
 Prototype Token

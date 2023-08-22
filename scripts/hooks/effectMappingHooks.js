@@ -3,6 +3,7 @@ import {
   applyCEEffect,
   applyTMFXPreset,
   determineAddedRemovedEffects,
+  executeMacro,
   EXPRESSION_OPERATORS,
   getAllActorTokens,
   getFileName,
@@ -419,6 +420,7 @@ async function _updateWithEffectMapping(token, added, removed) {
         executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'remove' });
       if (script.ceEffect?.name)
         executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
+      if (script.macroOnApply) executeOnCallback.push({ macro: script.macroOnApply, token });
     }
   }
   for (const ef of added) {
@@ -432,6 +434,7 @@ async function _updateWithEffectMapping(token, added, removed) {
         executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'apply' });
       if (script.ceEffect?.name)
         executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
+      if (script.macroOnRemove) executeOnCallback.push({ macro: script.macroOnRemove, token });
     }
   }
 
@@ -609,6 +612,8 @@ async function _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scr
       await applyTMFXPreset(scr.token, scr.tmfxPreset, scr.action);
     } else if (scr.ceEffect) {
       await applyCEEffect(scr.token, scr.ceEffect, scr.action);
+    } else if (scr.macro) {
+      await executeMacro(scr.macro, token);
     }
   }
 }

@@ -46,7 +46,7 @@ export async function renderTokenHUD(hud, html, token, searchText = '', fp_files
       src="modules/token-variants/img/token-images.svg"
       width="36"
       height="36"
-      title="${game.i18n.localize('token-variants.windows.art-select.select-variant')}"
+      title="Left-click: Image Menu&#013;Right-click: Search & Additional settings"
     />
   </div>
 `);
@@ -134,7 +134,7 @@ function _onButtonRightClick(event, hud, html, token) {
       event.preventDefault();
       event.stopPropagation();
       new FilePicker({
-        type: 'folder',
+        type: 'imagevideo',
         callback: async (path, fp) => {
           const content = await FilePicker.browse(fp.activeSource, fp.result.target);
           let files = content.files.filter((f) => isImage(f) || isVideo(f));

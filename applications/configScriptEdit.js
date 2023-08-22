@@ -25,6 +25,8 @@ export default class EditScriptConfig extends FormApplication {
     data.hasScript = !isEmpty(script);
     data.onApply = script.onApply;
     data.onRemove = script.onRemove;
+    data.macroOnApply = script.macroOnApply;
+    data.macroOnRemove = script.macroOnRemove;
 
     data.tmfxPreset = script.tmfxPreset;
     data.tmfxActive = game.modules.get('tokenmagic')?.active;
@@ -37,6 +39,8 @@ export default class EditScriptConfig extends FormApplication {
       data.ceEffect = script.ceEffect ?? { apply: true, remove: true };
       data.ceEffects = game.dfreds.effects.all.map((ef) => ef.name);
     }
+
+    data.macros = game.macros.map((m) => m.name);
 
     return data;
   }
@@ -72,19 +76,22 @@ export default class EditScriptConfig extends FormApplication {
    */
   async _updateObject(event, formData) {
     formData = expandObject(formData);
-    formData.onApply = formData.onApply.trim();
-    formData.onRemove = formData.onRemove.trim();
+    ['onApply', 'onRemove', 'macroOnApply', 'macroOnRemove'].forEach((k) => {
+      formData[k] = formData[k].trim();
+    });
     if (formData.ceEffect?.name) formData.ceEffect.name = formData.ceEffect.name.trim();
-    if (!formData.onApply && !formData.onRemove && !formData.tmfxPreset && !formData.ceEffect.name) {
+
+    if (
+      !formData.onApply &&
+      !formData.onRemove &&
+      !formData.tmfxPreset &&
+      !formData.ceEffect.name &&
+      !formData.macroOnApply &&
+      !formData.macroOnRemove
+    ) {
       if (this.callback) this.callback(null);
     } else {
-      if (this.callback)
-        this.callback({
-          onApply: formData.onApply,
-          onRemove: formData.onRemove,
-          tmfxPreset: formData.tmfxPreset,
-          ceEffect: formData.ceEffect,
-        });
+      if (this.callback) this.callback(formData);
     }
   }
 }

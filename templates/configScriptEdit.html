@@ -3,13 +3,37 @@
         <legend>Scripts</legend>
 
         <div class="form-group stacked command">
-            <label>Run On Apply</label>
+            <label>Run when 'Expression' is TRUE</label>
             <textarea name="onApply">{{onApply}}</textarea>
         </div>
 
         <div class="form-group stacked command">
-            <label>Run On Remove</label>
+            <label>Run when 'Expression' is FALSE</label>
             <textarea name="onRemove">{{onRemove}}</textarea>
+        </div>
+    </fieldset>
+
+    <br>
+
+    <datalist id="macros">
+        {{#each macros }}
+        <option value="{{this}}"></option>
+        {{/each}}
+    </datalist>
+
+    <fieldset>
+        <legend>Macros</legend>
+        <div class="form-group">
+            <label>Run when 'Expression' is TRUE</label>
+            <div class="form-fields">
+              <input list="macros" name="macroOnApply" value="{{macroOnApply}}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Run when 'Expression' is FALSE</label>
+            <div class="form-fields">
+              <input list="macros" name="macroOnRemove" value="{{macroOnRemove}}">
+            </div>
         </div>
     </fieldset>
 
@@ -18,7 +42,7 @@
     <fieldset>
         <legend>Token Magic FX</legend>
         <div class="form-group">
-            <label>Apply Preset</label>
+            <label>Toggle Preset</label>
             <div class="form-fields">
               <datalist id="tmfxPresets">
               {{#each tmfxPresets }}
