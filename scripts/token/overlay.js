@@ -65,12 +65,18 @@ export async function drawOverlays(token) {
         if (!sprite) {
           if (ov.parentID) {
             const parent = _findTVASprite(ov.parentID, token);
-            if (parent)
+            if (parent && !parent.tvaRemove)
               sprite = parent.addChildAuto(new TVASprite(await genTexture(token, ov), token, ov));
           } else {
             sprite = canvas.primary.addChild(new TVASprite(await genTexture(token, ov), token, ov));
           }
           if (sprite) token.tva_sprites.push(sprite);
+        }
+
+        // If the sprite has a parent confirm that the parent has not been removed
+        if (sprite?.overlayConfig.parentID) {
+          const parent = _findTVASprite(sprite.overlayConfig.parentID, token);
+          if (!parent || parent.tvaRemove) sprite = null;
         }
 
         if (sprite) {

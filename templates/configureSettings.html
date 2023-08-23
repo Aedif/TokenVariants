@@ -10,7 +10,7 @@
       {{#if enabledTabs.popup}}<a class="item" data-tab="popup"><i class="fas fa-book-open"></i> Pop-up</a>{{/if}}
       {{#if enabledTabs.permissions}}<a class="item" data-tab="permissions"><i class="fas fa-user-lock"></i> Permissions</a>{{/if}}
       {{#if enabledTabs.worldHud}}<a class="item" data-tab="worldHud"><i class="fas fa-images"></i> Token HUD</a>{{/if}}
-      {{#if enabledTabs.activeEffects}}<a class="item" data-tab="activeEffects"><i class="fas fa-sun"></i> Active Effects</a>{{/if}}
+      {{#if enabledTabs.activeEffects}}<a class="item" data-tab="activeEffects"><i class="fas fa-sun"></i> Effects</a>{{/if}}
       {{#if enabledTabs.misc}}<a class="item" data-tab="misc"><i class="fas fa-bars"></i> Misc</a>{{/if}}
     </nav>
 
@@ -603,7 +603,7 @@
           </div>
 
           <div class="form-group">
-            <label>Global Effect Configurations</label>
+            <label>Global Effect Mappings</label>
             <button class="token-variants-global-mapping" type="button">
                 <i class="fas fa-angle-double-right"></i>
                 <label>Configure</label>
@@ -749,21 +749,37 @@
 
           <hr>
 
-          <div class="form-group">
-            <label>Transfer Token Updates to Prototype</label>
-            <div class="form-fields">
-              <input type="checkbox" name="updateTokenProto" data-dtype="Boolean" {{#if updateTokenProto}}checked{{/if}}>
-            </div>
-            <p class="notes">Token updates using the module will also affect the prototype token.</p>
-          </div>
+          <fieldset>
+            <legend>Image Updates</legend>
 
-          <div class="form-group">
-            <label>Image Names Contain Dimensions</label>
-            <div class="form-fields">
-              <input type="checkbox" name="imgNameContainsDimensions" data-dtype="Boolean" {{#if imgNameContainsDimensions}}checked{{/if}}>
+            <div class="form-group">
+              <label>Transfer Token Updates to Prototype</label>
+              <div class="form-fields">
+                <input type="checkbox" name="updateTokenProto" data-dtype="Boolean" {{#if updateTokenProto}}checked{{/if}}>
+              </div>
+              <p class="notes">Token updates using the module will also affect the prototype token.</p>
             </div>
-            <p class="notes">Module will recognize `_scaleX.X_`, `_widthX.X_`, and `_heightX.X_` in image names and apply them to the token.</p>
-          </div>
+
+            <fieldset>
+              <legend>Dimensions in Image Names</legend>
+              <div class="form-group">
+                <label>Token HUD Wildcard</label>
+                <div class="form-fields">
+                  <input type="checkbox" name="imgNameContainsDimensions" data-dtype="Boolean" {{#if imgNameContainsDimensions}}checked{{/if}}>
+                </div>
+                <p class="notes">Module will recognize `_scale#.#_`, `_width#.#_`, and `_height#.#_` in image names and apply them to the token.</p>
+              </div>
+              <div class="form-group">
+                <label>Forgotten Adventures</label>
+                <div class="form-fields">
+                  <input type="checkbox" name="imgNameContainsFADimensions" data-dtype="Boolean" {{#if imgNameContainsFADimensions}}checked{{/if}}>
+                </div>
+                <p class="notes">Module will recognize `_Scale###_` in image names and apply it to the token.</p>
+              </div>
+            </fieldset>
+
+
+          </fieldset>
 
           <hr>
 

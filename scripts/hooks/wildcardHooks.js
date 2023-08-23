@@ -71,7 +71,7 @@ function _preCreateToken(tokenDocument, data, options, userId) {
     if (defaultImg) update['texture.src'] = defaultImg;
   }
 
-  if (TVA_CONFIG.imgNameContainsDimensions) {
+  if (TVA_CONFIG.imgNameContainsDimensions || TVA_CONFIG.imgNameContainsFADimensions) {
     updateTokenImage(update['texture.src'] ?? tokenDocument.texture.src, {
       token: tokenDocument,
       update,

@@ -494,7 +494,7 @@ export function getTokenConfigForUpdate(imgSrc, imgName, token) {
     }
   }
 
-  if (TVA_CONFIG.imgNameContainsDimensions) {
+  if (TVA_CONFIG.imgNameContainsDimensions || TVA_CONFIG.imgNameContainsFADimensions) {
     extractDimensionsFromImgName(imgSrc, tokenConfig);
   }
 
@@ -1060,11 +1060,22 @@ export function getAllActorTokens(actor, linked = false, document = false) {
 
 export function extractDimensionsFromImgName(img, dimensions = {}) {
   const name = getFileName(img);
-  const height = name.match(/_height(.*)_/)?.[1];
-  if (height) dimensions.height = parseFloat(height);
-  const width = name.match(/_width(.*)_/)?.[1];
-  if (width) dimensions.width = parseFloat(width);
-  const scale = name.match(/_scale(.*)_/)?.[1];
+
+  let scale;
+  if (TVA_CONFIG.imgNameContainsDimensions) {
+    const height = name.match(/_height(.*)_/)?.[1];
+    if (height) dimensions.height = parseFloat(height);
+    const width = name.match(/_width(.*)_/)?.[1];
+    if (width) dimensions.width = parseFloat(width);
+    scale = name.match(/_scale(.*)_/)?.[1];
+    if (scale) scale = Math.max(parseFloat(scale), 0.2);
+  }
+  if (TVA_CONFIG.imgNameContainsFADimensions) {
+    scale = name.match(/_Scale(\d+)_/)?.[1];
+    if (scale) {
+      scale = Math.max(parseInt(scale) / 100, 0.2);
+    }
+  }
   if (scale) {
     dimensions['texture.scaleX'] = scale;
     dimensions['texture.scaleY'] = scale;

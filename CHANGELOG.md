@@ -1,3 +1,13 @@
+# 4.52.0
+
+- `Image Names Contain Dimensions` renamed to `Image Updates` > `Dimensions in Image Names` > `Token HUD Wildcard`
+- New option `Image Updates` > `Dimensions in Image Names` > `Forgotten Adventures`
+
+  - When enabled image names will be examined for a string matching `_Scale###_` and apply appropriate scale to the token
+
+- Fixed an issue with child overlays not being removed when their parent's expression is false
+- Fixed Global Mapping form not saving changes when opened through the `Configure Settings` form
+
 # 4.51.0
 
 Mappings
