@@ -1,3 +1,7 @@
+# 4.52.1
+
+- Fixed a bug causing `Randomize Wildcard Images` to be preselected
+
 # 4.52.0
 
 - `Image Names Contain Dimensions` renamed to `Image Updates` > `Dimensions in Image Names` > `Token HUD Wildcard`

@@ -47,16 +47,16 @@ async function _renderTokenConfig(config, html) {
 
     // Hide/Show Default Img Form Group
     const rdmImgFormGroup = tvaFieldset.find('.imagevideo').closest('.form-group');
-    checkboxRandomize
-      .click((event) => {
-        if (event.target.checked) {
-          rdmImgFormGroup.show();
-        } else {
-          rdmImgFormGroup.hide();
-        }
-        config.setPosition();
-      })
-      .trigger('click');
+    const showHideGroup = function (checked) {
+      if (checked) {
+        rdmImgFormGroup.show();
+      } else {
+        rdmImgFormGroup.hide();
+      }
+      config.setPosition();
+    };
+    checkboxRandomize.on('click', (event) => showHideGroup(event.target.checked));
+    showHideGroup(checkboxRandomize.is(':checked'));
   }
 }
 
