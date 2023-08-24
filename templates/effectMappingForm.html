@@ -47,12 +47,20 @@
           />
         </div>
         <div class="mapping-expression">
-          <div class="div-input" contenteditable="true">{{{mapping.highlightedExpression}}}</div>
-          <input
-            type="text"
-            name="mappings.{{mapping.i}}.expression"
-            value="{{mapping.expression}}"
-            hidden/>
+          <div class="expression-container">
+            <a class="expression-switch" title="Toggle between Expression and JS Code"><i class="fad fa-code"></i></a>
+            <div>
+              <div class="div-input {{#if hasCodeExp}}hidden{{/if}}" contenteditable="true" title="Expression">{{{mapping.highlightedExpression}}}</div>
+              <input
+                type="text"
+                name="mappings.{{mapping.i}}.expression"
+                value="{{mapping.expression}}"
+                hidden/>
+            </div>
+            <div class="expression-code {{#unless hasCodeExp}}hidden{{/unless}}">
+              <textarea name="mappings.{{mapping.i}}.codeExp" title="JS Code&#013;'token' document is available within this context">{{mapping.codeExp}}</textarea>
+            </div>
+          </div>
         </div>
         <div class="mapping-priority">
           <input

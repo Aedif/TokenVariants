@@ -157,21 +157,9 @@ function _updateActiveEffect(activeEffect, change, options, userId) {
 function _preUpdateToken(token, change, options, userId) {
   if (game.user.id !== userId || change.actorId) return;
 
-  const preUpdateEffects = evaluateComparatorEffects(token);
-
-  if (TVA_CONFIG.internalEffects.hpChange.enabled) {
-    getHPChangeEffect(token, preUpdateEffects);
-  }
-
+  const preUpdateEffects = getTokenEffects(token, true);
   if (preUpdateEffects.length) {
     setProperty(options, 'token-variants.preUpdateEffects', preUpdateEffects);
-  }
-
-  // System specific effects
-  const stateEffects = [];
-  evaluateStateEffects(token, stateEffects);
-  if (stateEffects.length) {
-    setProperty(options, 'token-variants.system', stateEffects);
   }
 
   if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
@@ -184,17 +172,9 @@ async function _updateToken(token, change, options, userId) {
 
   const addedEffects = [];
   const removedEffects = [];
-  const postUpdateEffects = evaluateComparatorEffects(token);
-  if (TVA_CONFIG.internalEffects.hpChange.enabled) {
-    getHPChangeEffect(token, postUpdateEffects);
-  }
   const preUpdateEffects = getProperty(options, 'token-variants.preUpdateEffects') || [];
+  const postUpdateEffects = getTokenEffects(token, true);
   determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
-
-  const newStateEffects = [];
-  evaluateStateEffects(token, newStateEffects);
-  const oldStateEffects = getProperty(options, 'token-variants.system') || [];
-  determineAddedRemovedEffects(addedEffects, removedEffects, newStateEffects, oldStateEffects);
 
   if (addedEffects.length || removedEffects.length || 'actorLink' in change) {
     updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
@@ -244,12 +224,7 @@ function _preUpdateAssign(actor, change, options) {
     applyHpChangeEffect(actor, change, tokens);
   }
   for (const tkn of tokens) {
-    const preUpdateEffects = getTokenEffects(tkn);
-    //const preUpdateEffects = evaluateComparatorEffects(tkn);
-
-    if (TVA_CONFIG.internalEffects.hpChange.enabled) {
-      getHPChangeEffect(tkn, preUpdateEffects);
-    }
+    const preUpdateEffects = getTokenEffects(tkn, true);
 
     if (preUpdateEffects.length) {
       setProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects', preUpdateEffects);
@@ -264,12 +239,7 @@ function _preUpdateCheck(actor, options, pAdded = [], pRemoved = []) {
     // Check if effects changed by comparing them against the ones calculated in preUpdate*
     const added = [...pAdded];
     const removed = [...pRemoved];
-    //const postUpdateEffects = evaluateComparatorEffects(tkn);
-    const postUpdateEffects = getTokenEffects(tkn);
-    if (TVA_CONFIG.internalEffects.hpChange.enabled) {
-      getHPChangeEffect(tkn, postUpdateEffects);
-    }
-
+    const postUpdateEffects = getTokenEffects(tkn, true);
     const preUpdateEffects =
       getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
 
@@ -403,7 +373,7 @@ async function _updateWithEffectMapping(token, added, removed) {
   // 3. Configurations may contain effect names in a form of a logical expressions
   //    We need to evaluate them and insert them into effects/added/removed if needed
   for (const mapping of mappings) {
-    evaluateMappingExpression(mapping, effects, added, removed);
+    evaluateMappingExpression(mapping, effects, token, added, removed);
   }
 
   // Accumulate all scripts that will need to be run after the update
@@ -692,8 +662,7 @@ export function getTokenEffects(token, includeExpressions = false) {
   const data = token.document ?? token;
   let effects = [];
 
-  // Special Effects
-
+  // TVA Effects
   const tokenInCombat = game.combats.some((combat) => {
     return combat.combatants.some((c) => c.tokenId === token.id);
   });
@@ -716,29 +685,17 @@ export function getTokenEffects(token, includeExpressions = false) {
     getHPChangeEffect(data, effects);
   }
 
-  if (game.system.id === 'pf2e') {
-    if (data.actorLink) {
-      getEffectsFromActor(token.actor, effects);
-    } else {
-      if (isNewerVersion('11', game.version)) {
-        (data.actorData?.items || []).forEach((item) => {
-          if (PF2E_ITEM_TYPES.includes(item.type)) {
-            if (('active' in item && item.active) || ('isEquipped' in item && item.isEquipped))
-              effects.push(item.name);
-          }
-        });
-      } else {
-        (data.delta?.items || []).forEach((item) => {
-          if (PF2E_ITEM_TYPES.includes(item.type)) {
-            if (('active' in item && item.active) || ('isEquipped' in item && item.isEquipped))
-              effects.push(item.name);
-          }
-        });
-      }
-    }
+  // Actor/Token effects
+  if (data.actorLink) {
+    getEffectsFromActor(token.actor, effects);
   } else {
-    if (data.actorLink && token.actor) {
-      getEffectsFromActor(token.actor, effects);
+    if (game.system.id === 'pf2e') {
+      (data.delta?.items || []).forEach((item) => {
+        if (PF2E_ITEM_TYPES.includes(item.type)) {
+          if (('active' in item && item.active) || ('isEquipped' in item && item.isEquipped))
+            effects.push(item.name);
+        }
+      });
     } else {
       (data.effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
@@ -747,6 +704,7 @@ export function getTokenEffects(token, includeExpressions = false) {
     }
   }
 
+  // Expression/Mapping effects
   evaluateComparatorEffects(token, effects);
   evaluateStateEffects(token, effects);
 
@@ -757,7 +715,7 @@ export function getTokenEffects(token, includeExpressions = false) {
   for (const m of mappings) {
     if (m.alwaysOn) effects.unshift(m.id);
     else if (includeExpressions) {
-      const evaluation = evaluateMappingExpression(m, effects);
+      const evaluation = evaluateMappingExpression(m, effects, token);
       if (evaluation) effects.unshift(m.id);
     }
   }
@@ -865,7 +823,6 @@ export function evaluateComparatorEffects(token, effects = []) {
     for (let i = 0; i < expressions.length; i++) {
       if (evaluateComparator(token, expressions[i])) {
         matched.add(expressions[i]);
-        if (expressions.length === 1) effects.unshift(m.id);
       }
     }
   }
@@ -923,6 +880,7 @@ function _testRegExEffect(effect, effects) {
 export function evaluateMappingExpression(
   mapping,
   effects,
+  token,
   added = new Set(),
   removed = new Set()
 ) {
@@ -964,6 +922,18 @@ export function evaluateMappingExpression(
 
   try {
     let evaluation = eval(temp);
+
+    // Evaluate JS code
+    if (mapping.codeExp) {
+      try {
+        token = token.document ?? token;
+        if (!eval(mapping.codeExp)) evaluation = false;
+        else if (!mapping.expression) evaluation = true;
+      } catch (e) {
+        evaluation = false;
+      }
+    }
+
     if (evaluation) {
       if (hasAdded || hasRemoved) {
         added.add(mapping.id);

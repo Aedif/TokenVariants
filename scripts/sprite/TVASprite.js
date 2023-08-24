@@ -210,6 +210,10 @@ export class TVASprite extends TokenMesh {
     return (this.object.mesh._lastSortedIndex || 0) + this.overlaySort;
   }
 
+  get elevation() {
+    return this.object.mesh?.data.elevation;
+  }
+
   set _lastSortedIndex(val) {}
 
   async _tvaPlay() {

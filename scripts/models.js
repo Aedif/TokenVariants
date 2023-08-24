@@ -2,6 +2,7 @@ export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
   id: '',
   label: '',
   expression: '',
+  codeExp: '',
   imgName: '',
   imgSrc: '',
   priority: 50,

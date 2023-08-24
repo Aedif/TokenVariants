@@ -1,3 +1,15 @@
+# 4.53.0
+
+Mappings
+
+- `Expression` field now contains a toggle that presents a textarea for JS code to be input instead of or along side of an `Expression`
+  - The module will evaluate both the expression and the JS code to determine if they are 'true' and apply or remove the mapping
+  - Note that the module still only responds to token, actor, and item updates, so the JS code will not be run until they are affected.
+
+Misc.
+
+- Fixed overlays rendering bellow the token when elevation is assigned
+
 # 4.52.1
 
 - Fixed a bug causing `Randomize Wildcard Images` to be preselected

@@ -503,6 +503,10 @@ ol.token-variant-table .table-row .mapping-expression .div-input span {
   color: green;
 }
 
+ol.token-variant-table .table-row .mapping-expression .div-input.hidden {
+  display: none;
+}
+
 ol.token-variant-table .table-row .mapping-expression .div-input span.hp-expression {
   color: blue;
 }
@@ -541,6 +545,25 @@ ol.token-variant-table .table-row .mapping-expression .div-input {
   -moz-user-select: text;
   -ms-user-select: text;
   user-select: text;
+}
+
+ol.token-variant-table .table-row .mapping-expression .expression-container {
+  position: relative;
+}
+
+ol.token-variant-table .table-row .mapping-expression .expression-switch > i {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  color: green;
+}
+
+ol.token-variant-table .table-row .mapping-expression .expression-code {
+  margin-top: -5px;
+}
+
+ol.token-variant-table .table-row .mapping-expression .expression-code.hidden {
+  display: none;
 }
 
 /* ---------------------------------------- */

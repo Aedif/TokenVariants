@@ -63,6 +63,8 @@ export default class EffectMappingForm extends FormApplication {
       id: mapping.id || randomID(8),
       label: mapping.label,
       expression: mapping.expression,
+      codeExp: mapping.codeExp,
+      hasCodeExp: Boolean(mapping.codeExp),
       highlightedExpression: highlightOperators(mapping.expression),
       imgName: mapping.imgName,
       imgSrc: mapping.imgSrc,
@@ -166,6 +168,27 @@ export default class EffectMappingForm extends FormApplication {
     html.find('.group-disable > a').on('click', this._onGroupDisable.bind(this));
     html.find('.group-delete').on('click', this._onGroupDelete.bind(this));
     html.find('.mapping-group > input').on('change', this._onGroupChange.bind(this));
+    html.find('.expression-switch').on('click', this._onExpressionSwitch.bind(this));
+    html
+      .find('.expression-code textarea')
+      .focus((event) => $(event.target).animate({ height: '10em' }, 500, () => this.setPosition()))
+      .focusout((event) =>
+        $(event.target).animate({ height: '1em' }, 500, () => this.setPosition())
+      );
+  }
+
+  _onExpressionSwitch(event) {
+    const container = $(event.target).closest('.expression-container');
+    const divInput = container.find('.div-input');
+    const codeExp = container.find('.expression-code');
+
+    if (codeExp.hasClass('hidden')) {
+      codeExp.removeClass('hidden');
+      divInput.addClass('hidden');
+    } else {
+      codeExp.addClass('hidden');
+      divInput.removeClass('hidden');
+    }
   }
 
   async _onDisable(event) {
@@ -776,7 +799,6 @@ export default class EffectMappingForm extends FormApplication {
         if (this.globalMappings) {
           updateSettings({ globalMappings: effectMappings });
         } else {
-          await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
           await this.objectToFlag.setFlag('token-variants', 'effectMappings', effectMappings);
         }
       } else if (this.globalMappings) {
@@ -822,6 +844,7 @@ export default class EffectMappingForm extends FormApplication {
       m2.id = m1.id;
       m2.label = m1.label.replaceAll(String.fromCharCode(160), ' ');
       m2.expression = m1.expression.replaceAll(String.fromCharCode(160), ' ');
+      m2.codeExp = m1.codeExp?.trim();
       m2.imgSrc = m1.imgSrc;
       m2.imgName = m1.imgName;
       m2.priority = m1.priority;
