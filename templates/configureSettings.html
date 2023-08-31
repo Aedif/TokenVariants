@@ -139,59 +139,69 @@
             <p class="notes">{{localize "token-variants.settings.run-search-on-path.Hint"}}</p>
           </div>
 
-          <h1>Search Method</h1>
-<hr>
-          <h2>{{localize "token-variants.common.exact"}}</h2>
-          <div class="form-group">
-            <label>{{localize "token-variants.common.enable"}}</label>
-            <input type="checkbox" name="algorithm.exact" data-dtype="Boolean" {{#if algorithm.exact}}checked{{/if}}>
-            <p class="notes">{{localize "token-variants.settings.algorithm.window.exact-hint"}}</p>
-          </div>
+          <fieldset>
+            <legend>Search Method</legend>
+
+            <fieldset>
+              <legend>{{localize "token-variants.common.exact"}}</legend>
+           
+              <div class="form-group">
+                <label>{{localize "token-variants.common.enable"}}</label>
+                <input type="checkbox" name="algorithm.exact" data-dtype="Boolean" {{#if algorithm.exact}}checked{{/if}}>
+                <p class="notes">{{localize "token-variants.settings.algorithm.window.exact-hint"}}</p>
+              </div>
+            </fieldset>
         
-          <h2>{{localize "token-variants.common.fuzzy"}}</h2>
-          <div class="form-group">
-            <label>{{localize "token-variants.common.enable"}}</label>
-            <input type="checkbox" name="algorithm.fuzzy" data-dtype="Boolean" {{#if algorithm.fuzzy}}checked{{/if}}>
-            <p class="notes">{{localize "token-variants.settings.algorithm.window.fuzzy-hint"}}</p>
-          </div>
+            <br>
+
+            <fieldset>
+              <legend>{{localize "token-variants.common.fuzzy"}}</legend>
+
+              <div class="form-group">
+                <label>{{localize "token-variants.common.enable"}}</label>
+                <input type="checkbox" name="algorithm.fuzzy" data-dtype="Boolean" {{#if algorithm.fuzzy}}checked{{/if}}>
+                <p class="notes">{{localize "token-variants.settings.algorithm.window.fuzzy-hint"}}</p>
+              </div>
+            
+              <div class="form-group">
+                <label>{{localize "token-variants.settings.algorithm.window.percentage-match.Name"}}</label>
+                <input
+                  type="range"
+                  name="algorithm.fuzzyThreshold"
+                  data-dtype="Number"
+                  value="{{algorithm.fuzzyThreshold}}"
+                  min="0"
+                  max="100"
+                  step="1"
+                />
+                <span class="token-variants-range-value">{{algorithm.fuzzyThreshold}}%</span>
+                <p class="notes">
+                  {{localize "token-variants.settings.algorithm.window.percentage-match.Hint"}}
+                </p>
+              </div>
         
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.algorithm.window.percentage-match.Name"}}</label>
-            <input
-              type="range"
-              name="algorithm.fuzzyThreshold"
-              data-dtype="Number"
-              value="{{algorithm.fuzzyThreshold}}"
-              min="0"
-              max="100"
-              step="1"
-            />
-            <span class="token-variants-range-value">{{algorithm.fuzzyThreshold}}%</span>
-            <p class="notes">
-              {{localize "token-variants.settings.algorithm.window.percentage-match.Hint"}}
-            </p>
-          </div>
+              <div class="form-group">
+                <label>{{localize "token-variants.settings.algorithm.window.art-select-slider.Name"}}</label>
+                <input type="checkbox" name="algorithm.fuzzyArtSelectPercentSlider" data-dtype="Boolean" {{#if
+                  algorithm.fuzzyArtSelectPercentSlider}}checked{{/if}}>
+                <p class="notes">
+                  {{localize "token-variants.settings.algorithm.window.art-select-slider.Hint"}}
+                </p>
+              </div>
         
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.algorithm.window.art-select-slider.Name"}}</label>
-            <input type="checkbox" name="algorithm.fuzzyArtSelectPercentSlider" data-dtype="Boolean" {{#if
-              algorithm.fuzzyArtSelectPercentSlider}}checked{{/if}}>
-            <p class="notes">
-              {{localize "token-variants.settings.algorithm.window.art-select-slider.Hint"}}
-            </p>
-          </div>
-        
-          <div class="form-group">
-            <label>{{localize "token-variants.common.limit"}}</label>
-            <input
-              type="text"
-              name="algorithm.fuzzyLimit"
-              value="{{algorithm.fuzzyLimit}}"
-              placeholder="1"
-              data-dtype="Number"
-            />
-            <p class="notes">{{localize "token-variants.settings.algorithm.window.limit-hint"}}</p>
-          </div>
+              <div class="form-group">
+                <label>{{localize "token-variants.common.limit"}}</label>
+                <input
+                  type="text"
+                  name="algorithm.fuzzyLimit"
+                  value="{{algorithm.fuzzyLimit}}"
+                  placeholder="1"
+                  data-dtype="Number"
+                />
+                <p class="notes">{{localize "token-variants.settings.algorithm.window.limit-hint"}}</p>
+              </div>
+            </fieldset>
+          </fieldset>
         </div>
         {{/if}}
 
@@ -556,129 +566,150 @@
         {{#if enabledTabs.activeEffects}}
         <div class="tab" data-tab="activeEffects" data-group="primary-tabs">
 
-          <div class="form-group">
-            <label>Merge Global and Actor mappings based on Groups</label>
-            <div class="form-fields">
-              <input type="checkbox" name="mergeGroup" data-dtype="Boolean" {{#if mergeGroup}}checked{{/if}}>
-            </div>
-            <p class="notes">Instead of comparing `Labels` Actor mappings will take precedent over Global ones if they belong to the same group.</p>
-          </div>
-
-
-          <div class="form-group">
-            <label>Stack Effect Mapping Token Configs and Overlays</label>
-            <div class="form-fields">
-              <input type="checkbox" name="stackStatusConfig" data-dtype="Boolean" {{#if stackStatusConfig}}checked{{/if}}>
-            </div>
-            <p class="notes">When multiple Effect Mappings are active Token Configurations and Overlays will accumulate on the token instead of overriding each other.</p>
-          </div>
-
-          {{#if dnd5e}}
           <fieldset>
-            <legend>DnD5e</legend>
+            <legend>Mappings</legend>
+
             <div class="form-group">
-              <label>Disable image updates on Polymorphed</label>
+              <label>Global Mappings</label>
+              <button class="token-variants-global-mapping" type="button">
+                  <i class="fas fa-angle-double-right"></i>
+                  <label>Configure</label>
+              </button>
+              <p class="notes">Mappings applicable to ALL tokens. Will be overridden by Actor specific mappings.</p>
+            </div>
+
+            <div class="form-group">
+              <label>Merge mappings based on Groups</label>
               <div class="form-fields">
-                <input type="checkbox" name="disableImageChangeOnPolymorphed" data-dtype="Boolean" {{#if disableImageChangeOnPolymorphed}}checked{{/if}}>
+                <input type="checkbox" name="mergeGroup" data-dtype="Boolean" {{#if mergeGroup}}checked{{/if}}>
               </div>
-              <p class="notes">Active Effect changes will not update images on tokens with polymorphed or wild shaped actors.</p>
+              <p class="notes">Instead of comparing `Labels` Actor mappings will take precedent over Global ones if they belong to the same group.</p>
             </div>
+
+
+            <div class="form-group">
+              <label>Stack Mappings</label>
+              <div class="form-fields">
+                <input type="checkbox" name="stackStatusConfig" data-dtype="Boolean" {{#if stackStatusConfig}}checked{{/if}}>
+              </div>
+              <p class="notes">When multiple Mappings are active Token Configurations and Overlays will accumulate on the token instead of overriding each other.</p>
+            </div>
+
+            <div class="form-group">
+              <label>Disable image updates on manually changed tokens</label>
+              <div class="form-fields">
+                <input type="checkbox" name="disableImageUpdateOnNonPrototype" data-dtype="Boolean" {{#if disableImageUpdateOnNonPrototype}}checked{{/if}}>
+              </div>
+              <p class="notes">Mappings will not update images on tokens that have an image not corresponding to the prototype or any configurations.</p>
+            </div>
+
+            <div class="form-group">
+              <label>Disable Core Animation</label>
+              <div class="form-fields">
+                <input type="checkbox" name="disableTokenUpdateAnimation" data-dtype="Boolean" {{#if disableTokenUpdateAnimation}}checked{{/if}}>
+              </div>
+              <p class="notes">Mappings affecting Token appearance will not trigger core Foundry's Token animation.</p>
+            </div>
+
+            <div class="form-group">
+              <label>System's HP Path</label>
+              <div class="form-fields">
+                <input type="text" name="systemHpPath" data-dtype="String" value="{{systemHpPath}}">
+              </div>
+              <p class="notes">Path to the game system's HP min, max, and value properties.</p>
+            </div>
+
+            <div class="form-group">
+              <label>Update tokens only on the current scene</label>
+              <div class="form-fields">
+                <input type="checkbox" name="mappingsCurrentSceneOnly" data-dtype="Boolean" {{#if mappingsCurrentSceneOnly}}checked{{/if}}>
+              </div>
+              <p class="notes">Linked tokens will no longer be updated across the entire world on mappings changes. Might cause a de-sync of token state until the scene is loaded/re-loaded.</p>
+            </div>
+
+            <br>
+
+            <fieldset>
+              <legend>Internal Effects</legend>
+              <div class="form-group slim">
+                <label>HP Change (hp-- hp++)</label>
+                <div class="form-fields">
+                  <label>Enabled</label>
+                  <input type="checkbox" name="internalEffects.hpChange.enabled" data-dtype="Boolean" {{checked internalEffects.hpChange.enabled}}>
+                  <label>Duration <span class="units">(seconds)</span></label>
+                  <input type="number" name="internalEffects.hpChange.duration" data-dtype="Number" value="{{internalEffects.hpChange.duration}}" min="0.001" max="50" step="any" placeholder="infinite">
+                </div>
+                <p class="notes">Flags will be stored on tokens to allow the use of `hp--` (decreased) and `hp++` (increased) expressions in effect mappings.</p>
+              </div>
+            </fieldset>
+
+            {{#if dnd5e}}
+            <br>
+            <fieldset>
+              <legend>DnD5e</legend>
+              <div class="form-group">
+                <label>Disable image updates on Polymorphed</label>
+                <div class="form-fields">
+                  <input type="checkbox" name="disableImageChangeOnPolymorphed" data-dtype="Boolean" {{#if disableImageChangeOnPolymorphed}}checked{{/if}}>
+                </div>
+                <p class="notes">Mappings will not update images on tokens with polymorphed or wild shaped actors.</p>
+              </div>
+            </fieldset>
+            {{/if}}
+
           </fieldset>
-          {{/if}}
 
-          <div class="form-group">
-            <label>Disable image updates on manually changed tokens</label>
-            <div class="form-fields">
-              <input type="checkbox" name="disableImageUpdateOnNonPrototype" data-dtype="Boolean" {{#if disableImageUpdateOnNonPrototype}}checked{{/if}}>
-            </div>
-            <p class="notes">Active Effect changes will not update images on tokens that have an image not corresponding to the prototype or any configurations.</p>
-          </div>
-
-          <div class="form-group">
-            <label>Disable Token Animation</label>
-            <div class="form-fields">
-              <input type="checkbox" name="disableTokenUpdateAnimation" data-dtype="Boolean" {{#if disableTokenUpdateAnimation}}checked{{/if}}>
-            </div>
-            <p class="notes">Active Effect changes affecting Token appearance will not trigger core Foundry's Token animation.</p>
-          </div>
-
-          <div class="form-group">
-            <label>Global Effect Mappings</label>
-            <button class="token-variants-global-mapping" type="button">
-                <i class="fas fa-angle-double-right"></i>
-                <label>Configure</label>
-            </button>
-            <p class="notes">Configurations to be applied on ALL tokens. Will be overridden by token specific configurations.</p>
-          </div>
-
-          <div class="form-group">
-            <label>System's HP Path</label>
-            <div class="form-fields">
-              <input type="text" name="systemHpPath" data-dtype="String" value="{{systemHpPath}}">
-            </div>
-            <p class="notes">Path to the game system's HP min, max, and value properties.</p>
-          </div>
-
-          <hr>
-
-          <div class="form-group">
-            <label>Display Token Effect Icons on Hover</label>
-            <div class="form-fields">
-              <input type="checkbox" name="displayEffectIconsOnHover" data-dtype="Boolean" {{#if displayEffectIconsOnHover}}checked{{/if}}>
-            </div>
-            <p class="notes">Effect icons will only be displayed while hovering over the token.</p>
-          </div>
-
-          <hr>
-
-          <div class="form-group">
-            <label>Disable ALL Effect Icons</label>
-            <div class="form-fields">
-              <input type="checkbox" name="disableEffectIcons" data-dtype="Boolean" {{#if disableEffectIcons}}checked{{/if}}>
-            </div>
-            <p class="notes">Prevents drawing of temporary effects on the token and combat tracker.</p>
-          </div>
-
-          <hr>
-
-          {{#unless pathfinder}}
-          <div class="form-group">
-            <label>Disable SOME Effect Icons</label>
-            <div class="form-fields">
-              <input type="checkbox" name="filterEffectIcons" data-dtype="Boolean" {{#if filterEffectIcons}}checked{{/if}}>
-            </div>
-            <p class="notes">Disable drawing of the following effects on the token and combat tracker:</p>
-          </div>
-
-          <div class="form-group">
-            <label>Effects with mappings</label>
-            <div class="form-fields">
-              <input type="checkbox" name="filterCustomEffectIcons" data-dtype="Boolean" {{#if filterCustomEffectIcons}}checked{{/if}}>
-            </div>
-            <p class="notes">Prevents drawing of temporary effects on the token if a mapping exists for it.</p>
-          </div>
-
-          <div class="form-group">
-            <label>Additional Restricted Effects</label>
-            <div class="form-fields">
-              <input type="text" name="filterIconList" data-dtype="String" value="{{filterIconList}}" placeholder="e.g. Sharpshooter,Asleep">
-            </div>
-          </div>
-          {{/unless}}
-          <hr>
+          <br>
 
           <fieldset>
-            <legend>Internal Effects</legend>
-            <div class="form-group slim">
-              <label>HP Change (hp-- hp++)</label>
+            <legend>Effect Icons</legend>
+
+
+            <div class="form-group">
+              <label>Display Token Effect Icons on Hover</label>
               <div class="form-fields">
-                <label>Enabled</label>
-                <input type="checkbox" name="internalEffects.hpChange.enabled" data-dtype="Boolean" {{checked internalEffects.hpChange.enabled}}>
-                <label>Duration <span class="units">(seconds)</span></label>
-                <input type="number" name="internalEffects.hpChange.duration" data-dtype="Number" value="{{internalEffects.hpChange.duration}}" min="0.001" max="50" step="any" placeholder="infinite">
+                <input type="checkbox" name="displayEffectIconsOnHover" data-dtype="Boolean" {{#if displayEffectIconsOnHover}}checked{{/if}}>
               </div>
-              <p class="notes">Flags will be stored on tokens to allow the use of `hp--` (decreased) and `hp++` (increased) expressions in effect mappings.</p>
+              <p class="notes">Effect icons will only be displayed while hovering over the token.</p>
             </div>
+
+            <hr>
+
+            <div class="form-group">
+              <label>Disable ALL Effect Icons</label>
+              <div class="form-fields">
+                <input type="checkbox" name="disableEffectIcons" data-dtype="Boolean" {{#if disableEffectIcons}}checked{{/if}}>
+              </div>
+              <p class="notes">Prevents drawing of temporary effects on the token and combat tracker.</p>
+            </div>
+
+            <hr>
+
+            {{#unless pathfinder}}
+            <div class="form-group">
+              <label>Disable SOME Effect Icons</label>
+              <div class="form-fields">
+                <input type="checkbox" name="filterEffectIcons" data-dtype="Boolean" {{#if filterEffectIcons}}checked{{/if}}>
+              </div>
+              <p class="notes">Disable drawing of the following effects on the token and combat tracker:</p>
+            </div>
+
+            <div class="form-group">
+              <label>Effects with mappings</label>
+              <div class="form-fields">
+                <input type="checkbox" name="filterCustomEffectIcons" data-dtype="Boolean" {{#if filterCustomEffectIcons}}checked{{/if}}>
+              </div>
+              <p class="notes">Prevents drawing of temporary effects on the token if a mapping exists for it.</p>
+            </div>
+
+            <div class="form-group">
+              <label>Additional Restricted Effects</label>
+              <div class="form-fields">
+                <input type="text" name="filterIconList" data-dtype="String" value="{{filterIconList}}" placeholder="e.g. Sharpshooter,Asleep">
+              </div>
+            </div>
+            {{/unless}}
+      
           </fieldset>
 
         </div>
@@ -687,67 +718,76 @@
         <!-- Misc -->
         {{#if enabledTabs.misc}}
         <div class="tab" data-tab="misc" data-group="primary-tabs">
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
-            <div class="form-fields">
-              <input type="checkbox" name="disableNotifs" data-dtype="Boolean" {{#if disableNotifs}}checked{{/if}}>
-            </div>
-            <p class="notes">{{localize "token-variants.settings.disable-notifs.Hint"}}</p>
-          </div>
 
-          <div class="form-group">
-            <label>Static Cache</label>
-            <div class="form-fields">
-              <input type="checkbox" name="staticCache" data-dtype="Boolean" {{#if staticCache}}checked{{/if}}>
-            </div>
-            <p class="notes">Cached images will be stored in a file and read upon world load. Cache will be refreshed on search path changes or by clicking the button bellow.</p>
-          </div>
+          <fieldset>
+            <legend>Image Cache</legend>
 
-          <div class="form-group">
-            <label>Cache File</label>
-            <div class="form-fields">
-              <input type="text" name="staticCacheFile" data-dtype="String" value="{{staticCacheFile}}">
+            <div class="form-group">
+              <label>{{localize "token-variants.settings.disable-notifs.Name"}}</label>
+              <div class="form-fields">
+                <input type="checkbox" name="disableNotifs" data-dtype="Boolean" {{#if disableNotifs}}checked{{/if}}>
+              </div>
+              <p class="notes">{{localize "token-variants.settings.disable-notifs.Hint"}}</p>
             </div>
-            <p class="notes">Name and location of the image cache.</p>
-          </div>
 
-          <div class="form-group">
-            <label></label>
-            <button class="token-variants-cache-images" type="button">
-                <i class="fas fa-sync-alt"></i>
-                <label>Cache Images</label>
-            </button>
-          </div>
+            <div class="form-group">
+              <label>Static Cache</label>
+              <div class="form-fields">
+                <input type="checkbox" name="staticCache" data-dtype="Boolean" {{#if staticCache}}checked{{/if}}>
+              </div>
+              <p class="notes">Cached images will be stored in a file and read upon world load. Cache will be refreshed on search path changes or by clicking the button bellow.</p>
+            </div>
+
+            <div class="form-group">
+              <label>Cache File</label>
+              <div class="form-fields">
+                <input type="text" name="staticCacheFile" data-dtype="String" value="{{staticCacheFile}}">
+              </div>
+              <p class="notes">Name and location of the image cache.</p>
+            </div>
+
+            <div class="form-group">
+              <label></label>
+              <button class="token-variants-cache-images" type="button">
+                  <i class="fas fa-sync-alt"></i>
+                  <label>Cache Images</label>
+              </button>
+            </div>
           
-          <hr>
+          </fieldset>
 
-          <div class="form-group">
-            <label>Tile HUD</label>
-            <div class="form-fields">
-              <input type="checkbox" name="tilesEnabled" data-dtype="Boolean" {{#if tilesEnabled}}checked{{/if}}>
+          <br>
+
+          <fieldset>
+            <legend>HUD</legend>
+
+            <div class="form-group">
+              <label>Play Videos on mouse hover</label>
+              <div class="form-fields">
+                <input type="checkbox" name="playVideoOnHover" data-dtype="Boolean" {{#if playVideoOnHover}}checked{{/if}}>
+              </div>
+              <p class="notes">When enabled videos will not auto-play, and instead will unpause only when the mouse is hovered over them.</p>
             </div>
-            <p class="notes">Enables the Tile HUD button</p>
-          </div>
-
-          <div class="form-group">
-            <label>{{localize "token-variants.settings.imgur-client-id.Name"}}</label>
-            <div class="form-fields">
-              <input type="text" name="imgurClientId" data-dtype="String" value="{{imgurClientId}}">
+  
+            <div class="form-group">
+              <label>Pause Videos on mouse hover out</label>
+              <div class="form-fields">
+                <input type="checkbox" name="pauseVideoOnHoverOut" data-dtype="Boolean" {{#if pauseVideoOnHoverOut}}checked{{/if}}>
+              </div>
+              <p class="notes">When enabled videos will pause when the mouse leaves them.</p>
             </div>
-            <p class="notes">{{localize "token-variants.settings.imgur-client-id.Hint"}}</p>
-          </div>
 
-          <hr>
-
-          <div class="form-group">
-            <label>Custom Image Categories</label>
-            <div class="form-fields">
-              <input type="text" name="customImageCategories" data-dtype="String" value="{{customImageCategories}}" placeholder="e.g. Dragons,Vampires">
+            <div class="form-group">
+              <label>Tile HUD</label>
+              <div class="form-fields">
+                <input type="checkbox" name="tilesEnabled" data-dtype="Boolean" {{#if tilesEnabled}}checked{{/if}}>
+              </div>
+              <p class="notes">Enables the Tile HUD button</p>
             </div>
-            <p class="notes">Additional types that will be used by the module to group images on.</p>
-          </div>
 
-          <hr>
+          </fieldset>
+
+          <br>
 
           <fieldset>
             <legend>Image Updates</legend>
@@ -781,22 +821,22 @@
 
           </fieldset>
 
+          <div class="form-group">
+            <label>{{localize "token-variants.settings.imgur-client-id.Name"}}</label>
+            <div class="form-fields">
+              <input type="text" name="imgurClientId" data-dtype="String" value="{{imgurClientId}}">
+            </div>
+            <p class="notes">{{localize "token-variants.settings.imgur-client-id.Hint"}}</p>
+          </div>
+
           <hr>
 
           <div class="form-group">
-            <label>Play Videos on mouse hover</label>
+            <label>Custom Image Categories</label>
             <div class="form-fields">
-              <input type="checkbox" name="playVideoOnHover" data-dtype="Boolean" {{#if playVideoOnHover}}checked{{/if}}>
+              <input type="text" name="customImageCategories" data-dtype="String" value="{{customImageCategories}}" placeholder="e.g. Dragons,Vampires">
             </div>
-            <p class="notes">When enabled videos will not auto-play, and instead will unpause only when the mouse is hovered over them.</p>
-          </div>
-
-          <div class="form-group">
-            <label>Pause Videos on mouse hover out</label>
-            <div class="form-fields">
-              <input type="checkbox" name="pauseVideoOnHoverOut" data-dtype="Boolean" {{#if pauseVideoOnHoverOut}}checked{{/if}}>
-            </div>
-            <p class="notes">When enabled videos will pause when the mouse leaves them.</p>
+            <p class="notes">Additional types that will be used by the module to group images on.</p>
           </div>
 
         </div>

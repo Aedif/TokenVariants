@@ -1,3 +1,12 @@
+# 4.53.1
+
+Mappings
+
+- Fixed PF2e Effects not being recognized in expressions
+- New setting: `Effects` > `Update tokens on current scene only`
+  - Prevents linked tokens from being updates across the entire world when a mapping change occurs.
+  - Useful if token updates are slow on your server, but means that there might be some slight de-syncs happening if multiple scenes are active at the same time across multiple clients.
+
 # 4.53.0
 
 Mappings

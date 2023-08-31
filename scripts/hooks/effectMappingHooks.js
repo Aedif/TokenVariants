@@ -201,7 +201,9 @@ async function _updateActor(actor, change, options, userId) {
   if ('flags' in change && 'token-variants' in change.flags) {
     const tokenVariantFlags = change.flags['token-variants'];
     if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
-      const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+      const tokens = actor.token
+        ? [actor.token]
+        : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
       tokens.forEach((tkn) => updateWithEffectMapping(tkn));
       for (const tkn of tokens) {
         if (tkn.object && TVA_CONFIG.filterEffectIcons) {
@@ -219,7 +221,9 @@ function _preUpdateAssign(actor, change, options) {
 
   // Determine which comparators are applicable so that we can compare after the
   // actor update
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  const tokens = actor.token
+    ? [actor.token]
+    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   if (TVA_CONFIG.internalEffects.hpChange.enabled && tokens.length) {
     applyHpChangeEffect(actor, change, tokens);
   }
@@ -234,7 +238,9 @@ function _preUpdateAssign(actor, change, options) {
 
 function _preUpdateCheck(actor, options, pAdded = [], pRemoved = []) {
   if (!actor) return;
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  const tokens = actor.token
+    ? [actor.token]
+    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   for (const tkn of tokens) {
     // Check if effects changed by comparing them against the ones calculated in preUpdate*
     const added = [...pAdded];
@@ -691,9 +697,8 @@ export function getTokenEffects(token, includeExpressions = false) {
   } else {
     if (game.system.id === 'pf2e') {
       (data.delta?.items || []).forEach((item) => {
-        if (PF2E_ITEM_TYPES.includes(item.type)) {
-          if (('active' in item && item.active) || ('isEquipped' in item && item.isEquipped))
-            effects.push(item.name);
+        if (_activePF2EItem(item)) {
+          effects.push(item.name);
         }
       });
     } else {
@@ -728,13 +733,7 @@ export function getEffectsFromActor(actor, effects = []) {
 
   if (game.system.id === 'pf2e') {
     (actor.items || []).forEach((item, id) => {
-      if (PF2E_ITEM_TYPES.includes(item.type)) {
-        if ('active' in item) {
-          if (item.active) effects.push(item.name);
-        } else if ('isEquipped' in item) {
-          if (item.isEquipped) effects.push(item.name);
-        }
-      }
+      if (_activePF2EItem(item)) effects.push(item.name);
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
@@ -748,6 +747,19 @@ export function getEffectsFromActor(actor, effects = []) {
   }
 
   return effects;
+}
+
+function _activePF2EItem(item) {
+  if (PF2E_ITEM_TYPES.includes(item.type)) {
+    if ('active' in item) {
+      return item.active;
+    } else if ('isEquipped' in item) {
+      return item.isEquipped;
+    } else {
+      return true;
+    }
+  }
+  return false;
 }
 
 export const VALID_EXPRESSION = new RegExp('([a-zA-Z\\-\\.\\+]+)([><=]+)(".*"|-?\\d+)(%{0,1})');
@@ -985,7 +997,9 @@ export function getTokenHP(token) {
 }
 
 async function _updateImageOnEffectChange(effectName, actor, added = true) {
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  const tokens = actor.token
+    ? [actor.token]
+    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
       added: added ? [effectName] : [],
@@ -996,7 +1010,9 @@ async function _updateImageOnEffectChange(effectName, actor, added = true) {
 
 async function _updateImageOnMultiEffectChange(actor, added = [], removed = []) {
   if (!actor) return;
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, true);
+  const tokens = actor.token
+    ? [actor.token]
+    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
       added: added,

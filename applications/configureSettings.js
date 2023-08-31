@@ -166,6 +166,7 @@ export default class ConfigureSettings extends FormApplication {
     data.disableImageChangeOnPolymorphed = settings.disableImageChangeOnPolymorphed;
     data.disableImageUpdateOnNonPrototype = settings.disableImageUpdateOnNonPrototype;
     data.disableTokenUpdateAnimation = settings.disableTokenUpdateAnimation;
+    data.mappingsCurrentSceneOnly = settings.mappingsCurrentSceneOnly;
 
     // Controls
     data.pathfinder = ['pf1e', 'pf2e'].includes(game.system.id);
@@ -691,6 +692,7 @@ export default class ConfigureSettings extends FormApplication {
       disableImageChangeOnPolymorphed: formData.disableImageChangeOnPolymorphed,
       disableImageUpdateOnNonPrototype: formData.disableImageUpdateOnNonPrototype,
       disableTokenUpdateAnimation: formData.disableTokenUpdateAnimation,
+      mappingsCurrentSceneOnly: formData.mappingsCurrentSceneOnly,
     });
 
     // Global Mappings
