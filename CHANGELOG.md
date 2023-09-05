@@ -1,3 +1,8 @@
+# 4.53.2
+
+- Fixed errors thrown upon Mapping form closing when JavaScript expression field is expanded
+- Fixed errors thrown when migration of globalMappings is necessary on game load
+
 # 4.53.1
 
 Mappings

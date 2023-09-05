@@ -17,6 +17,7 @@ export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
 
 export const DEFAULT_OVERLAY_CONFIG = {
   img: '',
+  imgLinked: false,
   alpha: 1,
   scaleX: 1,
   scaleY: 1,

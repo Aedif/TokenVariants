@@ -855,6 +855,10 @@ ol.token-variant-table .table-row .mapping-expression .expression-code.hidden {
   flex: 0 1 200px;
 }
 
+.tva-overlay-form .image-link.active {
+  color: orange;
+}
+
 /* ---------------------------------------- */
 /* Active Effect Scripts                    */
 /* ---------------------------------------- */

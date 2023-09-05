@@ -363,8 +363,10 @@ export function registerSettings() {
 
   // 20/07/2023 Convert globalMappings to a new format
   if (getType(settings.globalMappings) === 'Object') {
-    TVA_CONFIG.globalMappings = migrateMappings(settings.globalMappings);
-    setTimeout(() => updateSettings({ globalMappings: TVA_CONFIG.globalMappings }), 10000);
+    Hooks.once('ready', () => {
+      TVA_CONFIG.globalMappings = migrateMappings(settings.globalMappings);
+      setTimeout(() => updateSettings({ globalMappings: TVA_CONFIG.globalMappings }), 10000);
+    });
   }
 
   // Read client settings

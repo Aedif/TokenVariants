@@ -36,6 +36,18 @@ export default class OverlayConfig extends FormApplication {
   activateListeners(html) {
     super.activateListeners(html);
 
+    html.find('.image-link').on('click', (event) => {
+      const chkBox = $(event.target).closest('.form-group').find('[name="imgLinked"]');
+      const button = $(event.target).closest('button');
+      if (chkBox.is(':checked')) {
+        chkBox.prop('checked', false);
+        button.removeClass('active');
+      } else {
+        chkBox.prop('checked', true);
+        button.addClass('active');
+      }
+    });
+
     html.find('.repeat').on('change', (event) => {
       const fieldset = $(event.target).closest('fieldset');
       const content = fieldset.find('.content');

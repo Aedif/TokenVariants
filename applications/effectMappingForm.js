@@ -173,7 +173,9 @@ export default class EffectMappingForm extends FormApplication {
       .find('.expression-code textarea')
       .focus((event) => $(event.target).animate({ height: '10em' }, 500, () => this.setPosition()))
       .focusout((event) =>
-        $(event.target).animate({ height: '1em' }, 500, () => this.setPosition())
+        $(event.target).animate({ height: '1em' }, 500, () => {
+          if (this._state === Application.RENDER_STATES.RENDERED) this.setPosition();
+        })
       );
   }
 
