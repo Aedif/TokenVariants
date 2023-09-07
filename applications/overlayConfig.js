@@ -5,6 +5,7 @@ import { SEARCH_TYPE } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { sortMappingsToGroups } from './effectMappingForm.js';
 import { getFlagMappings } from '../scripts/settings.js';
+import { Reticle } from '../scripts/reticle.js';
 
 export default class OverlayConfig extends FormApplication {
   constructor(config, callback, id, token) {
@@ -35,6 +36,13 @@ export default class OverlayConfig extends FormApplication {
    */
   activateListeners(html) {
     super.activateListeners(html);
+
+    html.find('.reticle').on('click', (event) => {
+      const icons = this.getPreviewIcons();
+      if (icons.length) {
+        Reticle.activate({ tvaSprite: icons[0].icon, app: this, config: this.previewConfig });
+      }
+    });
 
     html.find('.image-link').on('click', (event) => {
       const chkBox = $(event.target).closest('.form-group').find('[name="imgLinked"]');
