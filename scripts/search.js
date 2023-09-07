@@ -3,6 +3,8 @@ import { Fuse } from './fuse/fuse.js';
 import { getSearchOptions, TVA_CONFIG } from './settings.js';
 import {
   callForgeVTT,
+  decodeURIComponentSafely,
+  decodeURISafely,
   flattenSearchResults,
   getFileName,
   getFileNameWithExt,
@@ -35,7 +37,12 @@ let CACHED_IMAGES = {};
  */
 export async function doImageSearch(
   search,
-  { searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN, simpleResults = false, callback = null, searchOptions = {} } = {}
+  {
+    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+    simpleResults = false,
+    callback = null,
+    searchOptions = {},
+  } = {}
 ) {
   if (caching) return;
 
@@ -43,7 +50,8 @@ export async function doImageSearch(
 
   search = search.trim();
 
-  if (TVA_CONFIG.debug) console.info('TVA | STARTING: Art Search', search, searchType, searchOptions);
+  if (TVA_CONFIG.debug)
+    console.info('TVA | STARTING: Art Search', search, searchType, searchOptions);
 
   let searches = [search];
   let allImages = new Map();
@@ -124,7 +132,9 @@ export async function doSyncSearch(
 ) {
   if (caching) return null;
 
-  const results = flattenSearchResults(await _randSearchUtil(search, { searchType, actor, randomizerOptions }));
+  const results = flattenSearchResults(
+    await _randSearchUtil(search, { searchType, actor, randomizerOptions })
+  );
 
   // Find the image with the most similar name
   const fuse = new Fuse(results, {
@@ -145,7 +155,12 @@ export async function doSyncSearch(
 
 async function _randSearchUtil(
   search,
-  { searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN, actor = null, randomizerOptions = {}, searchOptions = {} } = {}
+  {
+    searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN,
+    actor = null,
+    randomizerOptions = {},
+    searchOptions = {},
+  } = {}
 ) {
   const randSettings = mergeObject(randomizerOptions, TVA_CONFIG.randomizer, { overwrite: false });
   if (
@@ -261,7 +276,9 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
     } else if (path.source.startsWith('imgur')) {
       await fetch('https://api.imgur.com/3/gallery/album/' + path.text, {
         headers: {
-          Authorization: 'Client-ID ' + (TVA_CONFIG.imgurClientId ? TVA_CONFIG.imgurClientId : 'df9d991443bb222'),
+          Authorization:
+            'Client-ID ' +
+            (TVA_CONFIG.imgurClientId ? TVA_CONFIG.imgurClientId : 'df9d991443bb222'),
           Accept: 'application/json',
         },
       })
@@ -272,7 +289,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
           }
           result.data.images.forEach((img) => {
             const rtName = img.title ?? img.description ?? getFileName(img.link);
-            _addToFound({ path: decodeURI(img.link), name: rtName }, typeKey, found_images);
+            _addToFound({ path: decodeURISafely(img.link), name: rtName }, typeKey, found_images);
           });
         })
         .catch((error) => console.warn('TVA |', error));
@@ -290,7 +307,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
         for (let baseTableData of table.results) {
           const rtPath = baseTableData.img;
           const rtName = baseTableData.text || getFileName(rtPath);
-          _addToFound({ path: decodeURI(rtPath), name: rtName }, typeKey, found_images);
+          _addToFound({ path: decodeURISafely(rtPath), name: rtName }, typeKey, found_images);
         }
       }
       return;
@@ -307,7 +324,11 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
           }
           result.forEach((img) => {
             const rtName = img.name ?? getFileName(img.path);
-            _addToFound({ path: decodeURI(img.path), name: rtName, tags: img.tags }, typeKey, found_images);
+            _addToFound(
+              { path: decodeURISafely(img.path), name: rtName, tags: img.tags },
+              typeKey,
+              found_images
+            );
           });
         })
         .catch((error) => console.warn('TVA |', error));
@@ -317,7 +338,9 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
     }
   } catch (err) {
     console.warn(
-      `TVA | ${game.i18n.localize('token-variants.notifications.warn.path-not-found')} ${path.source}:${path.text}`
+      `TVA | ${game.i18n.localize('token-variants.notifications.warn.path-not-found')} ${
+        path.source
+      }:${path.text}`
     );
     return;
   }
@@ -326,7 +349,11 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
 
   if (files.files) {
     files.files.forEach((tokenSrc) => {
-      _addToFound({ path: decodeURI(tokenSrc), name: getFileName(tokenSrc) }, typeKey, found_images);
+      _addToFound(
+        { path: decodeURISafely(tokenSrc), name: getFileName(tokenSrc) },
+        typeKey,
+        found_images
+      );
     });
   }
 
@@ -341,7 +368,11 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
   }
 
   for (let f_dir of files.dirs) {
-    await walkFindImages({ text: f_dir, source: path.source, types: path.types }, { apiKey: apiKey }, found_images);
+    await walkFindImages(
+      { text: f_dir, source: path.source, types: path.types },
+      { apiKey: apiKey },
+      found_images
+    );
   }
 }
 
@@ -365,7 +396,8 @@ async function walkAllPaths(searchType) {
   const paths = _filterPathsByType(TVA_CONFIG.searchPaths, searchType);
 
   for (const path of paths) {
-    if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path, {}, found_images);
+    if ((path.cache && caching) || (!path.cache && !caching))
+      await walkFindImages(path, {}, found_images);
   }
 
   // ForgeVTT specific path handling
@@ -375,7 +407,8 @@ async function walkAllPaths(searchType) {
     const paths = _filterPathsByType(TVA_CONFIG.forgeSearchPaths[uid].paths, searchType);
     if (uid === userId) {
       for (const path of paths) {
-        if ((path.cache && caching) || (!path.cache && !caching)) await walkFindImages(path, {}, found_images);
+        if ((path.cache && caching) || (!path.cache && !caching))
+          await walkFindImages(path, {}, found_images);
       }
     } else if (apiKey) {
       for (const path of paths) {
@@ -396,7 +429,13 @@ function _filterPathsByType(paths, searchType) {
 
 export async function findImagesFuzzy(name, searchType, searchOptions, forceSearchName = false) {
   if (TVA_CONFIG.debug)
-    console.info('TVA | STARTING: Fuzzy Image Search', name, searchType, searchOptions, forceSearchName);
+    console.info(
+      'TVA | STARTING: Fuzzy Image Search',
+      name,
+      searchType,
+      searchOptions,
+      forceSearchName
+    );
 
   const filters = getFilters(searchType, searchOptions.searchFilters);
 
@@ -416,7 +455,9 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
       const types = typeKey.split(',');
       if (types.includes(searchType)) {
         for (const imgObj of container[typeKey]) {
-          if (_imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)) {
+          if (
+            _imagePassesFilter(imgObj.name, imgObj.path, filters, searchOptions.runSearchOnPath)
+          ) {
             fuse.add(imgObj);
           }
         }
@@ -442,7 +483,8 @@ export async function findImagesFuzzy(name, searchType, searchOptions, forceSear
 }
 
 async function findImagesExact(name, searchType, searchOptions) {
-  if (TVA_CONFIG.debug) console.info('TVA | STARTING: Exact Image Search', name, searchType, searchOptions);
+  if (TVA_CONFIG.debug)
+    console.info('TVA | STARTING: Exact Image Search', name, searchType, searchOptions);
 
   const found_images = await walkAllPaths(searchType);
 
@@ -456,7 +498,15 @@ async function findImagesExact(name, searchType, searchOptions) {
       const types = typeKey.split(',');
       if (types.includes(searchType)) {
         for (const imgOBj of container[typeKey]) {
-          if (_exactSearchMatchesImage(simpleName, imgOBj.path, imgOBj.name, filters, searchOptions.runSearchOnPath)) {
+          if (
+            _exactSearchMatchesImage(
+              simpleName,
+              imgOBj.path,
+              imgOBj.name,
+              filters,
+              searchOptions.runSearchOnPath
+            )
+          ) {
             matchedImages.push(imgOBj);
           }
         }
@@ -484,7 +534,13 @@ async function findImages(name, searchType = '', searchOptions = {}) {
  * @param filters filters to be applied
  * @returns true|false
  */
-function _exactSearchMatchesImage(simplifiedSearch, imagePath, imageName, filters, runSearchOnPath) {
+function _exactSearchMatchesImage(
+  simplifiedSearch,
+  imagePath,
+  imageName,
+  filters,
+  runSearchOnPath
+) {
   // Is the search text contained in the name/path
   const simplified = runSearchOnPath ? simplifyPath(imagePath) : simplifyName(imageName);
   if (!simplified.includes(simplifiedSearch)) {
@@ -499,7 +555,7 @@ function _imagePassesFilter(imageName, imagePath, filters, runSearchOnPath) {
   // Filters are applied to path depending on the 'runSearchOnPath' setting, and actual or custom rolltable name
   let text;
   if (runSearchOnPath) {
-    text = decodeURIComponent(imagePath);
+    text = decodeURIComponentSafely(imagePath);
   } else if (getFileName(imagePath) === imageName) {
     text = getFileNameWithExt(imagePath);
   } else {
@@ -575,7 +631,10 @@ export async function cacheImages({
   if (!TVA_CONFIG.disableNotifs)
     ui.notifications.info(
       game.i18n.format('token-variants.notifications.info.caching-finished', {
-        imageCount: Object.keys(CACHED_IMAGES).reduce((count, types) => count + CACHED_IMAGES[types].length, 0),
+        imageCount: Object.keys(CACHED_IMAGES).reduce(
+          (count, types) => count + CACHED_IMAGES[types].length,
+          0
+        ),
       })
     );
 

@@ -1,4 +1,5 @@
 import { TVA_CONFIG } from '../settings.js';
+import { decodeURISafely } from '../utils.js';
 import { registerWrapper } from './wrappers.js';
 
 const feature_id = 'UserMappings';
@@ -38,7 +39,7 @@ async function _draw(wrapped, ...args) {
  * @param {*} img UserToImage mapping
  */
 function overrideVisibility(obj, img) {
-  if (img && decodeURI(img) === TVA_CONFIG.invisibleImage && !obj.tva_customVisibility) {
+  if (img && decodeURISafely(img) === TVA_CONFIG.invisibleImage && !obj.tva_customVisibility) {
     const originalIsVisible = _getIsVisibleDescriptor(obj).get;
     Object.defineProperty(obj, 'isVisible', {
       get: function () {

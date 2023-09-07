@@ -1,5 +1,5 @@
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
-import { SEARCH_TYPE } from '../scripts/utils.js';
+import { SEARCH_TYPE, decodeURISafely } from '../scripts/utils.js';
 import { insertArtSelectButton } from './artSelect.js';
 
 export default class UserList extends FormApplication {
@@ -45,14 +45,17 @@ export default class UserList extends FormApplication {
    */
   activateListeners(html) {
     super.activateListeners(html);
-    insertArtSelectButton(html, 'invisibleImage', { search: 'Invisible Image', searchType: SEARCH_TYPE.TOKEN });
+    insertArtSelectButton(html, 'invisibleImage', {
+      search: 'Invisible Image',
+      searchType: SEARCH_TYPE.TOKEN,
+    });
   }
 
   async _updateObject(event, formData) {
     const mappings = this.object.document.getFlag('token-variants', 'userMappings') || {};
 
     if (formData.invisibleImage !== TVA_CONFIG.invisibleImage) {
-      updateSettings({ invisibleImage: decodeURI(formData.invisibleImage) });
+      updateSettings({ invisibleImage: decodeURISafely(formData.invisibleImage) });
     }
     delete formData.invisibleImage;
 
@@ -60,7 +63,8 @@ export default class UserList extends FormApplication {
 
     for (const [userId, apply] of Object.entries(formData)) {
       if (apply) {
-        if (mappings[userId] && mappings[userId] !== this.img) affectedImages.push(mappings[userId]);
+        if (mappings[userId] && mappings[userId] !== this.img)
+          affectedImages.push(mappings[userId]);
         mappings[userId] = this.img;
       } else if (mappings[userId] === this.img) {
         delete mappings[userId];

@@ -1,3 +1,16 @@
+# 4.54.0
+
+- Fixed cache operation failing if an image is found containing `%` character
+
+Overlays
+
+- New option `Visibility` > `Limit Visibility to State` > `HUD`
+  - When enabled overlay will be shown only when the Token HUD is displayed
+- New option `Image` > `Positioning` > `Offset X (Pixels)`
+- New option `Image` > `Positioning` > `Offset Y (Pixels)`
+  - Allows offset to be specified irrelevant of the parent dimensions
+  - One usecase would be be to position an overlay a set amount of distance away from the token edge, in which case you'd set parent relative width to 0.5 (half the width of the token) and then use pixel offset to move it an additional 50 pixels. (is equivalent of setting pixel offset to an expression: token.w / 2 + 50)
+
 # 4.53.2
 
 - Fixed errors thrown upon Mapping form closing when JavaScript expression field is expanded

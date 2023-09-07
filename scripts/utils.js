@@ -532,7 +532,7 @@ export function setTokenConfig(imgSrc, imgName, tokenConfig) {
  */
 export function getFileName(path) {
   if (!path) return '';
-  return decodeURI(path).split('\\').pop().split('/').pop().split('.').slice(0, -1).join('.');
+  return decodeURISafely(path).split('\\').pop().split('/').pop().split('.').slice(0, -1).join('.');
 }
 
 /**
@@ -540,14 +540,14 @@ export function getFileName(path) {
  */
 export function getFileNameWithExt(path) {
   if (!path) return '';
-  return decodeURI(path).split('\\').pop().split('/').pop();
+  return decodeURISafely(path).split('\\').pop().split('/').pop();
 }
 
 /**
  * Extract the directory path excluding the file name.
  */
 export function getFilePath(path) {
-  return decodeURI(path).match(/(.*)[\/\\]/)[1] || '';
+  return decodeURISafely(path).match(/(.*)[\/\\]/)[1] || '';
 }
 
 /**
@@ -558,7 +558,7 @@ export function simplifyName(name) {
 }
 
 export function simplifyPath(path) {
-  return decodeURIComponent(path).replace(simplifyRegex, '').toLowerCase();
+  return decodeURIComponentSafely(path).replace(simplifyRegex, '').toLowerCase();
 }
 
 /**
@@ -1085,4 +1085,22 @@ export function extractDimensionsFromImgName(img, dimensions = {}) {
 
 export function string2Hex(hexString) {
   return PIXI.utils.string2hex(hexString);
+}
+
+export function decodeURISafely(uri) {
+  try {
+    return decodeURI(uri);
+  } catch (e) {
+    console.warn('URI Component not decodable: ' + uri);
+    return uri;
+  }
+}
+
+export function decodeURIComponentSafely(uri) {
+  try {
+    return decodeURIComponent(uri);
+  } catch (e) {
+    console.warn('URI Component not decodable: ' + uri);
+    return uri;
+  }
 }
