@@ -859,6 +859,43 @@ ol.token-variant-table .table-row .mapping-expression .expression-code.hidden {
   color: orange;
 }
 
+.tva-anchor {
+  width: 100px;
+  height: 100px;
+  border-style: groove;
+  margin: auto;
+  margin-top: 15px;
+  position: relative;
+}
+
+.tva-anchor input {
+  position: absolute;
+}
+
+.tva-anchor .top {
+  top: -8px;
+}
+
+.tva-anchor .mid {
+  top: 38px;
+}
+
+.tva-anchor .bot {
+  top: 87px;
+}
+
+.tva-anchor .left {
+  left: -13px;
+}
+
+.tva-anchor .center {
+  left: 35px;
+}
+
+.tva-anchor .right {
+  right: -7px;
+}
+
 /* ---------------------------------------- */
 /* Active Effect Scripts                    */
 /* ---------------------------------------- */

@@ -145,6 +145,9 @@ export class Reticle {
         }
       });
 
+      form.find('[name="anchor.x"]').val(this.config.anchor.x);
+      form.find('[name="anchor.y"]').val(this.config.anchor.y);
+
       if (this.app) this.app.maximize();
       this.app = null;
       this.config = null;
@@ -160,26 +163,56 @@ function displayControlDialog() {
   const d = new Dialog({
     title: 'Set Overlay Position',
     content: `
+     <input type="radio" id="relative" name="mode" ${Reticle.mode === 'relative' ? 'checked' : ''}>
+     <label for="relative">Relative (scale with token)</label><br>
+     <input type="radio" id="static" name="mode" ${Reticle.mode === 'static' ? 'checked' : ''}>
+     <label for="static">Static (fixed position no scaling)</label><br>
      <input type="radio" id="relative_static" name="mode" ${
        Reticle.mode === 'relative_static' ? 'checked' : ''
      }>
-     <label for="relative_static">Relative+Static</label><br>
-     <input type="radio" id="relative" name="mode" ${Reticle.mode === 'relative' ? 'checked' : ''}>
-     <label for="relative">Relative</label><br>
-     <input type="radio" id="static" name="mode" ${Reticle.mode === 'static' ? 'checked' : ''}>
-     <label for="static">Static</label><br>
+     <label for="relative_static">Smart (mix of scaling and fixed positioning)</label><br>
+     <br>
      <div class="form-group">
       <label>Step Size</label>
       <div class="form-fields">
         <input type="number" name="step" min="0" step="1" value="${Reticle.increment}">
       </div>
+      <label>Anchor</label>
+      <div class="tva-anchor">
+        <input type="radio" class="top left" name="anchor">
+        <input type="radio" class="top center" name="anchor">
+        <input type="radio" class="top right" name="anchor">
+        <input type="radio" class="mid left" name="anchor">
+        <input type="radio" class="mid center" name="anchor">
+        <input type="radio" class="mid right" name="anchor">
+        <input type="radio" class="bot left" name="anchor">
+        <input type="radio" class="bot center" name="anchor">
+        <input type="radio" class="bot right" name="anchor">
+      </div>
      </div>
      `,
     buttons: {},
     render: (html) => {
-      html.find('input[type="radio"]').on('change', (event) => {
+      html.find('input[name="mode"]').on('change', (event) => {
         Reticle.mode = event.target.id;
       });
+
+      html.find('input[name="anchor"]').on('change', (event) => {
+        const anchor = $(event.target);
+        let x;
+        let y;
+        if (anchor.hasClass('left')) x = 0;
+        else if (anchor.hasClass('center')) x = 0.5;
+        else x = 1;
+
+        if (anchor.hasClass('top')) y = 0;
+        else if (anchor.hasClass('mid')) y = 0.5;
+        else y = 1;
+
+        Reticle.config.anchor.x = x;
+        Reticle.config.anchor.y = y;
+      });
+
       html.find('[name="step"]').on('input', (event) => {
         console.log('step change');
         Reticle.increment = $(event.target).val() || 1;
