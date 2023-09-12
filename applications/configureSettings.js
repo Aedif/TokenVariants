@@ -155,6 +155,8 @@ export default class ConfigureSettings extends FormApplication {
     data.disableEffectIcons = settings.disableEffectIcons;
     data.displayEffectIconsOnHover = settings.displayEffectIconsOnHover;
     data.filterEffectIcons = settings.filterEffectIcons;
+    data.hideElevationTooltip = settings.hideElevationTooltip;
+    data.hideTokenBorder = settings.hideTokenBorder;
     data.filterCustomEffectIcons = settings.filterCustomEffectIcons;
     data.filterIconList = settings.filterIconList.join(',');
     data.tilesEnabled = settings.tilesEnabled;
@@ -679,6 +681,8 @@ export default class ConfigureSettings extends FormApplication {
       disableEffectIcons: formData.disableEffectIcons,
       displayEffectIconsOnHover: formData.displayEffectIconsOnHover,
       filterEffectIcons: formData.filterEffectIcons,
+      hideElevationTooltip: formData.hideElevationTooltip,
+      hideTokenBorder: formData.hideTokenBorder,
       filterCustomEffectIcons: formData.filterCustomEffectIcons,
       filterIconList: (formData.filterIconList || '')
         .split(',')

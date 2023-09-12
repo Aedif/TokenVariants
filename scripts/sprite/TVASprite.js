@@ -434,6 +434,10 @@ export class TVASprite extends TokenMesh {
       ? this.object.document.texture.tint
       : interpolateColor(config.tint, config.interpolateColor, true);
     this.tint = tint ? Color.from(tint) : 0xffffff;
+    if (shapes) {
+      shapes.tint = this.tint;
+      shapes.alpha = this.alpha;
+    }
 
     if (fullRefresh) {
       if (config.animation.rotate) {

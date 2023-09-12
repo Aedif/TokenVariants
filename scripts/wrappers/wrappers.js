@@ -1,4 +1,5 @@
 import { registerEffectIconWrappers } from './effectIconWrappers.js';
+import { registerHideElementWrappers } from './hideElementWrappers.js';
 import { registerHUDWrappers } from './hudWrappers.js';
 import { registerUserMappingWrappers } from './userMappingWrappers.js';
 
@@ -27,4 +28,6 @@ export function registerAllWrappers() {
   registerEffectIconWrappers();
   // Token HUD Variants Management
   registerHUDWrappers();
+  // Hide Core Token Elements
+  registerHideElementWrappers();
 }

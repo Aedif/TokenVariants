@@ -146,6 +146,8 @@ export const TVA_CONFIG = {
   internalEffects: {
     hpChange: { enabled: false, duration: null },
   },
+  hideElevationTooltip: false,
+  hideTokenBorder: false,
 };
 
 export const FEATURE_CONTROL = {
@@ -156,6 +158,7 @@ export const FEATURE_CONTROL = {
   Wildcards: true,
   PopUpAndRandomize: true,
   HUD: true,
+  HideElement: true,
 };
 
 export function registerSettings() {
@@ -253,6 +256,18 @@ export function registerSettings() {
       if ('displayEffectIconsOnHover' in diff) {
         for (const tkn of canvas.tokens.placeables) {
           if (tkn.effects) tkn.effects.visible = !diff.displayEffectIconsOnHover;
+        }
+      }
+
+      if ('hideElevationTooltip' in diff) {
+        for (const tkn of canvas.tokens.placeables) {
+          if (tkn.tooltip) tkn.tooltip.text = tkn._getTooltipText();
+        }
+      }
+
+      if ('hideTokenBorder' in diff) {
+        for (const tkn of canvas.tokens.placeables) {
+          if (tkn.border) tkn.border.visible = !diff.hideTokenBorder;
         }
       }
 

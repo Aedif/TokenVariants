@@ -1,4 +1,7 @@
+import EffectMappingForm from '../applications/effectMappingForm.js';
+import OverlayConfig from '../applications/overlayConfig.js';
 import { TVASprite } from './sprite/TVASprite.js';
+import { evaluateOverlayExpressions } from './token/overlay.js';
 
 export class Reticle {
   static app;
@@ -10,72 +13,133 @@ export class Reticle {
   static dialog = null;
 
   // Offset calculation controls
-  static mode = 'relative_static';
+  static mode = 'tooltip';
   static increment = 1;
 
   static _onBrushMove(event) {
     if (this.brushOverlay.isMouseDown) {
-      const pos = event.data.getLocalPosition(this.brushOverlay);
-
-      const increment = this.increment;
+      let pos = event.data.getLocalPosition(this.brushOverlay);
 
       this.config.pOffsetX = 0;
       this.config.pOffsetY = 0;
       this.config.offsetX = 0;
       this.config.offsetY = 0;
 
+      if (this.mode === 'token') {
+        this.config.linkRotation = true;
+        this.config.linkMirror = true;
+      }
+
       this.tvaSprite.refresh(this.config, { preview: true });
 
-      let center = { x: this.tvaSprite.x, y: this.tvaSprite.y };
+      const tCoord = { x: this.tvaSprite.x, y: this.tvaSprite.y };
+
       if (this.tvaSprite.overlayConfig.parentID) {
         let parent = this.tvaSprite;
         do {
           parent = parent.parent;
-          center.x += parent.x;
-          center.y = parent.y;
+          tCoord.x += parent.x;
+          tCoord.y += parent.y;
         } while (!(parent instanceof TVASprite));
       }
 
-      console.log(center);
+      let dx = round(pos.x - tCoord.x, this.increment);
+      let dy = round(pos.y - tCoord.y, this.increment);
+
+      let angle = 0;
+      if (!this.config.animation.relative) {
+        angle = this.config.angle;
+        if (this.config.linkRotation) angle += this.tvaSprite.object.document.rotation;
+      }
+
+      [dx, dy] = rotate(0, 0, dx, dy, angle);
+
+      // let lPos = event.data.getLocalPosition(this.tvaSprite);
+      // console.log(lPos);
+      // // let dx = lPos.x;
+      // // let dy = lPos.y;
 
       if (this.mode === 'static') {
-        this.config.pOffsetX = round(pos.x - center.x, increment);
-        this.config.pOffsetY = round(pos.y - center.y, increment);
-      } else if (this.mode === 'relative') {
-        this.config.offsetX = -round(pos.x - center.x, increment) / this.tvaSprite.object.w;
-        this.config.offsetY = -round(pos.y - center.y, increment) / this.tvaSprite.object.h;
+        this.config.pOffsetX = dx;
+        this.config.pOffsetY = dy;
+      } else if (this.mode === 'token') {
+        this.config.offsetX = -dx / this.tvaSprite.object.w;
+        this.config.offsetY = -dy / this.tvaSprite.object.h;
       } else {
-        let dx = round(pos.x - center.x, increment);
-        let dy = round(pos.y - center.y, increment);
         let token = this.tvaSprite.object;
 
-        const pWidth = this.tvaSprite.overlayConfig.parentID
-          ? (this.tvaSprite.parent.shapesWidth ?? this.tvaSprite.parent.width) /
-            this.tvaSprite.parent.scale.x
-          : token.w;
-        const pHeight = this.tvaSprite.overlayConfig.parentID
-          ? (this.tvaSprite.parent.shapesHeight ?? this.tvaSprite.parent.height) /
-            this.tvaSprite.parent.scale.y
-          : token.h;
+        let pWidth;
+        let pHeight;
 
-        if (Math.abs(dx) >= pWidth / 2) {
-          this.config.offsetX = 0.5 * (dx < 0 ? 1 : -1);
-          dx += (pWidth / 2) * (dx < 0 ? 1 : -1);
-        } else if (Math.abs(dy) >= pHeight / 2) {
-          this.config.offsetY = 0.5 * (dy < 0 ? 1 : -1);
-          dy += (pHeight / 2) * (dy < 0 ? 1 : -1);
+        if (this.tvaSprite.overlayConfig.parentID) {
+          pWidth =
+            (this.tvaSprite.parent.shapesWidth ?? this.tvaSprite.parent.width) /
+            this.tvaSprite.parent.scale.x;
+          pHeight =
+            (this.tvaSprite.parent.shapesHeight ?? this.tvaSprite.parent.height) /
+            this.tvaSprite.parent.scale.y;
+        } else {
+          pWidth = token.w;
+          pHeight = token.h;
+        }
+
+        if (this.mode === 'tooltip') {
+          if (Math.abs(dx) >= pWidth / 2) {
+            this.config.offsetX = 0.5 * (dx < 0 ? 1 : -1);
+            dx += (pWidth / 2) * (dx < 0 ? 1 : -1);
+          } else {
+            this.config.offsetX = -dx / this.tvaSprite.object.w;
+            dx = 0;
+          }
+
+          if (Math.abs(dy) >= pHeight / 2) {
+            this.config.offsetY = 0.5 * (dy < 0 ? 1 : -1);
+            dy += (pHeight / 2) * (dy < 0 ? 1 : -1);
+          } else {
+            this.config.offsetY = -dy / this.tvaSprite.object.h;
+            dy = 0;
+          }
+        } else {
+          if (Math.abs(dx) >= pWidth / 2) {
+            this.config.offsetX = 0.5 * (dx < 0 ? 1 : -1);
+            dx += (pWidth / 2) * (dx < 0 ? 1 : -1);
+          } else if (Math.abs(dy) >= pHeight / 2) {
+            this.config.offsetY = 0.5 * (dy < 0 ? 1 : -1);
+            dy += (pHeight / 2) * (dy < 0 ? 1 : -1);
+          } else {
+            this.config.offsetX = -dx / this.tvaSprite.object.w;
+            dx = 0;
+            this.config.offsetY = -dy / this.tvaSprite.object.h;
+            dy = 0;
+          }
         }
 
         this.config.pOffsetX = dx;
         this.config.pOffsetY = dy;
       }
 
-      // console.log({ x: this.config.pOffsetX, y: this.config.pOffsetY });
       this.tvaSprite.refresh(this.config, { preview: true });
     }
   }
 
-  static activate({ tvaSprite = null, config = {}, app = null } = {}) {
+  static minimizeApps() {
+    Object.values(ui.windows).forEach((app) => {
+      if (app instanceof OverlayConfig || app instanceof EffectMappingForm) {
+        app.minimize();
+      }
+    });
+  }
+
+  static maximizeApps() {
+    Object.values(ui.windows).forEach((app) => {
+      if (app instanceof OverlayConfig || app instanceof EffectMappingForm) {
+        app.maximize();
+      }
+    });
+  }
+
+  static activate({ tvaSprite = null, config = {} } = {}) {
+    console.log('ACTIVATE');
     if (this.deactivate() || !canvas.ready) return false;
     if (!tvaSprite || !config) return false;
 
@@ -89,9 +153,14 @@ export class Reticle {
     }
 
     this.tvaSprite = tvaSprite;
-    this.app = app;
-    this.app.minimize();
-    this.config = config;
+
+    this.minimizeApps();
+    this.config = evaluateOverlayExpressions(deepClone(config), this.tvaSprite.object, {
+      overlayConfig: config,
+    });
+
+    // Setup the overlay to be always visible while we're adjusting its position
+    this.config.alwaysVisible = true;
 
     this.active = true;
 
@@ -131,13 +200,21 @@ export class Reticle {
   }
 
   static deactivate() {
-    console.log('DEATIVATE');
     if (this.active) {
       if (this.brushOverlay) this.brushOverlay.parent?.removeChild(this.brushOverlay);
       this.active = false;
       this.tvaSprite = null;
+      if (this.dialog && this.dialog._state !== Application.RENDER_STATES.CLOSED)
+        this.dialog.close(true);
+      this.dialog = null;
+      this.maximizeApps();
 
-      const form = $(this.app.form);
+      const app = Object.values(ui.windows).find((app) => app instanceof OverlayConfig);
+      if (!app) {
+        this.config = null;
+        return;
+      }
+      const form = $(app.form);
 
       ['pOffsetX', 'pOffsetY', 'offsetX', 'offsetY'].forEach((field) => {
         if (field in this.config) {
@@ -145,15 +222,23 @@ export class Reticle {
         }
       });
 
-      form.find('[name="anchor.x"]').val(this.config.anchor.x);
-      form.find('[name="anchor.y"]').val(this.config.anchor.y);
+      if (this.mode === 'token') {
+        ['linkRotation', 'linkMirror'].forEach((field) => {
+          form.find(`[name="${field}"]`).prop('checked', true);
+        });
+        ['linkDimensionsX', 'linkDimensionsY'].forEach((field) => {
+          form.find(`[name="${field}"]`).prop('checked', false);
+        });
+      } else {
+        ['linkRotation', 'linkMirror'].forEach((field) => {
+          form.find(`[name="${field}"]`).prop('checked', false);
+        });
+      }
 
-      if (this.app) this.app.maximize();
-      this.app = null;
+      form.find('[name="anchor.x"]').val(this.config.anchor.x);
+      form.find('[name="anchor.y"]').val(this.config.anchor.y).trigger('change');
       this.config = null;
-      if (this.dialog && this.dialog._state !== Application.RENDER_STATES.CLOSED)
-        this.dialog.close(true);
-      this.dialog = null;
+
       return true;
     }
   }
@@ -163,14 +248,19 @@ function displayControlDialog() {
   const d = new Dialog({
     title: 'Set Overlay Position',
     content: `
-     <input type="radio" id="relative" name="mode" ${Reticle.mode === 'relative' ? 'checked' : ''}>
-     <label for="relative">Relative (scale with token)</label><br>
-     <input type="radio" id="static" name="mode" ${Reticle.mode === 'static' ? 'checked' : ''}>
-     <label for="static">Static (fixed position no scaling)</label><br>
-     <input type="radio" id="relative_static" name="mode" ${
-       Reticle.mode === 'relative_static' ? 'checked' : ''
-     }>
-     <label for="relative_static">Smart (mix of scaling and fixed positioning)</label><br>
+      <input type="radio" data-id="token" name="mode" ${Reticle.mode === 'token' ? 'checked' : ''}>
+      <label>Token</label><br>
+      <input type="radio" data-id="tooltip" name="mode" ${
+        Reticle.mode === 'tooltip' ? 'checked' : ''
+      }>
+      <label>Tooltip</label><br>
+      <input type="radio" data-id="hud" name="mode" ${Reticle.mode === 'hud' ? 'checked' : ''}>
+      <label>HUD</label><br>
+      <input type="radio" data-id="static" name="mode" ${
+        Reticle.mode === 'static' ? 'checked' : ''
+      }>
+      <label>Static</label><br>
+      <img src="modules/token-variants/img/position_reference.webp"></img>
      <br>
      <div class="form-group">
       <label>Step Size</label>
@@ -194,8 +284,24 @@ function displayControlDialog() {
     buttons: {},
     render: (html) => {
       html.find('input[name="mode"]').on('change', (event) => {
-        Reticle.mode = event.target.id;
+        Reticle.mode = $(event.target).data('id');
       });
+      // Pre-select anchor
+      console.log(Reticle.config);
+      let anchorX = Reticle.config?.anchor?.x || 0;
+      let anchorY = Reticle.config?.anchor?.y || 0;
+
+      let classes = '';
+      if (anchorX < 0.5) classes += '.left';
+      else if (anchorX > 0.5) classes += '.right';
+      else classes += '.center';
+
+      if (anchorY < 0.5) classes += '.top';
+      else if (anchorY > 0.5) classes += '.bot';
+      else classes += '.mid';
+
+      html.find('.tva-anchor').find(classes).prop('checked', true);
+      // end -  Pre-select anchor
 
       html.find('input[name="anchor"]').on('change', (event) => {
         const anchor = $(event.target);
@@ -221,10 +327,19 @@ function displayControlDialog() {
     close: () => Reticle.deactivate(),
   });
   d.render(true);
-  setTimeout(() => d.setPosition({ left: window.innerWidth / 2 - 200, top: 50 }), 100);
+  setTimeout(() => d.setPosition({ left: 200, top: window.innerHeight / 2, height: 'auto' }), 100);
   return d;
 }
 
 function round(number, increment, offset = 0) {
   return Math.ceil((number - offset) / increment) * increment + offset;
+}
+
+function rotate(cx, cy, x, y, angle) {
+  var radians = (Math.PI / 180) * angle,
+    cos = Math.cos(radians),
+    sin = Math.sin(radians),
+    nx = cos * (x - cx) + sin * (y - cy) + cx,
+    ny = cos * (y - cy) - sin * (x - cx) + cy;
+  return [nx, ny];
 }

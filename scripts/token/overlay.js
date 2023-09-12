@@ -405,9 +405,16 @@ function _executeString(evalString, token) {
 export function evaluateOverlayExpressions(obj, token, conf) {
   for (const [k, v] of Object.entries(obj)) {
     if (
-      !['label', 'interactivity', 'variables', 'id', 'parentID', 'limitedUsers', 'filter'].includes(
-        k
-      )
+      ![
+        'label',
+        'interactivity',
+        'variables',
+        'id',
+        'parentID',
+        'limitedUsers',
+        'filter',
+        'limitOnProperty',
+      ].includes(k)
     ) {
       obj[k] = _evaluateObjExpressions(v, token, conf);
     }

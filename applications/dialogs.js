@@ -68,7 +68,8 @@ export async function showPathSelectCategoryDialog(event) {
     for (const type of split) {
       content += `<label>${type}</label>`;
     }
-    content += '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
+    content +=
+      '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
     for (const type of split) {
       content += `<input class="category" type="checkbox" name="${type}" data-dtype="Boolean" ${
         selectedTypes.includes(type) ? 'checked' : ''
@@ -304,25 +305,44 @@ export function showMappingTemplateDialog(mappings, callback) {
   let user_t = `<tr><th>USER Templates</th></tr>`;
   for (const template of TVA_CONFIG.templateMappings) {
     if (!template.id) template.id = randomID(8);
-    user_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td class="template">${
+    user_t += `<tr draggable="true" data-id="${template.id}" title="${
+      template.hint ?? ''
+    }"><td class="template">${
       template.name
     }</td><td style="text-align:center;"><a class="delete-template"><i class="fa-solid fa-trash"></i></a></td></tr>`;
   }
   user_t = '<table>' + user_t + '</table>';
 
-  user_t += `<button class="create-template" ${mappings.length ? '' : 'disabled'}>Create Template</button>'`;
+  user_t += `<button class="create-template" ${
+    mappings.length ? '' : 'disabled'
+  }>Create Template</button>'`;
 
   let core_t = `<tr><th><a href="https://github.com/Aedif/TokenVariants/wiki/Templates">CORE Templates</a></th></tr>`;
+  const groups = {};
   for (const template of CORE_TEMPLATES) {
-    if (!template.id) template.id = randomID(8);
-    core_t += `<tr draggable="true" data-id="${template.id}" title="${template.hint ?? ''}"><td class="template">${
-      template.name
-    }</td></tr>`;
+    if (template.system && template.system !== game.system.id) continue;
+    if (!template.group) template.group = 'Other';
+    if (!(template.group in groups)) groups[template.group] = [];
+    groups[template.group].push(template);
+  }
+
+  for (const [group, templates] of Object.entries(groups)) {
+    core_t += `<tr><th>${group}</th></tr>`;
+
+    for (const template of templates) {
+      if (!template.id) template.id = randomID(8);
+      core_t += `<tr draggable="true" data-id="${template.id}" title="${
+        template.hint ?? ''
+      }"><td class="template">${template.name}</td></tr>`;
+    }
   }
   core_t = '<table>' + core_t + '</table>';
 
   let content =
-    '<style>.template:hover {background-color: rgba(39, 245, 101, 0.55);}</style>' + user_t + '<hr>' + core_t;
+    '<style>.template:hover {background-color: rgba(39, 245, 101, 0.55);}</style>' +
+    user_t +
+    '<hr>' +
+    core_t;
 
   let dialog;
   dialog = new Dialog({
@@ -334,7 +354,8 @@ export function showMappingTemplateDialog(mappings, callback) {
         let id = $(event.target).closest('tr').data('id');
         if (id) {
           let template =
-            CORE_TEMPLATES.find((t) => t.id === id) || TVA_CONFIG.templateMappings.find((t) => t.id === id);
+            CORE_TEMPLATES.find((t) => t.id === id) ||
+            TVA_CONFIG.templateMappings.find((t) => t.id === id);
           callback(template);
         }
       });
