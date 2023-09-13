@@ -6,7 +6,7 @@ import { evaluateOverlayExpressions } from './token/overlay.js';
 export class Reticle {
   static app;
   static fields;
-  static brushOverlay;
+  static reticleOverlay;
   static active = false;
   static hitTest;
   static token = null;
@@ -16,9 +16,9 @@ export class Reticle {
   static mode = 'tooltip';
   static increment = 1;
 
-  static _onBrushMove(event) {
-    if (this.brushOverlay.isMouseDown) {
-      let pos = event.data.getLocalPosition(this.brushOverlay);
+  static _onReticleMove(event) {
+    if (this.reticleOverlay.isMouseDown) {
+      let pos = event.data.getLocalPosition(this.reticleOverlay);
 
       this.config.pOffsetX = 0;
       this.config.pOffsetY = 0;
@@ -43,8 +43,8 @@ export class Reticle {
         } while (!(parent instanceof TVASprite));
       }
 
-      let dx = round(pos.x - tCoord.x, this.increment);
-      let dy = round(pos.y - tCoord.y, this.increment);
+      let dx = pos.x - tCoord.x;
+      let dy = pos.y - tCoord.y;
 
       let angle = 0;
       if (!this.config.animation.relative) {
@@ -53,6 +53,8 @@ export class Reticle {
       }
 
       [dx, dy] = rotate(0, 0, dx, dy, angle);
+      dx = round(dx, this.increment);
+      dy = round(dy, this.increment);
 
       // let lPos = event.data.getLocalPosition(this.tvaSprite);
       // console.log(lPos);
@@ -139,17 +141,16 @@ export class Reticle {
   }
 
   static activate({ tvaSprite = null, config = {} } = {}) {
-    console.log('ACTIVATE');
     if (this.deactivate() || !canvas.ready) return false;
     if (!tvaSprite || !config) return false;
 
-    if (this.brushOverlay) {
-      this.brushOverlay.destroy(true);
+    if (this.reticleOverlay) {
+      this.reticleOverlay.destroy(true);
     }
 
     const interaction = canvas.app.renderer.plugins.interaction;
-    if (!interaction.cursorStyles['brush']) {
-      interaction.cursorStyles['brush'] = "url('modules/token-variants/img/reticle.webp'), auto";
+    if (!interaction.cursorStyles['reticle']) {
+      interaction.cursorStyles['reticle'] = "url('modules/token-variants/img/reticle.webp'), auto";
     }
 
     this.tvaSprite = tvaSprite;
@@ -164,44 +165,50 @@ export class Reticle {
 
     this.active = true;
 
-    // Create the brush overlay
-    this.brushOverlay = new PIXI.Container();
-    this.brushOverlay.hitArea = canvas.dimensions.rect;
-    this.brushOverlay.cursor = 'brush';
-    this.brushOverlay.interactive = true;
-    this.brushOverlay.zIndex = Infinity;
+    // Create the reticle overlay
+    this.reticleOverlay = new PIXI.Container();
+    this.reticleOverlay.hitArea = canvas.dimensions.rect;
+    this.reticleOverlay.cursor = 'reticle';
+    this.reticleOverlay.interactive = true;
+    this.reticleOverlay.zIndex = Infinity;
 
-    this.brushOverlay.on('mousedown', (event) => {
+    const stopEvent = function (event) {
+      event.preventDefault();
+      // event.stopPropagation();
+    };
+
+    this.reticleOverlay.on('mousedown', (event) => {
       event.preventDefault();
 
       if (event.data.originalEvent.which != 2 && event.data.originalEvent.nativeEvent.which != 2) {
-        this.brushOverlay.isMouseDown = true;
-        this._onBrushMove(event);
+        this.reticleOverlay.isMouseDown = true;
+        this._onReticleMove(event);
       }
     });
-    this.brushOverlay.on('pointermove', (event) => {
+    this.reticleOverlay.on('pointermove', (event) => {
       event.preventDefault();
-      this._onBrushMove(event);
+      // event.stopPropagation();
+      this._onReticleMove(event);
     });
-    this.brushOverlay.on('mouseup', (event) => {
+    this.reticleOverlay.on('mouseup', (event) => {
       event.preventDefault();
-      this.brushOverlay.isMouseDown = false;
+      this.reticleOverlay.isMouseDown = false;
     });
-    this.brushOverlay.on('click', (event) => {
+    this.reticleOverlay.on('click', (event) => {
       event.preventDefault();
       if (event.data.originalEvent.which == 2 || event.data.originalEvent.nativeEvent.which == 2) {
         this.deactivate();
       }
     });
 
-    canvas.stage.addChild(this.brushOverlay);
+    canvas.stage.addChild(this.reticleOverlay);
     this.dialog = displayControlDialog();
     return true;
   }
 
   static deactivate() {
     if (this.active) {
-      if (this.brushOverlay) this.brushOverlay.parent?.removeChild(this.brushOverlay);
+      if (this.reticleOverlay) this.reticleOverlay.parent?.removeChild(this.reticleOverlay);
       this.active = false;
       this.tvaSprite = null;
       if (this.dialog && this.dialog._state !== Application.RENDER_STATES.CLOSED)
@@ -248,26 +255,20 @@ function displayControlDialog() {
   const d = new Dialog({
     title: 'Set Overlay Position',
     content: `
-      <input type="radio" data-id="token" name="mode" ${Reticle.mode === 'token' ? 'checked' : ''}>
-      <label>Token</label><br>
-      <input type="radio" data-id="tooltip" name="mode" ${
-        Reticle.mode === 'tooltip' ? 'checked' : ''
-      }>
-      <label>Tooltip</label><br>
-      <input type="radio" data-id="hud" name="mode" ${Reticle.mode === 'hud' ? 'checked' : ''}>
-      <label>HUD</label><br>
-      <input type="radio" data-id="static" name="mode" ${
-        Reticle.mode === 'static' ? 'checked' : ''
-      }>
-      <label>Static</label><br>
-      <img src="modules/token-variants/img/position_reference.webp"></img>
-     <br>
-     <div class="form-group">
-      <label>Step Size</label>
-      <div class="form-fields">
-        <input type="number" name="step" min="0" step="1" value="${Reticle.increment}">
+      <style>
+        .images { display: flex; }
+        .images a { flex: 20%; width: 50px; margin: 2px; }
+        .images a.active img { border-color: orange; border-width: 2px; }
+        .anchorlbl {margin: auto; display: table; }
+      </style>
+      <div class="images">
+        <a data-id="token"><img src="modules/token-variants/img/token_mode.png"></img></a>
+        <a data-id="tooltip"><img src="modules/token-variants/img/tooltip_mode.png"></img></a>
+        <a data-id="hud"><img src="modules/token-variants/img/hud_mode.png"></img></a>
+        <a data-id="static"><img src="modules/token-variants/img/static_mode.png"></img></a>
       </div>
-      <label>Anchor</label>
+     <br>
+      <label class="anchorlbl">Anchor</label>
       <div class="tva-anchor">
         <input type="radio" class="top left" name="anchor">
         <input type="radio" class="top center" name="anchor">
@@ -279,15 +280,26 @@ function displayControlDialog() {
         <input type="radio" class="bot center" name="anchor">
         <input type="radio" class="bot right" name="anchor">
       </div>
-     </div>
+      <div class="form-group">
+        <label>Step Size</label>
+        <div class="form-fields">
+          <input type="number" name="step" min="0" step="1" value="${Reticle.increment}">
+        </div>
+      </div>
      `,
     buttons: {},
     render: (html) => {
-      html.find('input[name="mode"]').on('change', (event) => {
-        Reticle.mode = $(event.target).data('id');
+      // Mode Images
+      const images = html.find('.images a');
+      html.find('.images a').on('click', (event) => {
+        images.removeClass('active');
+        const target = $(event.target).closest('a');
+        target.addClass('active');
+        Reticle.mode = target.data('id');
       });
-      // Pre-select anchor
-      console.log(Reticle.config);
+      html.find(`[data-id="${Reticle.mode}"]`).addClass('active');
+
+      // Anchor
       let anchorX = Reticle.config?.anchor?.x || 0;
       let anchorY = Reticle.config?.anchor?.y || 0;
 
@@ -320,7 +332,6 @@ function displayControlDialog() {
       });
 
       html.find('[name="step"]').on('input', (event) => {
-        console.log('step change');
         Reticle.increment = $(event.target).val() || 1;
       });
     },
