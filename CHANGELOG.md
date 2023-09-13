@@ -1,3 +1,28 @@
+# 4.55.0
+
+Overlays
+
+- Fixed a bug causing incorrect positioning of child overlays when they're out of bounds of the parent overlay
+- Fixed shape overlays not inheriting tint and opacity when they are linked to the token
+- Assisted Positioning utility has been added under ` Image`` >  `Positioning`
+
+  - Allows to position overlays via the use of your mouse (Click and/or Click and Drag to move the overlay)
+  - 4 positioning `modes` are provided via a dialog: `Token`, `Tooltip`, `HUD`, `Static`
+  - `Step Size` will make the overlay move in specific size steps/increments
+  - `Anchor` behaves just as it does on the main overlay form
+
+Mappings
+
+- Fixed `Disposition Markers` template
+- Templates are now sorted into groups
+- `Spell Slot Ring` template will now only be available if running `DnD5e`
+
+Misc.
+
+- New Setting `Effects` > `Token Element` > `Hide Elevation`
+- New Setting `Effects` > `Token Element` > `Hide Border`
+  - Hides token elevation and border
+
 # 4.54.0
 
 - Fixed cache operation failing if an image is found containing `%` character

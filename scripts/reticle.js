@@ -286,6 +286,8 @@ function displayControlDialog() {
           <input type="number" name="step" min="0" step="1" value="${Reticle.increment}">
         </div>
       </div>
+      <p class="notes"><b>Left-Click</b> to move the overlay</p>
+      <p class="notes"><b>Middle-Click</b> or <b>Close Dialog</b> to exit overlay positioning</p>
      `,
     buttons: {},
     render: (html) => {

@@ -16,10 +16,8 @@ function _clear(wrapped, ...args) {
   _applyVariantFlags();
 
   // HUD should not close if we're in assisted overlay positioning mode
-  if (!Reticle.active) {
-    let result = wrapped(...args);
-    return result;
-  }
+  if (Reticle.active && Reticle.mode === 'hud') return;
+  return wrapped(...args);
 }
 
 async function _applyVariantFlags() {
