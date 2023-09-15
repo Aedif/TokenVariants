@@ -230,11 +230,11 @@
             <div class="form-group">
                 <label>Image Path</label>
                 <div class="form-fields">
-                    <button type="button" class="file-picker" data-type="imagevideo" data-target="img" title="Browse Files" tabindex="-1"><i class="fas fa-file-import fa-fw"></i></button>
-                    <input class="image" type="text" name="img" placeholder="path/image.png" value="{{img}}">
+                    <button type="button" class="file-picker img-link-disable" data-type="imagevideo" data-target="img" title="Browse Files" tabindex="-1"><i class="fas fa-file-import fa-fw"></i></button>
+                    <input class="image img-link-disable" type="text" name="img" placeholder="path/image.png" value="{{img}}">
                     <button type="button" class="image-link {{#if imgLinked}}active{{/if}}" title="Use the same image as the Token."><i class="fas fa-link"></i></button>
                         <input type="checkbox" name="imgLinked" hidden {{#if imgLinked}}checked{{/if}}>
-                    <button type="button" title="Select Image" class="token-variants-image-select-button" tabindex="-1" data-type="imagevideo" data-target="img"><i class="fas fa-images"></i></button>
+                    <button type="button" title="Select Image" class="token-variants-image-select-button img-link-disable" tabindex="-1" data-type="imagevideo" data-target="img"><i class="fas fa-images"></i></button>
                 </div>
             </div>
 

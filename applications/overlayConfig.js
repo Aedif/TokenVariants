@@ -44,17 +44,24 @@ export default class OverlayConfig extends FormApplication {
       }
     });
 
+    const imgLinkDisable = function (disabled) {
+      html.find('.img-link-disable').prop('disabled', disabled);
+    };
+
     html.find('.image-link').on('click', (event) => {
       const chkBox = $(event.target).closest('.form-group').find('[name="imgLinked"]');
       const button = $(event.target).closest('button');
       if (chkBox.is(':checked')) {
         chkBox.prop('checked', false);
         button.removeClass('active');
+        imgLinkDisable(false);
       } else {
         chkBox.prop('checked', true);
         button.addClass('active');
+        imgLinkDisable(true);
       }
     });
+    imgLinkDisable(Boolean(this.config.imgLinked));
 
     html.find('.repeat').on('change', (event) => {
       const fieldset = $(event.target).closest('fieldset');

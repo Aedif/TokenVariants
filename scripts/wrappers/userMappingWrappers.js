@@ -119,12 +119,12 @@ export function assignUserSpecificImageToSelected(img, opts = {}) {
  */
 export function unassignUserSpecificImage(token, { userName = null, userId = null } = {}) {
   if (userName instanceof Array) {
-    for (const name of userName) unassignUserSpecificImage(token, img, { userName: name });
+    for (const name of userName) unassignUserSpecificImage(token, { userName: name });
     return;
   }
 
   if (userId instanceof Array) {
-    for (const id of userId) unassignUserSpecificImage(token, img, { userId: id });
+    for (const id of userId) unassignUserSpecificImage(token, { userId: id });
     return;
   }
 

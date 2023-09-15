@@ -103,8 +103,9 @@ export async function drawOverlays(token) {
 }
 
 export async function genTexture(token, conf) {
-  if (conf.img?.trim()) {
-    return await generateImage(token, conf);
+  const img = conf.imgLinked ? token.document.texture.src : conf.img?.trim();
+  if (img) {
+    return await generateImage(token, conf, img);
   } else if (conf.text?.text != null) {
     return await generateTextTexture(token, conf);
   } else if (conf.shapes?.length) {
@@ -116,10 +117,9 @@ export async function genTexture(token, conf) {
   }
 }
 
-async function generateImage(token, conf) {
-  let img = conf.img;
-  if (conf.img.includes('*') || (conf.img.includes('{') && conf.img.includes('}'))) {
-    const images = await wildcardImageSearch(conf.img);
+async function generateImage(token, conf, img) {
+  if (img.includes('*') || (img.includes('{') && img.includes('}'))) {
+    const images = await wildcardImageSearch(img);
     if (images.length) {
       if (images.length) {
         img = images[Math.floor(Math.random() * images.length)];

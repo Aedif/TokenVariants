@@ -1,3 +1,13 @@
+# 4.56.0
+
+Overlays
+
+- Button added to use the same image as the token
+
+API
+
+- Fixed errors thrown when calling unassignUserSpecificImage(...)
+
 # 4.55.0
 
 Overlays
