@@ -1104,3 +1104,32 @@ export function decodeURIComponentSafely(uri) {
     return uri;
   }
 }
+
+export function mergeMappings(from, to) {
+  const changedIDs = {};
+
+  for (const m of from) {
+    const i = to.findIndex((mapping) => mapping.label === m.label && mapping.group === m.group);
+    if (i === -1) to.push(m);
+    else {
+      changedIDs[to.id] = m.id;
+      if (to[i].tokens?.length) {
+        if (!m.tokens) m.tokens = [];
+        to[i].tokens.forEach((id) => {
+          if (!m.tokens.includes(id)) m.tokens.push(id);
+        });
+      }
+      to[i] = m;
+    }
+  }
+
+  // If parent's id has been changed we need to update all the children
+  to.forEach((m) => {
+    let pID = m.overlayConfig?.parentID;
+    if (pID && pID in changedIDs) {
+      m.overlayConfig.parentID = changedIDs[pID];
+    }
+  });
+
+  return to;
+}

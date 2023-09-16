@@ -9,6 +9,7 @@ export const DEFAULT_ACTIVE_EFFECT_CONFIG = {
   config: null,
   overlay: false,
   alwaysOn: false,
+  tokens: undefined,
   disabled: false,
   overlayConfig: null,
   targetActors: null,

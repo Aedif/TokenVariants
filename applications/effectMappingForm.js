@@ -1,5 +1,5 @@
 import { showArtSelect } from '../token-variants.mjs';
-import { SEARCH_TYPE, getFileName, isVideo, keyPressed } from '../scripts/utils.js';
+import { SEARCH_TYPE, getFileName, isVideo, keyPressed, mergeMappings } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 import {
   TVA_CONFIG,
@@ -22,6 +22,7 @@ import { drawOverlays } from '../scripts/token/overlay.js';
 
 // Persist group toggles across forms
 let TOGGLED_GROUPS;
+const NO_IMAGE = 'modules\\token-variants\\img\\empty.webp';
 
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
@@ -76,6 +77,9 @@ export default class EffectMappingForm extends FormApplication {
       config: mapping.config,
       overlay: mapping.overlay,
       alwaysOn: mapping.alwaysOn,
+      tokens: mapping.tokens,
+      tokensString: mapping.tokens?.join(',') ?? '',
+      tokenIDs: mapping.tokens?.length ? 'Assigned Tokens\n' + mapping.tokens.join('\n') : '',
       disabled: mapping.disabled,
       overlayConfig: mapping.overlayConfig,
       targetActors: mapping.targetActors,
@@ -86,6 +90,8 @@ export default class EffectMappingForm extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
+
+    data.NO_IMAGE = NO_IMAGE;
 
     let mappings = [];
     if (this.object.mappings) {
@@ -400,6 +406,7 @@ export default class EffectMappingForm extends FormApplication {
     vid.add(img).attr('src', '').attr('title', '');
     vid.hide();
     img.show();
+    img.attr('src', NO_IMAGE);
     $(event.target).siblings('.imgSrc').val('');
     $(event.target).siblings('.imgName').val('');
   }
@@ -693,30 +700,7 @@ export default class EffectMappingForm extends FormApplication {
   async _insertMappings(event, mappings) {
     const cMappings = deepClone(mappings).map(this._processConfig);
     await this._onSubmit(event);
-
-    const changedIDs = {};
-
-    for (const m of cMappings) {
-      const i = this.object.mappings.findIndex(
-        (mapping) => mapping.label === m.label && mapping.group === m.group
-      );
-      if (i === -1) this.object.mappings.push(m);
-      else {
-        changedIDs[this.object.mappings.id] = m.id;
-        this.object.mappings[i] = m;
-      }
-      if (m.group) {
-        TOGGLED_GROUPS[m.group] = true;
-      }
-    }
-
-    // If parent's id has been changed we need to update all the children
-    this.object.mappings.forEach((m) => {
-      let pID = m.overlayConfig?.parentID;
-      if (pID && pID in changedIDs) {
-        m.overlayConfig.parentID = changedIDs[pID];
-      }
-    });
+    mergeMappings(cMappings, this.object.mappings);
     this.render();
   }
 
@@ -852,6 +836,7 @@ export default class EffectMappingForm extends FormApplication {
       m2.priority = m1.priority;
       m2.overlay = m1.overlay;
       m2.alwaysOn = m1.alwaysOn;
+      m2.tokens = m1.tokens?.split(',');
       m2.disabled = m1.disabled;
       m2.group = m1.group;
     }

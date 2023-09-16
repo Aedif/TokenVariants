@@ -1,3 +1,4 @@
+import { toggleTemplate } from '../scripts/hooks/effectMappingHooks.js';
 import { CORE_TEMPLATES } from '../scripts/mappingTemplates.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
@@ -301,7 +302,7 @@ function showUserTemplateCreateDialog(mappings) {
   dialog.render(true);
 }
 
-export function showMappingTemplateDialog(mappings, callback) {
+export function showMappingTemplateDialog(mappings, callback, allowCreate = true) {
   let user_t = `<tr><th>USER Templates</th></tr>`;
   for (const template of TVA_CONFIG.templateMappings) {
     if (!template.id) template.id = randomID(8);
@@ -313,9 +314,11 @@ export function showMappingTemplateDialog(mappings, callback) {
   }
   user_t = '<table>' + user_t + '</table>';
 
-  user_t += `<button class="create-template" ${
-    mappings.length ? '' : 'disabled'
-  }>Create Template</button>'`;
+  if (allowCreate) {
+    user_t += `<button class="create-template" ${
+      mappings.length ? '' : 'disabled'
+    }>Create Template</button>'`;
+  }
 
   let core_t = `<tr><th><a href="https://github.com/Aedif/TokenVariants/wiki/Templates">CORE Templates</a></th></tr>`;
   const groups = {};
@@ -381,4 +384,14 @@ export function showMappingTemplateDialog(mappings, callback) {
     },
   });
   dialog.render(true);
+}
+
+export function toggleTemplateDialog() {
+  showMappingTemplateDialog(
+    null,
+    (template) => {
+      canvas.tokens.controlled.forEach((t) => toggleTemplate(t, template.name));
+    },
+    false
+  );
 }

@@ -511,6 +511,12 @@ ol.token-variant-table .table-row .mapping-expression .div-input span.hp-express
   color: blue;
 }
 
+ol.token-variant-table .table-row .tokens {
+  position: absolute;
+  right: 8px;
+  color: red;
+}
+
 /* Copied from input[type="text"] with some adjustments */
 ol.token-variant-table .table-row .mapping-expression .div-input {
   white-space: nowrap;

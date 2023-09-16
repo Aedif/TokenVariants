@@ -14,7 +14,12 @@ import {
   waitForTokenTexture,
 } from './scripts/utils.js';
 import { FONT_LOADING, drawOverlays } from './scripts/token/overlay.js';
-import { getTokenEffects, updateWithEffectMapping } from './scripts/hooks/effectMappingHooks.js';
+import {
+  getTokenEffects,
+  setOverlayVisibility,
+  toggleTemplate,
+  updateWithEffectMapping,
+} from './scripts/hooks/effectMappingHooks.js';
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
 import { REGISTERED_HOOKS, registerAllHooks, registerHook } from './scripts/hooks/hooks.js';
 import { REGISTERED_WRAPPERS, registerAllWrappers } from './scripts/wrappers/wrappers.js';
@@ -24,6 +29,7 @@ import {
   unassignUserSpecificImage,
   unassignUserSpecificImageFromSelected,
 } from './scripts/wrappers/userMappingWrappers.js';
+import { toggleTemplateDialog } from './applications/dialogs.js';
 
 // Tracks if module has been initialized
 let MODULE_INITIALIZED = false;
@@ -217,6 +223,9 @@ registerHook('main', 'init', function () {
     assignUserSpecificImageToSelected,
     unassignUserSpecificImage,
     unassignUserSpecificImageFromSelected,
+    setOverlayVisibility,
+    toggleTemplateDialog,
+    toggleTemplate,
     TVA_CONFIG,
   };
 

@@ -81,7 +81,7 @@
             {{#unless isVideo}}hidden{{/unless}}
             >
           </video>
-          <img height="32" width="32" src="{{mapping.imgSrc}}" title="{{mapping.imgName}}" {{#if isVideo}}hidden{{/if}}/>
+          <img height="32" width="32" src="{{#if mapping.imgSrc}} {{mapping.imgSrc}} {{else}} {{../NO_IMAGE}} {{/if}}" title="{{mapping.imgName}}" {{#if isVideo}}hidden{{/if}}/>
           <input
             class="imgSrc"
             type="hidden"
@@ -119,6 +119,10 @@
         <div class="mapping-group">
             <input list="groups" name="mappings.{{mapping.i}}.group" value="{{mapping.group}}"/>
         </div>
+        {{#if mapping.tokenIDs}}
+          <i class="tokens fa-duotone fa-circle-user" title="{{mapping.tokenIDs}}"></i>
+          <input type="text" name="mappings.{{mapping.i}}.tokens" value="{{mapping.tokensString}}" hidden />
+        {{/if}}
       </li>
       {{/each}}
     {{/each}}

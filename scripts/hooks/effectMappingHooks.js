@@ -1,4 +1,4 @@
-import { FEATURE_CONTROL, TVA_CONFIG, getFlagMappings } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG, getFlagMappings, updateSettings } from '../settings.js';
 import {
   applyCEEffect,
   applyTMFXPreset,
@@ -7,11 +7,13 @@ import {
   EXPRESSION_OPERATORS,
   getAllActorTokens,
   getFileName,
+  mergeMappings,
   tv_executeScript,
   updateTokenImage,
 } from '../utils.js';
-import { broadcastOverlayRedraw } from '../token/overlay.js';
+import { broadcastOverlayRedraw, drawOverlays } from '../token/overlay.js';
 import { registerHook, unregisterHook } from './hooks.js';
+import { CORE_TEMPLATES } from '../mappingTemplates.js';
 
 const EXPRESSION_MATCH_RE = /(\\\()|(\\\))|(\|\|)|(\&\&)|(\\\!)/g;
 const PF2E_ITEM_TYPES = ['condition', 'effect', 'weapon', 'equipment'];
@@ -619,6 +621,123 @@ export function getAllEffectMappings(token = null, includeDisabled = false) {
   return allMappings;
 }
 
+export async function setOverlayVisibility({
+  userName = null,
+  userId = null,
+  label = null,
+  group = null,
+  token = null,
+  visible = true,
+} = {}) {
+  if (!label && !group) return;
+  if (userName) userId = game.users.find((u) => u.name === userName)?.id;
+  if (!userId) return;
+
+  let tokenMappings = getFlagMappings(token);
+  let globalMappings = TVA_CONFIG.globalMappings;
+
+  let updateToken = false;
+  let updateGlobal = false;
+
+  const updateMappings = function (mappings) {
+    mappings = mappings.filter((m) => m.overlay && (m.label === label || m.group === group));
+    let found = false;
+    if (mappings.length) found = true;
+
+    mappings.forEach((m) => {
+      const overlayConfig = m.overlayConfig;
+      if (visible) {
+        if (!overlayConfig.limitedUsers) overlayConfig.limitedUsers = [];
+        if (!overlayConfig.limitedUsers.find((u) => u === userId))
+          overlayConfig.limitedUsers.push(userId);
+      } else if (overlayConfig.limitedUsers) {
+        overlayConfig.limitedUsers = overlayConfig.limitedUsers.filter((u) => u !== userId);
+      }
+    });
+    return found;
+  };
+
+  updateToken = updateMappings(tokenMappings);
+  updateGlobal = updateMappings(globalMappings);
+
+  if (updateGlobal) await updateSettings({ globalMappings: globalMappings });
+  if (updateToken) {
+    const actor = game.actors.get(token.document.actorId);
+    if (actor) await actor.setFlag('token-variants', 'effectMappings', tokenMappings);
+  }
+  if (updateToken || updateGlobal) drawOverlays(token);
+}
+
+export async function applyTemplate(token, templateName) {
+  if (!token || !templateName) return;
+
+  const template =
+    TVA_CONFIG.templateMappings.find((t) => t.name === templateName) ??
+    CORE_TEMPLATES.find((t) => t.name === templateName);
+  if (!template) return;
+
+  const actor = game.actors.get(token.actor.id);
+  if (!actor) return;
+  const templateMappings = deepClone(template.mappings);
+  templateMappings.forEach((tm) => (tm.tokens = [token.id]));
+
+  const mappings = mergeMappings(templateMappings, getFlagMappings(actor));
+  await actor.setFlag('token-variants', 'effectMappings', mappings);
+  await updateWithEffectMapping(token);
+  drawOverlays(token);
+}
+
+export async function removeTemplate(token, templateName) {
+  if (!token || !templateName) return;
+
+  const template =
+    TVA_CONFIG.templateMappings.find((t) => t.name === templateName) ??
+    CORE_TEMPLATES.find((t) => t.name === templateName);
+  if (!template) return;
+
+  const actor = game.actors.get(token.actor.id);
+  if (!actor) return;
+
+  let mappings = getFlagMappings(actor);
+  template.mappings.forEach((m) => {
+    let i = mappings.findIndex((m2) => m2.id === m.id);
+    if (i !== -1) {
+      mappings[i].tokens = mappings[i].tokens.filter((t) => t !== token.id);
+      if (mappings[i].tokens.length === 0) mappings.splice(i, 1);
+    }
+  });
+
+  console.log(mappings);
+
+  if (mappings.length) await actor.setFlag('token-variants', 'effectMappings', mappings);
+  else await actor.unsetFlag('token-variants', 'effectMappings');
+  await updateWithEffectMapping(token);
+  drawOverlays(token);
+}
+
+export function toggleTemplate(token, templateName) {
+  if (!token || !templateName) return;
+
+  const template =
+    TVA_CONFIG.templateMappings.find((t) => t.name === templateName) ??
+    CORE_TEMPLATES.find((t) => t.name === templateName);
+  if (!template) return;
+
+  const actor = game.actors.get(token.actor.id);
+  if (!actor) return;
+
+  const mappings = getFlagMappings(actor);
+  if (
+    mappings.some((m) =>
+      template.mappings.some((m2) => m2.id === m.id && m.tokens?.includes(token.id))
+    )
+  ) {
+    removeTemplate(token, templateName);
+  } else {
+    applyTemplate(token, templateName);
+  }
+}
+
 function getHPChangeEffect(token, effects) {
   const internals = token.actor?.getFlag('token-variants', 'internalEffects') || {};
   const delta = getProperty(
@@ -718,6 +837,7 @@ export function getTokenEffects(token, includeExpressions = false) {
   const mappings = getAllEffectMappings(token);
 
   for (const m of mappings) {
+    if (m.tokens?.length && !m.tokens.includes(data.id)) continue;
     if (m.alwaysOn) effects.unshift(m.id);
     else if (includeExpressions) {
       const evaluation = evaluateMappingExpression(m, effects, token);
