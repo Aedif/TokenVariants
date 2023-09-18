@@ -242,6 +242,10 @@ export class Reticle {
         });
       }
 
+      if (this.mode === 'hud') {
+        form.find('[name="ui"]').prop('checked', true).trigger('change');
+      }
+
       form.find('[name="anchor.x"]').val(this.config.anchor.x);
       form.find('[name="anchor.y"]').val(this.config.anchor.y).trigger('change');
       this.config = null;

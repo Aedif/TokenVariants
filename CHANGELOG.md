@@ -2,6 +2,36 @@
 
 Overlays
 
+- Fixed overlays not being rendered in chosen display order
+- New option: `Misc` > `UI Element`
+  - Overlay marked as a UI Element will always displays above Tokens and will not interact with scene lighting
+
+Mappings
+
+- `Image` will no longer be displayed as broken if it hasn't been added
+- `Health Circles` template positioning fixed
+- Templates `Info Box #1`, `Info Box #2`, `Info Box #3`, `Health Bar`, `Health Ring`, `Health Hearts`, `Health Circles`, `Health Squares` and `Spell Slot Ring` have been set as UI elements
+
+API
+
+- `toggleTemplate(token, templateName)`
+  - Applies and removes templates from the provided token
+- `toggleTemplateOnSelected(templateName)`
+  - Calls `toggleTemplate(...)` for all currently selected tokens
+- `toggleTemplateDialog()`
+  - Opens template dialog allowing you to apply templates to currently selected tokens
+  - New keybinding has been added to allow calling of this function via key-presses (`Toggle Template Dialog`)
+- `setOverlayVisibility({userName = null, userId = null, label = null, group = null, token = null, visible = true} = {})`
+  - Sets overlay `Visibility` > `Limit Visibility to users` for the given tokens
+  - User: `userName` or `userId`
+  - Overlay: `label` or `group`
+  - Token: `token`
+  - Check/Un-Check: `visible`
+
+# 4.55.1
+
+Overlays
+
 - Button added to use the same image as the token
 
 API
