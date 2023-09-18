@@ -75,6 +75,7 @@ export const DEFAULT_OVERLAY_CONFIG = {
   shapes: [],
   variables: [],
   interactivity: [],
+  ui: false,
 };
 
 export const OVERLAY_SHAPES = {

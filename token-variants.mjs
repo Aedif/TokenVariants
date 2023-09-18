@@ -18,6 +18,7 @@ import {
   getTokenEffects,
   setOverlayVisibility,
   toggleTemplate,
+  toggleTemplateOnSelected,
   updateWithEffectMapping,
 } from './scripts/hooks/effectMappingHooks.js';
 import { cacheImages, doImageSearch, doRandomSearch, isCaching } from './scripts/search.js';
@@ -226,6 +227,7 @@ registerHook('main', 'init', function () {
     setOverlayVisibility,
     toggleTemplateDialog,
     toggleTemplate,
+    toggleTemplateOnSelected,
     TVA_CONFIG,
   };
 

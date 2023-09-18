@@ -61,6 +61,12 @@ export async function drawOverlays(token) {
           } else if (diff.text?.text || diff.shapes) {
             sprite.setTexture(await genTexture(token, ov), { configuration: ov });
           }
+
+          if ('ui' in diff) {
+            sprite.parent.removeChild(sprite);
+            const layer = ov.ui ? canvas.tokens : canvas.primary;
+            sprite = layer.addChild(sprite);
+          }
         }
         if (!sprite) {
           if (ov.parentID) {
@@ -68,7 +74,8 @@ export async function drawOverlays(token) {
             if (parent && !parent.tvaRemove)
               sprite = parent.addChildAuto(new TVASprite(await genTexture(token, ov), token, ov));
           } else {
-            sprite = canvas.primary.addChild(new TVASprite(await genTexture(token, ov), token, ov));
+            const layer = ov.ui ? canvas.tokens : canvas.primary;
+            sprite = layer.addChild(new TVASprite(await genTexture(token, ov), token, ov));
           }
           if (sprite) token.tva_sprites.push(sprite);
         }

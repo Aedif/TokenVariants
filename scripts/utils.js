@@ -2,6 +2,7 @@ import { TVA_CONFIG, updateSettings, _arrayAwareDiffObject } from './settings.js
 import { showArtSelect } from '../token-variants.mjs';
 import EffectMappingForm from '../applications/effectMappingForm.js';
 import CompendiumMapConfig from '../applications/compendiumMap.js';
+import { toggleTemplateDialog } from '../applications/dialogs.js';
 
 const simplifyRegex = new RegExp(/[^A-Za-z0-9/\\]/g);
 
@@ -450,6 +451,15 @@ export function registerKeybinds() {
     onDown: () => {
       new CompendiumMapConfig().render(true);
     },
+    restricted: true,
+    precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
+  });
+
+  game.keybindings.register('token-variants', 'toggleTemplate', {
+    name: 'Toggle Template Dialog',
+    hint: 'Brings up a dialog from which you can toggle templates on currently selected tokens.',
+    editable: [],
+    onDown: toggleTemplateDialog,
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
   });

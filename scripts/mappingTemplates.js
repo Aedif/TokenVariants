@@ -712,6 +712,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: 'W8BPK9hv',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: true,
@@ -1483,6 +1484,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: 'f0pV6Pnl',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: true,
@@ -2464,6 +2466,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: 'Gt11vjXV',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: true,
@@ -4315,6 +4318,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: 'dgIBKbcU',
           parentID: '',
+          ui: true,
           underlay: true,
           bottom: true,
           top: false,
@@ -4465,6 +4469,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: 'erOTHzIc',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: false,
@@ -4651,6 +4656,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: '4uCpbtHY',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: false,
@@ -4742,6 +4748,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: '0vETg18v',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: false,
@@ -4870,6 +4877,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: '0vETg18v',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: false,
@@ -4999,6 +5007,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: '1SS3KhwM',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: true,

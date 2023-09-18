@@ -738,6 +738,10 @@ export function toggleTemplate(token, templateName) {
   }
 }
 
+export function toggleTemplateOnSelected(templateName) {
+  canvas.tokens.controlled.forEach((t) => toggleTemplate(t, templateName));
+}
+
 function getHPChangeEffect(token, effects) {
   const internals = token.actor?.getFlag('token-variants', 'internalEffects') || {};
   const delta = getProperty(

@@ -1,4 +1,4 @@
-import { toggleTemplate } from '../scripts/hooks/effectMappingHooks.js';
+import { toggleTemplateOnSelected } from '../scripts/hooks/effectMappingHooks.js';
 import { CORE_TEMPLATES } from '../scripts/mappingTemplates.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
@@ -387,11 +387,5 @@ export function showMappingTemplateDialog(mappings, callback, allowCreate = true
 }
 
 export function toggleTemplateDialog() {
-  showMappingTemplateDialog(
-    null,
-    (template) => {
-      canvas.tokens.controlled.forEach((t) => toggleTemplate(t, template.name));
-    },
-    false
-  );
+  showMappingTemplateDialog(null, (template) => toggleTemplateOnSelected(template.name), false);
 }

@@ -113,7 +113,8 @@ export default class OverlayConfig extends FormApplication {
 
     html.find('input,select').on('change', this._onInputChange.bind(this));
     html.find('textarea').on('input', this._onInputChange.bind(this));
-    html.find('[name="parentID"]').on('change', (event) => {
+    const parentId = html.find('[name="parentID"]');
+    parentId.on('change', (event) => {
       if (event.target.value === 'TOKEN') {
         html.find('.token-specific-fields').show();
       } else {
@@ -121,7 +122,20 @@ export default class OverlayConfig extends FormApplication {
       }
       this.setPosition();
     });
-    html.find('[name="parentID"]').trigger('change');
+    parentId.trigger('change');
+    html
+      .find('[name="ui"]')
+      .on('change', (event) => {
+        if (parentId.val() === 'TOKEN') {
+          if (event.target.checked) {
+            html.find('.display-priority').hide();
+          } else {
+            html.find('.display-priority').show();
+          }
+          this.setPosition();
+        }
+      })
+      .trigger('change');
 
     html.find('[name="filter"]').on('change', (event) => {
       html.find('.filterOptions').empty();

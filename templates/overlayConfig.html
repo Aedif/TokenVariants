@@ -115,7 +115,15 @@
                 </div>
             </div>
 
-            <fieldset class="token-specific-fields">
+            <div class="form-group token-specific-fields">
+                <label>UI Element</label>
+                <div class="form-fields">
+                    <input type="checkbox" name="ui" data-dtype="Boolean" value="{{ui}}" {{#if ui}}checked{{/if}}>
+                </div>
+                <p class="notes">Overlay marked as a UI element will always display above Tokens and will not interact with scene lighting.</p>
+            </div>
+
+            <fieldset class="token-specific-fields display-priority">
                 <legend>Display Priority</legend>
 
                 <div class="form-group">

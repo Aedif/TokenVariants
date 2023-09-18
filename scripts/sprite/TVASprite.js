@@ -95,6 +95,7 @@ export class TVASprite extends TokenMesh {
       configurable: true,
     });
 
+    this.eventMode = 'none';
     this.enableInteractivity(this.overlayConfig);
   }
 
@@ -103,11 +104,14 @@ export class TVASprite extends TokenMesh {
       this.removeAllListeners();
       this.mouseInteractionManager = null;
       this.cursor = null;
+      this.eventMode = 'none';
       return;
     } else if (this.mouseInteractionManager || !this.overlayConfig.interactivity?.length) return;
 
-    if (canvas.primary.eventMode === 'none') {
-      canvas.primary.eventMode = 'passive';
+    if (!this.overlayConfig.ui) {
+      if (canvas.primary.eventMode === 'none') {
+        canvas.primary.eventMode = 'passive';
+      }
     }
 
     this.eventMode = 'static';
