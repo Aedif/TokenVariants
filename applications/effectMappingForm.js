@@ -79,7 +79,9 @@ export default class EffectMappingForm extends FormApplication {
       alwaysOn: mapping.alwaysOn,
       tokens: mapping.tokens,
       tokensString: mapping.tokens?.join(',') ?? '',
-      tokenIDs: mapping.tokens?.length ? 'Assigned Tokens\n' + mapping.tokens.join('\n') : '',
+      tokenIDs: mapping.tokens?.length
+        ? 'Assigned Tokens\n' + mapping.tokens.join('\n') + '\n\n[CLICK TO UNASSIGN]'
+        : '',
       disabled: mapping.disabled,
       overlayConfig: mapping.overlayConfig,
       targetActors: mapping.targetActors,
@@ -183,6 +185,17 @@ export default class EffectMappingForm extends FormApplication {
           if (this._state === Application.RENDER_STATES.RENDERED) this.setPosition();
         })
       );
+    html.find('.tokens').on('click', this._onTokensRemove.bind(this));
+  }
+
+  async _onTokensRemove(event) {
+    await this._onSubmit(event);
+
+    const li = event.currentTarget.closest('.table-row');
+    const mapping = this.object.mappings[li.dataset.index];
+    mapping.tokens = undefined;
+
+    this.render();
   }
 
   _onExpressionSwitch(event) {

@@ -200,10 +200,7 @@ export class TVASprite extends TokenMesh {
 
   // Overlays have the same sort order as the parent
   get sort() {
-    let sort = this.object.document.sort || 0;
-    if (this.overlayConfig.top) return sort + 1000;
-    else if (this.overlayConfig.bottom) return sort - 1000;
-    return sort;
+    return this.object.document.sort || 0;
   }
 
   get _lastSortedIndex() {
@@ -211,7 +208,10 @@ export class TVASprite extends TokenMesh {
   }
 
   get elevation() {
-    return this.object.mesh?.data.elevation;
+    let elevation = this.object.mesh?.data.elevation;
+    if (this.overlayConfig.top) elevation += 9999;
+    else if (this.overlayConfig.bottom) elevation -= 9999;
+    return elevation;
   }
 
   set _lastSortedIndex(val) {}
