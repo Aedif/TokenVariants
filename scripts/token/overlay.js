@@ -109,6 +109,12 @@ export async function drawOverlays(token) {
   }
 }
 
+// function _getLayer(ov) {
+//   const layer = ov.ui ? canvas.tokens : canvas.primary;
+//   if (!layer.tvaSprites) layer.tvaSprites = layer.addChild(new PIXI.Container());
+//   return layer.tvaSprites;
+// }
+
 export async function genTexture(token, conf) {
   const img = conf.imgLinked ? token.document.texture.src : conf.img?.trim();
   if (img) {

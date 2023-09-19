@@ -128,9 +128,9 @@ export default class OverlayConfig extends FormApplication {
       .on('change', (event) => {
         if (parentId.val() === 'TOKEN') {
           if (event.target.checked) {
-            html.find('.display-priority').hide();
+            html.find('.ui-hide').hide();
           } else {
-            html.find('.display-priority').show();
+            html.find('.ui-hide').show();
           }
           this.setPosition();
         }

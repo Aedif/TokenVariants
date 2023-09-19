@@ -1,3 +1,9 @@
+# 4.56.1
+
+Overlays
+
+- Returned `Display Priority` > `BOTTOM` option when `UI Element` is selected
+
 # 4.56.0
 
 Overlays

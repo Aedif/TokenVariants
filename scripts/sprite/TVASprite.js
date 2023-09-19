@@ -504,15 +504,50 @@ export class TVASprite extends TokenMesh {
       filter.thickness = options.trueThickness ?? 1;
       filter.animate = options.animate ?? false;
     } else if (filterName === 'Token Magic FX') {
-      this.filters = await constructTMFXFilters(options.params || [], this);
+      this.applyTVAFilters(await constructTMFXFilters(options.params || [], this));
       return;
     }
 
     if (filter) {
+      this.applyTVAFilters([filter]);
       this.filters = [filter];
     } else {
-      this.filters = [];
+      this.removeTVAFilters();
     }
+
+    if (this.overlayConfig.ui && this.overlayConfig.bottom) this.applyReverseMask();
+    else this.removeReverseMask();
+  }
+
+  applyReverseMask() {
+    if (!this.filters?.find((f) => f.tvaReverse)) {
+      const filters = this.filters || [];
+      const reverseMask = ReverseMaskFilter.create({
+        uMaskSampler: canvas.primary.tokensRenderTexture,
+        channel: 'a',
+      });
+      reverseMask.tvaReverse = true;
+      filters.push(reverseMask);
+      this.filters = filters;
+    }
+    if (!this.filters) filters = [];
+  }
+
+  removeReverseMask() {
+    if (this.filters?.length) {
+      this.filters = this.filters.filter((f) => !f.tvaReverse);
+    }
+  }
+
+  applyTVAFilters(filters) {
+    if (filters?.length) {
+      this.removeTVAFilters();
+      this.filters = (this.filters || []).concat(filters);
+    }
+  }
+
+  removeTVAFilters() {
+    if (this.filters) this.filters = this.filters.filter((f) => !f.tvaFilter);
   }
 
   async stopAnimation() {
@@ -652,6 +687,7 @@ async function constructTMFXFilters(paramsArray, sprite) {
         filter.placeableImg = sprite;
         filter.targetPlaceable = sprite.object;
         // end of fixes
+        filter.tvaFilter = true;
         filters.unshift(filter);
       }
     }

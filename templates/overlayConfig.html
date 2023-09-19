@@ -123,10 +123,10 @@
                 <p class="notes">Overlay marked as a UI element will always display above Tokens and will not interact with scene lighting.</p>
             </div>
 
-            <fieldset class="token-specific-fields display-priority">
+            <fieldset class="token-specific-fields">
                 <legend>Display Priority</legend>
 
-                <div class="form-group">
+                <div class="form-group ui-hide">
                     <label><i class="fal fa-eclipse"></i> Underlay</label>
                     <div class="form-fields">
                         <input type="checkbox" name="underlay" data-dtype="Boolean" value="{{underlay}}" {{#if underlay}}checked{{/if}}>
@@ -142,7 +142,7 @@
                     <p class="notes">Place this underlay bellow all tokens.</p>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group ui-hide">
                     <label><i class="far fa-arrow-to-top"></i> TOP</label>
                     <div class="form-fields">
                         <input type="checkbox" name="top" data-dtype="Boolean" value="{{top}}" {{#if top}}checked{{/if}}>
