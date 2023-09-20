@@ -1,9 +1,4 @@
-import {
-  registerSettings,
-  TVA_CONFIG,
-  exportSettingsToJSON,
-  updateSettings,
-} from './scripts/settings.js';
+import { registerSettings, TVA_CONFIG, exportSettingsToJSON, updateSettings } from './scripts/settings.js';
 import { ArtSelect, addToArtSelectQueue } from './applications/artSelect.js';
 import {
   SEARCH_TYPE,
@@ -38,12 +33,6 @@ export function isInitialized() {
   return MODULE_INITIALIZED;
 }
 let onInit = [];
-
-// showArtSelect(...) can take a while to fully execute and it is possible for it to be called
-// multiple times in very quick succession especially if copy pasting tokens or importing actors.
-// This variable set early in the function execution is used to queue additional requests rather
-// than continue execution
-const showArtSelectExecuting = { inProgress: false };
 
 /**
  * Initialize the Token Variants module on Foundry VTT init
@@ -94,7 +83,7 @@ async function initialize() {
   startBatchUpdater();
 
   registerHook('Search', 'renderArtSelect', () => {
-    showArtSelectExecuting.inProgress = false;
+    ArtSelect.executing = false;
   });
 
   // Handle broadcasts
@@ -169,7 +158,7 @@ export async function showArtSelect(
   if (isCaching()) return;
 
   const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
-  if (showArtSelectExecuting.inProgress || (!force && artSelects.length !== 0)) {
+  if (ArtSelect.executing || (!force && artSelects.length !== 0)) {
     addToArtSelectQueue(search, {
       callback,
       searchType,
@@ -181,7 +170,7 @@ export async function showArtSelect(
     return;
   }
 
-  showArtSelectExecuting.inProgress = true;
+  ArtSelect.executing = true;
   if (!allImages)
     allImages = await doImageSearch(search, {
       searchType: searchType,

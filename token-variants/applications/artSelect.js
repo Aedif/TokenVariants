@@ -3,20 +3,16 @@ import { isVideo, isImage, keyPressed, SEARCH_TYPE, BASE_IMAGE_CATEGORIES, getFi
 import { showArtSelect } from '../token-variants.mjs';
 import { TVA_CONFIG, getSearchOptions } from '../scripts/settings.js';
 
-const ART_SELECT_QUEUE = {
-  queue: [],
-};
-
 export function addToArtSelectQueue(search, options) {
-  ART_SELECT_QUEUE.queue.push({
+  ArtSelect.queue.push({
     search: search,
     options: options,
   });
-  $('button#token-variant-art-clear-queue').html(`Clear Queue (${ART_SELECT_QUEUE.queue.length})`).show();
+  $('button#token-variant-art-clear-queue').html(`Clear Queue (${ArtSelect.queue.length})`).show();
 }
 
 export function addToQueue(search, options) {
-  ART_SELECT_QUEUE.queue.push({
+  ArtSelect.queue.push({
     search: search,
     options: options,
   });
@@ -26,16 +22,16 @@ export function renderFromQueue(force = false) {
   if (!force) {
     const artSelects = Object.values(ui.windows).filter((app) => app instanceof ArtSelect);
     if (artSelects.length !== 0) {
-      if (ART_SELECT_QUEUE.queue.length !== 0)
-        $('button#token-variant-art-clear-queue').html(`Clear Queue (${ART_SELECT_QUEUE.queue.length})`).show();
+      if (ArtSelect.queue.length !== 0)
+        $('button#token-variant-art-clear-queue').html(`Clear Queue (${ArtSelect.queue.length})`).show();
       return;
     }
   }
 
-  let callData = ART_SELECT_QUEUE.queue.shift();
+  let callData = ArtSelect.queue.shift();
   if (callData?.options.execute) {
     callData.options.execute();
-    callData = ART_SELECT_QUEUE.queue.shift();
+    callData = ArtSelect.queue.shift();
   }
   if (callData) {
     showArtSelect(callData.search, callData.options);
@@ -51,7 +47,15 @@ function delay(fn, ms) {
 }
 
 export class ArtSelect extends FormApplication {
+  static queue = [];
+
   static instance = null;
+
+  // showArtSelect(...) can take a while to fully execute and it is possible for it to be called
+  // multiple times in very quick succession especially if copy pasting tokens or importing actors.
+  // This variable set early in the function execution is used to queue additional requests rather
+  // than continue execution
+  static executing = false;
 
   static IMAGE_DISPLAY = {
     NONE: 0,
@@ -107,6 +111,9 @@ export class ArtSelect extends FormApplication {
       overwrite: false,
     });
     ArtSelect.instance = this;
+
+    const constructorName = `ArtSelect`;
+    Object.defineProperty(ArtSelect.prototype.constructor, 'name', { value: constructorName });
   }
 
   static get defaultOptions() {
@@ -249,7 +256,7 @@ export class ArtSelect extends FormApplication {
     if (artFound) data.allImages = allButtons;
 
     data.search = this.search;
-    data.queue = ART_SELECT_QUEUE.queue.length;
+    data.queue = ArtSelect.queue.length;
     data.image1 = this.image1;
     data.image2 = this.image2;
     data.displayMode = this.displayMode;
@@ -330,7 +337,7 @@ export class ArtSelect extends FormApplication {
     );
 
     html.find(`button#token-variant-art-clear-queue`).on('click', (event) => {
-      ART_SELECT_QUEUE.queue = ART_SELECT_QUEUE.queue.filter((callData) => callData.options.execute);
+      ArtSelect.queue = ArtSelect.queue.filter((callData) => callData.options.execute);
       $(event.target).hide();
     });
 
@@ -412,10 +419,10 @@ export class ArtSelect extends FormApplication {
   }
 
   async close(options = {}) {
-    let callData = ART_SELECT_QUEUE.queue.shift();
+    let callData = ArtSelect.queue.shift();
     if (callData?.options.execute) {
       callData.options.execute();
-      callData = ART_SELECT_QUEUE.queue.shift();
+      callData = ArtSelect.queue.shift();
     }
     if (callData) {
       callData.options.force = true;

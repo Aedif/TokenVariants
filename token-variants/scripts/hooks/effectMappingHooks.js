@@ -92,19 +92,12 @@ export function registerEffectMappingHooks() {
   });
 
   registerHook(feature_id, 'createItem', (item, options, userId) => {
-    if (game.userId !== userId || !applicable_item_types.includes(item.type) || !item.parent)
-      return;
+    if (game.userId !== userId || !applicable_item_types.includes(item.type) || !item.parent) return;
     _updateImageOnEffectChange(item.name, item.parent, true);
   });
 
   registerHook(feature_id, 'deleteItem', (item, options, userId) => {
-    if (
-      game.userId !== userId ||
-      !applicable_item_types.includes(item.type) ||
-      !item.parent ||
-      item.disabled
-    )
-      return;
+    if (game.userId !== userId || !applicable_item_types.includes(item.type) || !item.parent || item.disabled) return;
     _updateImageOnEffectChange(item.name, item.parent, false);
   });
 
@@ -203,9 +196,7 @@ async function _updateActor(actor, change, options, userId) {
   if ('flags' in change && 'token-variants' in change.flags) {
     const tokenVariantFlags = change.flags['token-variants'];
     if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
-      const tokens = actor.token
-        ? [actor.token]
-        : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+      const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
       tokens.forEach((tkn) => updateWithEffectMapping(tkn));
       for (const tkn of tokens) {
         if (tkn.object && TVA_CONFIG.filterEffectIcons) {
@@ -223,9 +214,7 @@ function _preUpdateAssign(actor, change, options) {
 
   // Determine which comparators are applicable so that we can compare after the
   // actor update
-  const tokens = actor.token
-    ? [actor.token]
-    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   if (TVA_CONFIG.internalEffects.hpChange.enabled && tokens.length) {
     applyHpChangeEffect(actor, change, tokens);
   }
@@ -240,16 +229,13 @@ function _preUpdateAssign(actor, change, options) {
 
 function _preUpdateCheck(actor, options, pAdded = [], pRemoved = []) {
   if (!actor) return;
-  const tokens = actor.token
-    ? [actor.token]
-    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   for (const tkn of tokens) {
     // Check if effects changed by comparing them against the ones calculated in preUpdate*
     const added = [...pAdded];
     const removed = [...pRemoved];
     const postUpdateEffects = getTokenEffects(tkn, true);
-    const preUpdateEffects =
-      getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
+    const preUpdateEffects = getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
 
     determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
     if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
@@ -352,8 +338,7 @@ async function _updateWithEffectMapping(token, added, removed) {
   const animate = !TVA_CONFIG.disableTokenUpdateAnimation;
   const tokenUpdateObj = {};
   const hadActiveHUD = token.object?.hasActiveHUD;
-  const toggleStatus =
-    canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
+  const toggleStatus = canvas.tokens.hud.object?.id === token.id ? canvas.tokens.hud._statusEffects : false;
 
   let effects = getTokenEffects(token);
 
@@ -394,10 +379,8 @@ async function _updateWithEffectMapping(token, added, removed) {
         if (script.onRemove.includes('tvaUpdate')) deferredUpdateScripts.push(script.onRemove);
         else executeOnCallback.push({ script: script.onRemove, token });
       }
-      if (script.tmfxPreset)
-        executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'remove' });
-      if (script.ceEffect?.name)
-        executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
+      if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'remove' });
+      if (script.ceEffect?.name) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'remove' });
       if (script.macroOnApply) executeOnCallback.push({ macro: script.macroOnApply, token });
     }
   }
@@ -408,19 +391,15 @@ async function _updateWithEffectMapping(token, added, removed) {
         if (script.onApply.includes('tvaUpdate')) deferredUpdateScripts.push(script.onApply);
         else executeOnCallback.push({ script: script.onApply, token });
       }
-      if (script.tmfxPreset)
-        executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'apply' });
-      if (script.ceEffect?.name)
-        executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
+      if (script.tmfxPreset) executeOnCallback.push({ tmfxPreset: script.tmfxPreset, token, action: 'apply' });
+      if (script.ceEffect?.name) executeOnCallback.push({ ceEffect: script.ceEffect, token, action: 'apply' });
       if (script.macroOnRemove) executeOnCallback.push({ macro: script.macroOnRemove, token });
     }
   }
 
   // Next we're going to determine what configs need to be applied and in what order
   // Filter effects that do not have a mapping and sort based on priority
-  effects = mappings
-    .filter((m) => effects.includes(m.id))
-    .sort((ef1, ef2) => ef1.priority - ef2.priority);
+  effects = mappings.filter((m) => effects.includes(m.id)).sort((ef1, ef2) => ef1.priority - ef2.priority);
 
   // Check if image update should be prevented based on module settings
   let disableImageUpdate = false;
@@ -503,13 +482,7 @@ async function _updateWithEffectMapping(token, added, removed) {
         token,
         imgName: newImg.imgName ? newImg.imgName : tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
+        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
         config: config,
         animate,
       });
@@ -526,13 +499,7 @@ async function _updateWithEffectMapping(token, added, removed) {
         token,
         imgName: tokenDefaultImg.imgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
+        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
         animate,
       });
     // If no default image exists but a custom effect is applied, we still want to perform an update to
@@ -543,13 +510,7 @@ async function _updateWithEffectMapping(token, added, removed) {
         token,
         imgName: tokenImgName,
         tokenUpdate: tokenUpdateObj,
-        callback: _postTokenUpdateProcessing.bind(
-          null,
-          token,
-          hadActiveHUD,
-          toggleStatus,
-          executeOnCallback
-        ),
+        callback: _postTokenUpdateProcessing.bind(null, token, hadActiveHUD, toggleStatus, executeOnCallback),
         animate,
       });
   }
@@ -648,8 +609,7 @@ export async function setOverlayVisibility({
       const overlayConfig = m.overlayConfig;
       if (visible) {
         if (!overlayConfig.limitedUsers) overlayConfig.limitedUsers = [];
-        if (!overlayConfig.limitedUsers.find((u) => u === userId))
-          overlayConfig.limitedUsers.push(userId);
+        if (!overlayConfig.limitedUsers.find((u) => u === userId)) overlayConfig.limitedUsers.push(userId);
       } else if (overlayConfig.limitedUsers) {
         overlayConfig.limitedUsers = overlayConfig.limitedUsers.filter((u) => u !== userId);
       }
@@ -707,8 +667,6 @@ export async function removeTemplate(token, templateName) {
     }
   });
 
-  console.log(mappings);
-
   if (mappings.length) await actor.setFlag('token-variants', 'effectMappings', mappings);
   else await actor.unsetFlag('token-variants', 'effectMappings');
   await updateWithEffectMapping(token);
@@ -727,11 +685,7 @@ export function toggleTemplate(token, templateName) {
   if (!actor) return;
 
   const mappings = getFlagMappings(actor);
-  if (
-    mappings.some((m) =>
-      template.mappings.some((m2) => m2.id === m.id && m.tokens?.includes(token.id))
-    )
-  ) {
+  if (mappings.some((m) => template.mappings.some((m2) => m2.id === m.id && m.tokens?.includes(token.id)))) {
     removeTemplate(token, templateName);
   } else {
     applyTemplate(token, templateName);
@@ -746,9 +700,7 @@ function getHPChangeEffect(token, effects) {
   const internals = token.actor?.getFlag('token-variants', 'internalEffects') || {};
   const delta = getProperty(
     token,
-    `${
-      isNewerVersion('11', game.version) ? 'actorData' : 'delta'
-    }.flags.token-variants.internalEffects`
+    `${isNewerVersion('11', game.version) ? 'actorData' : 'delta'}.flags.token-variants.internalEffects`
   );
   if (delta) mergeObject(internals, delta);
   if (internals['hp--'] != null) effects.push('hp--');
@@ -825,9 +777,7 @@ export function getTokenEffects(token, includeExpressions = false) {
         }
       });
     } else {
-      (data.effects || [])
-        .filter((ef) => !ef.disabled && !ef.isSuppressed)
-        .forEach((ef) => effects.push(ef.label));
+      (data.effects || []).filter((ef) => !ef.disabled && !ef.isSuppressed).forEach((ef) => effects.push(ef.label));
       getEffectsFromActor(token.actor, effects);
     }
   }
@@ -861,12 +811,10 @@ export function getEffectsFromActor(actor, effects = []) {
     });
   } else {
     (actor.effects || []).forEach((activeEffect, id) => {
-      if (!activeEffect.disabled && !activeEffect.isSuppressed)
-        effects.push(activeEffect.name ?? activeEffect.label);
+      if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.name ?? activeEffect.label);
     });
     (actor.items || []).forEach((item) => {
-      if (ITEM_TYPES.includes(item.type) && item.system.equipped)
-        effects.push(item.name ?? item.label);
+      if (ITEM_TYPES.includes(item.type) && item.system.equipped) effects.push(item.name ?? item.label);
     });
   }
 
@@ -1013,13 +961,7 @@ function _testRegExEffect(effect, effects) {
   return effects.find((ef) => re.test(ef));
 }
 
-export function evaluateMappingExpression(
-  mapping,
-  effects,
-  token,
-  added = new Set(),
-  removed = new Set()
-) {
+export function evaluateMappingExpression(mapping, effects, token, added = new Set(), removed = new Set()) {
   let arrExpression = mapping.expression
     .split(EXPRESSION_MATCH_RE)
     .filter(Boolean)
@@ -1121,9 +1063,7 @@ export function getTokenHP(token) {
 }
 
 async function _updateImageOnEffectChange(effectName, actor, added = true) {
-  const tokens = actor.token
-    ? [actor.token]
-    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
       added: added ? [effectName] : [],
@@ -1134,9 +1074,7 @@ async function _updateImageOnEffectChange(effectName, actor, added = true) {
 
 async function _updateImageOnMultiEffectChange(actor, added = [], removed = []) {
   if (!actor) return;
-  const tokens = actor.token
-    ? [actor.token]
-    : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
       added: added,

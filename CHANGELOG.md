@@ -1,3 +1,7 @@
+# 4.56.3
+
+- Fixed `Art Select` searches causing queues to open
+
 # 4.56.2
 
 - Module is now bundled into a single `token-variants.js` file
