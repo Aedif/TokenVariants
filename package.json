@@ -1,0 +1,14 @@
+{
+  "name": "token-variants",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "source:": "token-variants/token-variants.mjs",
+  "main": "token-variants/token-variants.js",
+  "devDependencies": {
+    "parcel": "latest"
+  },
+  "scripts": {
+    "build": "npx parcel build token-variants\\token-variants.mjs"
+  }
+}

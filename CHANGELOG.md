@@ -1,3 +1,7 @@
+# 4.56.2
+
+- Module is now bundled into a single `token-variants.js` file
+
 # 4.56.1
 
 Overlays

@@ -1,9 +1,6 @@
 token-variants.zip
-foundry
 jsconfig.json
 .vscode/settings.json
-docs/TokenVariantArtSceneBG.png
-docs/TokenVariantArtSceneBG.xcf
-token-variants-cache.json
-token.js
-visibilityTransparency.js
+dist/*
+token-variants/token-variants.js
+token-variants/token-variants.js.map
