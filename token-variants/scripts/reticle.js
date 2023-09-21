@@ -1,5 +1,5 @@
 import EffectMappingForm from '../applications/effectMappingForm.js';
-import OverlayConfig from '../applications/overlayConfig.js';
+import { OverlayConfig } from '../applications/overlayConfig.js';
 import { TVASprite } from './sprite/TVASprite.js';
 import { evaluateOverlayExpressions } from './token/overlay.js';
 
@@ -74,12 +74,9 @@ export class Reticle {
         let pHeight;
 
         if (this.tvaSprite.overlayConfig.parentID) {
-          pWidth =
-            (this.tvaSprite.parent.shapesWidth ?? this.tvaSprite.parent.width) /
-            this.tvaSprite.parent.scale.x;
+          pWidth = (this.tvaSprite.parent.shapesWidth ?? this.tvaSprite.parent.width) / this.tvaSprite.parent.scale.x;
           pHeight =
-            (this.tvaSprite.parent.shapesHeight ?? this.tvaSprite.parent.height) /
-            this.tvaSprite.parent.scale.y;
+            (this.tvaSprite.parent.shapesHeight ?? this.tvaSprite.parent.height) / this.tvaSprite.parent.scale.y;
         } else {
           pWidth = token.w;
           pHeight = token.h;
@@ -211,8 +208,7 @@ export class Reticle {
       if (this.reticleOverlay) this.reticleOverlay.parent?.removeChild(this.reticleOverlay);
       this.active = false;
       this.tvaSprite = null;
-      if (this.dialog && this.dialog._state !== Application.RENDER_STATES.CLOSED)
-        this.dialog.close(true);
+      if (this.dialog && this.dialog._state !== Application.RENDER_STATES.CLOSED) this.dialog.close(true);
       this.dialog = null;
       this.maximizeApps();
 

@@ -1,3 +1,7 @@
+# 4.56.4
+
+- Fixed the `Overlay Config` throwing errors when attempting to open
+
 # 4.56.3
 
 - Fixed `Art Select` searches causing queues to open

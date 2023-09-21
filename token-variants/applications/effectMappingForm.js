@@ -1,15 +1,10 @@
 import { showArtSelect } from '../token-variants.mjs';
 import { SEARCH_TYPE, getFileName, isVideo, keyPressed, mergeMappings } from '../scripts/utils.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
-import {
-  TVA_CONFIG,
-  getFlagMappings,
-  migrateMappings,
-  updateSettings,
-} from '../scripts/settings.js';
+import { TVA_CONFIG, getFlagMappings, migrateMappings, updateSettings } from '../scripts/settings.js';
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
-import OverlayConfig from './overlayConfig.js';
+import { OverlayConfig } from './overlayConfig.js';
 import {
   showMappingSelectDialog,
   showMappingTemplateDialog,
@@ -102,10 +97,7 @@ export default class EffectMappingForm extends FormApplication {
       const effectMappings = this.globalMappings ?? getFlagMappings(this.objectToFlag);
       mappings = effectMappings.map(this._processConfig);
 
-      if (
-        this.createMapping &&
-        !effectMappings.find((m) => m.expression === this.createMapping.expression)
-      ) {
+      if (this.createMapping && !effectMappings.find((m) => m.expression === this.createMapping.expression)) {
         mappings.push(this._processConfig(this._getNewEffectConfig(this.createMapping)));
       }
       this.createMapping = null;
@@ -153,11 +145,7 @@ export default class EffectMappingForm extends FormApplication {
     html.find('.mapping-config i.config-edit').click(this._onConfigEditClick.bind(this));
     html.find('.mapping-config i.config-script').click(this._onConfigScriptClick.bind(this));
     html.find('.mapping-overlay i.overlay-config').click(this._onOverlayConfigClick.bind(this));
-    html.on(
-      'contextmenu',
-      '.mapping-overlay i.overlay-config',
-      this._onOverlayConfigRightClick.bind(this)
-    );
+    html.on('contextmenu', '.mapping-overlay i.overlay-config', this._onOverlayConfigRightClick.bind(this));
     html.find('.mapping-overlay input').on('change', this._onOverlayChange).trigger('change');
     html.find('.div-input').on('input paste focus click', this._onExpressionChange);
     const app = this;
@@ -231,10 +219,7 @@ export default class EffectMappingForm extends FormApplication {
   async _onGroupDisable(event) {
     const group = $(event.target).closest('.group-disable');
     const groupName = group.data('group');
-    const chks = $(event.target)
-      .closest('form')
-      .find(`[data-group="${groupName}"]`)
-      .find('.mapping-disable > input');
+    const chks = $(event.target).closest('form').find(`[data-group="${groupName}"]`).find('.mapping-disable > input');
 
     if (group.hasClass('active')) {
       group.removeClass('active');
@@ -342,10 +327,7 @@ export default class EffectMappingForm extends FormApplication {
   async _onOverlayConfigRightClick(event) {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
-    showOverlayJsonConfigDialog(
-      mapping.overlayConfig,
-      (config) => (mapping.overlayConfig = config)
-    );
+    showOverlayJsonConfigDialog(mapping.overlayConfig, (config) => (mapping.overlayConfig = config));
   }
 
   async _toggleActiveControls(event) {
@@ -362,8 +344,7 @@ export default class EffectMappingForm extends FormApplication {
     if (hasTokenConfig) tokenConfig.addClass('active');
     else tokenConfig.removeClass('active');
 
-    if (Object.keys(mapping.config).filter((k) => mapping.config[k]).length)
-      configEdit.addClass('active');
+    if (Object.keys(mapping.config).filter((k) => mapping.config[k]).length) configEdit.addClass('active');
     else configEdit.removeClass('active');
 
     if (mapping.config.tv_script) scriptEdit.addClass('active');
@@ -597,12 +578,9 @@ export default class EffectMappingForm extends FormApplication {
       class: 'token-variants-templates',
       icon: 'fa-solid fa-book',
       onclick: async (ev) => {
-        showMappingTemplateDialog(
-          this.globalMappings ?? getFlagMappings(this.objectToFlag),
-          (template) => {
-            this._insertMappings(ev, template.mappings);
-          }
-        );
+        showMappingTemplateDialog(this.globalMappings ?? getFlagMappings(this.objectToFlag), (template) => {
+          this._insertMappings(ev, template.mappings);
+        });
       },
     });
 
@@ -670,8 +648,7 @@ export default class EffectMappingForm extends FormApplication {
               label: game.i18n.localize('token-variants.common.import'),
               callback: (html) => {
                 const form = html.find('form')[0];
-                if (!form.data.files.length)
-                  return ui.notifications?.error('You did not upload a data file!');
+                if (!form.data.files.length) return ui.notifications?.error('You did not upload a data file!');
                 readTextFromFile(form.data.files[0]).then((json) => {
                   json = JSON.parse(json);
                   if (!json || !('globalMappings' in json)) {
@@ -738,9 +715,7 @@ export default class EffectMappingForm extends FormApplication {
       <div class="form-group">
         <label>${act.label}</label>
         <div class="form-fields">
-            <input type="checkbox" name="${act.id}" data-dtype="Boolean" ${
-        act.enabled ? 'checked' : ''
-      }>
+            <input type="checkbox" name="${act.id}" data-dtype="Boolean" ${act.enabled ? 'checked' : ''}>
         </div>
       </div>
       `;
@@ -806,9 +781,7 @@ export default class EffectMappingForm extends FormApplication {
         await this.objectToFlag.unsetFlag('token-variants', 'effectMappings');
       }
 
-      const tokens = this.globalMappings
-        ? canvas.tokens.placeables
-        : this.objectToFlag.getActiveTokens();
+      const tokens = this.globalMappings ? canvas.tokens.placeables : this.objectToFlag.getActiveTokens();
       for (const tkn of tokens) {
         if (TVA_CONFIG.filterEffectIcons) {
           await tkn.drawEffects();
@@ -914,8 +887,7 @@ export function sortMappingsToGroups(mappings) {
   mappings.forEach((mapping, index) => {
     mapping.i = index; // assign so that we can reference the mapping inside of an array
     if (!mapping.group || !mapping.group.trim()) mapping.group = 'Default';
-    if (!(mapping.group in groupedMappings))
-      groupedMappings[mapping.group] = { list: [], active: false };
+    if (!(mapping.group in groupedMappings)) groupedMappings[mapping.group] = { list: [], active: false };
     if (!mapping.disabled) groupedMappings[mapping.group].active = true;
     groupedMappings[mapping.group].list.push(mapping);
   });
