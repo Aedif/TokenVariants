@@ -3,6 +3,7 @@ import { CORE_TEMPLATES } from '../scripts/mappingTemplates.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
 import { sortMappingsToGroups } from './effectMappingForm.js';
+import { Templates } from './templates.js';
 import TokenCustomConfig from './tokenCustomConfig.js';
 
 // Edit overlay configuration as a json string
@@ -69,8 +70,7 @@ export async function showPathSelectCategoryDialog(event) {
     for (const type of split) {
       content += `<label>${type}</label>`;
     }
-    content +=
-      '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
+    content += '</header><ul class="setting-list"><li class="setting form-group"><div class="form-fields">';
     for (const type of split) {
       content += `<input class="category" type="checkbox" name="${type}" data-dtype="Boolean" ${
         selectedTypes.includes(type) ? 'checked' : ''
@@ -262,7 +262,7 @@ export function showMappingSelectDialog(
   }).render(true);
 }
 
-function showUserTemplateCreateDialog(mappings) {
+export function showUserTemplateCreateDialog(mappings) {
   let content = `
 <div class="form-group">
   <label>Template Name</label>
@@ -302,90 +302,6 @@ function showUserTemplateCreateDialog(mappings) {
   dialog.render(true);
 }
 
-export function showMappingTemplateDialog(mappings, callback, allowCreate = true) {
-  let user_t = `<tr><th>USER Templates</th></tr>`;
-  for (const template of TVA_CONFIG.templateMappings) {
-    if (!template.id) template.id = randomID(8);
-    user_t += `<tr draggable="true" data-id="${template.id}" title="${
-      template.hint ?? ''
-    }"><td class="template">${
-      template.name
-    }</td><td style="text-align:center;"><a class="delete-template"><i class="fa-solid fa-trash"></i></a></td></tr>`;
-  }
-  user_t = '<table>' + user_t + '</table>';
-
-  if (allowCreate) {
-    user_t += `<button class="create-template" ${
-      mappings.length ? '' : 'disabled'
-    }>Create Template</button>'`;
-  }
-
-  let core_t = `<tr><th><a href="https://github.com/Aedif/TokenVariants/wiki/Templates">CORE Templates</a></th></tr>`;
-  const groups = {};
-  for (const template of CORE_TEMPLATES) {
-    if (template.system && template.system !== game.system.id) continue;
-    if (!template.group) template.group = 'Other';
-    if (!(template.group in groups)) groups[template.group] = [];
-    groups[template.group].push(template);
-  }
-
-  for (const [group, templates] of Object.entries(groups)) {
-    core_t += `<tr><th>${group}</th></tr>`;
-
-    for (const template of templates) {
-      if (!template.id) template.id = randomID(8);
-      core_t += `<tr draggable="true" data-id="${template.id}" title="${
-        template.hint ?? ''
-      }"><td class="template">${template.name}</td></tr>`;
-    }
-  }
-  core_t = '<table>' + core_t + '</table>';
-
-  let content =
-    '<style>.template:hover {background-color: rgba(39, 245, 101, 0.55);}</style>' +
-    user_t +
-    '<hr>' +
-    core_t;
-
-  let dialog;
-  dialog = new Dialog({
-    title: 'Mapping Templates',
-    content,
-    buttons: {},
-    render: (html) => {
-      html.find('.template').on('click', (event) => {
-        let id = $(event.target).closest('tr').data('id');
-        if (id) {
-          let template =
-            CORE_TEMPLATES.find((t) => t.id === id) ||
-            TVA_CONFIG.templateMappings.find((t) => t.id === id);
-          callback(template);
-        }
-      });
-      html.find('.delete-template').on('click', async (event) => {
-        const row = $(event.target).closest('tr');
-        const id = row.data('id');
-        if (id) {
-          await updateSettings({
-            templateMappings: TVA_CONFIG.templateMappings.filter((m) => m.id !== id),
-          });
-          row.remove();
-        }
-      });
-      html.find('.create-template').on('click', () => {
-        showMappingSelectDialog(mappings, {
-          title1: 'Create Template',
-          callback: (selectedMappings) => {
-            if (selectedMappings.length) showUserTemplateCreateDialog(selectedMappings);
-          },
-        });
-        dialog.close();
-      });
-    },
-  });
-  dialog.render(true);
-}
-
 export function toggleTemplateDialog() {
-  showMappingTemplateDialog(null, (template) => toggleTemplateOnSelected(template.name), false);
+  new Templates({ callback: (template) => toggleTemplateOnSelected(template.name) }).render(true);
 }

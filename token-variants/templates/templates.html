@@ -1,0 +1,36 @@
+<form>
+    <div class="form-group">
+        <label>Category</label>
+        <div class="form-fields">
+            <select name="category">
+                <option value="user" {{#if (eq category "user")}}selected="selected"{{/if}}>User</option>
+                <option value="core" {{#if (eq category "core")}}selected="core"{{/if}}>CORE</option>
+                <option value="community" {{#if (eq category "community")}}selected="community"{{/if}}>Community</option>
+            </select>
+        </div>
+        <p class="notes">Template category you wis to view.</p>
+    </div>
+
+    {{#if (eq category "core")}}
+    <label><a href="https://github.com/Aedif/TokenVariants/wiki/Templates">Wiki: Example Images</a></label>
+    <hr>
+    {{/if}}
+
+    {{#if allowCreate}}
+    <button class="create">Create Template</button>
+    <hr>
+    {{/if}}
+
+    <input type="text" class="search" placeholder="Search templates..">
+
+    <hr>
+    
+    <ul class="template-list">
+    {{#each templates}}
+        <li class="template" data-id="{{id}}" data-name="{{name}}" title="{{hint}}">
+            <a>{{name}}</a>
+            {{#if ../allowDelete}}<a class="delete" title="Delete"><i class="fa-solid fa-trash fa-xs"></i></a>{{/if}}
+        </li>
+    {{/each}}
+    </ul>
+</form>

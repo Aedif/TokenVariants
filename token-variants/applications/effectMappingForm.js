@@ -5,15 +5,11 @@ import { TVA_CONFIG, getFlagMappings, migrateMappings, updateSettings } from '..
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import { OverlayConfig } from './overlayConfig.js';
-import {
-  showMappingSelectDialog,
-  showMappingTemplateDialog,
-  showOverlayJsonConfigDialog,
-  showTokenCaptureDialog,
-} from './dialogs.js';
+import { showMappingSelectDialog, showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
 import { updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 import { drawOverlays } from '../scripts/token/overlay.js';
+import { Templates } from './templates.js';
 
 // Persist group toggles across forms
 let TOGGLED_GROUPS;
@@ -578,9 +574,12 @@ export default class EffectMappingForm extends FormApplication {
       class: 'token-variants-templates',
       icon: 'fa-solid fa-book',
       onclick: async (ev) => {
-        showMappingTemplateDialog(this.globalMappings ?? getFlagMappings(this.objectToFlag), (template) => {
-          this._insertMappings(ev, template.mappings);
-        });
+        new Templates({
+          mappings: this.globalMappings ?? getFlagMappings(this.objectToFlag),
+          callback: (template) => {
+            this._insertMappings(ev, template.mappings);
+          },
+        }).render(true);
       },
     });
 

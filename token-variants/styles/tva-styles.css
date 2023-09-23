@@ -925,3 +925,39 @@ input.tvaValid {
 input.tvaInvalid {
   border: 2px solid #ff0000;
 }
+
+/* ---------------------------------------- */
+/* Templates                                */
+/* ---------------------------------------- */
+
+#token-variants-templates .template-list {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 0;
+  overflow: auto;
+  height: 350px;
+}
+
+#token-variants-templates .template-list li {
+  border: 1px solid #ddd;
+  margin-top: -1px;
+  background-color: tan;
+  padding: 5px;
+  text-decoration: none;
+  font-size: 18px;
+  color: white;
+  display: block;
+}
+
+#token-variants-templates .template-list li:hover:not(.header) {
+  background-color: brown;
+}
+
+#token-variants-templates .delete {
+  position: absolute;
+  right: 20px;
+}
+
+#token-variants-templates .delete:hover {
+  color: red;
+}
