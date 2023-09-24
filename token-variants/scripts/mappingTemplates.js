@@ -31,7 +31,7 @@ export const CORE_TEMPLATES = [
   },
   {
     name: 'Health State Text Overlay',
-    hint: 'Displays text overlay based on percentage health.',
+    hint: `Displays text overlay based on percentage health. \n0% < hp <= 25% : Critical\n25% < hp <= 50% : Bloodied\n50% < hp <= 75% : Wounded\n75% < hp : Healthy`,
     img: 'https://user-images.githubusercontent.com/7693704/243426356-ceab629c-c16c-42b3-9004-af7dafb62eb7.png',
     group: 'Health',
     mappings: [

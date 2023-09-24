@@ -34,6 +34,10 @@ export class Templates extends FormApplication {
       this.templates = await retrieveCommunityTemplates();
     }
 
+    for (const template of this.templates) {
+      template.hint = template.hint.replace(/(\r\n|\n|\r)/gm, '<br>');
+    }
+
     data.category = this.category;
     data.templates = this.templates;
     data.allowDelete = this.category === 'user';
@@ -57,6 +61,10 @@ export class Templates extends FormApplication {
       const tooltip = template.find('.tooltiptext');
       const windowPos = appWindow.position();
       tooltip.css('top', windowPos.top + pos.top).css('left', windowPos.left + pos.left);
+
+      // Lazy load image
+      const img = template.find('img');
+      if (!img.attr('src')) img.attr('src', img.data('src'));
     });
 
     if (this.callback) {
