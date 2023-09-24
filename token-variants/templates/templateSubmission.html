@@ -1,0 +1,55 @@
+<form>
+    <div class="form-group" style="outline-style: dotted; color: orangered;">
+        <label>Templates submitted using this form will become available to all TVA users after approval by <b>@aedif</b>.</label>
+    </div>
+    <hr>
+
+    <div class="form-group">
+        <label>Template</label>
+        <div class="form-fields">
+            <select name="template">
+                {{#each templates}}
+                <option value="{{id}}">{{name}}</option>
+                {{/each}}
+            </select>
+        </div>
+        <p class="notes">Select the template you wish to submit.</p>
+    </div>
+    <div class="form-group">
+        <label>Name (optional)</label>
+        <div class="form-fields">
+            <input type="text" name="name" data-dtype="String" value="">
+        </div>
+        <p class="notes">The name you want the template to be submitted under. If not provided the original template's name will be used.</p>
+    </div>
+
+    <div class="form-group">
+        <label>Description (optional)</label>
+        <div class="form-fields">
+            <input type="text" name="description" data-dtype="String" value="">
+        </div>
+        <p class="notes">The description you want the template to be submitted with. If not provided the original template's description will be used.</p>
+    </div>
+
+    <div class="form-group">
+        <label>Is this template system dependant?</label>
+        <div class="form-fields">
+            <select name="system">
+                <option value="{{systemID}}" selected="selected">Yes. ( {{systemTitle}} )</option>
+                <option value="none">No.</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Submitter's Name</label>
+        <div class="form-fields">
+            <input type="text" name="createdBy" data-dtype="String" value="Anonymous">
+        </div>
+        <p class="notes">What name do you want to submit the template under?</p>
+    </div>
+
+    <footer class="sheet-footer flexrow">
+        <button type="submit"><i class="far fa-save"></i>Submit</button>
+    </footer>
+</form>

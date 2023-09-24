@@ -576,8 +576,8 @@ export default class EffectMappingForm extends FormApplication {
       onclick: async (ev) => {
         new Templates({
           mappings: this.globalMappings ?? getFlagMappings(this.objectToFlag),
-          callback: (template) => {
-            this._insertMappings(ev, template.mappings);
+          callback: (templateName, mappings) => {
+            this._insertMappings(ev, mappings);
           },
         }).render(true);
       },

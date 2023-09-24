@@ -2,6 +2,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Tint Red when HP is bellow 10%',
     hint: 'Tint token red when HP falls bellow 10%',
+    img: 'https://user-images.githubusercontent.com/7693704/243428871-c52130b3-2f12-4de7-a86e-fabc67e865a9.png',
     group: 'Health',
     mappings: [
       {
@@ -31,6 +32,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Health State Text Overlay',
     hint: 'Displays text overlay based on percentage health.',
+    img: 'https://user-images.githubusercontent.com/7693704/243426356-ceab629c-c16c-42b3-9004-af7dafb62eb7.png',
     group: 'Health',
     mappings: [
       {
@@ -319,6 +321,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Health State Text Overlay - Passed Check',
     hint: 'Same as Health State Text Overlay except also requiring the Token actor to have Reveal Health active effect applied to it.',
+    img: 'https://user-images.githubusercontent.com/7693704/243429385-f62b111c-3d9c-4cd8-9c27-f5b13e09fea2.png',
     group: 'Health',
     mappings: [
       {
@@ -607,6 +610,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Fancy Nameplate',
     hint: 'Displays a curved red nameplate underneath the token.',
+    img: 'https://user-images.githubusercontent.com/7693704/244439674-12510686-2f72-44b3-8a1d-e6cc7fbb00c6.png',
     mappings: [
       {
         id: 'DTbwvQiG',
@@ -696,6 +700,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Info Box #1',
     hint: 'Displays information about the token/actor when hovering over or controlling them. This box will adjust to canvas zoom.',
+    img: 'https://user-images.githubusercontent.com/7693704/244441852-b50f3ca6-e0c3-4ce0-b498-ddd00edcbdca.png',
     group: 'Info',
     mappings: [
       {
@@ -1468,6 +1473,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Info Box #2',
     hint: 'Displays information about the token/actor when hovering over or controlling them. This box will adjust to canvas zoom.',
+    img: 'https://user-images.githubusercontent.com/7693704/244750685-81988600-5153-4d29-acb0-2c62111bed14.png',
     group: 'Info',
     mappings: [
       {
@@ -2450,6 +2456,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Info Box #3',
     hint: 'Displays information about the token/actor when hovering over or controlling them. This box will adjust to canvas zoom.',
+    img: 'https://user-images.githubusercontent.com/7693704/244750246-794625b9-9e1d-4322-9265-fc295f02ca2b.png',
     group: 'Info',
     mappings: [
       {
@@ -3432,6 +3439,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Facing Direction',
     hint: 'Displays an arrow in the top-right corner of the token showing the direction it is facing.',
+    img: 'https://user-images.githubusercontent.com/7693704/244647284-2213caf5-6d49-4413-ab5f-83901ffbc8e6.png',
     mappings: [
       {
         id: '9UEOkJ1J',
@@ -3512,6 +3520,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Combat Markers',
     hint: 'Displays rotating markers for tokens in combat.',
+    img: 'https://user-images.githubusercontent.com/7693704/257478593-81b9192d-1ffe-4f0b-8e5d-806218d7e25f.png',
     mappings: [
       {
         id: '9R3glzOK',
@@ -3663,6 +3672,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Disposition Markers',
     hint: 'Displays circles underneath tokens coloured based on their disposition.',
+    img: 'https://user-images.githubusercontent.com/7693704/246497702-5de47dc9-21ef-43a1-86db-b3f85eb8ddb1.png',
     mappings: [
       {
         id: 'TzP6MBC1',
@@ -4302,6 +4312,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Health Bar',
     hint: 'A recreation of the standard health bar using Overlays.',
+    img: 'https://user-images.githubusercontent.com/7693704/257246890-d41894a0-7f40-4e91-a47a-bc10d6f198e6.png',
     group: 'Health',
     mappings: [
       {
@@ -4453,6 +4464,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Health Ring',
     hint: 'A ring shaped health bar.',
+    img: 'https://user-images.githubusercontent.com/7693704/257246432-a339394f-489a-4436-9d4b-427c285d4f27.png',
     group: 'Health',
     mappings: [
       {
@@ -4640,6 +4652,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Health Hearts',
     hint: 'Displays up to 10 hearts to the right of the token based on their current health. Each heart is representative of 10% of the health.',
+    img: 'https://user-images.githubusercontent.com/7693704/257349483-1864d4ca-a2de-468d-872d-6d8c2847434a.png',
     group: 'Health',
     mappings: [
       {
@@ -4732,6 +4745,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Health Circles',
     hint: 'Displays up to 10 circles to the right of the token based on their current health. Each circle is representative of 10% of the health.',
+    img: 'https://user-images.githubusercontent.com/7693704/257476414-c42bdbc0-c57b-4367-8207-3e2e4273094f.png',
     group: 'Health',
     mappings: [
       {
@@ -4861,6 +4875,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Health Squares',
     hint: 'Displays up to 10 squares to the right of the token based on their current health. Each square is representative of 10% of the health.',
+    img: 'https://user-images.githubusercontent.com/7693704/257477099-689cd23a-0e4a-4d9a-aaa2-bf88b169ede8.png',
     group: 'Health',
     mappings: [
       {
@@ -4991,6 +5006,7 @@ export const CORE_TEMPLATES = [
   {
     name: 'Spell Slot Ring',
     hint: 'Remaining spell slots represented as a ring.',
+    img: 'https://user-images.githubusercontent.com/7693704/261663740-444d86b9-ee9f-4a2f-963f-6886a2af29cc.png',
     system: 'dnd5e',
     mappings: [
       {

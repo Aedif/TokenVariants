@@ -27,7 +27,13 @@
     
     <ul class="template-list">
     {{#each templates}}
-        <li class="template" data-id="{{id}}" data-name="{{name}}" title="{{hint}}">
+        <li class="template tooltip" data-id="{{id}}" data-name="{{name}}" data-url="{{templateURL}}">
+            {{#if (or hint img)}}
+                <span class="tooltiptext">
+                    {{#if hint}}<div class="description">{{hint}}</div>{{/if}}
+                    {{#if img}}<img src="{{img}}" loading="lazy">{{/if}}
+                </span>
+            {{/if}}
             <a>{{name}}</a>
             {{#if ../allowDelete}}<a class="delete" title="Delete"><i class="fa-solid fa-trash fa-xs"></i></a>{{/if}}
         </li>

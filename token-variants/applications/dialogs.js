@@ -275,6 +275,12 @@ export function showUserTemplateCreateDialog(mappings) {
   <div class="form-fields">
     <input type="text" name="templateHint" data-dtype="String" value="">
   </div>
+</div>
+<div class="form-group">
+  <label>Hover Image (optional)</label>
+  <div class="form-fields">
+    <input type="text" name="img" data-dtype="String" value="">
+  </div>
 </div>`;
 
   let dialog;
@@ -285,10 +291,11 @@ export function showUserTemplateCreateDialog(mappings) {
       create: {
         label: 'Create Template',
         callback: (html) => {
-          const name = html.find('[name="templateName"]').val();
-          const hint = html.find('[name="templateHint"]').val();
+          const name = html.find('[name="templateName"]').val().trim();
+          const hint = html.find('[name="templateHint"]').val().trim();
+          const img = html.find('[name="img"]').val().trim();
           if (name.trim()) {
-            TVA_CONFIG.templateMappings.push({ name, hint, mappings: deepClone(mappings) });
+            TVA_CONFIG.templateMappings.push({ name, hint, img, mappings: deepClone(mappings) });
             updateSettings({ templateMappings: TVA_CONFIG.templateMappings });
           }
         },
@@ -303,5 +310,7 @@ export function showUserTemplateCreateDialog(mappings) {
 }
 
 export function toggleTemplateDialog() {
-  new Templates({ callback: (template) => toggleTemplateOnSelected(template.name) }).render(true);
+  new Templates({ callback: (templateName, mappings) => toggleTemplateOnSelected(templateName, mappings) }).render(
+    true
+  );
 }

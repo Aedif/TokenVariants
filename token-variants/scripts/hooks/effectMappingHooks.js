@@ -628,72 +628,67 @@ export async function setOverlayVisibility({
   if (updateToken || updateGlobal) drawOverlays(token);
 }
 
-export async function applyTemplate(token, templateName) {
-  if (!token || !templateName) return;
-
-  const template =
+function _getTemplateMappings(templateName) {
+  return (
     TVA_CONFIG.templateMappings.find((t) => t.name === templateName) ??
-    CORE_TEMPLATES.find((t) => t.name === templateName);
-  if (!template) return;
+    CORE_TEMPLATES.find((t) => t.name === templateName)
+  )?.mappings;
+}
+
+export async function applyTemplate(token, templateName = null, mappings = null) {
+  if (templateName) mappings = _getTemplateMappings(templateName);
+  if (!token || !mappings) return;
 
   const actor = game.actors.get(token.actor.id);
   if (!actor) return;
-  const templateMappings = deepClone(template.mappings);
+  const templateMappings = deepClone(mappings);
   templateMappings.forEach((tm) => (tm.tokens = [token.id]));
 
-  const mappings = mergeMappings(templateMappings, getFlagMappings(actor));
-  await actor.setFlag('token-variants', 'effectMappings', mappings);
+  const actMappings = mergeMappings(templateMappings, getFlagMappings(actor));
+  await actor.setFlag('token-variants', 'effectMappings', actMappings);
   await updateWithEffectMapping(token);
   drawOverlays(token);
 }
 
-export async function removeTemplate(token, templateName) {
-  if (!token || !templateName) return;
-
-  const template =
-    TVA_CONFIG.templateMappings.find((t) => t.name === templateName) ??
-    CORE_TEMPLATES.find((t) => t.name === templateName);
-  if (!template) return;
+export async function removeTemplate(token, templateName = null, mappings = null) {
+  if (templateName) mappings = _getTemplateMappings(templateName);
+  if (!token || !mappings) return;
 
   const actor = game.actors.get(token.actor.id);
   if (!actor) return;
 
-  let mappings = getFlagMappings(actor);
-  template.mappings.forEach((m) => {
-    let i = mappings.findIndex((m2) => m2.id === m.id);
+  let actMappings = getFlagMappings(actor);
+  mappings.forEach((m) => {
+    let i = actMappings.findIndex((m2) => m2.id === m.id);
     if (i !== -1) {
-      mappings[i].tokens = mappings[i].tokens.filter((t) => t !== token.id);
-      if (mappings[i].tokens.length === 0) mappings.splice(i, 1);
+      actMappings[i].tokens = actMappings[i].tokens.filter((t) => t !== token.id);
+      if (actMappings[i].tokens.length === 0) actMappings.splice(i, 1);
     }
   });
 
-  if (mappings.length) await actor.setFlag('token-variants', 'effectMappings', mappings);
+  if (actMappings.length) await actor.setFlag('token-variants', 'effectMappings', actMappings);
   else await actor.unsetFlag('token-variants', 'effectMappings');
   await updateWithEffectMapping(token);
   drawOverlays(token);
 }
 
-export function toggleTemplate(token, templateName) {
-  if (!token || !templateName) return;
-
-  const template =
-    TVA_CONFIG.templateMappings.find((t) => t.name === templateName) ??
-    CORE_TEMPLATES.find((t) => t.name === templateName);
-  if (!template) return;
+export function toggleTemplate(token, templateName = null, mappings = null) {
+  if (templateName) mappings = _getTemplateMappings(templateName);
+  if (!token || !mappings) return;
 
   const actor = game.actors.get(token.actor.id);
   if (!actor) return;
 
-  const mappings = getFlagMappings(actor);
-  if (mappings.some((m) => template.mappings.some((m2) => m2.id === m.id && m.tokens?.includes(token.id)))) {
-    removeTemplate(token, templateName);
+  const actMappings = getFlagMappings(actor);
+  if (actMappings.some((m) => mappings.some((m2) => m2.id === m.id && m.tokens?.includes(token.id)))) {
+    removeTemplate(token, null, mappings);
   } else {
-    applyTemplate(token, templateName);
+    applyTemplate(token, null, mappings);
   }
 }
 
-export function toggleTemplateOnSelected(templateName) {
-  canvas.tokens.controlled.forEach((t) => toggleTemplate(t, templateName));
+export function toggleTemplateOnSelected(templateName = null, mappings = null) {
+  canvas.tokens.controlled.forEach((t) => toggleTemplate(t, templateName, mappings));
 }
 
 function getHPChangeEffect(token, effects) {
