@@ -8,13 +8,8 @@
                 <option value="community" {{#if (eq category "community")}}selected="community"{{/if}}>Community</option>
             </select>
         </div>
-        <p class="notes">Template category you wis to view.</p>
+        <p class="notes">Template category you wish to view.</p>
     </div>
-
-    {{#if (eq category "core")}}
-    <label><a href="https://github.com/Aedif/TokenVariants/wiki/Templates">Wiki: Example Images</a></label>
-    <hr>
-    {{/if}}
 
     {{#if allowCreate}}
     <button class="create">Create Template</button>
@@ -27,14 +22,14 @@
     
     <ul class="template-list">
     {{#each templates}}
-        <li class="template tooltip" data-id="{{id}}" data-name="{{name}}" data-url="{{templateURL}}">
+        <li class="template tooltip" data-id="{{id}}" data-name="{{name}}" data-url="{{templateURL}}" data-creator="{{createdBy}}">
             {{#if (or hint img)}}
                 <div class="tooltiptext">
                     {{#if hint}}<div class="description">{{{hint}}}</div>{{/if}}
                     {{#if img}}<img data-src="{{img}}" loading="lazy">{{/if}}
                 </div>
             {{/if}}
-            <a>{{name}}</a>
+            <a>{{name}}</a> {{#if createdBy}}<span class="createdBy">- by {{createdBy}}{{/if}}</span>
             {{#if ../allowDelete}}<a class="delete" title="Delete"><i class="fa-solid fa-trash fa-xs"></i></a>{{/if}}
         </li>
     {{/each}}

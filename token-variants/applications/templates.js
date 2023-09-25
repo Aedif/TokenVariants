@@ -31,11 +31,11 @@ export class Templates extends FormApplication {
     } else if (this.category === 'core') {
       this.templates = CORE_TEMPLATES;
     } else {
-      this.templates = await retrieveCommunityTemplates();
+      this.templates = await communityTemplates();
     }
 
     for (const template of this.templates) {
-      template.hint = template.hint.replace(/(\r\n|\n|\r)/gm, '<br>');
+      template.hint = template.hint?.replace(/(\r\n|\n|\r)/gm, '<br>');
     }
 
     data.category = this.category;
@@ -75,8 +75,7 @@ export class Templates extends FormApplication {
         let mappings;
         let templateName;
         if (url) {
-          const template = await (await fetch(url)).json();
-          if (template) mapping = template.mappings;
+          mappings = getMappingsFromFileURL(url);
         } else if (id) {
           const template = this.templates.find((t) => t.id === id);
           if (template) {
@@ -93,9 +92,10 @@ export class Templates extends FormApplication {
       const filter = html.find('.search').val().trim().toLowerCase();
       html.find('.template-list li').each(function () {
         const li = $(this);
-        const description = li.attr('title').trim().toLowerCase();
+        const description = li.find('.description').text().trim().toLowerCase();
         const name = li.data('name').trim().toLowerCase();
-        if (name.includes(filter) || description.includes(filter)) li.show();
+        const createdBy = li.data('creator').trim().toLowerCase();
+        if (name.includes(filter) || description.includes(filter) || createdBy.includes(filter)) li.show();
         else li.hide();
       });
     });
@@ -152,6 +152,8 @@ class TemplateSubmissionForm extends FormApplication {
     super({}, {});
   }
 
+  static apiKey = 'AIzaSyCJpwIkpjrG10jaHwcpllvSChxRPawcMXE';
+
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
       id: 'token-variants-template-submission',
@@ -184,114 +186,155 @@ class TemplateSubmissionForm extends FormApplication {
     let template = TVA_CONFIG.templateMappings.find((t) => t.id === formData.template);
     if (!template) return;
 
-    template = deepClone(template);
+    console.log(formData);
 
-    formData.name = formData.name.trim();
-    if (formData.name) template.name = formData.name;
+    const name = formData.name.trim() || template.name;
+    const hint = formData.hint.trim() || template.hint?.trim();
+    const createdBy = formData.createdBy.trim();
+    const system = formData.system;
+    const id = randomID();
+    const img = formData.img.trim();
 
-    formData.description = formData.description.trim();
-    if (formData.description) template.hint = formData.description;
-
-    if (!formData.createdBy || formData.createdBy.length === 1) template.createdBy = 'Anonymous';
-    else template.createdBy = formData.createdBy;
-
-    template.system = formData.system;
-
-    uploadTemplate(template);
+    submitTemplate({ id, name, hint, img, createdBy, system, mappings: template.mappings });
   }
 }
 
-async function uploadTemplate(template) {
-  let success = false;
-  try {
-    const description = generateControlString(template);
-    if (description) {
-      const fileName = 'template-' + randomID() + '.json';
-      const files = {};
-      files[fileName] = {
-        content: JSON.stringify(template),
-      };
+function _setStringField(template, fields, field) {
+  if (template[field] && template[field] !== '') {
+    fields[field] = { stringValue: template[field] };
+  }
+}
 
-      let response = await fetch('https://api.github.com/gists', {
-        method: 'POST',
-        body: JSON.stringify({
-          description: description,
-          files: files,
-          public: false,
-        }),
-        headers: {
-          Authorization: _getToken(),
-          'X-GitHub-Api-Version': '2022-11-28',
-          'Content-Type': 'application/json',
-        },
-      });
-      success = response.ok && response.status === 201;
+async function submitTemplate(template) {
+  const fields = {};
+  ['name', 'hint', 'img', 'id', 'createdBy', 'system'].forEach((field) => _setStringField(template, fields, field));
+  fields.mappings = { stringValue: JSON.stringify(template.mappings) };
+  fields.createTime = { integerValue: new Date().getTime() };
+
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents/templates?key=${TemplateSubmissionForm.apiKey}`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        fields: fields,
+      }),
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
     }
-  } catch (e) {
-    console.log(e);
+  );
+
+  if (response.ok && response.status === 200) {
+    ui.notifications.info('Template submission completed.');
+  } else {
+    ui.notifications.warn('Template submission failed.');
   }
-  if (success) ui.notifications.info('Template submitted.');
-  else ui.notifications.warn('Template submission failed.');
 }
 
-function generateControlString(template) {
-  // Sanitize
-  const name = template.name.replaceAll('¬', '');
-  const hint = template.hint.replaceAll('¬', '');
-  const createdBy = template.createdBy.replaceAll('¬', '');
+const SEARCH_QUERY = {
+  structuredQuery: {
+    select: {
+      fields: [
+        {
+          fieldPath: 'id',
+        },
+        {
+          fieldPath: 'name',
+        },
+        {
+          fieldPath: 'hint',
+        },
+        {
+          fieldPath: 'createdBy',
+        },
+        {
+          fieldPath: 'img',
+        },
+      ],
+    },
+    where: {
+      fieldFilter: {
+        field: {
+          fieldPath: 'approved',
+        },
+        op: 'EQUAL',
+        value: {
+          booleanValue: true,
+        },
+      },
+    },
+    from: [{ collectionId: 'templates' }],
+    orderBy: [
+      {
+        field: {
+          fieldPath: 'createTime',
+        },
+      },
+    ],
+    offset: 0,
+    limit: 50,
+  },
+};
 
-  return [false, name, hint, template.system, createdBy].join('¬');
+async function communityTemplates(search = null) {
+  let query;
+  if (search?.trim()) {
+  } else {
+    query = SEARCH_QUERY;
+  }
+
+  const response = await fetch(
+    `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents:runQuery?key=${TemplateSubmissionForm.apiKey}`,
+    {
+      method: 'POST',
+      body: JSON.stringify(SEARCH_QUERY),
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (response.ok && response.status === 200) {
+    const templates = [];
+
+    const documents = await response.json();
+
+    for (let doc of documents) {
+      if ('document' in doc) {
+        doc = doc.document;
+        const template = {};
+        Object.keys(doc.fields).forEach((field) => {
+          template[field] = doc.fields[field].stringValue;
+        });
+        template.fileURL = doc.name;
+        if (!('createdBy' in template)) template.createdBy = 'Anonymous';
+        templates.push(template);
+      }
+    }
+
+    return templates;
+  } else {
+    ui.notifications.warn('Query failed', response);
+  }
 }
 
-async function retrieveCommunityTemplates(approved = true) {
-  let templates = [];
-
-  let response = await fetch('https://api.github.com/users/aedif/gists', {
+async function getMappingsFromFileURL(fileURL) {
+  const response = await fetch(`https://firestore.googleapis.com/v1/${fileURL}?key=${TemplateSubmissionForm.apiKey}`, {
     method: 'GET',
     headers: {
-      Authorization: _getToken(),
-      'X-GitHub-Api-Version': '2022-11-28',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
     },
   });
 
   if (response.ok && response.status === 200) {
-    const gists = await response.json();
-    if (Array.isArray(gists)) {
-      for (const gist of gists) {
-        const template = await parseGistToTemplate(gist, approved);
-        if (template) templates.push(template);
-      }
+    const data = await response.json();
+    const mappingString = data.fields?.mappings?.stringValue;
+    if (mappingString) {
+      return JSON.parse(mappingString);
     }
   }
-  return templates;
-}
-
-// Control: {approved}¬{name}¬{description}¬{gameSystem}¬{createdBy}
-async function parseGistToTemplate(gist, approved) {
-  try {
-    const controlArr = gist.description.split('¬');
-    if (controlArr.length < 5) return null; // Control must have minimum of 5 fields to be valid
-
-    if (approved && !eval(controlArr[0])) return null;
-
-    const fileURL = gist.files[Object.keys(gist.files)[0]]['raw_url'];
-    return {
-      name: controlArr[1],
-      hint: controlArr[2],
-      system: controlArr[3],
-      createdBy: controlArr[4],
-      templateURL: fileURL,
-    };
-  } catch (e) {}
-
-  return null;
-}
-
-function _getToken() {
-  let p1, p2, p3;
-  p1 = 'Iaaf2k6rYZ92VFI8H';
-  p2 = 'xVxyoej8Rz6N';
-  p3 = 'ghp_qeJmpSX';
-  return 'Bearer ' + p3 + p2 + p1;
+  return [];
 }

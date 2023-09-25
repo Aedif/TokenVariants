@@ -953,6 +953,11 @@ input.tvaInvalid {
   background-color: brown;
 }
 
+#token-variants-templates .template-list .createdBy {
+  color: gold;
+  font-size: 0.9em;
+}
+
 #token-variants-templates .delete {
   position: absolute;
   right: 20px;

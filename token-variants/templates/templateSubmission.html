@@ -15,10 +15,21 @@
         </div>
         <p class="notes">Select the template you wish to submit.</p>
     </div>
+
+    <div class="form-group">
+        <label>Is this template system dependant?</label>
+        <div class="form-fields">
+            <select name="system">
+                <option value="{{systemID}}" selected="selected">Yes. ( {{systemTitle}} )</option>
+                <option value="">No.</option>
+            </select>
+        </div>
+    </div>
+
     <div class="form-group">
         <label>Name (optional)</label>
         <div class="form-fields">
-            <input type="text" name="name" data-dtype="String" value="">
+            <input type="text" name="name" data-dtype="String" value="" minlength="5" maxlength="100">
         </div>
         <p class="notes">The name you want the template to be submitted under. If not provided the original template's name will be used.</p>
     </div>
@@ -26,25 +37,23 @@
     <div class="form-group">
         <label>Description (optional)</label>
         <div class="form-fields">
-            <input type="text" name="description" data-dtype="String" value="">
+            <input type="text" name="hint" data-dtype="String" value="" maxlength="1000">
         </div>
         <p class="notes">The description you want the template to be submitted with. If not provided the original template's description will be used.</p>
     </div>
 
     <div class="form-group">
-        <label>Is this template system dependant?</label>
+        <label>Example Image (optional)</label>
         <div class="form-fields">
-            <select name="system">
-                <option value="{{systemID}}" selected="selected">Yes. ( {{systemTitle}} )</option>
-                <option value="none">No.</option>
-            </select>
+            <input type="text" name="img" data-dtype="String" value="" maxlength="200">
         </div>
+        <p class="notes">External image URL.</p>
     </div>
 
     <div class="form-group">
-        <label>Submitter's Name</label>
+        <label>Submitter's Name (optional)</label>
         <div class="form-fields">
-            <input type="text" name="createdBy" data-dtype="String" value="Anonymous">
+            <input type="text" name="createdBy" data-dtype="String" value="">
         </div>
         <p class="notes">What name do you want to submit the template under?</p>
     </div>
