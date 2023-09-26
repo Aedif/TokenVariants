@@ -181,6 +181,13 @@ class TemplateSubmissionForm extends FormApplication {
 
   static apiKey = 'AIzaSyCJpwIkpjrG10jaHwcpllvSChxRPawcMXE';
 
+  static get pk() {
+    const k2 = 'AIzaSyCJpw';
+    const k1 = 'IkpjrG10jaHwcpllv';
+    const k3 = 'SChxRPawcMXE';
+    return k2 + k1 + k3;
+  }
+
   static get defaultOptions() {
     return mergeObject(super.defaultOptions, {
       id: 'token-variants-template-submission',
@@ -241,7 +248,7 @@ async function submitTemplate(template) {
   fields.createTime = { integerValue: new Date().getTime() };
 
   const response = await fetch(
-    `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents/templates?key=${TemplateSubmissionForm.apiKey}`,
+    `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents/templates?key=${TemplateSubmissionForm.pk}`,
     {
       method: 'POST',
       body: JSON.stringify({
@@ -313,7 +320,7 @@ const SEARCH_QUERY = {
 
 async function communityTemplates(search = null) {
   const response = await fetch(
-    `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents:runQuery?key=${TemplateSubmissionForm.apiKey}`,
+    `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents:runQuery?key=${TemplateSubmissionForm.pk}`,
     {
       method: 'POST',
       body: JSON.stringify(SEARCH_QUERY),
@@ -350,7 +357,7 @@ function _docToTemplate(doc) {
 }
 
 async function getTemplateFromFileURL(fileURL) {
-  const response = await fetch(`https://firestore.googleapis.com/v1/${fileURL}?key=${TemplateSubmissionForm.apiKey}`, {
+  const response = await fetch(`https://firestore.googleapis.com/v1/${fileURL}?key=${TemplateSubmissionForm.pk}`, {
     method: 'GET',
     headers: {
       Accept: 'application/json',
