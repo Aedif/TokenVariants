@@ -4,3 +4,5 @@ jsconfig.json
 dist/*
 token-variants/token-variants.js
 token-variants/token-variants.js.map
+token-variants/bundle.js.map
+token-variants/bundle.js
