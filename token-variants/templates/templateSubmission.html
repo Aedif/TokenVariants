@@ -1,6 +1,6 @@
 <form>
-    <div class="form-group" style="outline-style: dotted; color: orangered;">
-        <label>Templates submitted using this form will become available to all TVA users after approval by <b>@aedif</b>.</label>
+    <div class="form-group" style="outline-style: dotted; color: orangered; padding: 5px;">
+        <label>Templates uploaded using this form will become available to all TVA users after approval by <b>@aedif</b>.</label>
     </div>
     <hr>
 
@@ -45,7 +45,7 @@
     <div class="form-group">
         <label>Example Image (optional)</label>
         <div class="form-fields">
-            <input type="text" name="img" data-dtype="String" value="" maxlength="200">
+            <input type="text" name="img" data-dtype="String" value="" maxlength="400">
         </div>
         <p class="notes">External image URL.</p>
     </div>
@@ -53,12 +53,12 @@
     <div class="form-group">
         <label>Submitter's Name (optional)</label>
         <div class="form-fields">
-            <input type="text" name="createdBy" data-dtype="String" value="">
+            <input type="text" name="createdBy" data-dtype="String" value="" maxlength="19">
         </div>
         <p class="notes">What name do you want to submit the template under?</p>
     </div>
 
     <footer class="sheet-footer flexrow">
-        <button type="submit"><i class="far fa-save"></i>Submit</button>
+        <button type="submit"><i class="fa-solid fa-cloud-arrow-up"></i>Upload</button>
     </footer>
 </form>

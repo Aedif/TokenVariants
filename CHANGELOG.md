@@ -1,3 +1,15 @@
+# 4.57.0
+
+- Template form has been reworked
+  - Templates can now be chosen from 3 categories; `User`, `CORE`, and `Community`
+    - `User` category will display `Create Template` button and all user created templates
+    - `CORE` shows templates that come bundled with TVA
+    - `Community` shows templates uploaded by other users
+    - Both `CORE` and `Community` templates have a `Copy to User` buttons
+  - Header button: `Upload Template`
+    - Opens a form allowing you to upload one of your `User` templates
+    - Uploaded templates will become available to other users via the `Community` category after approval by `@aedif`
+
 # 4.56.4
 
 - Fixed the `Overlay Config` throwing errors when attempting to open

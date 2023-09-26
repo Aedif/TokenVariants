@@ -157,9 +157,9 @@ export class Templates extends FormApplication {
   _getHeaderButtons() {
     const buttons = super._getHeaderButtons();
     buttons.unshift({
-      label: 'Submit Template',
+      label: 'Upload Template',
       class: '.token-variants-submit-template',
-      icon: 'fas fa-file-import fa-fw',
+      icon: 'fa-solid fa-cloud-arrow-up',
       onclick: () => {
         new TemplateSubmissionForm().render(true);
       },
@@ -193,10 +193,10 @@ class TemplateSubmissionForm extends FormApplication {
       id: 'token-variants-template-submission',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/templateSubmission.html',
-      resizable: false,
+      resizable: true,
       minimizable: false,
       closeOnSubmit: false,
-      title: 'Submit Template',
+      title: 'Upload Template',
       width: 500,
       height: 'auto',
     });
