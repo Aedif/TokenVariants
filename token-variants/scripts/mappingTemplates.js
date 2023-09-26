@@ -701,6 +701,7 @@ export const CORE_TEMPLATES = [
     name: 'Info Box #1',
     hint: 'Displays information about the token/actor when hovering over or controlling them. This box will adjust to canvas zoom.',
     img: 'https://user-images.githubusercontent.com/7693704/244441852-b50f3ca6-e0c3-4ce0-b498-ddd00edcbdca.png',
+    system: 'dnd5e',
     group: 'Info',
     mappings: [
       {
@@ -1474,7 +1475,7 @@ export const CORE_TEMPLATES = [
     name: 'Info Box #2',
     hint: 'Displays information about the token/actor when hovering over or controlling them. This box will adjust to canvas zoom.',
     img: 'https://user-images.githubusercontent.com/7693704/244750685-81988600-5153-4d29-acb0-2c62111bed14.png',
-    group: 'Info',
+    system: 'dnd5e',
     mappings: [
       {
         id: 'f0pV6Pnl',
@@ -2457,7 +2458,7 @@ export const CORE_TEMPLATES = [
     name: 'Info Box #3',
     hint: 'Displays information about the token/actor when hovering over or controlling them. This box will adjust to canvas zoom.',
     img: 'https://user-images.githubusercontent.com/7693704/244750246-794625b9-9e1d-4322-9265-fc295f02ca2b.png',
-    group: 'Info',
+    system: 'dnd5e',
     mappings: [
       {
         id: 'Gt11vjXV',

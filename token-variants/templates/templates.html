@@ -22,7 +22,7 @@
     
     <ul class="template-list">
     {{#each templates}}
-        <li class="template tooltip" data-id="{{id}}" data-name="{{name}}" data-url="{{templateURL}}" data-creator="{{createdBy}}">
+        <li class="template tooltip" data-id="{{id}}" data-name="{{name}}" data-url="{{fileURL}}" data-creator="{{createdBy}}">
             {{#if (or hint img)}}
                 <div class="tooltiptext">
                     {{#if hint}}<div class="description">{{{hint}}}</div>{{/if}}
@@ -31,6 +31,8 @@
             {{/if}}
             <a>{{name}}</a> {{#if createdBy}}<span class="createdBy">- by {{createdBy}}{{/if}}</span>
             {{#if ../allowDelete}}<a class="delete" title="Delete"><i class="fa-solid fa-trash fa-xs"></i></a>{{/if}}
+            {{#if ../allowCopy}}<a class="copy" title="Copy to User"><i class="fas fa-clone fa-xs"></i></a>{{/if}}
+            {{#if system}}<br><span class="system">({{system}})</span>{{/if}}
         </li>
     {{/each}}
     </ul>

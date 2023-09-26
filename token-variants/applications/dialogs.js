@@ -295,7 +295,7 @@ export function showUserTemplateCreateDialog(mappings) {
           const hint = html.find('[name="templateHint"]').val().trim();
           const img = html.find('[name="img"]').val().trim();
           if (name.trim()) {
-            TVA_CONFIG.templateMappings.push({ name, hint, img, mappings: deepClone(mappings) });
+            TVA_CONFIG.templateMappings.push({ id: randomID(), name, hint, img, mappings: deepClone(mappings) });
             updateSettings({ templateMappings: TVA_CONFIG.templateMappings });
           }
         },

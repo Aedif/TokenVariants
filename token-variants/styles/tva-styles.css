@@ -949,6 +949,16 @@ input.tvaInvalid {
   display: block;
 }
 
+#token-variants-templates .template-list li a {
+  display: inline-block;
+  max-width: 430px;
+}
+
+#token-variants-templates .template-list li .system {
+  color: gold;
+  font-size: small;
+}
+
 #token-variants-templates .template-list li:hover:not(.header) {
   background-color: brown;
 }
@@ -958,13 +968,15 @@ input.tvaInvalid {
   font-size: 0.9em;
 }
 
-#token-variants-templates .delete {
+#token-variants-templates .delete,
+#token-variants-templates .copy {
   position: absolute;
   right: 20px;
 }
 
-#token-variants-templates .delete:hover {
-  color: red;
+#token-variants-templates .delete:hover,
+#token-variants-templates .copy:hover {
+  color: gold;
 }
 
 #token-variants-templates .tooltip {

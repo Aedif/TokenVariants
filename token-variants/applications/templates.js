@@ -42,7 +42,7 @@ export class Templates extends FormApplication {
     data.templates = this.templates;
     data.allowDelete = this.category === 'user';
     data.allowCreate = this.category === 'user';
-    data.allowCopy = this.category === 'community';
+    data.allowCopy = this.category === 'community' || this.category === 'core';
 
     return data;
   }
@@ -75,7 +75,8 @@ export class Templates extends FormApplication {
         let mappings;
         let templateName;
         if (url) {
-          mappings = getMappingsFromFileURL(url);
+          const template = await getTemplateFromFileURL(url);
+          if (template) mappings = template.mappings;
         } else if (id) {
           const template = this.templates.find((t) => t.id === id);
           if (template) {
@@ -117,6 +118,32 @@ export class Templates extends FormApplication {
         this.render(true);
       }
     });
+
+    html.find('.copy').on('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const id = $(event.target).closest('.template').data('id');
+      if (id) {
+        let template;
+        if (this.category === 'core') {
+          template = deepClone(CORE_TEMPLATES.find((t) => t.id === id));
+        } else {
+          const fileURL = $(event.target).closest('.template').data('url');
+          if (fileURL) template = await getTemplateFromFileURL(fileURL);
+        }
+
+        if (template) {
+          TVA_CONFIG.templateMappings.push(template);
+          await updateSettings({
+            templateMappings: TVA_CONFIG.templateMappings,
+          });
+          ui.notifications.info(`Template {${template.name}} copied to User templates.`);
+          this.render(true);
+        }
+      }
+    });
+
     html.find('.create').on('click', () => {
       showMappingSelectDialog(this.mappings, {
         title1: 'Create Template',
@@ -161,6 +188,7 @@ class TemplateSubmissionForm extends FormApplication {
       template: 'modules/token-variants/templates/templateSubmission.html',
       resizable: false,
       minimizable: false,
+      closeOnSubmit: false,
       title: 'Submit Template',
       width: 500,
       height: 'auto',
@@ -195,7 +223,8 @@ class TemplateSubmissionForm extends FormApplication {
     const id = randomID();
     const img = formData.img.trim();
 
-    submitTemplate({ id, name, hint, img, createdBy, system, mappings: template.mappings });
+    const result = submitTemplate({ id, name, hint, img, createdBy, system, mappings: template.mappings });
+    if (result) this.close();
   }
 }
 
@@ -227,8 +256,10 @@ async function submitTemplate(template) {
 
   if (response.ok && response.status === 200) {
     ui.notifications.info('Template submission completed.');
+    return true;
   } else {
     ui.notifications.warn('Template submission failed.');
+    return false;
   }
 }
 
@@ -250,6 +281,9 @@ const SEARCH_QUERY = {
         },
         {
           fieldPath: 'img',
+        },
+        {
+          fieldPath: 'system',
         },
       ],
     },
@@ -278,12 +312,6 @@ const SEARCH_QUERY = {
 };
 
 async function communityTemplates(search = null) {
-  let query;
-  if (search?.trim()) {
-  } else {
-    query = SEARCH_QUERY;
-  }
-
   const response = await fetch(
     `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents:runQuery?key=${TemplateSubmissionForm.apiKey}`,
     {
@@ -296,31 +324,32 @@ async function communityTemplates(search = null) {
     }
   );
 
+  const templates = [];
   if (response.ok && response.status === 200) {
-    const templates = [];
-
     const documents = await response.json();
 
     for (let doc of documents) {
-      if ('document' in doc) {
-        doc = doc.document;
-        const template = {};
-        Object.keys(doc.fields).forEach((field) => {
-          template[field] = doc.fields[field].stringValue;
-        });
-        template.fileURL = doc.name;
-        if (!('createdBy' in template)) template.createdBy = 'Anonymous';
-        templates.push(template);
-      }
+      if ('document' in doc) templates.push(_docToTemplate(doc.document));
     }
-
-    return templates;
   } else {
-    ui.notifications.warn('Query failed', response);
+    ui.notifications.warn('Failed to retrieve Community templates.');
   }
+  return templates;
 }
 
-async function getMappingsFromFileURL(fileURL) {
+function _docToTemplate(doc) {
+  const template = {};
+  ['id', 'name', 'mappings', 'createdBy', 'img', 'hint', 'system'].forEach((f) => {
+    template[f] = doc.fields[f]?.stringValue || '';
+  });
+  if (template.mappings) template.mappings = JSON.parse(template.mappings);
+  else template.fileURL = doc.name;
+
+  if (!template.createdBy) template.createdBy = 'Anonymous';
+  return template;
+}
+
+async function getTemplateFromFileURL(fileURL) {
   const response = await fetch(`https://firestore.googleapis.com/v1/${fileURL}?key=${TemplateSubmissionForm.apiKey}`, {
     method: 'GET',
     headers: {
@@ -330,11 +359,8 @@ async function getMappingsFromFileURL(fileURL) {
   });
 
   if (response.ok && response.status === 200) {
-    const data = await response.json();
-    const mappingString = data.fields?.mappings?.stringValue;
-    if (mappingString) {
-      return JSON.parse(mappingString);
-    }
+    const doc = await response.json();
+    return _docToTemplate(doc);
   }
-  return [];
+  return null;
 }
