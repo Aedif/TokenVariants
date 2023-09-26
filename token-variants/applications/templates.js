@@ -246,6 +246,7 @@ async function submitTemplate(template) {
   ['name', 'hint', 'img', 'id', 'createdBy', 'system'].forEach((field) => _setStringField(template, fields, field));
   fields.mappings = { stringValue: JSON.stringify(template.mappings) };
   fields.createTime = { integerValue: new Date().getTime() };
+  fields.approved = { booleanValue: false };
 
   const response = await fetch(
     `https://firestore.googleapis.com/v1/projects/tva---templates/databases/(default)/documents/templates?key=${TemplateSubmissionForm.pk}`,

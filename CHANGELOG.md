@@ -1,3 +1,7 @@
+# 4.57.1
+
+- Upload template bug fix
+
 # 4.57.0
 
 - Template form has been reworked
