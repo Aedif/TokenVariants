@@ -987,7 +987,7 @@ input.tvaInvalid {
 
 #token-variants-templates .tooltip .tooltiptext {
   visibility: hidden;
-  width: 500px;
+  max-width: 500px;
   background-color: rgba(38, 38, 38, 0.85);
   color: #fff;
   text-align: center;

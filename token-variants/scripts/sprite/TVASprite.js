@@ -1,9 +1,6 @@
 import { FILTERS } from '../../applications/overlayConfig.js';
 import { evaluateComparator, getTokenEffects } from '../hooks/effectMappingHooks.js';
-import {
-  registerOverlayRefreshHook,
-  unregisterOverlayRefreshHooks,
-} from '../hooks/overlayHooks.js';
+import { registerOverlayRefreshHook, unregisterOverlayRefreshHooks } from '../hooks/overlayHooks.js';
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
 import { interpolateColor, removeMarkedOverlays } from '../token/overlay.js';
 import { executeMacro, toggleCEEffect, toggleTMFXPreset, tv_executeScript } from '../utils.js';
@@ -95,7 +92,7 @@ export class TVASprite extends TokenMesh {
       configurable: true,
     });
 
-    this.eventMode = 'none';
+    this.eventMode = 'passive';
     this.enableInteractivity(this.overlayConfig);
   }
 
@@ -104,12 +101,12 @@ export class TVASprite extends TokenMesh {
       this.removeAllListeners();
       this.mouseInteractionManager = null;
       this.cursor = null;
-      this.eventMode = 'none';
+      this.eventMode = 'passive';
       return;
     } else if (this.mouseInteractionManager || !this.overlayConfig.interactivity?.length) return;
 
     if (!this.overlayConfig.ui) {
-      if (canvas.primary.eventMode === 'none') {
+      if (canvas.primary.eventMode === 'passive') {
         canvas.primary.eventMode = 'passive';
       }
     }
@@ -187,15 +184,9 @@ export class TVASprite extends TokenMesh {
     }
 
     if (ov.limitOnHover || ov.limitOnControl || ov.limitOnHighlight || ov.limitOnHUD) {
-      if (
-        ov.limitOnHover &&
-        canvas.controls.ruler._state === Ruler.STATES.INACTIVE &&
-        this.object.hover
-      )
-        return true;
+      if (ov.limitOnHover && canvas.controls.ruler._state === Ruler.STATES.INACTIVE && this.object.hover) return true;
       if (ov.limitOnControl && this.object.controlled) return true;
-      if (ov.limitOnHighlight && (canvas.tokens.highlightObjects ?? canvas.tokens._highlight))
-        return true;
+      if (ov.limitOnHighlight && (canvas.tokens.highlightObjects ?? canvas.tokens._highlight)) return true;
       if (ov.limitOnHUD && this.object.hasActiveHUD) return true;
       return false;
     }
@@ -272,8 +263,7 @@ export class TVASprite extends TokenMesh {
       this._destroyTexture();
       this.pseudoTexture = this.originalTexture;
       this.texture = this.originalTexture.texture;
-      if (this.originalTexture.shapes)
-        this.pseudoTexture.shapes = this.addChild(this.originalTexture.shapes);
+      if (this.originalTexture.shapes) this.pseudoTexture.shapes = this.addChild(this.originalTexture.shapes);
       delete this.originalTexture;
     } else {
       this._swapChildren(pTexture);
@@ -366,20 +356,14 @@ export class TVASprite extends TokenMesh {
       shapes.position.y = -this.anchor.y * shapes.height;
       if (config.animation.relative) {
         this.pivot.set(0, 0);
-        shapes.pivot.set(
-          (0.5 - this.anchor.x) * shapes.width,
-          (0.5 - this.anchor.y) * shapes.height
-        );
+        shapes.pivot.set((0.5 - this.anchor.x) * shapes.width, (0.5 - this.anchor.y) * shapes.height);
         xOff = shapes.pivot.x * this.scale.x;
         yOff = shapes.pivot.y * this.scale.y;
       }
     } else if (config.animation.relative) {
       xOff = (0.5 - this.anchor.x) * this.width;
       yOff = (0.5 - this.anchor.y) * this.height;
-      this.pivot.set(
-        (0.5 - this.anchor.x) * this.texture.width,
-        (0.5 - this.anchor.y) * this.texture.height
-      );
+      this.pivot.set((0.5 - this.anchor.x) * this.texture.width, (0.5 - this.anchor.y) * this.texture.height);
     }
 
     // Position
@@ -396,22 +380,11 @@ export class TVASprite extends TokenMesh {
     } else {
       if (config.animation.relative) {
         this.position.set(
-          this.object.document.x +
-            this.object.w / 2 +
-            pOffsetX +
-            -config.offsetX * this.object.w +
-            xOff,
-          this.object.document.y +
-            this.object.h / 2 +
-            pOffsetY +
-            -config.offsetY * this.object.h +
-            yOff
+          this.object.document.x + this.object.w / 2 + pOffsetX + -config.offsetX * this.object.w + xOff,
+          this.object.document.y + this.object.h / 2 + pOffsetY + -config.offsetY * this.object.h + yOff
         );
       } else {
-        this.position.set(
-          this.object.document.x + this.object.w / 2,
-          this.object.document.y + this.object.h / 2
-        );
+        this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
         this.pivot.set(
           -pOffsetX / this.scale.x + (config.offsetX * this.object.w) / this.scale.x,
           -pOffsetY / this.scale.y + (config.offsetY * this.object.h) / this.scale.y
@@ -645,10 +618,7 @@ async function constructTMFXFilters(paramsArray, sprite) {
 
   let filters = [];
   for (const params of paramsArray) {
-    if (
-      !params.hasOwnProperty('filterType') ||
-      !TMFXFilterTypes.hasOwnProperty(params.filterType)
-    ) {
+    if (!params.hasOwnProperty('filterType') || !TMFXFilterTypes.hasOwnProperty(params.filterType)) {
       // one invalid ? all rejected.
       return [];
     }

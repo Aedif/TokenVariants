@@ -221,8 +221,6 @@ class TemplateSubmissionForm extends FormApplication {
     let template = TVA_CONFIG.templateMappings.find((t) => t.id === formData.template);
     if (!template) return;
 
-    console.log(formData);
-
     const name = formData.name.trim() || template.name;
     const hint = formData.hint.trim() || template.hint?.trim();
     const createdBy = formData.createdBy.trim();
