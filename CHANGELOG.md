@@ -1,3 +1,8 @@
+# 4.57.2
+
+- Fixed children overlay triggers not firing if their parents have no triggers of their own
+- Fixed Mapping scripts not executing under certain circumstances
+
 # 4.57.1
 
 - Upload template bug fix

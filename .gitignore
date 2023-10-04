@@ -6,3 +6,6 @@ token-variants/token-variants.js
 token-variants/token-variants.js.map
 token-variants/bundle.js.map
 token-variants/bundle.js
+node_modules/*
+.parcel-cache/*
+package-lock.json
