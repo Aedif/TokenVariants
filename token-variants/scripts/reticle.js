@@ -1,6 +1,6 @@
 import EffectMappingForm from '../applications/effectMappingForm.js';
 import { OverlayConfig } from '../applications/overlayConfig.js';
-import { TVASprite } from './sprite/TVASprite.js';
+import { TVAOverlay } from './sprite/TVAOverlay.js';
 import { evaluateOverlayExpressions } from './token/overlay.js';
 
 export class Reticle {
@@ -30,17 +30,17 @@ export class Reticle {
         this.config.linkMirror = true;
       }
 
-      this.tvaSprite.refresh(this.config, { preview: true });
+      this.tvaOverlay.refresh(this.config, { preview: true });
 
-      const tCoord = { x: this.tvaSprite.x, y: this.tvaSprite.y };
+      const tCoord = { x: this.tvaOverlay.x, y: this.tvaOverlay.y };
 
-      if (this.tvaSprite.overlayConfig.parentID) {
-        let parent = this.tvaSprite;
+      if (this.tvaOverlay.overlayConfig.parentID) {
+        let parent = this.tvaOverlay;
         do {
           parent = parent.parent;
           tCoord.x += parent.x;
           tCoord.y += parent.y;
-        } while (!(parent instanceof TVASprite));
+        } while (!(parent instanceof TVAOverlay));
       }
 
       let dx = pos.x - tCoord.x;
@@ -49,14 +49,14 @@ export class Reticle {
       let angle = 0;
       if (!this.config.animation.relative) {
         angle = this.config.angle;
-        if (this.config.linkRotation) angle += this.tvaSprite.object.document.rotation;
+        if (this.config.linkRotation) angle += this.tvaOverlay.object.document.rotation;
       }
 
       [dx, dy] = rotate(0, 0, dx, dy, angle);
       dx = round(dx, this.increment);
       dy = round(dy, this.increment);
 
-      // let lPos = event.data.getLocalPosition(this.tvaSprite);
+      // let lPos = event.data.getLocalPosition(this.tvaOverlay);
       // console.log(lPos);
       // // let dx = lPos.x;
       // // let dy = lPos.y;
@@ -65,18 +65,19 @@ export class Reticle {
         this.config.pOffsetX = dx;
         this.config.pOffsetY = dy;
       } else if (this.mode === 'token') {
-        this.config.offsetX = -dx / this.tvaSprite.object.w;
-        this.config.offsetY = -dy / this.tvaSprite.object.h;
+        this.config.offsetX = -dx / this.tvaOverlay.object.w;
+        this.config.offsetY = -dy / this.tvaOverlay.object.h;
       } else {
-        let token = this.tvaSprite.object;
+        let token = this.tvaOverlay.object;
 
         let pWidth;
         let pHeight;
 
-        if (this.tvaSprite.overlayConfig.parentID) {
-          pWidth = (this.tvaSprite.parent.shapesWidth ?? this.tvaSprite.parent.width) / this.tvaSprite.parent.scale.x;
+        if (this.tvaOverlay.overlayConfig.parentID) {
+          pWidth =
+            (this.tvaOverlay.parent.shapesWidth ?? this.tvaOverlay.parent.width) / this.tvaOverlay.parent.scale.x;
           pHeight =
-            (this.tvaSprite.parent.shapesHeight ?? this.tvaSprite.parent.height) / this.tvaSprite.parent.scale.y;
+            (this.tvaOverlay.parent.shapesHeight ?? this.tvaOverlay.parent.height) / this.tvaOverlay.parent.scale.y;
         } else {
           pWidth = token.w;
           pHeight = token.h;
@@ -87,7 +88,7 @@ export class Reticle {
             this.config.offsetX = 0.5 * (dx < 0 ? 1 : -1);
             dx += (pWidth / 2) * (dx < 0 ? 1 : -1);
           } else {
-            this.config.offsetX = -dx / this.tvaSprite.object.w;
+            this.config.offsetX = -dx / this.tvaOverlay.object.w;
             dx = 0;
           }
 
@@ -95,7 +96,7 @@ export class Reticle {
             this.config.offsetY = 0.5 * (dy < 0 ? 1 : -1);
             dy += (pHeight / 2) * (dy < 0 ? 1 : -1);
           } else {
-            this.config.offsetY = -dy / this.tvaSprite.object.h;
+            this.config.offsetY = -dy / this.tvaOverlay.object.h;
             dy = 0;
           }
         } else {
@@ -106,9 +107,9 @@ export class Reticle {
             this.config.offsetY = 0.5 * (dy < 0 ? 1 : -1);
             dy += (pHeight / 2) * (dy < 0 ? 1 : -1);
           } else {
-            this.config.offsetX = -dx / this.tvaSprite.object.w;
+            this.config.offsetX = -dx / this.tvaOverlay.object.w;
             dx = 0;
-            this.config.offsetY = -dy / this.tvaSprite.object.h;
+            this.config.offsetY = -dy / this.tvaOverlay.object.h;
             dy = 0;
           }
         }
@@ -117,7 +118,7 @@ export class Reticle {
         this.config.pOffsetY = dy;
       }
 
-      this.tvaSprite.refresh(this.config, { preview: true });
+      this.tvaOverlay.refresh(this.config, { preview: true });
     }
   }
 
@@ -137,9 +138,9 @@ export class Reticle {
     });
   }
 
-  static activate({ tvaSprite = null, config = {} } = {}) {
+  static activate({ tvaOverlay = null, config = {} } = {}) {
     if (this.deactivate() || !canvas.ready) return false;
-    if (!tvaSprite || !config) return false;
+    if (!tvaOverlay || !config) return false;
 
     if (this.reticleOverlay) {
       this.reticleOverlay.destroy(true);
@@ -150,10 +151,10 @@ export class Reticle {
       interaction.cursorStyles['reticle'] = "url('modules/token-variants/img/reticle.webp'), auto";
     }
 
-    this.tvaSprite = tvaSprite;
+    this.tvaOverlay = tvaOverlay;
 
     this.minimizeApps();
-    this.config = evaluateOverlayExpressions(deepClone(config), this.tvaSprite.object, {
+    this.config = evaluateOverlayExpressions(deepClone(config), this.tvaOverlay.object, {
       overlayConfig: config,
     });
 
@@ -207,7 +208,7 @@ export class Reticle {
     if (this.active) {
       if (this.reticleOverlay) this.reticleOverlay.parent?.removeChild(this.reticleOverlay);
       this.active = false;
-      this.tvaSprite = null;
+      this.tvaOverlay = null;
       if (this.dialog && this.dialog._state !== Application.RENDER_STATES.CLOSED) this.dialog.close(true);
       this.dialog = null;
       this.maximizeApps();

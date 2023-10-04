@@ -1017,3 +1017,21 @@ input.tvaInvalid {
   margin-top: 5px;
   text-align: left;
 }
+
+/* ---------------------------------------- */
+/* HTML Overlay                             */
+/* ---------------------------------------- */
+
+#tva-html-overlays {
+  position: absolute;
+}
+
+.tva-html-overlay {
+  position: absolute;
+  border-style: dashed;
+  z-index: -50;
+}
+
+.tva-html-overlay .window-content {
+  pointer-events: auto;
+}

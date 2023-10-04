@@ -40,7 +40,7 @@ export class OverlayConfig extends FormApplication {
     html.find('.reticle').on('click', (event) => {
       const icons = this.getPreviewIcons();
       if (icons.length) {
-        Reticle.activate({ tvaSprite: icons[0].icon, app: this, config: this.previewConfig });
+        Reticle.activate({ tvaOverlay: icons[0].icon, app: this, config: this.previewConfig });
       }
     });
 
@@ -431,8 +431,8 @@ export class OverlayConfig extends FormApplication {
     const tokens = this.token ? [this.token] : canvas.tokens.placeables;
     const previewIcons = [];
     for (const tkn of tokens) {
-      if (tkn.tva_sprites) {
-        for (const c of tkn.tva_sprites) {
+      if (tkn.tvaOverlays) {
+        for (const c of tkn.tvaOverlays) {
           if (c.overlayConfig && c.overlayConfig.id === this.config.id) {
             // Effect icon found, however if we're in global preview then we need to take into account
             // a token/actor specific mapping which may override the global one

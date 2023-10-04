@@ -1,5 +1,6 @@
 import { FEATURE_CONTROL } from '../settings.js';
-import { TVASprite } from '../sprite/TVASprite.js';
+import { HTMLOverlay } from '../sprite/HTMLOverlay.js';
+import { TVAOverlay } from '../sprite/TVAOverlay.js';
 import { drawOverlays } from '../token/overlay.js';
 import { registerHook, unregisterHook } from './hooks.js';
 
@@ -7,9 +8,15 @@ const feature_id = 'Overlays';
 
 export function registerOverlayHooks() {
   if (!FEATURE_CONTROL[feature_id]) {
-    ['refreshToken', 'destroyToken', 'updateActor', 'renderCombatTracker', 'updateToken', 'createToken'].forEach((id) =>
-      unregisterHook(feature_id, id)
-    );
+    [
+      'refreshToken',
+      'destroyToken',
+      'updateActor',
+      'renderCombatTracker',
+      'updateToken',
+      'createToken',
+      'renderHeadsUpDisplay',
+    ].forEach((id) => unregisterHook(feature_id, id));
     return;
   }
 
@@ -22,17 +29,17 @@ export function registerOverlayHooks() {
   });
 
   registerHook(feature_id, 'refreshToken', (token) => {
-    if (token.tva_sprites)
-      for (const child of token.tva_sprites) {
-        if (child instanceof TVASprite) {
+    if (token.tvaOverlays)
+      for (const child of token.tvaOverlays) {
+        if (child instanceof TVAOverlay) {
           child.refresh(null, { preview: false, fullRefresh: false });
         }
       }
   });
 
   registerHook(feature_id, 'destroyToken', (token) => {
-    if (token.tva_sprites)
-      for (const child of token.tva_sprites) {
+    if (token.tvaOverlays)
+      for (const child of token.tvaOverlays) {
         child.parent?.removeChild(child)?.destroy();
       }
   });
@@ -49,29 +56,33 @@ export function registerOverlayHooks() {
       drawOverlays(tkn);
     }
   });
+
+  registerHook(feature_id, 'renderHeadsUpDisplay', () => {
+    HTMLOverlay.hudRendered();
+  });
 }
 
 const REFRESH_HOOKS = {};
 
-export function registerOverlayRefreshHook(tvaSprite, hookName) {
+export function registerOverlayRefreshHook(tvaOverlay, hookName) {
   if (!(hookName in REFRESH_HOOKS)) {
-    registerHook('TVASpriteRefresh', hookName, () => {
+    registerHook('TVAOverlayRefresh', hookName, () => {
       REFRESH_HOOKS[hookName]?.forEach((s) => s.refresh());
     });
-    REFRESH_HOOKS[hookName] = [tvaSprite];
-  } else if (!REFRESH_HOOKS[hookName].find((s) => s == tvaSprite)) {
-    REFRESH_HOOKS[hookName].push(tvaSprite);
+    REFRESH_HOOKS[hookName] = [tvaOverlay];
+  } else if (!REFRESH_HOOKS[hookName].find((s) => s == tvaOverlay)) {
+    REFRESH_HOOKS[hookName].push(tvaOverlay);
   }
 }
 
-export function unregisterOverlayRefreshHooks(tvaSprite, hookName = null) {
+export function unregisterOverlayRefreshHooks(tvaOverlay, hookName = null) {
   const unregister = function (hook) {
     if (REFRESH_HOOKS[hook]) {
-      let index = REFRESH_HOOKS[hook].findIndex((s) => s == tvaSprite);
+      let index = REFRESH_HOOKS[hook].findIndex((s) => s == tvaOverlay);
       if (index > -1) {
         REFRESH_HOOKS[hook].splice(index, 1);
         if (!REFRESH_HOOKS[hook].length) {
-          unregisterHook('TVASpriteRefresh', hook);
+          unregisterHook('TVAOverlayRefresh', hook);
           delete REFRESH_HOOKS[hook];
         }
       }

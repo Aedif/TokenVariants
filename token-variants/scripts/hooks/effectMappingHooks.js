@@ -535,6 +535,11 @@ async function _updateWithEffectMapping(token, added, removed) {
     } else {
       updateCall();
     }
+  } else {
+    if (executeOnCallback.length || deferredUpdateScripts.length) {
+      _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, executeOnCallback);
+      _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, deferredUpdateScripts);
+    }
   }
   broadcastOverlayRedraw(placeable);
 }

@@ -4,67 +4,13 @@ import { registerOverlayRefreshHook, unregisterOverlayRefreshHooks } from '../ho
 import { DEFAULT_OVERLAY_CONFIG } from '../models.js';
 import { interpolateColor, removeMarkedOverlays } from '../token/overlay.js';
 import { executeMacro, toggleCEEffect, toggleTMFXPreset, tv_executeScript } from '../utils.js';
+import { HTMLOverlay } from './HTMLOverlay.js';
 
-class OutlineFilter extends OutlineOverlayFilter {
-  /** @inheritdoc */
-  static createFragmentShader() {
-    return `
-    varying vec2 vTextureCoord;
-    varying vec2 vFilterCoord;
-    uniform sampler2D uSampler;
-    
-    uniform vec2 thickness;
-    uniform vec4 outlineColor;
-    uniform vec4 filterClamp;
-    uniform float alphaThreshold;
-    uniform float time;
-    uniform bool knockout;
-    uniform bool wave;
-    
-    ${this.CONSTANTS}
-    ${this.WAVE()}
-    
-    void main(void) {
-        float dist = distance(vFilterCoord, vec2(0.5)) * 2.0;
-        vec4 ownColor = texture2D(uSampler, vTextureCoord);
-        vec4 wColor = wave ? outlineColor * 
-                             wcos(0.0, 1.0, dist * 75.0, 
-                                  -time * 0.01 + 3.0 * dot(vec4(1.0), ownColor)) 
-                             * 0.33 * (1.0 - dist) : vec4(0.0);
-        float texAlpha = smoothstep(alphaThreshold, 1.0, ownColor.a);
-        vec4 curColor;
-        float maxAlpha = 0.;
-        vec2 displaced;
-        for ( float angle = 0.0; angle <= TWOPI; angle += ${this.#quality.toFixed(7)} ) {
-            displaced.x = vTextureCoord.x + thickness.x * cos(angle);
-            displaced.y = vTextureCoord.y + thickness.y * sin(angle);
-            curColor = texture2D(uSampler, clamp(displaced, filterClamp.xy, filterClamp.zw));
-            curColor.a = clamp((curColor.a - 0.6) * 2.5, 0.0, 1.0);
-            maxAlpha = max(maxAlpha, curColor.a);
-        }
-        float resultAlpha = max(maxAlpha, texAlpha);
-        vec3 result = (ownColor.rgb + outlineColor.rgb * (1.0 - texAlpha)) * resultAlpha;
-        gl_FragColor = vec4((ownColor.rgb + outlineColor.rgb * (1. - ownColor.a)) * resultAlpha, resultAlpha);
-    }
-    `;
-  }
-
-  static get #quality() {
-    switch (canvas.performance.mode) {
-      case CONST.CANVAS_PERFORMANCE_MODES.LOW:
-        return (Math.PI * 2) / 10;
-      case CONST.CANVAS_PERFORMANCE_MODES.MED:
-        return (Math.PI * 2) / 20;
-      default:
-        return (Math.PI * 2) / 30;
-    }
-  }
-}
-
-export class TVASprite extends TokenMesh {
+export class TVAOverlay extends TokenMesh {
   constructor(pTexture, token, config) {
     super(token);
     if (pTexture.shapes) pTexture.shapes = this.addChild(pTexture.shapes);
+
     this.pseudoTexture = pTexture;
     this.texture = pTexture.texture;
     //this.setTexture(pTexture, { refresh: false });
@@ -73,6 +19,7 @@ export class TVASprite extends TokenMesh {
     this.overlaySort = 0;
 
     this.overlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
+    if (pTexture.html) this.addHTMLOverlay();
 
     // linkDimensions has been converted to linkDimensionsX and linkDimensionsY
     // Make sure we're using the latest fields
@@ -430,8 +377,34 @@ export class TVASprite extends TokenMesh {
 
     if (preview && this.children) {
       this.children.forEach((ch) => {
-        if (ch instanceof TVASprite) ch.refresh(null, { preview: true });
+        if (ch instanceof TVAOverlay) ch.refresh(null, { preview: true });
       });
+    }
+
+    if (this.htmlOverlay) {
+      // this.htmlOverlay.setPosition({
+      //   left: this.x + shapes.x,
+      //   top: this.y + shapes.y,
+      //   width: dimensions.width * this.scale.x,
+      //   height: dimensions.height * this.scale.y,
+      //   angle: this.angle,
+      // });
+
+      this.htmlOverlay.setPosition({
+        left: this.x - this.pivot.x * this.scale.x - this.width * this.anchor.x,
+        top: this.y - this.pivot.y * this.scale.y - this.height * this.anchor.y,
+        width: this.width,
+        height: this.height,
+        angle: this.angle,
+      });
+
+      // this.htmlOverlay.setPosition({
+      //   left: this.x - shapes.pivot.x - dimensions.width / 2,
+      //   top: this.y - shapes.pivot.y - dimensions.height / 2,
+      //   width: dimensions.width,
+      //   height: dimensions.height,
+      //   angle: this.angle,
+      // });
     }
 
     this.ready = true;
@@ -578,7 +551,7 @@ export class TVASprite extends TokenMesh {
 
     if (this.children) {
       for (const ch of this.children) {
-        if (ch instanceof TVASprite) ch.tvaRemove = true;
+        if (ch instanceof TVAOverlay) ch.tvaRemove = true;
       }
       removeMarkedOverlays(this.object);
       if (this.pseudoTexture.shapes) {
@@ -593,12 +566,19 @@ export class TVASprite extends TokenMesh {
     } else if (this.texture?.baseTexture.resource?.source?.tagName === 'VIDEO') {
       this.texture.baseTexture.destroy();
     }
+
+    if (this.htmlOverlay) this.htmlOverlay.remove();
+
     super.destroy();
   }
 
   // Foundry BUG Fix
   calculateTrimmedVertices() {
     return PIXI.Sprite.prototype.calculateTrimmedVertices.call(this);
+  }
+
+  addHTMLOverlay() {
+    this.htmlOverlay = new HTMLOverlay(this.overlayConfig, this.object);
   }
 }
 
@@ -725,3 +705,59 @@ const TMFXFilterTypes = {
   replaceColor: 'FilterReplaceColor',
   ddTint: 'FilterDDTint',
 };
+
+class OutlineFilter extends OutlineOverlayFilter {
+  /** @inheritdoc */
+  static createFragmentShader() {
+    return `
+    varying vec2 vTextureCoord;
+    varying vec2 vFilterCoord;
+    uniform sampler2D uSampler;
+    
+    uniform vec2 thickness;
+    uniform vec4 outlineColor;
+    uniform vec4 filterClamp;
+    uniform float alphaThreshold;
+    uniform float time;
+    uniform bool knockout;
+    uniform bool wave;
+    
+    ${this.CONSTANTS}
+    ${this.WAVE()}
+    
+    void main(void) {
+        float dist = distance(vFilterCoord, vec2(0.5)) * 2.0;
+        vec4 ownColor = texture2D(uSampler, vTextureCoord);
+        vec4 wColor = wave ? outlineColor * 
+                             wcos(0.0, 1.0, dist * 75.0, 
+                                  -time * 0.01 + 3.0 * dot(vec4(1.0), ownColor)) 
+                             * 0.33 * (1.0 - dist) : vec4(0.0);
+        float texAlpha = smoothstep(alphaThreshold, 1.0, ownColor.a);
+        vec4 curColor;
+        float maxAlpha = 0.;
+        vec2 displaced;
+        for ( float angle = 0.0; angle <= TWOPI; angle += ${this.#quality.toFixed(7)} ) {
+            displaced.x = vTextureCoord.x + thickness.x * cos(angle);
+            displaced.y = vTextureCoord.y + thickness.y * sin(angle);
+            curColor = texture2D(uSampler, clamp(displaced, filterClamp.xy, filterClamp.zw));
+            curColor.a = clamp((curColor.a - 0.6) * 2.5, 0.0, 1.0);
+            maxAlpha = max(maxAlpha, curColor.a);
+        }
+        float resultAlpha = max(maxAlpha, texAlpha);
+        vec3 result = (ownColor.rgb + outlineColor.rgb * (1.0 - texAlpha)) * resultAlpha;
+        gl_FragColor = vec4((ownColor.rgb + outlineColor.rgb * (1. - ownColor.a)) * resultAlpha, resultAlpha);
+    }
+    `;
+  }
+
+  static get #quality() {
+    switch (canvas.performance.mode) {
+      case CONST.CANVAS_PERFORMANCE_MODES.LOW:
+        return (Math.PI * 2) / 10;
+      case CONST.CANVAS_PERFORMANCE_MODES.MED:
+        return (Math.PI * 2) / 20;
+      default:
+        return (Math.PI * 2) / 30;
+    }
+  }
+}

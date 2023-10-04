@@ -47,19 +47,16 @@ const BATCH_UPDATES = {
 export function startBatchUpdater() {
   canvas.app.ticker.add(() => {
     if (BATCH_UPDATES.TOKEN.length) {
-      canvas.scene
-        .updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN, BATCH_UPDATES.TOKEN_CONTEXT)
-        .then(() => {
-          for (const cb of BATCH_UPDATES.TOKEN_CALLBACKS) {
-            cb();
-          }
-          BATCH_UPDATES.TOKEN_CALLBACKS = [];
-        });
+      canvas.scene.updateEmbeddedDocuments('Token', BATCH_UPDATES.TOKEN, BATCH_UPDATES.TOKEN_CONTEXT).then(() => {
+        for (const cb of BATCH_UPDATES.TOKEN_CALLBACKS) {
+          cb();
+        }
+        BATCH_UPDATES.TOKEN_CALLBACKS = [];
+      });
       BATCH_UPDATES.TOKEN = [];
     }
     if (BATCH_UPDATES.ACTOR.length !== 0) {
-      if (BATCH_UPDATES.ACTOR_CONTEXT)
-        Actor.updateDocuments(BATCH_UPDATES.ACTOR, BATCH_UPDATES.ACTOR_CONTEXT);
+      if (BATCH_UPDATES.ACTOR_CONTEXT) Actor.updateDocuments(BATCH_UPDATES.ACTOR, BATCH_UPDATES.ACTOR_CONTEXT);
       else Actor.updateDocuments(BATCH_UPDATES.ACTOR);
       BATCH_UPDATES.ACTOR = [];
       BATCH_UPDATES.ACTOR_CONTEXT = null;
@@ -110,9 +107,7 @@ export async function updateTokenImage(
   } = {}
 ) {
   if (!(token || actor)) {
-    console.warn(
-      game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor')
-    );
+    console.warn(game.i18n.localize('token-variants.notifications.warn.update-image-no-token-actor'));
     return;
   }
 
@@ -164,8 +159,7 @@ export async function updateTokenImage(
   let tokenUpdateObj = tokenUpdate;
   if (imgSrc) {
     setProperty(tokenUpdateObj, 'texture.src', imgSrc);
-    if (imgName && getFileName(imgSrc) === imgName)
-      setProperty(tokenUpdateObj, 'flags.token-variants.-=name', null);
+    if (imgName && getFileName(imgSrc) === imgName) setProperty(tokenUpdateObj, 'flags.token-variants.-=name', null);
     else setProperty(tokenUpdateObj, 'flags.token-variants.name', imgName);
   }
 
@@ -185,17 +179,11 @@ export async function updateTokenImage(
       let doc = token.document ?? token;
       const tokenData = doc.toObject ? doc.toObject() : deepClone(doc);
 
-      const defConf = constructDefaultConfig(
-        mergeObject(tokenData, defaultConfig),
-        tokenCustomConfig
-      );
+      const defConf = constructDefaultConfig(mergeObject(tokenData, defaultConfig), tokenCustomConfig);
       setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
     } else if (actor && !token) {
       setProperty(tokenUpdateObj, 'flags.token-variants.usingCustomConfig', true);
-      const tokenData =
-        actor.prototypeToken instanceof Object
-          ? actor.prototypeToken
-          : actor.prototypeToken.toObject();
+      const tokenData = actor.prototypeToken instanceof Object ? actor.prototypeToken : actor.prototypeToken.toObject();
       const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
       setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
     }
@@ -471,9 +459,7 @@ export function registerKeybinds() {
 export function getTokenConfig(imgSrc, imgName) {
   if (!imgName) imgName = getFileName(imgSrc);
   const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
-  return (
-    tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName) ?? {}
-  );
+  return tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName) ?? {};
 }
 
 /**
@@ -516,9 +502,7 @@ export function getTokenConfigForUpdate(imgSrc, imgName, token) {
  */
 export function setTokenConfig(imgSrc, imgName, tokenConfig) {
   const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
-  const tcIndex = tokenConfigs.findIndex(
-    (config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName
-  );
+  const tcIndex = tokenConfigs.findIndex((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName);
 
   let deleteConfig = !tokenConfig || Object.keys(tokenConfig).length === 0;
   if (!deleteConfig) {
@@ -675,9 +659,7 @@ export async function waitForTokenTexture(token, callback, checks = 40) {
   if (!token.mesh || !token.mesh.texture) {
     checks--;
     if (checks > 1)
-      new Promise((resolve) => setTimeout(resolve, 1)).then(() =>
-        waitForTokenTexture(token, callback, checks)
-      );
+      new Promise((resolve) => setTimeout(resolve, 1)).then(() => waitForTokenTexture(token, callback, checks));
     return;
   }
 
@@ -769,13 +751,7 @@ function _modMergeInsert(original, k, v, { insertKeys, insertValues } = {}, _d) 
  * A helper function for merging objects when the target key exists in the original
  * @private
  */
-function _modMergeUpdate(
-  original,
-  k,
-  v,
-  { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {},
-  _d
-) {
+function _modMergeUpdate(original, k, v, { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {}, _d) {
   const x = original[k];
   const tv = getType(v);
   const tx = getType(x);
@@ -819,9 +795,7 @@ export async function tv_executeScript(script, { actor, token, tvaUpdate } = {})
     const fn = AsyncFunction('speaker', 'actor', 'token', 'character', 'tvaUpdate', `${script}`);
     await fn.call(null, speaker, actor, token, character, tvaUpdate);
   } catch (err) {
-    ui.notifications.error(
-      `There was an error in your script syntax. See the console (F12) for details`
-    );
+    ui.notifications.error(`There was an error in your script syntax. See the console (F12) for details`);
     console.error(err);
   }
 }
@@ -1035,7 +1009,7 @@ function captureToken(token, { scale = 3, width = null, height = null } = {}) {
   canvas.stage.disableTempParent(cacheParent);
 
   let spritesToRender = [token.mesh];
-  if (token.tva_sprites) spritesToRender = spritesToRender.concat(token.tva_sprites);
+  if (token.tvaOverlays) spritesToRender = spritesToRender.concat(token.tvaOverlays);
   spritesToRender.sort((sprite) => sprite.sort);
 
   for (const sprite of spritesToRender) {

@@ -1,5 +1,5 @@
 import { TVA_CONFIG } from '../settings.js';
-import { TVASprite } from '../sprite/TVASprite.js';
+import { TVAOverlay } from '../sprite/TVAOverlay.js';
 import { string2Hex, waitForTokenTexture } from '../utils.js';
 import { getAllEffectMappings, getTokenEffects, getTokenHP } from '../hooks/effectMappingHooks.js';
 
@@ -15,8 +15,7 @@ export async function drawOverlays(token) {
     .filter((m) => m.overlay && effects.includes(m.id))
     .sort(
       (m1, m2) =>
-        (m1.priority - m1.overlayConfig?.parentID ? 0 : 999) -
-        (m2.priority - m2.overlayConfig?.parentID ? 0 : 999)
+        (m1.priority - m1.overlayConfig?.parentID ? 0 : 999) - (m2.priority - m2.overlayConfig?.parentID ? 0 : 999)
     );
 
   // See if the whole stack or just top of the stack should be used according to settings
@@ -27,13 +26,11 @@ export async function drawOverlays(token) {
   }
 
   // Process strings as expressions
-  const overlays = processedMappings.map((m) =>
-    evaluateOverlayExpressions(deepClone(m.overlayConfig), token, m)
-  );
+  const overlays = processedMappings.map((m) => evaluateOverlayExpressions(deepClone(m.overlayConfig), token, m));
 
   if (overlays.length) {
     waitForTokenTexture(token, async (token) => {
-      if (!token.tva_sprites) token.tva_sprites = [];
+      if (!token.tvaOverlays) token.tvaOverlays = [];
       // Temporarily mark every overlay for removal.
       // We'll only keep overlays that are still applicable to the token
       _markAllOverlaysForRemoval(token);
@@ -42,7 +39,7 @@ export async function drawOverlays(token) {
       let overlaySort = 0;
       let underlaySort = 0;
       for (const ov of overlays) {
-        let sprite = _findTVASprite(ov.id, token);
+        let sprite = _findTVAOverlay(ov.id, token);
         if (sprite) {
           const diff = diffObject(sprite.overlayConfig, ov);
 
@@ -70,19 +67,19 @@ export async function drawOverlays(token) {
         }
         if (!sprite) {
           if (ov.parentID) {
-            const parent = _findTVASprite(ov.parentID, token);
+            const parent = _findTVAOverlay(ov.parentID, token);
             if (parent && !parent.tvaRemove)
-              sprite = parent.addChildAuto(new TVASprite(await genTexture(token, ov), token, ov));
+              sprite = parent.addChildAuto(new TVAOverlay(await genTexture(token, ov), token, ov));
           } else {
             const layer = ov.ui ? canvas.tokens : canvas.primary;
-            sprite = layer.addChild(new TVASprite(await genTexture(token, ov), token, ov));
+            sprite = layer.addChild(new TVAOverlay(await genTexture(token, ov), token, ov));
           }
-          if (sprite) token.tva_sprites.push(sprite);
+          if (sprite) token.tvaOverlays.push(sprite);
         }
 
         // If the sprite has a parent confirm that the parent has not been removed
         if (sprite?.overlayConfig.parentID) {
-          const parent = _findTVASprite(sprite.overlayConfig.parentID, token);
+          const parent = _findTVAOverlay(sprite.overlayConfig.parentID, token);
           if (!parent || parent.tvaRemove) sprite = null;
         }
 
@@ -111,8 +108,8 @@ export async function drawOverlays(token) {
 
 // function _getLayer(ov) {
 //   const layer = ov.ui ? canvas.tokens : canvas.primary;
-//   if (!layer.tvaSprites) layer.tvaSprites = layer.addChild(new PIXI.Container());
-//   return layer.tvaSprites;
+//   if (!layer.tvaOverlay) layer.tvaOverlays = layer.addChild(new PIXI.Container());
+//   return layer.tvaOverlays;
 // }
 
 export async function genTexture(token, conf) {
@@ -122,7 +119,9 @@ export async function genTexture(token, conf) {
   } else if (conf.text?.text != null) {
     return await generateTextTexture(token, conf);
   } else if (conf.shapes?.length) {
-    return await generateShapeTexture(token, conf);
+    return await generateShapeTexture(token, conf.shapes);
+  } else if (conf.html?.template) {
+    return { html: true, texture: await loadTexture('modules\\token-variants\\img\\html_bg.webp') };
   } else {
     return {
       texture: await loadTexture('modules/token-variants/img/token-images.svg'),
@@ -214,27 +213,14 @@ function _renderContainer(container, resolution, { width = null, height = null }
 // Return width and height of the drawn shape
 function _drawShape(graphics, shape, xOffset = 0, yOffset = 0) {
   if (shape.type === 'rectangle') {
-    graphics.drawRoundedRect(
-      shape.x + xOffset,
-      shape.y + yOffset,
-      shape.width,
-      shape.height,
-      shape.radius
-    );
+    graphics.drawRoundedRect(shape.x + xOffset, shape.y + yOffset, shape.width, shape.height, shape.radius);
     return [shape.width, shape.height];
   } else if (shape.type === 'ellipse') {
-    graphics.drawEllipse(
-      shape.x + xOffset + shape.width,
-      shape.y + yOffset + shape.height,
-      shape.width,
-      shape.height
-    );
+    graphics.drawEllipse(shape.x + xOffset + shape.width, shape.y + yOffset + shape.height, shape.width, shape.height);
     return [shape.width * 2, shape.height * 2];
   } else if (shape.type === 'polygon') {
     graphics.drawPolygon(
-      shape.points
-        .split(',')
-        .map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
+      shape.points.split(',').map((p, i) => Number(p) * shape.scale + (i % 2 === 0 ? shape.x : shape.y))
     );
   } else if (shape.type === 'torus') {
     drawTorus(
@@ -250,10 +236,10 @@ function _drawShape(graphics, shape, xOffset = 0, yOffset = 0) {
   }
 }
 
-export async function generateShapeTexture(token, conf) {
+export async function generateShapeTexture(token, shapes) {
   let graphics = new PIXI.Graphics();
 
-  for (const obj of conf.shapes) {
+  for (const obj of shapes) {
     graphics.beginFill(interpolateColor(obj.fill.color, obj.fill.interpolateColor), obj.fill.alpha);
     graphics.lineStyle(obj.line.width, string2Hex(obj.line.color), obj.line.alpha);
 
@@ -302,23 +288,15 @@ export async function generateShapeTexture(token, conf) {
 
 function drawTorus(graphics, x, y, innerRadius, outerRadius, startArc = 0, endArc = Math.PI * 2) {
   if (Math.abs(endArc - startArc) >= Math.PI * 2) {
-    return graphics
-      .drawCircle(x, y, outerRadius)
-      .beginHole()
-      .drawCircle(x, y, innerRadius)
-      .endHole();
+    return graphics.drawCircle(x, y, outerRadius).beginHole().drawCircle(x, y, innerRadius).endHole();
   }
 
   graphics.finishPoly();
-  graphics
-    .arc(x, y, innerRadius, endArc, startArc, true)
-    .arc(x, y, outerRadius, startArc, endArc, false)
-    .finishPoly();
+  graphics.arc(x, y, innerRadius, endArc, startArc, true).arc(x, y, outerRadius, startArc, endArc, false).finishPoly();
 }
 
 export function interpolateColor(minColor, interpolate, rString = false) {
-  if (!interpolate || !interpolate.color2 || !interpolate.prc)
-    return rString ? minColor : string2Hex(minColor);
+  if (!interpolate || !interpolate.color2 || !interpolate.prc) return rString ? minColor : string2Hex(minColor);
 
   if (!PIXI.Color) return _interpolateV10(minColor, interpolate, rString);
 
@@ -418,16 +396,9 @@ function _executeString(evalString, token) {
 export function evaluateOverlayExpressions(obj, token, conf) {
   for (const [k, v] of Object.entries(obj)) {
     if (
-      ![
-        'label',
-        'interactivity',
-        'variables',
-        'id',
-        'parentID',
-        'limitedUsers',
-        'filter',
-        'limitOnProperty',
-      ].includes(k)
+      !['label', 'interactivity', 'variables', 'id', 'parentID', 'limitedUsers', 'filter', 'limitOnProperty'].includes(
+        k
+      )
     ) {
       obj[k] = _evaluateObjExpressions(v, token, conf);
     }
@@ -512,14 +483,11 @@ export async function generateTextTexture(token, conf) {
   if (curve?.radius || curve?.angle) {
     // Curve the text
     const letterSpacing = conf.text.letterSpacing ?? 0;
-    const radius = curve.angle
-      ? (texture.width + letterSpacing) / (Math.PI * 2) / (curve.angle / 360)
-      : curve.radius;
+    const radius = curve.angle ? (texture.width + letterSpacing) / (Math.PI * 2) / (curve.angle / 360) : curve.radius;
     const maxRopePoints = 100;
     const step = Math.PI / maxRopePoints;
 
-    let ropePoints =
-      maxRopePoints - Math.round((texture.width / (radius * Math.PI)) * maxRopePoints);
+    let ropePoints = maxRopePoints - Math.round((texture.width / (radius * Math.PI)) * maxRopePoints);
     ropePoints /= 2;
 
     const points = [];
@@ -542,8 +510,8 @@ export async function generateTextTexture(token, conf) {
 }
 
 function _markAllOverlaysForRemoval(token) {
-  for (const child of token.tva_sprites) {
-    if (child instanceof TVASprite) {
+  for (const child of token.tvaOverlays) {
+    if (child instanceof TVAOverlay) {
       child.tvaRemove = true;
     }
   }
@@ -551,18 +519,18 @@ function _markAllOverlaysForRemoval(token) {
 
 export function removeMarkedOverlays(token) {
   const sprites = [];
-  for (const child of token.tva_sprites) {
+  for (const child of token.tvaOverlays) {
     if (child.tvaRemove) {
       child.parent?.removeChild(child)?.destroy();
     } else {
       sprites.push(child);
     }
   }
-  token.tva_sprites = sprites;
+  token.tvaOverlays = sprites;
 }
 
-function _findTVASprite(id, token) {
-  for (const child of token.tva_sprites) {
+function _findTVAOverlay(id, token) {
+  for (const child of token.tvaOverlays) {
     if (child.overlayConfig?.id === id) {
       return child;
     }
@@ -571,11 +539,11 @@ function _findTVASprite(id, token) {
 }
 
 function _removeAllOverlays(token) {
-  if (token.tva_sprites)
-    for (const child of token.tva_sprites) {
+  if (token.tvaOverlays)
+    for (const child of token.tvaOverlays) {
       child.parent?.removeChild(child)?.destroy();
     }
-  token.tva_sprites = null;
+  token.tvaOverlays = null;
 }
 
 export function broadcastOverlayRedraw(token) {
