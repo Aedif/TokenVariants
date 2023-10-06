@@ -1,3 +1,11 @@
+# 4.58.0
+
+Overlays
+
+- New option: `Visibility` > `Limit Visibility to State` > `Target`
+  - Renders overlay visible if the token is targeted by the current or any user
+- `null` values will not default to `0` within overlay forms
+
 # 4.57.2
 
 - Fixed children overlay triggers not firing if their parents have no triggers of their own

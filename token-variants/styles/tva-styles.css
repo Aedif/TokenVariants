@@ -902,6 +902,10 @@ ol.token-variant-table .table-row .mapping-expression .expression-code.hidden {
   right: -7px;
 }
 
+.tva-overlay-form .html-text {
+  height: 600px;
+}
+
 /* ---------------------------------------- */
 /* Active Effect Scripts                    */
 /* ---------------------------------------- */
@@ -1032,6 +1036,8 @@ input.tvaInvalid {
   z-index: -50;
 }
 
-.tva-html-overlay .window-content {
+.tva-html-overlay form {
+  text-align: left;
+  padding: 5px;
   pointer-events: auto;
 }

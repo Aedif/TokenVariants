@@ -130,11 +130,20 @@ export class TVAOverlay extends TokenMesh {
       }
     }
 
-    if (ov.limitOnHover || ov.limitOnControl || ov.limitOnHighlight || ov.limitOnHUD) {
+    if (
+      ov.limitOnHover ||
+      ov.limitOnControl ||
+      ov.limitOnHighlight ||
+      ov.limitOnHUD ||
+      ov.limitOnTarget ||
+      ov.limitOnAnyTarget
+    ) {
       if (ov.limitOnHover && canvas.controls.ruler._state === Ruler.STATES.INACTIVE && this.object.hover) return true;
       if (ov.limitOnControl && this.object.controlled) return true;
       if (ov.limitOnHighlight && (canvas.tokens.highlightObjects ?? canvas.tokens._highlight)) return true;
       if (ov.limitOnHUD && this.object.hasActiveHUD) return true;
+      if (ov.limitOnAnyTarget && this.object.targeted.size) return true;
+      if (ov.limitOnTarget && this.object.targeted.some((u) => u.id === game.userId)) return true;
       return false;
     }
     return true;
@@ -220,6 +229,7 @@ export class TVAOverlay extends TokenMesh {
       if (pTexture.shapes) this.pseudoTexture.shapes = this.addChild(pTexture.shapes);
     }
 
+    if (this.pseudoTexture.html) this.addHTMLOverlay();
     if (refresh) this.refresh(configuration, { fullRefresh: !preview });
   }
 
@@ -237,6 +247,8 @@ export class TVAOverlay extends TokenMesh {
     }
 
     const config = mergeObject(this.overlayConfig, configuration ?? {}, { inplace: !preview });
+
+    if (preview && this.htmlOverlay) this.htmlOverlay.render(config, true);
 
     this.enableInteractivity(config);
 
@@ -382,14 +394,6 @@ export class TVAOverlay extends TokenMesh {
     }
 
     if (this.htmlOverlay) {
-      // this.htmlOverlay.setPosition({
-      //   left: this.x + shapes.x,
-      //   top: this.y + shapes.y,
-      //   width: dimensions.width * this.scale.x,
-      //   height: dimensions.height * this.scale.y,
-      //   angle: this.angle,
-      // });
-
       this.htmlOverlay.setPosition({
         left: this.x - this.pivot.x * this.scale.x - this.width * this.anchor.x,
         top: this.y - this.pivot.y * this.scale.y - this.height * this.anchor.y,
@@ -397,14 +401,6 @@ export class TVAOverlay extends TokenMesh {
         height: this.height,
         angle: this.angle,
       });
-
-      // this.htmlOverlay.setPosition({
-      //   left: this.x - shapes.pivot.x - dimensions.width / 2,
-      //   top: this.y - shapes.pivot.y - dimensions.height / 2,
-      //   width: dimensions.width,
-      //   height: dimensions.height,
-      //   angle: this.angle,
-      // });
     }
 
     this.ready = true;
@@ -539,9 +535,12 @@ export class TVAOverlay extends TokenMesh {
     if (this.texture.textLabel || this.texture.destroyable) {
       this.texture.destroy(true);
     }
+
     if (this.pseudoTexture?.shapes) {
       this.removeChild(this.pseudoTexture.shapes);
       this.pseudoTexture.shapes.destroy();
+    } else if (this.pseudoTexture?.html) {
+      this.removeHTMLOverlay();
     }
   }
 
@@ -567,7 +566,7 @@ export class TVAOverlay extends TokenMesh {
       this.texture.baseTexture.destroy();
     }
 
-    if (this.htmlOverlay) this.htmlOverlay.remove();
+    this.removeHTMLOverlay();
 
     super.destroy();
   }
@@ -578,7 +577,12 @@ export class TVAOverlay extends TokenMesh {
   }
 
   addHTMLOverlay() {
-    this.htmlOverlay = new HTMLOverlay(this.overlayConfig, this.object);
+    if (!this.htmlOverlay) this.htmlOverlay = new HTMLOverlay(this.overlayConfig, this.object);
+  }
+
+  removeHTMLOverlay() {
+    if (this.htmlOverlay) this.htmlOverlay.remove();
+    this.htmlOverlay = null;
   }
 }
 

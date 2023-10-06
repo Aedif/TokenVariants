@@ -27,7 +27,12 @@ export class OverlayConfig extends FormApplication {
       title: 'Overlay Settings',
       width: 500,
       height: 'auto',
-      tabs: [{ navSelector: '.sheet-tabs', contentSelector: '.content', initial: 'misc' }],
+      //tabs: [{ navSelector: '.sheet-tabs', contentSelector: '.content', initial: 'misc' }, ],
+
+      tabs: [
+        { navSelector: '.tabs[data-group="main"]', contentSelector: 'form', initial: 'misc' },
+        { navSelector: '.tabs[data-group="html"]', contentSelector: '.tab[data-tab="html"]', initial: 'template' },
+      ],
     });
   }
 
@@ -112,7 +117,7 @@ export class OverlayConfig extends FormApplication {
     html.find('.cloneShape').on('click', this._onCloneShape.bind(this));
 
     html.find('input,select').on('change', this._onInputChange.bind(this));
-    html.find('textarea').on('input', this._onInputChange.bind(this));
+    html.find('textarea').on('change', this._onInputChange.bind(this));
     const parentId = html.find('[name="parentID"]');
     parentId.on('change', (event) => {
       if (event.target.value === 'TOKEN') {

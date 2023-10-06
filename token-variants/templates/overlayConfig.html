@@ -40,25 +40,23 @@
     <section class = "content">
 
         <div class="tab" data-group="main" data-tab="html">
-            <div class="form-group">
-                <label>Template</label>
-                <div class="form-fields">
-                    <textarea name="html.template">{{html.template}}</textarea>
-                </div>
+
+            <nav class="tabs sheet-tabs secondary-tabs" data-group="html" aria-role="Sight Configuration Tabs">
+                <a class="item active" data-tab="template" data-group="html"><i class="fa-solid fa-eye"></i> Template</a>
+                <a class="item" data-tab="style" data-group="html"><i class="fa-solid fa-radar"></i> Style</a>
+                <a class="item" data-tab="listeners" data-group="html"><i class="fa-solid fa-cogs"></i> Listeners</a>
+            </nav>
+
+            <div class="tab" data-group="html" data-tab="template">
+                <textarea class="html-text" name="html.template">{{html.template}}</textarea>
             </div>
 
-            <div class="form-group">
-                <label>Style</label>
-                <div class="form-fields">
-                    <textarea name="html.style">{{html.style}}</textarea>
-                </div>
+            <div class="tab" data-group="html" data-tab="style">
+                <textarea class="html-text"name="html.style">{{html.style}}</textarea>
             </div>
 
-            <div class="form-group">
-                <label>Register Listeners</label>
-                <div class="form-fields">
-                    <textarea name="html.listeners">{{html.listeners}}</textarea>
-                </div>
+            <div class="tab" data-group="html" data-tab="listeners">
+                <textarea class="html-text" name="html.listeners">{{html.listeners}}</textarea>
             </div>
         </div>
 
@@ -489,6 +487,15 @@
                     <label>HUD</label>
                     <div class="form-fields">
                         <input type="checkbox" name="limitOnHUD" data-dtype="Boolean" value="{{limitOnHUD}}" {{#if limitOnHUD}}checked{{/if}}>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Target</label>
+                    <div class="form-fields">
+                        <label>User</label>
+                        <input type="checkbox" name="limitOnTarget" data-dtype="Boolean" value="{{limitOnTarget}}" {{#if limitOnTarget}}checked{{/if}}>
+                        <label>Any</label>
+                        <input type="checkbox" name="limitOnAnyTarget" data-dtype="Boolean" value="{{limitOnAnyTarget}}" {{#if limitOnAnyTarget}}checked{{/if}}>
                     </div>
                 </div>
             </fieldset>

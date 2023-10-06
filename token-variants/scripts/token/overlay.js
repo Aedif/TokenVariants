@@ -47,7 +47,7 @@ export async function drawOverlays(token) {
           if (!isEmpty(diff)) {
             if (ov.img?.includes('*') || (ov.img?.includes('{') && ov.img?.includes('}'))) {
               sprite.refresh(ov);
-            } else if (diff.img || diff.text || diff.shapes || diff.repeat) {
+            } else if (diff.img || diff.text || diff.shapes || diff.repeat || diff.html) {
               sprite.setTexture(await genTexture(token, ov), { configuration: ov });
             } else if (diff.parentID) {
               sprite.parent?.removeChild(sprite)?.destroy();
@@ -376,7 +376,7 @@ function _evaluateString(str, token, conf) {
       if (token && property === 'hp') return getTokenHP(token)?.[0];
       else if (token && property === 'hpMax') return getTokenHP(token)?.[1];
       const val = getProperty(token.document ?? token, property);
-      return val === undefined ? match : val;
+      return val ?? 0;
     })
     .replace('\\n', '\n');
 
@@ -396,9 +396,17 @@ function _executeString(evalString, token) {
 export function evaluateOverlayExpressions(obj, token, conf) {
   for (const [k, v] of Object.entries(obj)) {
     if (
-      !['label', 'interactivity', 'variables', 'id', 'parentID', 'limitedUsers', 'filter', 'limitOnProperty'].includes(
-        k
-      )
+      ![
+        'label',
+        'interactivity',
+        'variables',
+        'id',
+        'parentID',
+        'limitedUsers',
+        'filter',
+        'limitOnProperty',
+        'html',
+      ].includes(k)
     ) {
       obj[k] = _evaluateObjExpressions(v, token, conf);
     }
