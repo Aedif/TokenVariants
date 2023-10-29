@@ -8,7 +8,7 @@ import {
   userRequiresImageCache,
   waitForTokenTexture,
 } from './scripts/utils.js';
-import { FONT_LOADING, drawOverlays } from './scripts/token/overlay.js';
+import { FONT_LOADING, broadcastDrawOverlays, drawOverlays } from './scripts/token/overlay.js';
 import {
   getTokenEffects,
   setOverlayVisibility,
@@ -217,6 +217,8 @@ registerHook('main', 'init', function () {
     toggleTemplateDialog,
     toggleTemplate,
     toggleTemplateOnSelected,
+    drawOverlays,
+    broadcastDrawOverlays,
     TVA_CONFIG,
   };
 

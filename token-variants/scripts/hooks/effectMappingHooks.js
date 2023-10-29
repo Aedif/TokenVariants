@@ -11,7 +11,7 @@ import {
   tv_executeScript,
   updateTokenImage,
 } from '../utils.js';
-import { broadcastOverlayRedraw, drawOverlays } from '../token/overlay.js';
+import { broadcastDrawOverlays, drawOverlays } from '../token/overlay.js';
 import { registerHook, unregisterHook } from './hooks.js';
 import { CORE_TEMPLATES } from '../mappingTemplates.js';
 
@@ -544,7 +544,7 @@ async function _updateWithEffectMapping(token, added, removed) {
       _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, deferredUpdateScripts);
     }
   }
-  broadcastOverlayRedraw(placeable);
+  broadcastDrawOverlays(placeable);
 }
 
 async function _postTokenUpdateProcessing(token, hadActiveHUD, toggleStatus, scripts) {

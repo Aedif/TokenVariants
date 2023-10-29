@@ -34,7 +34,7 @@
       </div>
       {{#each mappings.list as |mapping|}}
       <input type="text" name="mappings.{{mapping.i}}.id" value="{{mapping.id}}" hidden/>
-      <li class="table-row flexrow" data-group="{{group}}" data-index="{{mapping.i}}">
+      <li class="table-row flexrow {{#if mapping.parentID}}child{{/if}}" data-group="{{group}}" data-index="{{mapping.i}}">
         <div class="mapping-controls">
           <a class="clone-mapping" title="Clone mapping"><i class="fas fa-clone"></i></a>
           <a class="delete-mapping" title="Delete mapping"><i class="fas fa-trash"></i></a>

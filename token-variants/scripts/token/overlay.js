@@ -554,7 +554,7 @@ function _removeAllOverlays(token) {
   token.tvaOverlays = null;
 }
 
-export function broadcastOverlayRedraw(token) {
+export function broadcastDrawOverlays(token) {
   // Need to broadcast to other users to re-draw the overlay
   if (token) drawOverlays(token);
   const actorId = token.document?.actorLink ? token.actor?.id : null;

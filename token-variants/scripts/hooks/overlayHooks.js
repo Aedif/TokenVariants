@@ -1,4 +1,4 @@
-import { FEATURE_CONTROL } from '../settings.js';
+import { FEATURE_CONTROL, TVA_CONFIG } from '../settings.js';
 import { HTMLOverlay } from '../sprite/HTMLOverlay.js';
 import { TVAOverlay } from '../sprite/TVAOverlay.js';
 import { drawOverlays } from '../token/overlay.js';
@@ -15,9 +15,18 @@ export function registerOverlayHooks() {
       'renderCombatTracker',
       'updateToken',
       'createToken',
+      'hoverToken',
       'renderHeadsUpDisplay',
     ].forEach((id) => unregisterHook(feature_id, id));
     return;
+  } else if (!TVA_CONFIG.evaluateOverlayOnHover) {
+    unregisterHook(feature_id, 'hoverToken');
+  }
+
+  if (TVA_CONFIG.evaluateOverlayOnHover) {
+    registerHook(feature_id, 'hoverToken', function (token, hover) {
+      drawOverlays(token);
+    });
   }
 
   registerHook(feature_id, 'createToken', async function (token) {

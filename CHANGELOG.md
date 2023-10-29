@@ -1,3 +1,17 @@
+# 4.59.0
+
+- New option: `Effects` > `Refresh Overlays on Token Hover`
+  - Enabled by default
+  - Will refresh overlay expressions when the token is hovered over
+- Overlay configuration `Text` field was changed to a `textarea` making code and multiline strings more legible
+
+API
+
+- `drawOverlays(token)`
+  - Draws/re-draws overlays for the provided token on the current client
+- `broadcastDrawOverlays(token)`
+  - Draws/re-draws overlays for the provided token on all clients
+
 # 4.58.0
 
 Overlays

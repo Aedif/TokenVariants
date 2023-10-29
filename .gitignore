@@ -9,3 +9,4 @@ token-variants/bundle.js
 node_modules/*
 .parcel-cache/*
 package-lock.json
+token-variants/token-variants-cache.json

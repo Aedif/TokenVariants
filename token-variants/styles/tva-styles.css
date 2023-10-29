@@ -472,6 +472,11 @@ ol.token-variant-table .table-row .mapping-overlay > a.child {
   color: rgb(252, 30, 252);
 }
 
+ol.token-variant-table .table-row.child {
+  padding-left: 5px;
+  border-left: 2px solid rgb(252, 30, 252);
+}
+
 ol.token-variant-table .table-row .mapping-alwaysOn {
   flex: 0 0 80px;
   text-align: center;

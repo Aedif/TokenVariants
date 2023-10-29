@@ -76,26 +76,30 @@ export class HTMLOverlay {
 
 const _templateCache = {};
 
-function _compile(stringHTML) {
+function _compile(html, id) {
+  //      <style scoped>${html.style}</style>
   return Handlebars.compile(
-    '<div class="tva-html-overlay"> <section class="window-content"><form>' + stringHTML + '</form></section></div>'
+    `<div class="tva-html-overlay overlay-${id}">
+      <section class="window-content">
+        <form>${html.template}</form>
+      </section>
+    </div>`
   );
 }
 
 function constructTemplate(ovConfig, force = false) {
   if (!_templateCache.hasOwnProperty(ovConfig.id)) {
-    const compiled = _compile(ovConfig.html.template);
+    const compiled = _compile(ovConfig.html, ovConfig.id);
     Handlebars.registerPartial(ovConfig.id, compiled);
     _templateCache[ovConfig.id] = compiled;
   } else if (force) {
-    return _compile(ovConfig.html.template);
+    return _compile(ovConfig.html, ovConfig.id);
   }
   return _templateCache[ovConfig.id];
 }
 
 function renderTemplate(ovConfig, data, force = false) {
   const template = constructTemplate(ovConfig, force);
-  console.log(data.x);
   return template(data || {}, {
     allowProtoMethodsByDefault: true,
     allowProtoPropertiesByDefault: true,
