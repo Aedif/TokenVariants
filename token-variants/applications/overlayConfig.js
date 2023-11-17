@@ -1175,7 +1175,8 @@ function genControl(control, values) {
   <div class="form-fields">
       <textarea style="width: 450px; height: 200px;" name="filterOptions.${name}">${val}</textarea>
   </div>`;
-    if (game.modules.get('multi-token-edit')?.api.showGenericForm) {
+    const massEdit = game.modules.get('multi-token-edit');
+    if (massEdit?.active && massEdit.api.showGenericForm) {
       control += `
   <div style="text-align: right; color: orangered;">
       <a> <i class="me-edit-json fas fa-edit" title="Show Generic Form"></i></a>

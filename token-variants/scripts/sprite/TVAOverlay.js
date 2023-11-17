@@ -151,7 +151,10 @@ export class TVAOverlay extends TokenMesh {
 
   // Overlays have the same sort order as the parent
   get sort() {
-    return this.object.document.sort || 0;
+    const sort = this.object.mesh.sort;
+    if (this.overlayConfig.top) return sort + 9999;
+    else if (this.overlayConfig.bottom) return sort - 9999;
+    return sort;
   }
 
   get _lastSortedIndex() {
@@ -159,9 +162,9 @@ export class TVAOverlay extends TokenMesh {
   }
 
   get elevation() {
-    let elevation = this.object.mesh?.data.elevation;
-    if (this.overlayConfig.top) elevation += 9999;
-    else if (this.overlayConfig.bottom) elevation -= 9999;
+    const elevation = this.object.mesh?.data.elevation;
+    if (this.overlayConfig.bottom) return 0;
+    else if (this.overlayConfig.top) return elevation + 9999;
     return elevation;
   }
 
@@ -587,7 +590,7 @@ export class TVAOverlay extends TokenMesh {
 }
 
 async function constructTMFXFilters(paramsArray, sprite) {
-  if (typeof TokenMagic === 'undefined') return [];
+  if (typeof TokenMagic === 'undefined' || !('filterTypes' in TokenMagic)) return [];
 
   try {
     paramsArray = eval(paramsArray);
@@ -602,7 +605,7 @@ async function constructTMFXFilters(paramsArray, sprite) {
 
   let filters = [];
   for (const params of paramsArray) {
-    if (!params.hasOwnProperty('filterType') || !TMFXFilterTypes.hasOwnProperty(params.filterType)) {
+    if (!params.hasOwnProperty('filterType') || !TokenMagic.filterTypes.hasOwnProperty(params.filterType)) {
       // one invalid ? all rejected.
       return [];
     }
@@ -626,16 +629,18 @@ async function constructTMFXFilters(paramsArray, sprite) {
     // params.placeableType = placeable._TMFXgetPlaceableType();
     params.updateId = randomID();
 
-    const filterClass = await getTMFXFilter(params.filterType);
+    const filterClass = TokenMagic.filterTypes[params.filterType];
     if (filterClass) {
-      filterClass.prototype.assignPlaceable = function () {
-        this.targetPlaceable = sprite.object;
-        this.placeableImg = sprite;
-      };
+      class ModTMFX extends filterClass {
+        assignPlaceable() {
+          this.targetPlaceable = sprite.object;
+          this.placeableImg = sprite;
+        }
 
-      filterClass.prototype._TMFXsetAnimeFlag = async function () {};
+        async _TMFXsetAnimeFlag() {}
+      }
 
-      const filter = new filterClass(params);
+      const filter = new ModTMFX(params);
       if (filter) {
         // Patch fixes
         filter.placeableImg = sprite;
@@ -648,67 +653,6 @@ async function constructTMFXFilters(paramsArray, sprite) {
   }
   return filters;
 }
-
-async function getTMFXFilter(id) {
-  if (id in TMFXFilterTypes) {
-    if (id in LOADED_TMFXFilters) return LOADED_TMFXFilters[id];
-    else {
-      try {
-        const className = TMFXFilterTypes[id];
-        let fxModule = await import(`../../../tokenmagic/fx/filters/${className}.js`);
-        if (fxModule && fxModule[className]) {
-          LOADED_TMFXFilters[id] = fxModule[className];
-          return fxModule[className];
-        }
-      } catch (e) {}
-    }
-  }
-  return null;
-}
-
-const LOADED_TMFXFilters = {};
-
-const TMFXFilterTypes = {
-  adjustment: 'FilterAdjustment',
-  distortion: 'FilterDistortion',
-  oldfilm: 'FilterOldFilm',
-  glow: 'FilterGlow',
-  outline: 'FilterOutline',
-  bevel: 'FilterBevel',
-  xbloom: 'FilterXBloom',
-  shadow: 'FilterDropShadow',
-  twist: 'FilterTwist',
-  zoomblur: 'FilterZoomBlur',
-  blur: 'FilterBlur',
-  bulgepinch: 'FilterBulgePinch',
-  zapshadow: 'FilterRemoveShadow',
-  ray: 'FilterRays',
-  fog: 'FilterFog',
-  xfog: 'FilterXFog',
-  electric: 'FilterElectric',
-  wave: 'FilterWaves',
-  shockwave: 'FilterShockwave',
-  fire: 'FilterFire',
-  fumes: 'FilterFumes',
-  smoke: 'FilterSmoke',
-  flood: 'FilterFlood',
-  images: 'FilterMirrorImages',
-  field: 'FilterForceField',
-  xray: 'FilterXRays',
-  liquid: 'FilterLiquid',
-  xglow: 'FilterGleamingGlow',
-  pixel: 'FilterPixelate',
-  web: 'FilterSpiderWeb',
-  ripples: 'FilterSolarRipples',
-  globes: 'FilterGlobes',
-  transform: 'FilterTransform',
-  splash: 'FilterSplash',
-  polymorph: 'FilterPolymorph',
-  xfire: 'FilterXFire',
-  sprite: 'FilterSprite',
-  replaceColor: 'FilterReplaceColor',
-  ddTint: 'FilterDDTint',
-};
 
 class OutlineFilter extends OutlineOverlayFilter {
   /** @inheritdoc */

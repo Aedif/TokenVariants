@@ -1,3 +1,8 @@
+# 4.59.1
+
+- Overlay TMFX filters now require TMFX version `>=0.6.5` to work
+- Fixed `Overlay` > `Display Priority` > `BOTTOM` causing overlays to render beneath scene background
+
 # 4.59.0
 
 - New option: `Effects` > `Refresh Overlays on Token Hover`
