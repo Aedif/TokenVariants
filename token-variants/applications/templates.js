@@ -209,6 +209,12 @@ class TemplateSubmissionForm extends FormApplication {
     data.systemTitle = game.system.title;
     data.templates = TVA_CONFIG.templateMappings;
 
+    data.modules = game.modules
+      .filter((m) => m.active)
+      .map((m) => {
+        return { id: m.name, name: m.title };
+      });
+
     return data;
   }
 
@@ -225,10 +231,25 @@ class TemplateSubmissionForm extends FormApplication {
     const hint = formData.hint.trim() || template.hint?.trim();
     const createdBy = formData.createdBy.trim();
     const system = formData.system;
+
+    if (!(formData.modules instanceof Array)) formData.modules = [formData.modules];
+    const modules = formData.modules.filter(Boolean).map((id) => {
+      return { id, name: game.modules.get(id).title };
+    });
+
     const id = randomID();
     const img = formData.img.trim();
 
-    const result = submitTemplate({ id, name, hint, img, createdBy, system, mappings: template.mappings });
+    const result = await submitTemplate({
+      id,
+      name,
+      hint,
+      img,
+      createdBy,
+      system,
+      modules,
+      mappings: template.mappings,
+    });
     if (result) this.close();
   }
 }
@@ -242,6 +263,7 @@ function _setStringField(template, fields, field) {
 async function submitTemplate(template) {
   const fields = {};
   ['name', 'hint', 'img', 'id', 'createdBy', 'system'].forEach((field) => _setStringField(template, fields, field));
+  fields.modules = { stringValue: template.modules.length ? JSON.stringify(template.modules) : '' };
   fields.mappings = { stringValue: JSON.stringify(template.mappings) };
   fields.createTime = { integerValue: new Date().getTime() };
   fields.approved = { booleanValue: false };
@@ -290,6 +312,9 @@ const SEARCH_QUERY = {
         },
         {
           fieldPath: 'system',
+        },
+        {
+          fieldPath: 'modules',
         },
       ],
     },
@@ -345,11 +370,13 @@ async function communityTemplates(search = null) {
 
 function _docToTemplate(doc) {
   const template = {};
-  ['id', 'name', 'mappings', 'createdBy', 'img', 'hint', 'system'].forEach((f) => {
+  ['id', 'name', 'mappings', 'createdBy', 'img', 'hint', 'system', 'modules'].forEach((f) => {
     template[f] = doc.fields[f]?.stringValue || '';
   });
   if (template.mappings) template.mappings = JSON.parse(template.mappings);
   else template.fileURL = doc.name;
+
+  if (template.modules) template.modules = JSON.parse(template.modules);
 
   if (!template.createdBy) template.createdBy = 'Anonymous';
   return template;

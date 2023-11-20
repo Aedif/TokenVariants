@@ -33,6 +33,7 @@
             {{#if ../allowDelete}}<a class="delete" title="Delete"><i class="fa-solid fa-trash fa-xs"></i></a>{{/if}}
             {{#if ../allowCopy}}<a class="copy" title="Copy to User"><i class="fas fa-clone fa-xs"></i></a>{{/if}}
             {{#if system}}<br><span class="system">({{system}})</span>{{/if}}
+            {{#each modules as |module|}}<span class="module" title="{{module.id}}">({{module.name}})</span>{{/each}}
         </li>
     {{/each}}
     </ul>

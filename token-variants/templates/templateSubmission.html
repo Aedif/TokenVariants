@@ -26,6 +26,18 @@
         </div>
     </div>
 
+    <div>
+        <label>Module Dependencies</label>
+        <div style="max-height: 150px; overflow: scroll; border-width: 2px; border-style: groove;">
+            {{#each modules as |module|}}
+            <div>
+                <input type="checkbox" name="modules" value="{{module.id}}">
+                <label>{{module.name}}</label>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+
     <div class="form-group">
         <label>Name (optional)</label>
         <div class="form-fields">

@@ -163,7 +163,7 @@ export class TVAOverlay extends TokenMesh {
 
   get elevation() {
     const elevation = this.object.mesh?.data.elevation;
-    if (this.overlayConfig.bottom) return 0;
+    if (this.overlayConfig.bottom && elevation > 0) return 0;
     else if (this.overlayConfig.top) return elevation + 9999;
     return elevation;
   }

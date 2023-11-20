@@ -1,3 +1,9 @@
+# 4.60.0
+
+- Added module dependencies to the Template submission form
+- Mappings form now has separate buttons to `Save` and to `Save & Close`
+- Minor caret positioning fix for the Mapping form's `Expression` textbox
+
 # 4.59.1
 
 - Overlay TMFX filters now require TMFX version `>=0.6.5` to work
