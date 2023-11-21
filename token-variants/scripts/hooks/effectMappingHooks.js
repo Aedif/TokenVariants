@@ -125,7 +125,7 @@ function _preUpdateActiveEffect(activeEffect, change, options, userId) {
   if (!activeEffect.parent || game.userId !== userId) return;
 
   if ('label' in change) {
-    options['token-variants-old-name'] = activeEffect.label;
+    options['token-variants-old-name'] = activeEffect.name ?? activeEffect.label;
   }
 }
 
@@ -136,8 +136,8 @@ function _updateActiveEffect(activeEffect, change, options, userId) {
   const removed = [];
 
   if ('disabled' in change) {
-    if (change.disabled) removed.push(activeEffect.label);
-    else added.push(activeEffect.label);
+    if (change.disabled) removed.push(activeEffect ?? activeEffect.label);
+    else added.push(activeEffect.name ?? activeEffect.label);
   }
   if ('label' in change) {
     removed.push(options['token-variants-old-name']);
