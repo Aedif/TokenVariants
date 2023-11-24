@@ -254,6 +254,7 @@ export function showMappingSelectDialog(
         },
       },
     },
+    close: () => callback(null),
     render: (html) => {
       html.find('.select-all').click(() => {
         html.find('input[type="checkbox"]').prop('checked', true);

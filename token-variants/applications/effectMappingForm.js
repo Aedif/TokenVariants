@@ -612,23 +612,21 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   async _exportConfigs(event) {
-    let mappings;
     let filename = '';
-    if (this.globalMappings) {
-      mappings = { globalMappings: deepClone(TVA_CONFIG.globalMappings) };
-      filename = 'token-variants-global-mappings.json';
-    } else {
-      mappings = {
-        globalMappings: deepClone(getFlagMappings(this.objectToFlag)),
-      };
 
-      let actorName = this.objectToFlag.name ?? 'Actor';
-      actorName = actorName.replace(/[/\\?%*:|"<>]/g, '-');
-      filename = 'token-variants-' + actorName + '.json';
-    }
+    let mappings = await new Promise((resolve) => {
+      showMappingSelectDialog(this.globalMappings ?? getFlagMappings(this.objectToFlag), { callback: resolve });
+    });
 
     if (mappings && !isEmpty(mappings)) {
-      saveDataToFile(JSON.stringify(mappings, null, 2), 'text/json', filename);
+      if (this.globalMappings) {
+        filename = 'token-variants-global-mappings.json';
+      } else {
+        let actorName = this.objectToFlag.name ?? 'Actor';
+        actorName = actorName.replace(/[/\\?%*:|"<>]/g, '-');
+        filename = 'token-variants-' + actorName + '.json';
+      }
+      saveDataToFile(JSON.stringify({ globalMappings: mappings }, null, 2), 'text/json', filename);
     }
   }
 

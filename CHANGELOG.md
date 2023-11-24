@@ -1,3 +1,8 @@
+# 4.60.1
+
+- Deprecation warning fixes
+- During Mapping export you can now select which individual mappings you wish to export
+
 # 4.60.0
 
 - Added module dependencies to the Template submission form

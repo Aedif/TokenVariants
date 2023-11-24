@@ -124,8 +124,8 @@ function _createCombatant(combatant, options, userId) {
 function _preUpdateActiveEffect(activeEffect, change, options, userId) {
   if (!activeEffect.parent || game.userId !== userId) return;
 
-  if ('label' in change) {
-    options['token-variants-old-name'] = activeEffect.name ?? activeEffect.label;
+  if ('name' in change) {
+    options['token-variants-old-name'] = activeEffect.name;
   }
 }
 
@@ -136,12 +136,12 @@ function _updateActiveEffect(activeEffect, change, options, userId) {
   const removed = [];
 
   if ('disabled' in change) {
-    if (change.disabled) removed.push(activeEffect ?? activeEffect.label);
-    else added.push(activeEffect.name ?? activeEffect.label);
+    if (change.disabled) removed.push(activeEffect.name);
+    else added.push(activeEffect.name);
   }
-  if ('label' in change) {
+  if ('name' in change) {
     removed.push(options['token-variants-old-name']);
-    added.push(change.label);
+    added.push(change.name);
   }
 
   if (added.length || removed.length) {
