@@ -39,8 +39,7 @@ export class TVAOverlay extends TokenMesh {
       configurable: true,
     });
 
-    this.eventMode = 'passive';
-    this.enableInteractivity(this.overlayConfig);
+    this.eventMode = 'none';
   }
 
   enableInteractivity() {
@@ -48,7 +47,7 @@ export class TVAOverlay extends TokenMesh {
       this.removeAllListeners();
       this.mouseInteractionManager = null;
       this.cursor = null;
-      this.eventMode = 'passive';
+      this.eventMode = 'none';
       return;
     } else if (this.mouseInteractionManager || !this.overlayConfig.interactivity?.length) return;
 
@@ -59,6 +58,14 @@ export class TVAOverlay extends TokenMesh {
     }
 
     this.eventMode = 'static';
+
+    // If this overlay iss interactable all of its parents need to be set as interactable too
+    let parent = this.parent;
+    while (parent instanceof TVAOverlay || parent?.parent instanceof TVAOverlay) {
+      parent.eventMode = 'passive';
+      parent = parent.parent;
+    }
+
     this.cursor = 'pointer';
     const token = this.object;
     const sprite = this;

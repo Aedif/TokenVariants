@@ -1,3 +1,7 @@
+# 4.60.2
+
+- Fixed overlays being interactive even when no `Triggers` have been assigned to them
+
 # 4.60.1
 
 - Deprecation warning fixes
