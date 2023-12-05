@@ -296,7 +296,7 @@ function _updateItem(item, change, options, userId) {
 
   if (game.user.id === userId) {
     // Handle condition/effect name change
-    if (options['token-variants-old-name'] !== item.name) {
+    if (options['token-variants-old-name'] != null && options['token-variants-old-name'] !== item.name) {
       added.push(item.name);
       removed.push(options['token-variants-old-name']);
     }

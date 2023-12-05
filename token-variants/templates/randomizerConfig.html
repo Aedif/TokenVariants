@@ -28,6 +28,14 @@
         <input type="checkbox" name="randomizer.syncImages" data-dtype="Boolean" {{#if randomizer.syncImages}}checked{{/if}}>
     </div>
 
+    <hr />
+
+    <div class="form-group">
+        <label>Prevent image repeats</label>
+        <input type="checkbox" name="randomizer.nonRepeat" data-dtype="Boolean" {{#if randomizer.nonRepeat}}checked{{/if}}>
+        <p class="notes">Tokens on the active scene will be checked to make sure there are no repeating images.</p>
+    </div>
+
     <h2>Searches to include in image Randomization</h2>
 
     <div class="form-group">

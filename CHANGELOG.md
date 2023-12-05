@@ -1,3 +1,10 @@
+# 4.61.0
+
+- New randomizer option: `Prevent image repeats`
+  - When enabled tokens on the active scene will be checked to make sure that the chosen random image is unique
+  - If no unique option exists in the selection of images, a random duplicate will be picked
+- Fixed items bypassing type restrictions during updates ( **pf2e**: 'condition', 'effect', 'weapon', 'equipment' **other systems**: 'equipment', 'weapon') when considering active effects for mappings
+
 # 4.60.2
 
 - Fixed overlays being interactive even when no `Triggers` have been assigned to them

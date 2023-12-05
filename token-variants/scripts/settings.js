@@ -60,6 +60,7 @@ export const TVA_CONFIG = {
     popupOnDisable: false,
     diffImages: false,
     syncImages: false,
+    nonRepeat: false,
   },
   popup: {
     disableAutoPopupOnActorCreate: true,
