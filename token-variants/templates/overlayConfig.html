@@ -2,9 +2,10 @@
 
     <nav class="sheet-tabs tabs" data-group="main" aria-role="Form Tab Navigation">
         <a class="item active" data-tab="misc"><i class="fas fa-wrench"></i> Misc</a>
-        <a class="item" data-tab="image"><i class="fas fa-expand"></i> Image</a>
+        <a class="item" data-tab="appearance"><i class="fas fa-expand"></i> Appearance</a>
+        <a class="item" data-tab="image" style="border-left: 1px solid rgba(0, 0, 0, 0.2);"><i class="fas fa-image"></i> Image</a>
         <a class="item" data-tab="text"><i class="fas fa-text-size"></i> Text</a>
-        <a class="item" data-tab="shapes"><i class="fas fa-shapes"></i> Shapes</a>
+        <a class="item" data-tab="shapes" style="border-right: 1px solid rgba(0, 0, 0, 0.2);"><i class="fas fa-shapes"></i> Shapes</a>
         <!-- <a class="item" data-tab="html"><i class="fas fa-bolt"></i> HTML</a> -->
         <a class="item" data-tab="filter"><i class="fas fa-paint-roller"></i> Filter</a>
         <a class="item" data-tab="visibility"><i class="fas fa-eye"></i> Visibility</a>
@@ -260,17 +261,28 @@
 
         <div class="tab active" data-group="main" data-tab="image">
             <div class="form-group">
-                <label>Image Path</label>
-                <div class="form-fields">
-                    <button type="button" class="file-picker img-link-disable" data-type="imagevideo" data-target="img" title="Browse Files" tabindex="-1"><i class="fas fa-file-import fa-fw"></i></button>
-                    <input class="image img-link-disable" type="text" name="img" placeholder="path/image.png" value="{{img}}">
-                    <button type="button" class="image-link {{#if imgLinked}}active{{/if}}" title="Use the same image as the Token."><i class="fas fa-link"></i></button>
-                        <input type="checkbox" name="imgLinked" hidden {{#if imgLinked}}checked{{/if}}>
-                    <button type="button" title="Select Image" class="token-variants-image-select-button img-link-disable" tabindex="-1" data-type="imagevideo" data-target="img"><i class="fas fa-images"></i></button>
-                </div>
+                <button class="addImage" type="button">Add Image</button>
             </div>
 
+            {{#each img as |image|}}
+            <hr>
+            <div class="form-group" style="padding: 5px;">
+                <label><a class="deleteImage" data-index="{{@index}}" title="Remove"><i class="fas fa-trash-alt"></i></a> Image</label>
+                <div class="form-fields">
+                    <button type="button" class="file-picker img-link-disable" data-type="imagevideo" data-target="img.{{@index}}.src" title="Browse Files" tabindex="-1"><i class="fas fa-file-import fa-fw"></i></button>
+                    <input class="image img-link-disable" type="text" name="img.{{@index}}.src" placeholder="path/image.png" value="{{image.src}}">
+                    <button type="button" class="image-link {{#if image.linked}}active{{/if}}" title="Use the same image as the Token."><i class="fas fa-link"></i></button>
+                        <input type="checkbox" name="img.{{@index}}.linked" hidden {{#if image.linked}}checked{{/if}}>
+                    <button type="button" title="Select Image" class="token-variants-image-select-button img-link-disable" tabindex="-1" data-type="imagevideo" data-target="img.{{@index}}.src"><i class="fas fa-images"></i></button>
+                </div>
+            </div>
+            {{/each}}
+            <hr>
+
             {{~>modules/token-variants/templates/partials/repeating.html repeating=repeating root="" repeat=repeat padding="true"}}
+        </div>
+
+        <div class="tab active" data-group="main" data-tab="appearance">
 
             <fieldset>
                 <legend>Appearance</legend>

@@ -148,7 +148,7 @@ export class Templates extends FormApplication {
       showMappingSelectDialog(this.mappings, {
         title1: 'Create Template',
         callback: (selectedMappings) => {
-          if (selectedMappings.length) showUserTemplateCreateDialog(selectedMappings);
+          if (selectedMappings?.length) showUserTemplateCreateDialog(selectedMappings);
         },
       });
     });

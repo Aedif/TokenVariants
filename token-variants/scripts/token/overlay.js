@@ -45,7 +45,7 @@ export async function drawOverlays(token) {
 
           // Check if we need to create a new texture or simply refresh the overlay
           if (!isEmpty(diff)) {
-            if (ov.img?.includes('*') || (ov.img?.includes('{') && ov.img?.includes('}'))) {
+            if (ov.img instanceof Array) {
               sprite.refresh(ov);
             } else if (diff.img || diff.text || diff.shapes || diff.repeat || diff.html) {
               sprite.setTexture(await genTexture(token, ov), { configuration: ov });
@@ -113,9 +113,8 @@ export async function drawOverlays(token) {
 // }
 
 export async function genTexture(token, conf) {
-  const img = conf.imgLinked ? token.document.texture.src : conf.img?.trim();
-  if (img) {
-    return await generateImage(token, conf, img);
+  if (conf.img) {
+    return await generateImage(token, conf, conf.img);
   } else if (conf.text?.text != null) {
     return await generateTextTexture(token, conf);
   } else if (conf.shapes?.length) {
@@ -130,14 +129,16 @@ export async function genTexture(token, conf) {
 }
 
 async function generateImage(token, conf, img) {
-  if (img.includes('*') || (img.includes('{') && img.includes('}'))) {
-    const images = await wildcardImageSearch(img);
-    if (images.length) {
-      if (images.length) {
-        img = images[Math.floor(Math.random() * images.length)];
-      }
-    }
+  let linked = false;
+  if (img instanceof Array) {
+    img = img[Math.floor(Math.random() * img.length)];
+    linked = img.linked;
+    img = img.src;
+  } else {
+    linked = conf.imgLinked;
   }
+
+  if (linked) img = token.document.texture.src;
 
   let texture = await loadTexture(img, {
     fallback: 'modules/token-variants/img/token-images.svg',

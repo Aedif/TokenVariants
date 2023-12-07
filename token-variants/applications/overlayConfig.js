@@ -11,6 +11,11 @@ export class OverlayConfig extends FormApplication {
   constructor(config, callback, id, token) {
     super({}, {});
     this.config = config ?? {};
+
+    if (this.config.img && !(this.config.img instanceof Array)) {
+      this.config.img = [{ src: this.config.img, linked: this.config.imgLinked }];
+    }
+
     this.config.id = id;
     this.callback = callback;
     this.token = canvas.tokens.get(token._id);
@@ -109,8 +114,10 @@ export class OverlayConfig extends FormApplication {
 
     // Shape listeners
     html.find('.addShape').on('click', this._onAddShape.bind(this));
+    html.find('.addImage').on('click', this._onAddImage.bind(this));
     html.find('.addEvent').on('click', this._onAddEvent.bind(this));
     html.find('.deleteShape').on('click', this._onDeleteShape.bind(this));
+    html.find('.deleteImage').on('click', this._onDeleteImage.bind(this));
     html.find('.deleteEvent').on('click', this._onDeleteEvent.bind(this));
     html.find('.moveShapeUp').on('click', this._onMoveShapeUp.bind(this));
     html.find('.moveShapeDown').on('click', this._onMoveShapeDown.bind(this));
@@ -335,6 +342,16 @@ export class OverlayConfig extends FormApplication {
     this.render(true);
   }
 
+  _onAddImage(event) {
+    this.config = this._getSubmitData();
+    if (!this.config.img) this.config.img = [];
+    else if (!(this.config.img instanceof Array)) {
+      this.config.img = [{ src: this.config.img, linked: this.config.imgLinked }];
+    }
+    this.config.img.push({ src: '', linked: false });
+    this.render(true);
+  }
+
   _onAddEvent(event) {
     let listener = $(event.target).siblings('select').val();
 
@@ -352,6 +369,19 @@ export class OverlayConfig extends FormApplication {
     this.config = this._getSubmitData();
     if (!this.config.shapes) this.config.shapes = [];
     this.config.shapes.splice(index, 1);
+
+    this.render(true);
+  }
+
+  _onDeleteImage(event) {
+    const index = $(event.target).closest('.deleteImage').data('index');
+    if (index == null) return;
+
+    this.config = this._getSubmitData();
+    if (!(this.config.img instanceof Array)) this.config.img = [];
+    else this.config.img.splice(index, 1);
+
+    if (!this.config.img.length) this.config.img = '';
 
     this.render(true);
   }
@@ -487,6 +517,7 @@ export class OverlayConfig extends FormApplication {
     const settings = mergeObject(DEFAULT_OVERLAY_CONFIG, this.config, {
       inplace: false,
     });
+
     data.ceActive = game.modules.get('dfreds-convenient-effects')?.active;
     if (data.ceActive) {
       data.ceEffects = game.dfreds.effects.all.map((ef) => ef.name);
@@ -578,6 +609,16 @@ export class OverlayConfig extends FormApplication {
   _getSubmitData() {
     let formData = super._getSubmitData();
     formData = expandObject(formData);
+
+    if (formData.img) {
+      const images = Object.values(formData.img);
+      if (images.length === 1) {
+        formData.img = images[0].src;
+        formData.imgLinked = images[0].linked;
+      } else {
+        formData.img = images;
+      }
+    }
 
     if (!formData.repeating) delete formData.repeat;
     if (!formData.text.repeating) delete formData.text.repeat;

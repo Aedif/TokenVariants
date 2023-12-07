@@ -1117,3 +1117,10 @@ export function mergeMappings(from, to) {
 
   return to;
 }
+
+export function isResponsibleGM() {
+  const isResponsibleGM = !game.users
+    .filter((user) => user.isGM && (user.active || user.isActive))
+    .some((other) => other.id < game.user.id);
+  return isResponsibleGM;
+}

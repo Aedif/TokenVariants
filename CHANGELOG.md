@@ -1,3 +1,17 @@
+# 4.62.0
+
+- Fixed an error thrown during template creation which prevented one of the dialogs from closing
+
+**Overlays**
+
+- `Image Path` has been moved to its own tab, and will now support multiple images.
+  - If more than one image is provided, one will be chosen at random during overlay creation
+
+**Compendium Mapper**
+
+- Will now batch load all documents
+- Log batch load start/end, and amount of processed documents so far in 100 increments
+
 # 4.61.0
 
 - New randomizer option: `Prevent image repeats`

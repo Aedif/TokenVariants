@@ -91,10 +91,7 @@ async function initialize() {
     if (message.handlerName === 'forgeSearchPaths' && message.type === 'UPDATE') {
       // Workaround for forgeSearchPaths setting to be updated by non-GM clients
       if (!game.user.isGM) return;
-      const isResponsibleGM = !game.users
-        .filter((user) => user.isGM && (user.active || user.isActive))
-        .some((other) => other.id < game.user.id);
-      if (!isResponsibleGM) return;
+      if (!isResponsibleGM()) return;
       updateSettings({ forgeSearchPaths: message.args });
     } else if (message.handlerName === 'drawOverlays' && message.type === 'UPDATE') {
       if (message.args.all) {
@@ -112,10 +109,7 @@ async function initialize() {
       }
     } else if (message.handlerName === 'effectMappings') {
       if (!game.user.isGM) return;
-      const isResponsibleGM = !game.users
-        .filter((user) => user.isGM && (user.active || user.isActive))
-        .some((other) => other.id < game.user.id);
-      if (!isResponsibleGM) return;
+      if (!isResponsibleGM()) return;
       const args = message.args;
       const token = game.scenes.get(args.sceneId)?.tokens.get(args.tokenId);
       if (token) updateWithEffectMapping(token, { added: args.added, removed: args.removed });

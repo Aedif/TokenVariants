@@ -265,7 +265,9 @@ export default class CompendiumMapConfig extends FormApplication {
     }
 
     if (formData.cache || !userRequiresImageCache() || formData.searchOptions.searchPaths?.length) {
+      console.log('TVA-Mapper: Starting Image caching.');
       await cacheImages();
+      console.log('TVA-Mapper: Caching finished.');
     }
 
     const endMapping = function () {
@@ -283,9 +285,10 @@ export default class CompendiumMapConfig extends FormApplication {
     let artSelectDisplayed = false;
 
     let processItem;
+    let consoleProcessedTracking = 0;
     if (compendium.documentName === 'Actor') {
       processItem = async function (item) {
-        const actor = await compendium.getDocument(item._id);
+        const actor = item;
         if (actor.name === '#[CF_tempEntity]') return; // Compendium Folders module's control entity
 
         let hasPortrait = actor.img !== CONST.DEFAULT_TOKEN && !missingImageList.includes(actor.img);
@@ -315,10 +318,14 @@ export default class CompendiumMapConfig extends FormApplication {
             addToArtSelectQueue(actor, image1, image2, formData, typeOverride);
           }
         }
+
+        consoleProcessedTracking++;
+        if (consoleProcessedTracking % 100 === 0)
+          console.log(`TVA-Mapper: Processed ${consoleProcessedTracking} ${compendium.documentName}s`);
       };
     } else {
       processItem = async function (item) {
-        const doc = await compendium.getDocument(item._id);
+        const doc = item;
         if (doc.name === '#[CF_tempEntity]') return; // Compendium Folders module's control entity
 
         let defaultImg = '';
@@ -355,33 +362,36 @@ export default class CompendiumMapConfig extends FormApplication {
             },
           });
         }
+
+        consoleProcessedTracking++;
+        if (consoleProcessedTracking % 100 === 0)
+          console.log(`TVA-Mapper: Processed ${consoleProcessedTracking} ${compendium.documentName}s`);
       };
     }
 
-    const allItems = [];
-    compendium.index.forEach((k) => {
-      allItems.push(k);
-    });
+    console.log(`TVA-Mapper: Starting Batch ${compendium.documentName} load.`);
+    const documents = await compendium.getDocuments();
+    console.log(`TVA-Mapper: Load finished. Beginning processing.`);
 
     if (formData.autoApply) {
       let processing = true;
       let stopProcessing = false;
       let processed = 0;
-      let counter = $(`<p>CACHING 0/${allItems.length}</p>`);
+      let counter = $(`<p>CACHING 0/${documents.length}</p>`);
       let d;
 
       const startProcessing = async function () {
-        while (processing && processed < allItems.length) {
+        while (processing && processed < documents.length) {
           await new Promise((resolve, reject) => {
             setTimeout(async () => {
-              await processItem(allItems[processed]);
+              await processItem(documents[processed]);
               resolve();
             }, 10);
           });
           processed++;
-          counter.html(`${processed}/${allItems.length}`);
+          counter.html(`${processed}/${documents.length}`);
         }
-        if (stopProcessing || processed === allItems.length) {
+        if (stopProcessing || processed === documents.length) {
           d?.close(true);
           addToQueue('DUMMY', { execute: endMapping });
           renderFromQueue();
@@ -426,7 +436,7 @@ export default class CompendiumMapConfig extends FormApplication {
       });
       d.render(true);
     } else {
-      const tasks = allItems.map(processItem);
+      const tasks = documents.map(processItem);
       Promise.all(tasks).then(() => {
         addToQueue('DUMMY', { execute: endMapping });
         renderFromQueue();
