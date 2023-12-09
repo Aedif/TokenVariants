@@ -1,3 +1,7 @@
+# 4.62.2
+
+- Fixed linked overlay not generating a new texture on token image swap
+
 # 4.62.1
 
 - Fixed overlay image linking to token texture

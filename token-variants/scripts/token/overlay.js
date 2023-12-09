@@ -47,7 +47,7 @@ export async function drawOverlays(token) {
 
           // Check if we need to create a new texture or simply refresh the overlay
           if (!isEmpty(diff)) {
-            if (ov.img instanceof Array) {
+            if (ov.img instanceof Array && ov.img.length > 1) {
               sprite.refresh(ov);
             } else if (diff.img || diff.text || diff.shapes || diff.repeat || diff.html) {
               sprite.setTexture(await genTexture(token, ov), { configuration: ov });
