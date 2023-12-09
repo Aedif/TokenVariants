@@ -41,6 +41,8 @@ export async function drawOverlays(token) {
       for (const ov of overlays) {
         let sprite = _findTVAOverlay(ov.id, token);
         if (sprite) {
+          _evaluateLinkedImages(ov, token.document.texture.src);
+
           const diff = diffObject(sprite.overlayConfig, ov);
 
           // Check if we need to create a new texture or simply refresh the overlay
@@ -106,6 +108,14 @@ export async function drawOverlays(token) {
   }
 }
 
+function _evaluateLinkedImages(ov, tokenImage) {
+  if (ov.img instanceof Array) {
+    for (const img of ov.img) {
+      if (img.linked) img.src = tokenImage;
+    }
+  } else if (ov.imgLinked) ov.img = tokenImage;
+}
+
 // function _getLayer(ov) {
 //   const layer = ov.ui ? canvas.tokens : canvas.primary;
 //   if (!layer.tvaOverlay) layer.tvaOverlays = layer.addChild(new PIXI.Container());
@@ -114,7 +124,7 @@ export async function drawOverlays(token) {
 
 export async function genTexture(token, conf) {
   if (conf.img) {
-    return await generateImage(token, conf, conf.img);
+    return await generateImage(token, conf);
   } else if (conf.text?.text != null) {
     return await generateTextTexture(token, conf);
   } else if (conf.shapes?.length) {
@@ -128,17 +138,14 @@ export async function genTexture(token, conf) {
   }
 }
 
-async function generateImage(token, conf, img) {
-  let linked = false;
-  if (img instanceof Array) {
-    img = img[Math.floor(Math.random() * img.length)];
-    linked = img.linked;
-    img = img.src;
-  } else {
-    linked = conf.imgLinked;
-  }
+async function generateImage(token, conf) {
+  _evaluateLinkedImages(conf, token.document.texture.src);
 
-  if (linked) img = token.document.texture.src;
+  let img = conf.img;
+
+  if (img instanceof Array) {
+    img = img[Math.floor(Math.random() * img.length)].src;
+  }
 
   let texture = await loadTexture(img, {
     fallback: 'modules/token-variants/img/token-images.svg',

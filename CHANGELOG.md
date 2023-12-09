@@ -1,3 +1,7 @@
+# 4.62.1
+
+- Fixed overlay image linking to token texture
+
 # 4.62.0
 
 - Fixed an error thrown during template creation which prevented one of the dialogs from closing

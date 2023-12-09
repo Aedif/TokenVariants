@@ -269,11 +269,10 @@
             <div class="form-group" style="padding: 5px;">
                 <label><a class="deleteImage" data-index="{{@index}}" title="Remove"><i class="fas fa-trash-alt"></i></a> Image</label>
                 <div class="form-fields">
-                    <button type="button" class="file-picker img-link-disable" data-type="imagevideo" data-target="img.{{@index}}.src" title="Browse Files" tabindex="-1"><i class="fas fa-file-import fa-fw"></i></button>
-                    <input class="image img-link-disable" type="text" name="img.{{@index}}.src" placeholder="path/image.png" value="{{image.src}}">
-                    <button type="button" class="image-link {{#if image.linked}}active{{/if}}" title="Use the same image as the Token."><i class="fas fa-link"></i></button>
-                        <input type="checkbox" name="img.{{@index}}.linked" hidden {{#if image.linked}}checked{{/if}}>
-                    <button type="button" title="Select Image" class="token-variants-image-select-button img-link-disable" tabindex="-1" data-type="imagevideo" data-target="img.{{@index}}.src"><i class="fas fa-images"></i></button>
+                    <button type="button" class="file-picker" data-type="imagevideo" data-target="img.{{@index}}.src" title="Browse Files"><i class="fas fa-file-import fa-fw"></i></button>
+                    <input class="image" type="text" name="img.{{@index}}.src" placeholder="path/image.png" value="{{image.src}}">
+                    <input type="checkbox" title="Link to Token Image" name="img.{{@index}}.linked" {{#if image.linked}}checked{{/if}}>
+                    <button type="button" title="Select Image" class="token-variants-image-select-button" data-type="imagevideo" data-target="img.{{@index}}.src"><i class="fas fa-images"></i></button>
                 </div>
             </div>
             {{/each}}

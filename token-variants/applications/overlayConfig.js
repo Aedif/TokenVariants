@@ -12,7 +12,7 @@ export class OverlayConfig extends FormApplication {
     super({}, {});
     this.config = config ?? {};
 
-    if (this.config.img && !(this.config.img instanceof Array)) {
+    if ((this.config.img || this.config.imgLinked) && !(this.config.img instanceof Array)) {
       this.config.img = [{ src: this.config.img, linked: this.config.imgLinked }];
     }
 
@@ -53,25 +53,6 @@ export class OverlayConfig extends FormApplication {
         Reticle.activate({ tvaOverlay: icons[0].icon, app: this, config: this.previewConfig });
       }
     });
-
-    const imgLinkDisable = function (disabled) {
-      html.find('.img-link-disable').prop('disabled', disabled);
-    };
-
-    html.find('.image-link').on('click', (event) => {
-      const chkBox = $(event.target).closest('.form-group').find('[name="imgLinked"]');
-      const button = $(event.target).closest('button');
-      if (chkBox.is(':checked')) {
-        chkBox.prop('checked', false);
-        button.removeClass('active');
-        imgLinkDisable(false);
-      } else {
-        chkBox.prop('checked', true);
-        button.addClass('active');
-        imgLinkDisable(true);
-      }
-    });
-    imgLinkDisable(Boolean(this.config.imgLinked));
 
     html.find('.repeat').on('change', (event) => {
       const fieldset = $(event.target).closest('fieldset');
@@ -609,7 +590,6 @@ export class OverlayConfig extends FormApplication {
   _getSubmitData() {
     let formData = super._getSubmitData();
     formData = expandObject(formData);
-
     if (formData.img) {
       const images = Object.values(formData.img);
       if (images.length === 1) {
