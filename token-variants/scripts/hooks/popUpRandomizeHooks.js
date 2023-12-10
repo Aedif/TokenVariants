@@ -62,6 +62,10 @@ async function _createToken(token, options, userId) {
       if (!img) return;
 
       if (randSettings.diffImages) {
+        // Prevent searches via method intended purely for tokens
+        if (!(randSettings.tokenName || randSettings.actorName)) randSettings.tokenName = true;
+        randSettings.wildcard = false;
+        randSettings.shared = false;
         let imgPortrait;
         if (randSettings.syncImages) {
           imgPortrait = await doSyncSearch(token.name, img[1], {
@@ -154,6 +158,10 @@ async function _createActor(actor, options, userId) {
       if (!img) return;
 
       if (randSettings.diffImages) {
+        // Prevent searches via method intended purely for tokens
+        if (!(randSettings.tokenName || randSettings.actorName)) randSettings.tokenName = true;
+        randSettings.wildcard = false;
+        randSettings.shared = false;
         let imgToken;
         if (randSettings.syncImages) {
           imgToken = await doSyncSearch(actor.name, img[1], { actor: actor });

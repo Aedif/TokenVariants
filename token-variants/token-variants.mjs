@@ -7,6 +7,7 @@ import {
   startBatchUpdater,
   userRequiresImageCache,
   waitForTokenTexture,
+  isResponsibleGM,
 } from './scripts/utils.js';
 import { FONT_LOADING, broadcastDrawOverlays, drawOverlays } from './scripts/token/overlay.js';
 import {

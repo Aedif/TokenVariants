@@ -1,3 +1,11 @@
+# 4.62.4
+
+- Randomizer `Sync` options will no longer include wildcard and shared options within the portrait image search
+
+# 4.62.3
+
+- Fixed `isResponsibleGM` not being found
+
 # 4.62.2
 
 - Fixed linked overlay not generating a new texture on token image swap
