@@ -1,3 +1,8 @@
+# 4.62.5
+
+- Some Mapping related label changes
+- Minor token to portrait image sync improvements
+
 # 4.62.4
 
 - Randomizer `Sync` options will no longer include wildcard and shared options within the portrait image search

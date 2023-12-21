@@ -146,27 +146,13 @@ export async function doRandomSearch(
   return [result.path, result.name];
 }
 
-export async function doSyncSearch(
-  search,
-  target,
-  { searchType = SEARCH_TYPE.TOKEN, actor = null, randomizerOptions = {} } = {}
-) {
+export async function doSyncSearch(target, { searchType = SEARCH_TYPE.TOKEN } = {}) {
   if (caching) return null;
 
-  const results = flattenSearchResults(await _randSearchUtil(search, { searchType, actor, randomizerOptions }));
-
-  // Find the image with the most similar name
-  const fuse = new Fuse(results, {
-    keys: ['name'],
-    minMatchCharLength: 1,
-    ignoreLocation: true,
-    threshold: 0.4,
-  });
-
-  const fResults = fuse.search(target);
+  const fResults = await findImages(target, searchType, { algorithm: { fuzzy: true } });
 
   if (fResults && fResults.length !== 0) {
-    return [fResults[0].item.path, fResults[0].item.name];
+    return [fResults[0].path, fResults[0].name];
   } else {
     return null;
   }

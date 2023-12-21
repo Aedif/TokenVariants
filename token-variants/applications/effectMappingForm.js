@@ -17,7 +17,7 @@ const NO_IMAGE = 'modules\\token-variants\\img\\empty.webp';
 
 export default class EffectMappingForm extends FormApplication {
   constructor(token, { globalMappings = false, callback = null, createMapping = null } = {}) {
-    super({}, { title: (globalMappings ? 'GLOBAL ' : 'ACTOR  ') + 'Mappings' });
+    super({}, {});
 
     this.token = token;
     if (globalMappings) {
@@ -43,6 +43,12 @@ export default class EffectMappingForm extends FormApplication {
       height: 'auto',
       scrollY: ['ol.token-variant-table'],
     });
+  }
+
+  get title() {
+    let scope = 'GLOBAL';
+    if (!this.globalMappings) scope = this.objectToFlag.name;
+    return `[${scope}] Mappings`;
   }
 
   _processConfig(mapping) {
@@ -316,8 +322,8 @@ export default class EffectMappingForm extends FormApplication {
           gear.attr('title', '');
         }
       },
-      mapping.id,
-      this.token
+      this.token,
+      { mapping, global: Boolean(this.globalMappings), actor: this.objectToFlag }
     ).render(true);
   }
 

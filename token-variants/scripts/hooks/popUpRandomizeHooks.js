@@ -59,21 +59,18 @@ async function _createToken(token, options, userId) {
         });
       }
 
-      if (!img) return;
-
       if (randSettings.diffImages) {
-        // Prevent searches via method intended purely for tokens
-        if (!(randSettings.tokenName || randSettings.actorName)) randSettings.tokenName = true;
-        randSettings.wildcard = false;
-        randSettings.shared = false;
         let imgPortrait;
         if (randSettings.syncImages) {
-          imgPortrait = await doSyncSearch(token.name, img[1], {
-            actor: token.actor,
+          if (!img) return;
+          imgPortrait = await doSyncSearch(img[1], {
             searchType: SEARCH_TYPE.PORTRAIT,
-            randomizerOptions: randSettings,
           });
         } else {
+          // Prevent searches via method intended purely for tokens
+          if (!(randSettings.tokenName || randSettings.actorName)) randSettings.tokenName = true;
+          randSettings.wildcard = false;
+          randSettings.shared = false;
           imgPortrait = await doRandomSearch(token.name, {
             searchType: SEARCH_TYPE.PORTRAIT,
             actor: token.actor,
@@ -85,6 +82,7 @@ async function _createToken(token, options, userId) {
           await updateActorImage(token.actor, imgPortrait[0]);
         }
       } else if (randSettings.tokenToPortrait) {
+        if (!img) return;
         await updateActorImage(token.actor, img[0]);
       }
       return;
@@ -145,7 +143,7 @@ async function _createActor(actor, options, userId) {
     let performRandomSearch = true;
     if (randSettings.linkedActorDisable && actor.prototypeToken.actorLink) performRandomSearch = false;
     if (_disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
-
+    console.log(randSettings, performRandomSearch);
     if (performRandomSearch) {
       const img = await doRandomSearch(actor.name, {
         searchType: SEARCH_TYPE.PORTRAIT,
@@ -158,13 +156,9 @@ async function _createActor(actor, options, userId) {
       if (!img) return;
 
       if (randSettings.diffImages) {
-        // Prevent searches via method intended purely for tokens
-        if (!(randSettings.tokenName || randSettings.actorName)) randSettings.tokenName = true;
-        randSettings.wildcard = false;
-        randSettings.shared = false;
         let imgToken;
         if (randSettings.syncImages) {
-          imgToken = await doSyncSearch(actor.name, img[1], { actor: actor });
+          imgToken = await doSyncSearch(img[1], { searchType: SEARCH_TYPE.TOKEN });
         } else {
           imgToken = await doRandomSearch(actor.name, {
             searchType: SEARCH_TYPE.TOKEN,

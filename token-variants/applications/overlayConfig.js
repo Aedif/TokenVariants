@@ -8,7 +8,7 @@ import { getFlagMappings } from '../scripts/settings.js';
 import { Reticle } from '../scripts/reticle.js';
 
 export class OverlayConfig extends FormApplication {
-  constructor(config, callback, id, token) {
+  constructor(config, callback, token, { mapping, global = false, actor } = {}) {
     super({}, {});
     this.config = config ?? {};
 
@@ -16,10 +16,13 @@ export class OverlayConfig extends FormApplication {
       this.config.img = [{ src: this.config.img, linked: this.config.imgLinked }];
     }
 
-    this.config.id = id;
+    this.config.id = mapping.id;
     this.callback = callback;
     this.token = canvas.tokens.get(token._id);
     this.previewConfig = deepClone(this.config);
+    this.mapping = mapping;
+    this.global = global;
+    this.actor = actor;
   }
 
   static get defaultOptions() {
@@ -39,6 +42,14 @@ export class OverlayConfig extends FormApplication {
         { navSelector: '.tabs[data-group="html"]', contentSelector: '.tab[data-tab="html"]', initial: 'template' },
       ],
     });
+  }
+
+  get title() {
+    let scope = 'GLOBAL';
+    if (!this.global && this.actor) {
+      scope = this.actor.name;
+    }
+    return `${this.mapping.label} — [${scope}]`;
   }
 
   /**
