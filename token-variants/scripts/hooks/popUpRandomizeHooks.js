@@ -143,7 +143,6 @@ async function _createActor(actor, options, userId) {
     let performRandomSearch = true;
     if (randSettings.linkedActorDisable && actor.prototypeToken.actorLink) performRandomSearch = false;
     if (_disableRandomSearchForType(randSettings, actor)) performRandomSearch = false;
-    console.log(randSettings, performRandomSearch);
     if (performRandomSearch) {
       const img = await doRandomSearch(actor.name, {
         searchType: SEARCH_TYPE.PORTRAIT,

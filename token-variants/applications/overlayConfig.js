@@ -163,7 +163,11 @@ export class OverlayConfig extends FormApplication {
       if (presetName) {
         const preset = TokenMagic.getPreset(presetName);
         if (preset) {
-          $(event.target).closest('.form-group').find('textarea').val(JSON.stringify(preset, null, 2)).trigger('input');
+          $(event.target)
+            .closest('.form-group')
+            .find('textarea')
+            .val(JSON.stringify(preset, null, 2))
+            .trigger('change');
         }
       }
     });
@@ -235,7 +239,7 @@ export class OverlayConfig extends FormApplication {
           game.modules.get('multi-token-edit').api.showGenericForm(param, param.filterType ?? 'TMFX', {
             inputChangeCallback: (selected) => {
               mergeObject(param, selected, { inplace: true });
-              textarea.val(JSON.stringify(params, null, 2)).trigger('input');
+              textarea.val(JSON.stringify(params, null, 2)).trigger('change');
             },
           });
       }
@@ -484,6 +488,7 @@ export class OverlayConfig extends FormApplication {
       target.icon.refresh(preview, {
         preview: true,
         previewTexture: await genTexture(target.token, preview),
+        refreshFilters: true,
       });
     }
   }
@@ -491,7 +496,7 @@ export class OverlayConfig extends FormApplication {
   async _removePreviews() {
     const targets = this.getPreviewIcons();
     for (const target of targets) {
-      target.icon.refresh();
+      target.icon.refresh(null, { refreshFilters: true });
     }
   }
 

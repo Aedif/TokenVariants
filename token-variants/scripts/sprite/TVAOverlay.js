@@ -17,6 +17,7 @@ export class TVAOverlay extends TokenMesh {
 
     this.ready = false;
     this.overlaySort = 0;
+    this.filtersApplied = false;
 
     this.overlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
     if (pTexture.html) this.addHTMLOverlay();
@@ -212,7 +213,7 @@ export class TVAOverlay extends TokenMesh {
     }
   }
 
-  setTexture(pTexture, { preview = false, refresh = true, configuration = null } = {}) {
+  setTexture(pTexture, { preview = false, refresh = true, configuration = null, refreshFilters = false } = {}) {
     // Text preview handling
     if (preview) {
       this._swapChildren(pTexture);
@@ -240,10 +241,10 @@ export class TVAOverlay extends TokenMesh {
     }
 
     if (this.pseudoTexture.html) this.addHTMLOverlay();
-    if (refresh) this.refresh(configuration, { fullRefresh: !preview });
+    if (refresh) this.refresh(configuration, { fullRefresh: !preview, refreshFilters });
   }
 
-  refresh(configuration, { preview = false, fullRefresh = true, previewTexture = null } = {}) {
+  refresh(configuration, { preview = false, fullRefresh = true, previewTexture = null, refreshFilters = false } = {}) {
     if (!this.overlayConfig || !this.texture) return;
 
     // Text preview handling
@@ -394,7 +395,7 @@ export class TVAOverlay extends TokenMesh {
     }
 
     // Apply filters
-    if (fullRefresh) this._applyFilters(config);
+    if (fullRefresh && (refreshFilters || !this.filtersApplied)) this._applyFilters(config);
     //if (fullRefresh) this.filters = this._getFilters(config);
 
     if (preview && this.children) {
@@ -434,6 +435,7 @@ export class TVAOverlay extends TokenMesh {
   }
 
   async _applyFilters(config) {
+    this.filtersApplied = true;
     const filterName = config.filter;
     const FilterClass = PIXI.filters[filterName];
     const options = mergeObject(FILTERS[filterName]?.defaultValues || {}, config.filterOptions);

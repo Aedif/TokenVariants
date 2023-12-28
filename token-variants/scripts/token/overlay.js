@@ -47,18 +47,19 @@ export async function drawOverlays(token) {
 
           // Check if we need to create a new texture or simply refresh the overlay
           if (!isEmpty(diff)) {
+            const refreshFilters = Boolean(diff.filter || diff.filterOptions);
             if (ov.img instanceof Array && ov.img.length > 1) {
-              sprite.refresh(ov);
+              sprite.refresh(ov, { refreshFilters });
             } else if (diff.img || diff.text || diff.shapes || diff.repeat || diff.html) {
-              sprite.setTexture(await genTexture(token, ov), { configuration: ov });
+              sprite.setTexture(await genTexture(token, ov), { configuration: ov, refreshFilters });
             } else if (diff.parentID) {
               sprite.parent?.removeChild(sprite)?.destroy();
               sprite = null;
             } else {
-              sprite.refresh(ov);
+              sprite.refresh(ov, { refreshFilters });
             }
           } else if (diff.text?.text || diff.shapes) {
-            sprite.setTexture(await genTexture(token, ov), { configuration: ov });
+            sprite.setTexture(await genTexture(token, ov), { configuration: ov, refreshFilters });
           }
 
           if ('ui' in diff) {
@@ -412,6 +413,7 @@ export function evaluateOverlayExpressions(obj, token, conf) {
         'parentID',
         'limitedUsers',
         'filter',
+        'filterOptions',
         'limitOnProperty',
         'html',
       ].includes(k)

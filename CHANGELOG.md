@@ -1,3 +1,10 @@
+# 4.62.6
+
+**Overlays**
+
+- Filters should no longer refresh on unrelated updates
+- Fixed `Mass Edit` form changes not triggering overlay preview refresh
+
 # 4.62.5
 
 - Some Mapping related label changes
