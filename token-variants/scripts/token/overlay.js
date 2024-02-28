@@ -15,7 +15,7 @@ export async function drawOverlays(token) {
     .filter((m) => m.overlay && effects.includes(m.id))
     .sort(
       (m1, m2) =>
-        (m1.priority - m1.overlayConfig?.parentID ? 0 : 999) - (m2.priority - m2.overlayConfig?.parentID ? 0 : 999)
+        m1.priority - (m1.overlayConfig?.parentID ? 0 : 999) - (m2.priority - (m2.overlayConfig?.parentID ? 0 : 999))
     );
 
   // See if the whole stack or just top of the stack should be used according to settings
@@ -97,6 +97,9 @@ export async function drawOverlays(token) {
             overlaySort += 0.01;
             sprite.overlaySort = overlaySort;
           }
+
+          sprite.parent.sortableChildren = true;
+          sprite.parent.sortDirty = true;
         }
       }
 

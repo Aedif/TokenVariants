@@ -1,3 +1,8 @@
+# 4.63.0
+
+- Fixed inconsistent overlay sorting
+- Added 'Rebuild Cache' button to Art Select forms
+
 # 4.62.6
 
 **Overlays**

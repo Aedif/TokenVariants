@@ -712,6 +712,8 @@ ol.token-variant-table .table-row .mapping-expression .expression-code.hidden {
   background-color: rgb(28, 28, 28, 0.7);
   color: white;
   border-color: black;
+  line-height: 28px;
+  margin: 0 1px;
 }
 
 #tile-hud .token-variants-button-select:hover .token-variants-button-image,

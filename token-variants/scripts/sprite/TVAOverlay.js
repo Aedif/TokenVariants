@@ -157,6 +157,10 @@ export class TVAOverlay extends TokenMesh {
     return true;
   }
 
+  get zIndex() {
+    return this.sort + this._lastSortedIndex;
+  }
+
   // Overlays have the same sort order as the parent
   get sort() {
     const sort = this.object.mesh.sort;

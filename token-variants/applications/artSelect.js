@@ -2,6 +2,7 @@ import TokenCustomConfig from './tokenCustomConfig.js';
 import { isVideo, isImage, keyPressed, SEARCH_TYPE, BASE_IMAGE_CATEGORIES, getFileName } from '../scripts/utils.js';
 import { showArtSelect } from '../token-variants.mjs';
 import { TVA_CONFIG, getSearchOptions } from '../scripts/settings.js';
+import { cacheImages } from '../scripts/search.js';
 
 export function addToArtSelectQueue(search, options) {
   ArtSelect.queue.push({
@@ -128,6 +129,17 @@ export class ArtSelect extends FormApplication {
 
   _getHeaderButtons() {
     const buttons = super._getHeaderButtons();
+
+    buttons.unshift({
+      label: 'Rebuild Cache',
+      class: 'cache-rebuild',
+      icon: 'fas fa-sync-alt',
+      onclick: async () => {
+        await cacheImages();
+        this._performSearch(this.search, true);
+      },
+    });
+
     buttons.unshift({
       label: 'FilePicker',
       class: 'file-picker',
@@ -154,6 +166,7 @@ export class ArtSelect extends FormApplication {
         if (ArtSelect.instance) ArtSelect.instance._typeSelect();
       },
     });
+
     return buttons;
   }
 
