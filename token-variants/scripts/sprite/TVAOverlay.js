@@ -287,10 +287,10 @@ export class TVAOverlay extends TokenMesh {
       const scale = this.scale;
       const aspect = dimensions.width / dimensions.height;
       if (aspect >= 1) {
-        scale.x = (this.object.w * this.object.document.texture.scaleX) / dimensions.width;
+        scale.x = (this.object.w * Math.abs(this.object.document.texture.scaleX)) / dimensions.width;
         scale.y = Number(scale.x);
       } else {
-        scale.y = (this.object.h * this.object.document.texture.scaleY) / dimensions.height;
+        scale.y = (this.object.h * Math.abs(this.object.document.texture.scaleY)) / dimensions.height;
         scale.x = Number(scale.y);
       }
     } else if (config.linkStageScale) {

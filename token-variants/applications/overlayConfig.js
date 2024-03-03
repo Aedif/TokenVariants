@@ -537,6 +537,21 @@ export class OverlayConfig extends FormApplication {
     });
 
     data.fonts = Object.keys(CONFIG.fontDefinitions);
+    data.fontWeights = [
+      'normal',
+      'bold',
+      'bolder',
+      'lighter',
+      '100',
+      '200',
+      '300',
+      '400',
+      '500',
+      '600',
+      '700',
+      '800',
+      '900',
+    ];
 
     const allMappings = getAllEffectMappings(this.token, true).filter((m) => m.id !== this.config.id);
     const [_, groupedMappings] = sortMappingsToGroups(allMappings);

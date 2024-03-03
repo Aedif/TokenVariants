@@ -1,3 +1,9 @@
+# 4.64.0
+
+- Fixed a bug causing overlays to override each other
+- Added a new `Overlay Config > Text > Font Weight` option
+- Support for Dnd5e v3 temporary effects
+
 # 4.63.0
 
 - Fixed inconsistent overlay sorting

@@ -411,7 +411,18 @@ export function migrateMappings(mappings, globalMappings = []) {
         delete mapping.overlayConfig.parent;
       }
     }
-    return nMappings;
+    mappings = nMappings;
+  }
+  // If overlay enabled but no image, text, or shape is being rendered, assume that imgSrs if available should be
+  // used as the image
+  for (const m of mappings) {
+    if (m.overlay && m.overlayConfig) {
+      if (m.imgSrc && !m.overlayConfig.img && !m.overlayConfig.text?.text && !m.overlayConfig.shapes?.length) {
+        m.overlayConfig.img = m.imgSrc;
+        m.imgSrc = '';
+        m.imgName = '';
+      }
+    }
   }
   return mappings;
 }

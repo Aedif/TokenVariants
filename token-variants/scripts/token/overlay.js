@@ -26,7 +26,10 @@ export async function drawOverlays(token) {
   }
 
   // Process strings as expressions
-  const overlays = processedMappings.map((m) => evaluateOverlayExpressions(deepClone(m.overlayConfig), token, m));
+  const overlays = processedMappings.map((m) => {
+    m.overlayConfig.id = m.id; // TODO: For some reason ID can get de-synced between mapping and overlay
+    return evaluateOverlayExpressions(deepClone(m.overlayConfig), token, m);
+  });
 
   if (overlays.length) {
     waitForTokenTexture(token, async (token) => {

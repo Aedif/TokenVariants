@@ -578,6 +578,19 @@
                     <input name="text.fontSize" class="range-value" type="text" value="{{text.fontSize}}"></input>
                 </div>
             </div>
+
+            <div class="form-group">
+                <label>Font Weight</label>
+                <div class="form-fields">
+                <select name="text.fontWeight">
+
+                    {{#each fontWeights as |fw|}}
+                    <option value="{{fw}}" {{#if (eq ../text.fontWeight fw)}}selected="selected"{{/if}}>{{fw}}</option>
+                    {{/each}}
+                </select>
+                </div>
+            </div>
+
             <div class="form-group">
                 <label>Align</label>
                 <div class="form-fields">

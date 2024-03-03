@@ -52,14 +52,14 @@ export function registerEffectMappingHooks() {
   }
 
   registerHook(feature_id, 'createActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
+    if (activeEffect.disabled || game.userId !== userId) return;
     const effectName = activeEffect.name ?? activeEffect.label;
-    _updateImageOnEffectChange(effectName, activeEffect.parent, true);
+    _updateImageOnEffectChange(effectName, activeEffect, true);
   });
   registerHook(feature_id, 'deleteActiveEffect', (activeEffect, options, userId) => {
-    if (!activeEffect.parent || activeEffect.disabled || game.userId !== userId) return;
+    if (activeEffect.disabled || game.userId !== userId) return;
     const effectName = activeEffect.name ?? activeEffect.label;
-    _updateImageOnEffectChange(effectName, activeEffect.parent, false);
+    _updateImageOnEffectChange(effectName, activeEffect, false);
   });
   registerHook(feature_id, 'preUpdateActiveEffect', _preUpdateActiveEffect);
   registerHook(feature_id, 'updateActiveEffect', _updateActiveEffect);
@@ -88,17 +88,17 @@ export function registerEffectMappingHooks() {
     if (game.user.id === userId && applicable_item_types.includes(item.type)) {
       options['token-variants-old-name'] = item.name;
     }
-    _preUpdateAssign(item.parent, change, options);
+    _preUpdateAssign(getActorParent(item), change, options);
   });
 
   registerHook(feature_id, 'createItem', (item, options, userId) => {
-    if (game.userId !== userId || !applicable_item_types.includes(item.type) || !item.parent) return;
-    _updateImageOnEffectChange(item.name, item.parent, true);
+    if (game.userId !== userId || !applicable_item_types.includes(item.type)) return;
+    _updateImageOnEffectChange(item.name, item, true);
   });
 
   registerHook(feature_id, 'deleteItem', (item, options, userId) => {
-    if (game.userId !== userId || !applicable_item_types.includes(item.type) || !item.parent || item.disabled) return;
-    _updateImageOnEffectChange(item.name, item.parent, false);
+    if (game.userId !== userId || !applicable_item_types.includes(item.type) || item.disabled) return;
+    _updateImageOnEffectChange(item.name, item, false);
   });
 
   // Status Effects can be applied "stealthily" on item equip/un-equip
@@ -122,7 +122,7 @@ function _createCombatant(combatant, options, userId) {
 }
 
 function _preUpdateActiveEffect(activeEffect, change, options, userId) {
-  if (!activeEffect.parent || game.userId !== userId) return;
+  if (game.userId !== userId || !getActorParent(activeEffect)) return;
 
   if ('name' in change) {
     options['token-variants-old-name'] = activeEffect.name;
@@ -130,7 +130,7 @@ function _preUpdateActiveEffect(activeEffect, change, options, userId) {
 }
 
 function _updateActiveEffect(activeEffect, change, options, userId) {
-  if (!activeEffect.parent || game.userId !== userId) return;
+  if (game.userId !== userId || !getActorParent(activeEffect)) return;
 
   const added = [];
   const removed = [];
@@ -145,7 +145,7 @@ function _updateActiveEffect(activeEffect, change, options, userId) {
   }
 
   if (added.length || removed.length) {
-    _updateImageOnMultiEffectChange(activeEffect.parent, added, removed);
+    _updateImageOnMultiEffectChange(getActorParent(activeEffect), added, removed);
   }
 }
 
@@ -301,7 +301,7 @@ function _updateItem(item, change, options, userId) {
       removed.push(options['token-variants-old-name']);
     }
 
-    _preUpdateCheck(item.parent, options, added, removed);
+    _preUpdateCheck(getActorParent(item), options, added, removed);
   }
 }
 
@@ -816,6 +816,13 @@ export function getEffectsFromActor(actor, effects = []) {
     (actor.effects || []).forEach((activeEffect, id) => {
       if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.name ?? activeEffect.label);
     });
+
+    if (game.system.id === 'dnd5e') {
+      (actor.temporaryEffects || []).forEach((activeEffect, id) => {
+        if (!activeEffect.disabled && !activeEffect.isSuppressed) effects.push(activeEffect.name ?? activeEffect.label);
+      });
+    }
+
     (actor.items || []).forEach((item) => {
       if (ITEM_TYPES.includes(item.type) && item.system.equipped) effects.push(item.name ?? item.label);
     });
@@ -1065,7 +1072,9 @@ export function getTokenHP(token) {
   return [attributes?.value, attributes?.max];
 }
 
-async function _updateImageOnEffectChange(effectName, actor, added = true) {
+async function _updateImageOnEffectChange(effectName, source, added = true) {
+  const actor = getActorParent(source);
+  if (!actor) return;
   const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
@@ -1073,6 +1082,11 @@ async function _updateImageOnEffectChange(effectName, actor, added = true) {
       removed: !added ? [effectName] : [],
     });
   }
+}
+
+function getActorParent(ent) {
+  while (ent && !(ent instanceof Actor)) ent = ent.parent;
+  return ent;
 }
 
 async function _updateImageOnMultiEffectChange(actor, added = [], removed = []) {
