@@ -1,3 +1,10 @@
+# 4.64.1
+
+Overlays
+
+- New shape added: 'Cut Circle'
+  - Draws a circle cut at a specific percentage line
+
 # 4.64.0
 
 - Fixed a bug causing overlays to override each other

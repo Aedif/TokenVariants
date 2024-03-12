@@ -717,6 +717,8 @@
                 {{~>modules/token-variants/templates/partials/shapePolygon.html shape}}
             {{else if (eq shape.shape.type "torus")}}
                 {{~>modules/token-variants/templates/partials/shapeTorus.html shape}}
+            {{else if (eq shape.shape.type "cutCircle")}}
+                {{~>modules/token-variants/templates/partials/shapeCutCircle.html shape}}
             {{/if}}
 
             <fieldset>

@@ -248,6 +248,15 @@ function _drawShape(graphics, shape, xOffset = 0, yOffset = 0) {
       shape.endAngle >= 360 ? Math.PI * 2 : Math.toRadians(shape.endAngle)
     );
     return [shape.outerRadius * 2, shape.outerRadius * 2];
+  } else if (shape.type === 'cutCircle') {
+    drawCutCircle(
+      graphics,
+      shape.x + xOffset + shape.radius,
+      shape.y + yOffset + shape.radius,
+      shape.radius,
+      shape.rotation,
+      shape.cut
+    );
   }
 }
 
@@ -308,6 +317,16 @@ function drawTorus(graphics, x, y, innerRadius, outerRadius, startArc = 0, endAr
 
   graphics.finishPoly();
   graphics.arc(x, y, innerRadius, endArc, startArc, true).arc(x, y, outerRadius, startArc, endArc, false).finishPoly();
+}
+
+function drawCutCircle(graphics, x, y, radius, rotation, cut) {
+  if (cut >= 1) return;
+  else if (cut <= 0) return graphics.drawCircle(x, y, radius);
+
+  let startAngle = -90 + 180 * cut + rotation;
+  let endAngle = 270 - 180 * cut + rotation;
+
+  graphics.arc(x, y, radius, Math.toRadians(startAngle), Math.toRadians(endAngle), false).closePath().finishPoly();
 }
 
 export function interpolateColor(minColor, interpolate, rString = false) {

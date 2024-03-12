@@ -1,0 +1,38 @@
+<fieldset>
+    <input type="text" name="shapes.{{@index}}.shape.type" value="{{shape.type}}" hidden>
+    <legend class="shape-legend"><b>CUT-CIRCLE</b></legend>
+    <div class="form-group">
+        <label>X</label>
+        <div class="form-fields">
+            <input name="shapes.{{@index}}.shape.x" type="text" value="{{shape.x}}"></input>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Y</label>
+        <div class="form-fields">
+            <input name="shapes.{{@index}}.shape.y"type="text" value="{{shape.y}}"></input>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Radius</label>
+        <div class="form-fields">
+            <input name="shapes.{{@index}}.shape.radius" type="text" value="{{shape.radius}}"></input>
+        </div>
+    </div>
+    <div class="form-group">
+        <label>Cut</label>
+        <div class="form-fields">
+            <input type="range" value="{{shape.cut}}" min="0" max="1" step="0.01">
+            <input name="shapes.{{@index}}.shape.cut" class="range-value" type="text" value="{{shape.cut}}"></input>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>Rotation</label>
+        <div class="form-fields">
+            <input type="range" value="{{shape.rotation}}" min="0" max="360" step="1">
+            <input name="shapes.{{@index}}.shape.rotation" class="range-value" type="text" value="{{shape.rotation}}"></input>
+        </div>
+    </div>
+
+</fieldset>

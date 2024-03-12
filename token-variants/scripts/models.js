@@ -114,6 +114,15 @@ export const OVERLAY_SHAPES = {
     endAngle: 180,
     repeating: false,
   },
+  CutCircle: {
+    type: 'cutCircle',
+    x: 0,
+    y: 0,
+    radius: 50,
+    cut: 0.5,
+    rotation: 0,
+    repeating: false,
+  },
 };
 
 export const CORE_SHAPE = {
