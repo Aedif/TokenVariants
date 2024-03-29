@@ -210,7 +210,7 @@ export async function updateTokenImage(
   if (!isEmpty(tokenUpdateObj)) {
     if (actor && !token) {
       TokenDataAdapter.formToData(actor.prototypeToken, tokenUpdateObj);
-      actorUpdate.token = tokenUpdateObj;
+      actorUpdate.prototypeToken = tokenUpdateObj;
       if (pack) {
         queueActorUpdate(actor.id, actorUpdate, { pack: pack });
       } else {
@@ -457,6 +457,7 @@ export function registerKeybinds() {
  * Retrieves a custom token configuration if one exists for the given image
  */
 export function getTokenConfig(imgSrc, imgName) {
+  imgSrc = decodeURISafely(imgSrc);
   if (!imgName) imgName = getFileName(imgSrc);
   const tokenConfigs = (TVA_CONFIG.tokenConfigs || []).flat();
   return tokenConfigs.find((config) => config.tvImgSrc == imgSrc && config.tvImgName == imgName) ?? {};

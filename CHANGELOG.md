@@ -1,3 +1,8 @@
+# 4.64.2
+
+- Fixed Token Configs not applying when configured for image containing `{` or `}` in their file paths
+- Fixed Compendium Mapper not applying `prototypeToken` images under certain circumstances
+
 # 4.64.1
 
 Overlays

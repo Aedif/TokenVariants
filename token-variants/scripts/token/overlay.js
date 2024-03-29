@@ -438,7 +438,7 @@ export function evaluateOverlayExpressions(obj, token, conf) {
         'parentID',
         'limitedUsers',
         'filter',
-        'filterOptions',
+        //'filterOptions',
         'limitOnProperty',
         'html',
       ].includes(k)
