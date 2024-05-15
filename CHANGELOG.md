@@ -1,3 +1,7 @@
+# 4.64.3
+
+- Mappings now respond to Gear equip/un-equip in `Shadowrun 5th Edition` system
+
 # 4.64.2
 
 - Fixed Token Configs not applying when configured for image containing `{` or `}` in their file paths

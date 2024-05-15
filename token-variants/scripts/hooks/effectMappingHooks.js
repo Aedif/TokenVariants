@@ -823,9 +823,19 @@ export function getEffectsFromActor(actor, effects = []) {
       });
     }
 
-    (actor.items || []).forEach((item) => {
-      if (ITEM_TYPES.includes(item.type) && item.system.equipped) effects.push(item.name ?? item.label);
-    });
+    if (game.system.id === 'shadowrun5e') {
+      (actor.items || []).forEach((item) => {
+        if (
+          ['weapon', 'armor', 'bioware', 'cyberware', 'device', 'equipment'].includes(item.type) &&
+          item.system.technology.equipped
+        )
+          effects.push(item.name);
+      });
+    } else {
+      (actor.items || []).forEach((item) => {
+        if (ITEM_TYPES.includes(item.type) && item.system.equipped) effects.push(item.name ?? item.label);
+      });
+    }
   }
 
   return effects;
