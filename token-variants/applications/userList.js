@@ -11,7 +11,7 @@ export default class UserList extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-user-list',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/userList.html',
@@ -63,8 +63,7 @@ export default class UserList extends FormApplication {
 
     for (const [userId, apply] of Object.entries(formData)) {
       if (apply) {
-        if (mappings[userId] && mappings[userId] !== this.img)
-          affectedImages.push(mappings[userId]);
+        if (mappings[userId] && mappings[userId] !== this.img) affectedImages.push(mappings[userId]);
         mappings[userId] = this.img;
       } else if (mappings[userId] === this.img) {
         delete mappings[userId];

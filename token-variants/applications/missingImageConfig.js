@@ -8,7 +8,7 @@ export default class MissingImageConfig extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-missing-images',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/missingImageConfig.html',
@@ -23,8 +23,7 @@ export default class MissingImageConfig extends FormApplication {
   async getData(options) {
     const data = super.getData(options);
 
-    if (!this.missingImages)
-      this.missingImages = deepClone(TVA_CONFIG.compendiumMapper.missingImages);
+    if (!this.missingImages) this.missingImages = foundry.utils.deepClone(TVA_CONFIG.compendiumMapper.missingImages);
 
     data.missingImages = this.missingImages;
 

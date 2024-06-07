@@ -28,7 +28,7 @@ export async function drawOverlays(token) {
   // Process strings as expressions
   const overlays = processedMappings.map((m) => {
     m.overlayConfig.id = m.id; // TODO: For some reason ID can get de-synced between mapping and overlay
-    return evaluateOverlayExpressions(deepClone(m.overlayConfig), token, m);
+    return evaluateOverlayExpressions(foundry.utils.deepClone(m.overlayConfig), token, m);
   });
 
   if (overlays.length) {
@@ -46,10 +46,10 @@ export async function drawOverlays(token) {
         if (sprite) {
           _evaluateLinkedImages(ov, token.document.texture.src);
 
-          const diff = diffObject(sprite.overlayConfig, ov);
+          const diff = foundry.utils.diffObject(sprite.overlayConfig, ov);
 
           // Check if we need to create a new texture or simply refresh the overlay
-          if (!isEmpty(diff)) {
+          if (!foundry.utils.isEmpty(diff)) {
             const refreshFilters = Boolean(diff.filter || diff.filterOptions);
             if (ov.img instanceof Array && ov.img.length > 1) {
               sprite.refresh(ov, { refreshFilters });
@@ -409,7 +409,7 @@ function _evaluateString(str, token, conf) {
       }
       if (token && property === 'hp') return getTokenHP(token)?.[0];
       else if (token && property === 'hpMax') return getTokenHP(token)?.[1];
-      const val = getProperty(token.document ?? token, property);
+      const val = foundry.utils.getProperty(token.document ?? token, property);
       return val ?? 0;
     })
     .replace('\\n', '\n');
@@ -421,7 +421,7 @@ function _executeString(evalString, token) {
   try {
     const actor = token.actor; // So that actor is easily accessible within eval() scope
     const result = eval(evalString);
-    if (getType(result) === 'Object') evalString;
+    if (foundry.utils.getType(result) === 'Object') evalString;
     return result;
   } catch (e) {}
   return evalString;
@@ -451,7 +451,7 @@ export function evaluateOverlayExpressions(obj, token, conf) {
 
 // Evaluate provided object values substituting in {{path.to.property}} with token properties, and performing eval() on strings
 function _evaluateObjExpressions(obj, token, conf) {
-  const t = getType(obj);
+  const t = foundry.utils.getType(obj);
   if (t === 'string') {
     const str = _evaluateString(obj, token, conf);
     return _executeString(str, token);
@@ -462,10 +462,10 @@ function _evaluateObjExpressions(obj, token, conf) {
   } else if (t === 'Object') {
     for (const [k, v] of Object.entries(obj)) {
       // Exception for text overlay
-      if (k === 'text' && getType(v) === 'string' && v) {
+      if (k === 'text' && foundry.utils.getType(v) === 'string' && v) {
         const evalString = _evaluateString(v, token, conf);
         const result = _executeString(evalString, token);
-        if (getType(result) !== 'string') obj[k] = evalString;
+        if (foundry.utils.getType(result) !== 'string') obj[k] = evalString;
         else obj[k] = result;
       } else obj[k] = _evaluateObjExpressions(v, token, conf);
     }

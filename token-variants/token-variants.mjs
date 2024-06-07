@@ -219,14 +219,14 @@ registerHook('main', 'init', function () {
 
   Object.defineProperty(api, 'hooks', {
     get() {
-      return deepClone(REGISTERED_HOOKS);
+      return foundry.utils.deepClone(REGISTERED_HOOKS);
     },
     configurable: true,
   });
 
   Object.defineProperty(api, 'wrappers', {
     get() {
-      return deepClone(REGISTERED_WRAPPERS);
+      return foundry.utils.deepClone(REGISTERED_WRAPPERS);
     },
     configurable: true,
   });

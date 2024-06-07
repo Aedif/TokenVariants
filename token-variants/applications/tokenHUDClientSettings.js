@@ -6,7 +6,7 @@ export default class TokenHUDClientSettings extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-hud-settings',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/tokenHUDClientSettings.html',
@@ -19,7 +19,7 @@ export default class TokenHUDClientSettings extends FormApplication {
 
   async getData(options) {
     const data = super.getData(options);
-    return mergeObject(data, TVA_CONFIG.hud);
+    return foundry.utils.mergeObject(data, TVA_CONFIG.hud);
   }
 
   /**
@@ -27,6 +27,6 @@ export default class TokenHUDClientSettings extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    game.settings.set('token-variants', 'hudSettings', mergeObject(TVA_CONFIG.hud, formData));
+    game.settings.set('token-variants', 'hudSettings', foundry.utils.mergeObject(TVA_CONFIG.hud, formData));
   }
 }

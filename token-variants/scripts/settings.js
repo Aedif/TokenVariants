@@ -170,12 +170,12 @@ export function registerSettings() {
     type: Object,
     default: FEATURE_CONTROL,
     onChange: async (val) => {
-      mergeObject(FEATURE_CONTROL, val);
+      foundry.utils.mergeObject(FEATURE_CONTROL, val);
       registerAllHooks();
       registerAllWrappers();
     },
   });
-  mergeObject(FEATURE_CONTROL, game.settings.get('token-variants', 'featureControl'));
+  foundry.utils.mergeObject(FEATURE_CONTROL, game.settings.get('token-variants', 'featureControl'));
 
   game.settings.registerMenu('token-variants', 'settings', {
     name: 'Configure Settings',
@@ -219,7 +219,7 @@ export function registerSettings() {
       }
 
       // Update live settings
-      mergeObject(TVA_CONFIG, val);
+      foundry.utils.mergeObject(TVA_CONFIG, val);
 
       if (TVA_CONFIG.filterEffectIcons && ('filterCustomEffectIcons' in diff || 'filterIconList' in diff)) {
         for (const tkn of canvas.tokens.placeables) {
@@ -347,9 +347,9 @@ export function registerSettings() {
 
   // Read settings
   const settings = game.settings.get('token-variants', 'settings');
-  mergeObject(TVA_CONFIG, settings);
+  foundry.utils.mergeObject(TVA_CONFIG, settings);
 
-  if (isEmpty(TVA_CONFIG.searchFilters)) {
+  if (foundry.utils.isEmpty(TVA_CONFIG.searchFilters)) {
     BASE_IMAGE_CATEGORIES.forEach((cat) => {
       TVA_CONFIG.searchFilters[cat] = {
         include: '',
@@ -373,7 +373,7 @@ export function registerSettings() {
   }
 
   // 20/07/2023 Convert globalMappings to a new format
-  if (getType(settings.globalMappings) === 'Object') {
+  if (foundry.utils.getType(settings.globalMappings) === 'Object') {
     Hooks.once('ready', () => {
       TVA_CONFIG.globalMappings = migrateMappings(settings.globalMappings);
       setTimeout(() => updateSettings({ globalMappings: TVA_CONFIG.globalMappings }), 10000);
@@ -386,12 +386,12 @@ export function registerSettings() {
 
 export function migrateMappings(mappings, globalMappings = []) {
   if (!mappings) return [];
-  if (getType(mappings) === 'Object') {
+  if (foundry.utils.getType(mappings) === 'Object') {
     let nMappings = [];
     for (const [effect, mapping] of Object.entries(mappings)) {
       if (!mapping.label) mapping.label = effect.replaceAll('¶', '.');
       if (!mapping.expression) mapping.expression = effect.replaceAll('¶', '.');
-      if (!mapping.id) mapping.id = randomID(8);
+      if (!mapping.id) mapping.id = foundry.utils.randomID(8);
       delete mapping.effect;
       if (mapping.overlayConfig) mapping.overlayConfig.id = mapping.id;
       delete mapping.overlayConfig?.effect;
@@ -438,7 +438,7 @@ export function getFlagMappings(object) {
 
   // 23/07/2023
   let mappings = doc.getFlag('token-variants', 'effectMappings') ?? [];
-  if (getType(mappings) === 'Object') {
+  if (foundry.utils.getType(mappings) === 'Object') {
     mappings = migrateMappings(mappings, TVA_CONFIG.globalMappings);
     doc.setFlag('token-variants', 'effectMappings', mappings);
   }
@@ -446,7 +446,7 @@ export function getFlagMappings(object) {
 }
 
 export function exportSettingsToJSON() {
-  const settings = deepClone(TVA_CONFIG);
+  const settings = foundry.utils.deepClone(TVA_CONFIG);
   const filename = `token-variants-settings.json`;
   saveDataToFile(JSON.stringify(settings, null, 2), 'text/json', filename);
 }
@@ -525,7 +525,7 @@ function _refreshFilters(filters, customCategories, updateTVAConfig = false) {
 }
 
 export async function updateSettings(newSettings) {
-  const settings = mergeObject(deepClone(TVA_CONFIG), newSettings, { insertKeys: false });
+  const settings = foundry.utils.mergeObject(foundry.utils.deepClone(TVA_CONFIG), newSettings, { insertKeys: false });
   // Custom image categories might have changed, meaning we may have filters that are no longer relevant
   // or need to be added
   if ('customImageCategories' in newSettings) {
@@ -540,14 +540,14 @@ export async function updateSettings(newSettings) {
 
 export function _arrayAwareDiffObject(original, other, { inner = false } = {}) {
   function _difference(v0, v1) {
-    let t0 = getType(v0);
-    let t1 = getType(v1);
+    let t0 = foundry.utils.getType(v0);
+    let t1 = foundry.utils.getType(v1);
     if (t0 !== t1) return [true, v1];
     if (t0 === 'Array') return [!_arrayEquality(v0, v1), v1];
     if (t0 === 'Object') {
-      if (isEmpty(v0) !== isEmpty(v1)) return [true, v1];
+      if (foundry.utils.isEmpty(v0) !== foundry.utils.isEmpty(v1)) return [true, v1];
       let d = _arrayAwareDiffObject(v0, v1, { inner });
-      return [!isEmpty(d), d];
+      return [!foundry.utils.isEmpty(d), d];
     }
     return [v0 !== v1, v1];
   }
@@ -564,7 +564,7 @@ export function _arrayAwareDiffObject(original, other, { inner = false } = {}) {
 function _arrayEquality(a1, a2) {
   if (!(a2 instanceof Array) || a2.length !== a1.length) return false;
   return a1.every((v, i) => {
-    if (getType(v) === 'Object') return Object.keys(_arrayAwareDiffObject(v, a2[i])).length === 0;
+    if (foundry.utils.getType(v) === 'Object') return Object.keys(_arrayAwareDiffObject(v, a2[i])).length === 0;
     return a2[i] === v;
   });
 }

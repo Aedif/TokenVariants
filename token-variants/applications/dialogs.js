@@ -1,5 +1,4 @@
 import { toggleTemplateOnSelected } from '../scripts/hooks/effectMappingHooks.js';
-import { CORE_TEMPLATES } from '../scripts/mappingTemplates.js';
 import { TVA_CONFIG, updateSettings } from '../scripts/settings.js';
 import { BASE_IMAGE_CATEGORIES, uploadTokenImage } from '../scripts/utils.js';
 import { sortMappingsToGroups } from './effectMappingForm.js';
@@ -8,7 +7,7 @@ import TokenCustomConfig from './tokenCustomConfig.js';
 
 // Edit overlay configuration as a json string
 export function showOverlayJsonConfigDialog(overlayConfig, callback) {
-  const config = deepClone(overlayConfig || {});
+  const config = foundry.utils.deepClone(overlayConfig || {});
   delete config.effect;
   let content = `<div style="height: 300px;" class="form-group stacked command"><textarea style="height: 300px;" class="configJson">${JSON.stringify(
     config,
@@ -123,10 +122,10 @@ export async function showPathSelectConfigForm(event) {
     null,
     (conf) => {
       if (!conf) conf = {};
-      if (conf.flags == null || isEmpty(conf.flags)) delete conf.flags;
+      if (conf.flags == null || foundry.utils.isEmpty(conf.flags)) delete conf.flags;
       configInput.val(JSON.stringify(conf));
       const cog = configInput.siblings('.select-config');
-      if (isEmpty(conf)) cog.removeClass('active');
+      if (foundry.utils.isEmpty(conf)) cog.removeClass('active');
       else cog.addClass('active');
     },
     config
@@ -244,7 +243,7 @@ export function showMappingSelectDialog(
             if (this.checked) {
               const mapping = mappings.find((m) => m.id === this.name);
               if (mapping) {
-                const cMapping = deepClone(mapping);
+                const cMapping = foundry.utils.deepClone(mapping);
                 selectedMappings.push(cMapping);
                 delete cMapping.targetActors;
               }
@@ -296,7 +295,13 @@ export function showUserTemplateCreateDialog(mappings) {
           const hint = html.find('[name="templateHint"]').val().trim();
           const img = html.find('[name="img"]').val().trim();
           if (name.trim()) {
-            TVA_CONFIG.templateMappings.push({ id: randomID(), name, hint, img, mappings: deepClone(mappings) });
+            TVA_CONFIG.templateMappings.push({
+              id: foundry.utils.randomID(),
+              name,
+              hint,
+              img,
+              mappings: foundry.utils.deepClone(mappings),
+            });
             updateSettings({ templateMappings: TVA_CONFIG.templateMappings });
           }
         },

@@ -2,7 +2,7 @@ import { importSettingsFromJSON, exportSettingsToJSON } from '../scripts/setting
 
 export default class ImportExport extends FormApplication {
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-import-export',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/importExport.html',
@@ -41,8 +41,7 @@ export default class ImportExport extends FormApplication {
               label: game.i18n.localize('token-variants.common.import'),
               callback: (html) => {
                 const form = html.find('form')[0];
-                if (!form.data.files.length)
-                  return ui.notifications?.error('You did not upload a data file!');
+                if (!form.data.files.length) return ui.notifications?.error('You did not upload a data file!');
                 readTextFromFile(form.data.files[0]).then((json) => {
                   importSettingsFromJSON(json);
                   resolve(true);

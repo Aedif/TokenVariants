@@ -154,7 +154,7 @@ export class Reticle {
     this.tvaOverlay = tvaOverlay;
 
     this.minimizeApps();
-    this.config = evaluateOverlayExpressions(deepClone(config), this.tvaOverlay.object, {
+    this.config = evaluateOverlayExpressions(foundry.utils.deepClone(config), this.tvaOverlay.object, {
       overlayConfig: config,
     });
 

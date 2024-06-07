@@ -60,8 +60,8 @@ export default class TokenCustomConfig extends TokenConfig {
     }
 
     if (this.config) {
-      let config = expandObject(filtered);
-      config.flags = config.flags ? mergeObject(this.flags || {}, config.flags) : this.flags;
+      let config = foundry.utils.expandObject(filtered);
+      config.flags = config.flags ? foundry.utils.mergeObject(this.flags || {}, config.flags) : this.flags;
       if (this.callback) this.callback(config);
     } else {
       const saved = setTokenConfig(this.imgSrc, this.imgName, filtered);

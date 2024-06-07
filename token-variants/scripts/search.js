@@ -42,7 +42,7 @@ export async function doImageSearch(
 ) {
   if (caching) return;
 
-  searchOptions = mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
+  searchOptions = foundry.utils.mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
 
   search = search.trim();
 
@@ -162,7 +162,7 @@ async function _randSearchUtil(
   search,
   { searchType = SEARCH_TYPE.PORTRAIT_AND_TOKEN, actor = null, randomizerOptions = {}, searchOptions = {} } = {}
 ) {
-  const randSettings = mergeObject(randomizerOptions, TVA_CONFIG.randomizer, { overwrite: false });
+  const randSettings = foundry.utils.mergeObject(randomizerOptions, TVA_CONFIG.randomizer, { overwrite: false });
   if (
     !(
       randSettings.tokenName ||
@@ -484,7 +484,7 @@ async function findImagesExact(name, searchType, searchOptions) {
 }
 
 async function findImages(name, searchType = '', searchOptions = {}) {
-  const sOptions = mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
+  const sOptions = foundry.utils.mergeObject(searchOptions, getSearchOptions(), { overwrite: false });
   if (sOptions.algorithm.exact) {
     return await findImagesExact(name, searchType, sOptions);
   } else {

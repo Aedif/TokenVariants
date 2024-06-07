@@ -21,7 +21,7 @@ export default class EffectMappingForm extends FormApplication {
 
     this.token = token;
     if (globalMappings) {
-      this.globalMappings = deepClone(TVA_CONFIG.globalMappings).filter(Boolean);
+      this.globalMappings = foundry.utils.deepClone(TVA_CONFIG.globalMappings).filter(Boolean);
     }
     if (!globalMappings) this.objectToFlag = game.actors.get(token.actorId);
     this.callback = callback;
@@ -32,7 +32,7 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-active-effect-config',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/effectMappingForm.html',
@@ -58,7 +58,7 @@ export default class EffectMappingForm extends FormApplication {
     if (mapping.config.tv_script) hasTokenConfig--;
 
     return {
-      id: mapping.id || randomID(8),
+      id: mapping.id || foundry.utils.randomID(8),
       label: mapping.label,
       expression: mapping.expression,
       codeExp: mapping.codeExp,
@@ -68,7 +68,7 @@ export default class EffectMappingForm extends FormApplication {
       imgSrc: mapping.imgSrc,
       isVideo: mapping.imgSrc ? isVideo(mapping.imgSrc) : false,
       priority: mapping.priority,
-      hasConfig: mapping.config ? !isEmpty(mapping.config) : false,
+      hasConfig: mapping.config ? !foundry.utils.isEmpty(mapping.config) : false,
       hasScript: mapping.config && mapping.config.tv_script,
       hasTokenConfig: hasTokenConfig > 0,
       config: mapping.config,
@@ -385,7 +385,7 @@ export default class EffectMappingForm extends FormApplication {
       null,
       null,
       (config) => {
-        if (!config || isEmpty(config)) {
+        if (!config || foundry.utils.isEmpty(config)) {
           config = {};
           config.tv_script = mapping.config.tv_script;
           config.flags = mapping.config.flags;
@@ -487,9 +487,9 @@ export default class EffectMappingForm extends FormApplication {
     event.preventDefault();
     await this._onSubmit(event);
     const li = event.currentTarget.closest('.table-row');
-    const clone = deepClone(this.object.mappings[li.dataset.index]);
+    const clone = foundry.utils.deepClone(this.object.mappings[li.dataset.index]);
     clone.label = clone.label + ' - Copy';
-    clone.id = randomID(8);
+    clone.id = foundry.utils.randomID(8);
     this.object.mappings.push(clone);
     this.render();
   }
@@ -505,7 +505,7 @@ export default class EffectMappingForm extends FormApplication {
     // if (textOverlay) {
     //   TOGGLED_GROUPS['Text Overlays'] = true;
     //   return {
-    //     id: randomID(8),
+    //     id: foundry.utils.randomID(8),
     //     label: label,
     //     expression: label,
     //     highlightedExpression: highlightOperators(label),
@@ -552,10 +552,10 @@ export default class EffectMappingForm extends FormApplication {
     //   };
     // } else {
     TOGGLED_GROUPS['Default'] = true;
-    return mergeObject(deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG), {
+    return foundry.utils.mergeObject(foundry.utils.deepClone(DEFAULT_ACTIVE_EFFECT_CONFIG), {
       label,
       expression,
-      id: randomID(8),
+      id: foundry.utils.randomID(8),
     });
     // }
   }
@@ -624,7 +624,7 @@ export default class EffectMappingForm extends FormApplication {
       showMappingSelectDialog(this.globalMappings ?? getFlagMappings(this.objectToFlag), { callback: resolve });
     });
 
-    if (mappings && !isEmpty(mappings)) {
+    if (mappings && !foundry.utils.isEmpty(mappings)) {
       if (this.globalMappings) {
         filename = 'token-variants-global-mappings.json';
       } else {
@@ -692,7 +692,7 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   async _insertMappings(event, mappings) {
-    const cMappings = deepClone(mappings).map(this._processConfig);
+    const cMappings = foundry.utils.deepClone(mappings).map(this._processConfig);
     await this._onSubmit(event);
     mergeMappings(cMappings, this.object.mappings);
     this.render();
@@ -773,7 +773,7 @@ export default class EffectMappingForm extends FormApplication {
 
       if (mappings.length !== 0) {
         const effectMappings = mappings.map((m) =>
-          mergeObject(DEFAULT_ACTIVE_EFFECT_CONFIG, m, {
+          foundry.utils.mergeObject(DEFAULT_ACTIVE_EFFECT_CONFIG, m, {
             inplace: false,
             insertKeys: false,
             recursive: false,
@@ -815,7 +815,7 @@ export default class EffectMappingForm extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    const mappings = expandObject(formData).mappings ?? {};
+    const mappings = foundry.utils.expandObject(formData).mappings ?? {};
 
     // Merge form data with internal mappings
     for (let i = 0; i < this.object.mappings.length; i++) {

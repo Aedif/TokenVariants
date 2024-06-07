@@ -133,7 +133,7 @@ export async function updateTokenImage(
       if ('token-variants' in tokenData.flags && 'defaultConfig' in tokenData['token-variants'])
         configEntries = tokenData['token-variants']['defaultConfig'];
     }
-    return expandObject(Object.fromEntries(configEntries));
+    return foundry.utils.expandObject(Object.fromEntries(configEntries));
   };
 
   const constructDefaultConfig = (origData, customConfig) => {
@@ -158,34 +158,35 @@ export async function updateTokenImage(
 
   let tokenUpdateObj = tokenUpdate;
   if (imgSrc) {
-    setProperty(tokenUpdateObj, 'texture.src', imgSrc);
-    if (imgName && getFileName(imgSrc) === imgName) setProperty(tokenUpdateObj, 'flags.token-variants.-=name', null);
-    else setProperty(tokenUpdateObj, 'flags.token-variants.name', imgName);
+    foundry.utils.setProperty(tokenUpdateObj, 'texture.src', imgSrc);
+    if (imgName && getFileName(imgSrc) === imgName)
+      foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.-=name', null);
+    else foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.name', imgName);
   }
 
-  const tokenCustomConfig = mergeObject(
+  const tokenCustomConfig = foundry.utils.mergeObject(
     getTokenConfigForUpdate(imgSrc || token?.texture.src, imgName, token),
     config ?? {}
   );
   const usingCustomConfig = token?.getFlag('token-variants', 'usingCustomConfig');
   const defaultConfig = getDefaultConfig(token);
-  if (!isEmpty(tokenCustomConfig) || usingCustomConfig) {
+  if (!foundry.utils.isEmpty(tokenCustomConfig) || usingCustomConfig) {
     tokenUpdateObj = modMergeObject(tokenUpdateObj, defaultConfig);
   }
 
-  if (!isEmpty(tokenCustomConfig)) {
+  if (!foundry.utils.isEmpty(tokenCustomConfig)) {
     if (token) {
-      setProperty(tokenUpdateObj, 'flags.token-variants.usingCustomConfig', true);
+      foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.usingCustomConfig', true);
       let doc = token.document ?? token;
-      const tokenData = doc.toObject ? doc.toObject() : deepClone(doc);
+      const tokenData = doc.toObject ? doc.toObject() : foundry.utils.deepClone(doc);
 
-      const defConf = constructDefaultConfig(mergeObject(tokenData, defaultConfig), tokenCustomConfig);
-      setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
+      const defConf = constructDefaultConfig(foundry.utils.mergeObject(tokenData, defaultConfig), tokenCustomConfig);
+      foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
     } else if (actor && !token) {
-      setProperty(tokenUpdateObj, 'flags.token-variants.usingCustomConfig', true);
+      foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.usingCustomConfig', true);
       const tokenData = actor.prototypeToken instanceof Object ? actor.prototypeToken : actor.prototypeToken.toObject();
       const defConf = constructDefaultConfig(tokenData, tokenCustomConfig);
-      setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
+      foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.defaultConfig', defConf);
     }
 
     // Fix, an empty flag may be passed which would overwrite any current flags in the updateObj
@@ -196,18 +197,18 @@ export async function updateTokenImage(
 
     tokenUpdateObj = modMergeObject(tokenUpdateObj, tokenCustomConfig);
   } else if (usingCustomConfig) {
-    setProperty(tokenUpdateObj, 'flags.token-variants.-=usingCustomConfig', null);
+    foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.-=usingCustomConfig', null);
     delete tokenUpdateObj?.flags?.['token-variants']?.defaultConfig;
-    setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultConfig', null);
+    foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultConfig', null);
   }
 
   if (!applyDefaultConfig) {
-    setProperty(tokenUpdateObj, 'flags.token-variants.-=usingCustomConfig', null);
+    foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.-=usingCustomConfig', null);
     delete tokenUpdateObj?.flags?.['token-variants']?.defaultConfig;
-    setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultConfig', null);
+    foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultConfig', null);
   }
 
-  if (!isEmpty(tokenUpdateObj)) {
+  if (!foundry.utils.isEmpty(tokenUpdateObj)) {
     if (actor && !token) {
       TokenDataAdapter.formToData(actor.prototypeToken, tokenUpdateObj);
       actorUpdate.prototypeToken = tokenUpdateObj;
@@ -222,7 +223,7 @@ export async function updateTokenImage(
       TokenDataAdapter.formToData(token, tokenUpdateObj);
       if (TVA_CONFIG.updateTokenProto && token.actor) {
         if (update) {
-          mergeObject(update, { token: tokenUpdateObj });
+          foundry.utils.mergeObject(update, { token: tokenUpdateObj });
         } else {
           // Timeout to prevent race conditions with other modules namely MidiQOL
           // this is a low priority update so it should be Ok to do
@@ -235,7 +236,7 @@ export async function updateTokenImage(
       }
 
       if (update) {
-        mergeObject(update, tokenUpdateObj);
+        foundry.utils.mergeObject(update, tokenUpdateObj);
       } else {
         if (token.object) queueTokenUpdate(token.id, tokenUpdateObj, callback, animate);
         else {
@@ -473,13 +474,13 @@ export function getTokenConfigForUpdate(imgSrc, imgName, token) {
   let tokenConfig = {};
   for (const path of TVA_CONFIG.searchPaths) {
     if (path.config && imgSrc.startsWith(path.text)) {
-      mergeObject(tokenConfig, path.config);
+      foundry.utils.mergeObject(tokenConfig, path.config);
     }
   }
 
   let imgConfig = getTokenConfig(imgSrc, imgName ?? getFileName(imgSrc));
-  if (!isEmpty(imgConfig)) {
-    imgConfig = deepClone(imgConfig);
+  if (!foundry.utils.isEmpty(imgConfig)) {
+    imgConfig = foundry.utils.deepClone(imgConfig);
     delete imgConfig.tvImgSrc;
     delete imgConfig.tvImgName;
     if (token) TokenDataAdapter.formToData(token, imgConfig);
@@ -705,9 +706,9 @@ export function modMergeObject(
 
   // Special handling at depth 0
   if (_d === 0) {
-    if (!inplace) original = deepClone(original);
-    if (Object.keys(original).some((k) => /\./.test(k))) original = expandObject(original);
-    if (Object.keys(other).some((k) => /\./.test(k))) other = expandObject(other);
+    if (!inplace) original = foundry.utils.deepClone(original);
+    if (Object.keys(original).some((k) => /\./.test(k))) original = foundry.utils.expandObject(original);
+    if (Object.keys(other).some((k) => /\./.test(k))) other = foundry.utils.expandObject(other);
   }
 
   // Iterate over the other object
@@ -754,8 +755,8 @@ function _modMergeInsert(original, k, v, { insertKeys, insertValues } = {}, _d) 
  */
 function _modMergeUpdate(original, k, v, { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {}, _d) {
   const x = original[k];
-  const tv = getType(v);
-  const tx = getType(x);
+  const tv = foundry.utils.getType(v);
+  const tx = foundry.utils.getType(x);
 
   // Recursively merge an inner object
   if (tv === 'Object' && tx === 'Object' && recursive) {
@@ -885,8 +886,8 @@ export class TokenDataAdapter {
       if (!('scale' in formData)) formData.scale = Math.abs(doc.texture.scaleX);
       if (!('mirrorX' in formData)) formData.mirrorX = doc.texture.scaleX < 0;
       if (!('mirrorY' in formData)) formData.mirrorY = doc.texture.scaleY < 0;
-      setProperty(formData, 'texture.scaleX', formData.scale * (formData.mirrorX ? -1 : 1));
-      setProperty(formData, 'texture.scaleY', formData.scale * (formData.mirrorY ? -1 : 1));
+      foundry.utils.setProperty(formData, 'texture.scaleX', formData.scale * (formData.mirrorX ? -1 : 1));
+      foundry.utils.setProperty(formData, 'texture.scaleY', formData.scale * (formData.mirrorY ? -1 : 1));
       ['scale', 'mirrorX', 'mirrorY'].forEach((k) => delete formData[k]);
     }
   }
@@ -939,7 +940,7 @@ export async function nameForgeRandomize(randomizerSettings) {
     if (nameForge?.active) {
       const randomNames = [];
       for (const modelKey of nameForgeSettings.models) {
-        const modelProp = getProperty(nameForge.models, modelKey);
+        const modelProp = foundry.utils.getProperty(nameForge.models, modelKey);
         if (modelProp) {
           const model = await nameForge.api.createModel(modelProp);
           if (model) {

@@ -10,7 +10,7 @@ export class Templates extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-templates',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/templates.html',
@@ -127,7 +127,7 @@ export class Templates extends FormApplication {
       if (id) {
         let template;
         if (this.category === 'core') {
-          template = deepClone(CORE_TEMPLATES.find((t) => t.id === id));
+          template = foundry.utils.deepClone(CORE_TEMPLATES.find((t) => t.id === id));
         } else {
           const fileURL = $(event.target).closest('.template').data('url');
           if (fileURL) template = await getTemplateFromFileURL(fileURL);
@@ -189,7 +189,7 @@ class TemplateSubmissionForm extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-template-submission',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/templateSubmission.html',
@@ -237,7 +237,7 @@ class TemplateSubmissionForm extends FormApplication {
       return { id, name: game.modules.get(id).title };
     });
 
-    const id = randomID();
+    const id = foundry.utils.randomID();
     const img = formData.img.trim();
 
     const result = await submitTemplate({

@@ -35,13 +35,13 @@ export default class ConfigureSettings extends FormApplication {
     };
     this.settings = foundry.utils.deepClone(TVA_CONFIG);
     if (dummySettings) {
-      this.settings = mergeObject(this.settings, dummySettings, { insertKeys: false });
+      this.settings = foundry.utils.mergeObject(this.settings, dummySettings, { insertKeys: false });
       this.dummySettings = dummySettings;
     }
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-configure-settings',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/configureSettings.html',
@@ -69,7 +69,7 @@ export default class ConfigureSettings extends FormApplication {
       r.source = path.source || '';
       r.types = path.types.join(',');
       r.config = JSON.stringify(path.config ?? {});
-      r.hasConfig = path.config && !isEmpty(path.config);
+      r.hasConfig = path.config && !foundry.utils.isEmpty(path.config);
       return r;
     });
     data.searchPaths = paths;
@@ -81,12 +81,12 @@ export default class ConfigureSettings extends FormApplication {
     }
 
     // === Algorithm ===
-    data.algorithm = deepClone(settings.algorithm);
+    data.algorithm = foundry.utils.deepClone(settings.algorithm);
     data.algorithm.fuzzyThreshold = 100 - data.algorithm.fuzzyThreshold * 100;
 
     // === Randomizer ===
     // Get all actor types defined by the game system
-    data.randomizer = deepClone(settings.randomizer);
+    data.randomizer = foundry.utils.deepClone(settings.randomizer);
     const actorTypes = (game.system.entityTypes ?? game.system.documentTypes)['Actor'];
     data.randomizer.actorTypes = actorTypes.reduce((obj, t) => {
       const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
@@ -101,7 +101,7 @@ export default class ConfigureSettings extends FormApplication {
       !(settings.randomizer.tokenCreate || settings.randomizer.tokenCopyPaste) || data.randomizer.diffImages;
 
     // === Pop-up ===
-    data.popup = deepClone(settings.popup);
+    data.popup = foundry.utils.deepClone(settings.popup);
     // Get all actor types defined by the game system
     data.popup.actorTypes = actorTypes.reduce((obj, t) => {
       const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
@@ -132,11 +132,11 @@ export default class ConfigureSettings extends FormApplication {
     data.permissions = settings.permissions;
 
     // === Token HUD ===
-    data.worldHud = deepClone(settings.worldHud);
+    data.worldHud = foundry.utils.deepClone(settings.worldHud);
     data.worldHud.tokenHUDWildcardActive = game.modules.get('token-hud-wildcard')?.active;
 
     // === Internal Effects ===
-    data.internalEffects = deepClone(settings.internalEffects);
+    data.internalEffects = foundry.utils.deepClone(settings.internalEffects);
 
     // === Misc ===
     data.keywordSearch = settings.keywordSearch;
@@ -618,31 +618,31 @@ export default class ConfigureSettings extends FormApplication {
     for (const filter in formData.searchFilters) {
       if (!this._validRegex(formData.searchFilters[filter].regex)) formData.searchFilters[filter].regex = '';
     }
-    mergeObject(settings.searchFilters, formData.searchFilters);
+    foundry.utils.mergeObject(settings.searchFilters, formData.searchFilters);
 
     // Algorithm
     formData.algorithm.fuzzyLimit = parseInt(formData.algorithm.fuzzyLimit);
     if (isNaN(formData.algorithm.fuzzyLimit) || formData.algorithm.fuzzyLimit < 1) formData.algorithm.fuzzyLimit = 50;
     formData.algorithm.fuzzyThreshold = (100 - formData.algorithm.fuzzyThreshold) / 100;
-    mergeObject(settings.algorithm, formData.algorithm);
+    foundry.utils.mergeObject(settings.algorithm, formData.algorithm);
 
     // Randomizer
-    mergeObject(settings.randomizer, formData.randomizer);
+    foundry.utils.mergeObject(settings.randomizer, formData.randomizer);
 
     // Pop-up
-    mergeObject(settings.popup, formData.popup);
+    foundry.utils.mergeObject(settings.popup, formData.popup);
 
     // Permissions
-    mergeObject(settings.permissions, formData.permissions);
+    foundry.utils.mergeObject(settings.permissions, formData.permissions);
 
     // Token HUD
-    mergeObject(settings.worldHud, formData.worldHud);
+    foundry.utils.mergeObject(settings.worldHud, formData.worldHud);
 
     // Internal Effects
-    mergeObject(settings.internalEffects, formData.internalEffects);
+    foundry.utils.mergeObject(settings.internalEffects, formData.internalEffects);
 
     // Misc
-    mergeObject(settings, {
+    foundry.utils.mergeObject(settings, {
       keywordSearch: formData.keywordSearch,
       excludedKeywords: formData.excludedKeywords,
       systemHpPath: formData.systemHpPath?.trim(),
@@ -717,9 +717,9 @@ export function mergeObjectFix(
 
   // Special handling at depth 0
   if (_d === 0) {
-    if (!inplace) original = deepClone(original);
-    if (Object.keys(original).some((k) => /\./.test(k))) original = expandObject(original);
-    if (Object.keys(other).some((k) => /\./.test(k))) other = expandObject(other);
+    if (!inplace) original = foundry.utils.deepClone(original);
+    if (Object.keys(original).some((k) => /\./.test(k))) original = foundry.utils.expandObject(original);
+    if (Object.keys(other).some((k) => /\./.test(k))) other = foundry.utils.expandObject(other);
   }
 
   // Iterate over the other object
@@ -751,8 +751,8 @@ function _mergeInsertFix(original, k, v, { insertKeys, insertValues } = {}, _d) 
 
 function _mergeUpdate(original, k, v, { insertKeys, insertValues, enforceTypes, overwrite, recursive } = {}, _d) {
   const x = original[k];
-  const tv = getType(v);
-  const tx = getType(x);
+  const tv = foundry.utils.getType(v);
+  const tx = foundry.utils.getType(x);
 
   // Recursively merge an inner object
   if (tv === 'Object' && tx === 'Object' && recursive) {

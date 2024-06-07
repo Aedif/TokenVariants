@@ -6,7 +6,7 @@ export default class EditScriptConfig extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-config-script-edit',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/configScriptEdit.html',
@@ -22,7 +22,7 @@ export default class EditScriptConfig extends FormApplication {
     const data = super.getData(options);
 
     const script = this.script ? this.script : {};
-    data.hasScript = !isEmpty(script);
+    data.hasScript = !foundry.utils.isEmpty(script);
     data.onApply = script.onApply;
     data.onRemove = script.onRemove;
     data.macroOnApply = script.macroOnApply;
@@ -75,7 +75,7 @@ export default class EditScriptConfig extends FormApplication {
    * @param {Object} formData
    */
   async _updateObject(event, formData) {
-    formData = expandObject(formData);
+    formData = foundry.utils.expandObject(formData);
     ['onApply', 'onRemove', 'macroOnApply', 'macroOnRemove'].forEach((k) => {
       formData[k] = formData[k].trim();
     });

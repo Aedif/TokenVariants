@@ -153,13 +153,13 @@ function addToArtSelectQueue(actor, image1, image2, formData, typeOverride) {
 export default class CompendiumMapConfig extends FormApplication {
   constructor() {
     super({}, {});
-    this.searchOptions = deepClone(getSearchOptions());
-    mergeObject(this.searchOptions, deepClone(TVA_CONFIG.compendiumMapper.searchOptions));
+    this.searchOptions = foundry.utils.deepClone(getSearchOptions());
+    foundry.utils.mergeObject(this.searchOptions, foundry.utils.deepClone(TVA_CONFIG.compendiumMapper.searchOptions));
     this._fixSearchPaths();
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-compendium-map-config',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/compendiumMap.html',
@@ -172,7 +172,7 @@ export default class CompendiumMapConfig extends FormApplication {
 
   async getData(options) {
     let data = super.getData(options);
-    data = mergeObject(data, TVA_CONFIG.compendiumMapper);
+    data = foundry.utils.mergeObject(data, TVA_CONFIG.compendiumMapper);
 
     const supportedPacks = ['Actor', 'Cards', 'Item', 'Macro', 'RollTable'];
     data.supportedPacks = supportedPacks.join(', ');
@@ -230,7 +230,7 @@ export default class CompendiumMapConfig extends FormApplication {
 
   _fixSearchPaths() {
     if (!this.searchOptions.searchPaths?.length) {
-      this.searchOptions.searchPaths = deepClone(TVA_CONFIG.searchPaths);
+      this.searchOptions.searchPaths = foundry.utils.deepClone(TVA_CONFIG.searchPaths);
     }
   }
 
@@ -455,7 +455,7 @@ export default class CompendiumMapConfig extends FormApplication {
     // If search paths are the same, remove them from searchOptions
     if (
       !this.searchOptions.searchPaths?.length ||
-      isEmpty(diffObject(this.searchOptions.searchPaths, TVA_CONFIG.searchPaths))
+      foundry.utils.isEmpty(diffObject(this.searchOptions.searchPaths, TVA_CONFIG.searchPaths))
     ) {
       this.searchOptions.searchPaths = [];
     }

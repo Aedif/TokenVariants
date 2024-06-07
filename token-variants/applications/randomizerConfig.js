@@ -5,7 +5,7 @@ export default class RandomizerConfig extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-token-flags',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/randomizerConfig.html',
@@ -20,7 +20,7 @@ export default class RandomizerConfig extends FormApplication {
     const data = super.getData(options);
     const settings = this.actor.getFlag('token-variants', 'randomizerSettings') || {};
     data.randomizer = settings;
-    data.hasSettings = !isEmpty(settings);
+    data.hasSettings = !foundry.utils.isEmpty(settings);
     data.nameForgeActive = game.modules.get('nameforge')?.active;
     if (data.randomizer.nameForge?.models && Array.isArray(data.randomizer.nameForge.models)) {
       data.randomizer.nameForge.models = data.randomizer.nameForge.models.join(',');
@@ -99,7 +99,7 @@ export default class RandomizerConfig extends FormApplication {
     if (event.submitter.value === 'remove') {
       await this.actor.unsetFlag('token-variants', 'randomizerSettings');
     } else {
-      const expanded = expandObject(formData);
+      const expanded = foundry.utils.expandObject(formData);
       if (expanded.randomizer.nameForge?.models) {
         expanded.randomizer.nameForge.models = expanded.randomizer.nameForge.models.split(',');
       }

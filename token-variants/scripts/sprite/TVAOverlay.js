@@ -6,7 +6,7 @@ import { interpolateColor, removeMarkedOverlays } from '../token/overlay.js';
 import { executeMacro, toggleCEEffect, toggleTMFXPreset, tv_executeScript } from '../utils.js';
 import { HTMLOverlay } from './HTMLOverlay.js';
 
-export class TVAOverlay extends TokenMesh {
+export class TVAOverlay extends PrimarySpriteMesh {
   constructor(pTexture, token, config) {
     super(token);
     if (pTexture.shapes) pTexture.shapes = this.addChild(pTexture.shapes);
@@ -19,7 +19,7 @@ export class TVAOverlay extends TokenMesh {
     this.overlaySort = 0;
     this.filtersApplied = false;
 
-    this.overlayConfig = mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
+    this.overlayConfig = foundry.utils.mergeObject(DEFAULT_OVERLAY_CONFIG, config, { inplace: false });
     if (pTexture.html) this.addHTMLOverlay();
 
     // linkDimensions has been converted to linkDimensionsX and linkDimensionsY
@@ -261,7 +261,7 @@ export class TVAOverlay extends TokenMesh {
       this._registerHooks(configuration);
     }
 
-    const config = mergeObject(this.overlayConfig, configuration ?? {}, { inplace: !preview });
+    const config = foundry.utils.mergeObject(this.overlayConfig, configuration ?? {}, { inplace: !preview });
 
     if (preview && this.htmlOverlay) this.htmlOverlay.render(config, true);
 
@@ -442,7 +442,7 @@ export class TVAOverlay extends TokenMesh {
     this.filtersApplied = true;
     const filterName = config.filter;
     const FilterClass = PIXI.filters[filterName];
-    const options = mergeObject(FILTERS[filterName]?.defaultValues || {}, config.filterOptions);
+    const options = foundry.utils.mergeObject(FILTERS[filterName]?.defaultValues || {}, config.filterOptions);
     let filter;
     if (FilterClass) {
       if (FILTERS[filterName]?.argType === 'args') {
@@ -515,7 +515,7 @@ export class TVAOverlay extends TokenMesh {
   }
 
   async animate(config) {
-    if (!this.animationName) this.animationName = this.object.sourceId + '.' + randomID(5);
+    if (!this.animationName) this.animationName = this.object.sourceId + '.' + foundry.utils.randomID(5);
 
     let newAngle = this.angle + (config.animation.clockwise ? 360 : -360);
     const rotate = [{ parent: this, attribute: 'angle', to: newAngle }];
@@ -628,19 +628,19 @@ async function constructTMFXFilters(paramsArray, sprite) {
     }
 
     if (!params.hasOwnProperty('filterId') || params.filterId == null) {
-      params.filterId = randomID();
+      params.filterId = foundry.utils.randomID();
     }
 
     if (!params.hasOwnProperty('enabled') || !(typeof params.enabled === 'boolean')) {
       params.enabled = true;
     }
 
-    params.filterInternalId = randomID();
+    params.filterInternalId = foundry.utils.randomID();
 
     const gms = game.users.filter((user) => user.isGM);
     params.filterOwner = gms.length ? gms[0].id : game.data.userId;
     // params.placeableType = placeable._TMFXgetPlaceableType();
-    params.updateId = randomID();
+    params.updateId = foundry.utils.randomID();
 
     const filterClass = TokenMagic.filterTypes[params.filterType];
     if (filterClass) {

@@ -10,7 +10,7 @@ export default class FlagsConfig extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-token-flags',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/flagsConfig.html',
@@ -27,14 +27,14 @@ export default class FlagsConfig extends FormApplication {
     const disableNameSearch = this.objectToFlag.getFlag('token-variants', 'disableNameSearch');
     const directory = this.objectToFlag.getFlag('token-variants', 'directory') || {};
 
-    return mergeObject(data, {
+    return foundry.utils.mergeObject(data, {
       popups: popups,
       popupsSetFlag: popups != null,
       disableNameSearch: disableNameSearch,
       disableNameSearchSetFlag: disableNameSearch != null,
       directory: directory.path,
       directorySource: directory.source,
-      directorySetFlag: !isEmpty(directory),
+      directorySetFlag: !foundry.utils.isEmpty(directory),
       tile: this.isTile,
     });
   }

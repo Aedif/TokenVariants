@@ -108,7 +108,7 @@ export class ArtSelect extends FormApplication {
     this.displayMode = displayMode;
     this.multipleSelection = multipleSelection;
     this.searchType = searchType;
-    this.searchOptions = mergeObject(searchOptions, getSearchOptions(), {
+    this.searchOptions = foundry.utils.mergeObject(searchOptions, getSearchOptions(), {
       overwrite: false,
     });
     ArtSelect.instance = this;
@@ -118,7 +118,7 @@ export class ArtSelect extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-art-select',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/artSelect.html',

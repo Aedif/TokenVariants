@@ -20,7 +20,7 @@ async function _createToken(token, options, userId) {
 
   // Check if random search is enabled and if so perform it
   const actorRandSettings = game.actors.get(token.actorId)?.getFlag('token-variants', 'randomizerSettings');
-  const randSettings = mergeObject(TVA_CONFIG.randomizer, actorRandSettings ?? {}, {
+  const randSettings = foundry.utils.mergeObject(TVA_CONFIG.randomizer, actorRandSettings ?? {}, {
     inplace: false,
     recursive: false,
   });

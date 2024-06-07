@@ -78,5 +78,5 @@ function _preCreateToken(tokenDocument, data, options, userId) {
     });
   }
 
-  if (!isEmpty(update)) tokenDocument.updateSource(update);
+  if (!foundry.utils.isEmpty(update)) tokenDocument.updateSource(update);
 }

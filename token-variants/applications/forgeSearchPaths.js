@@ -7,7 +7,7 @@ export class ForgeSearchPaths extends FormApplication {
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-search-paths',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/forgeSearchPaths.html',
@@ -42,7 +42,7 @@ export class ForgeSearchPaths extends FormApplication {
   }
 
   async _getPaths() {
-    const forgePaths = deepClone(TVA_CONFIG.forgeSearchPaths) || {};
+    const forgePaths = foundry.utils.deepClone(TVA_CONFIG.forgeSearchPaths) || {};
     this.userId = typeof ForgeAPI !== 'undefined' ? await ForgeAPI.getUserId() : 'tempUser'; // TODO
     this.apiKey = forgePaths[this.userId]?.apiKey;
     return forgePaths[this.userId]?.paths || [];
@@ -117,7 +117,7 @@ export class ForgeSearchPaths extends FormApplication {
   }
 
   async _updateObject(event, formData) {
-    const expanded = expandObject(formData);
+    const expanded = foundry.utils.expandObject(formData);
     expanded.paths = expanded.hasOwnProperty('paths') ? Object.values(expanded.paths) : [];
     expanded.paths.forEach((path, index) => {
       this.object.paths[index] = {
@@ -130,7 +130,7 @@ export class ForgeSearchPaths extends FormApplication {
       if (path.config) {
         try {
           path.config = JSON.parse(path.config);
-          if (!isEmpty(path.config)) {
+          if (!foundry.utils.isEmpty(path.config)) {
             this.object.paths[index].config = path.config;
           }
         } catch (e) {}
@@ -152,7 +152,7 @@ export class ForgeSearchPaths extends FormApplication {
 
   _updatePaths() {
     if (this.userId) {
-      const forgePaths = deepClone(TVA_CONFIG.forgeSearchPaths) || {};
+      const forgePaths = foundry.utils.deepClone(TVA_CONFIG.forgeSearchPaths) || {};
       forgePaths[this.userId] = {
         paths: this._cleanPaths(),
         apiKey: this.apiKey,

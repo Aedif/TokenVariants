@@ -154,11 +154,11 @@ function _preUpdateToken(token, change, options, userId) {
 
   const preUpdateEffects = getTokenEffects(token, true);
   if (preUpdateEffects.length) {
-    setProperty(options, 'token-variants.preUpdateEffects', preUpdateEffects);
+    foundry.utils.setProperty(options, 'token-variants.preUpdateEffects', preUpdateEffects);
   }
 
   if (game.system.id === 'dnd5e' && token.actor?.isPolymorphed) {
-    setProperty(options, 'token-variants.wasPolymorphed', true);
+    foundry.utils.setProperty(options, 'token-variants.wasPolymorphed', true);
   }
 }
 
@@ -170,13 +170,13 @@ async function _updateToken(token, change, options, userId) {
 
   const addedEffects = [];
   const removedEffects = [];
-  const preUpdateEffects = getProperty(options, 'token-variants.preUpdateEffects') || [];
+  const preUpdateEffects = foundry.utils.getProperty(options, 'token-variants.preUpdateEffects') || [];
   const postUpdateEffects = getTokenEffects(token, true);
   determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
 
   if (addedEffects.length || removedEffects.length || 'actorLink' in change) {
     updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
-  } else if (getProperty(options, 'token-variants.wasPolymorphed') && !token.actor?.isPolymorphed) {
+  } else if (foundry.utils.getProperty(options, 'token-variants.wasPolymorphed') && !token.actor?.isPolymorphed) {
     updateWithEffectMapping(token);
   }
 
@@ -225,7 +225,7 @@ function _preUpdateAssign(actor, change, options) {
     const preUpdateEffects = getTokenEffects(tkn, true);
 
     if (preUpdateEffects.length) {
-      setProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects', preUpdateEffects);
+      foundry.utils.setProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects', preUpdateEffects);
     }
   }
 }
@@ -238,7 +238,7 @@ function _preUpdateCheck(actor, options, pAdded = [], pRemoved = []) {
     const added = [...pAdded];
     const removed = [...pRemoved];
     const postUpdateEffects = getTokenEffects(tkn, true);
-    const preUpdateEffects = getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
+    const preUpdateEffects = foundry.utils.getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
 
     determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
     if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
@@ -456,7 +456,7 @@ async function _updateWithEffectMapping(token, added, removed) {
     if (TVA_CONFIG.stackStatusConfig) {
       config = {};
       for (const ef of effects) {
-        config = mergeObject(config, ef.config);
+        config = foundry.utils.mergeObject(config, ef.config);
       }
     } else {
       for (let i = effects.length - 1; i >= 0; i--) {
@@ -470,11 +470,11 @@ async function _updateWithEffectMapping(token, added, removed) {
     // Use or update the default (original) token image
     if (!newImg.imgSrc && tokenDefaultImg) {
       delete tokenUpdateObj.flags?.['token-variants']?.defaultImg;
-      setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultImg', null);
+      foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultImg', null);
       newImg.imgSrc = tokenDefaultImg.imgSrc;
       newImg.imgName = tokenDefaultImg.imgName;
     } else if (!tokenDefaultImg && newImg.imgSrc) {
-      setProperty(tokenUpdateObj, 'flags.token-variants.defaultImg', {
+      foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.defaultImg', {
         imgSrc: token.texture.src,
         imgName: tokenImgName,
       });
@@ -495,7 +495,7 @@ async function _updateWithEffectMapping(token, added, removed) {
   // reset the token image back to default
   if (effects.length === 0 && tokenDefaultImg) {
     delete tokenUpdateObj.flags?.['token-variants']?.defaultImg;
-    setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultImg', null);
+    foundry.utils.setProperty(tokenUpdateObj, 'flags.token-variants.-=defaultImg', null);
 
     updateCall = () =>
       updateTokenImage(tokenDefaultImg.imgSrc, {
@@ -649,7 +649,7 @@ export async function applyTemplate(token, templateName = null, mappings = null)
 
   const actor = game.actors.get(token.actor.id);
   if (!actor) return;
-  const templateMappings = deepClone(mappings);
+  const templateMappings = foundry.utils.deepClone(mappings);
   templateMappings.forEach((tm) => (tm.tokens = [token.id]));
 
   const actMappings = mergeMappings(templateMappings, getFlagMappings(actor));
@@ -701,11 +701,11 @@ export function toggleTemplateOnSelected(templateName = null, mappings = null) {
 
 function getHPChangeEffect(token, effects) {
   const internals = token.actor?.getFlag('token-variants', 'internalEffects') || {};
-  const delta = getProperty(
+  const delta = foundry.utils.getProperty(
     token,
     `${isNewerVersion('11', game.version) ? 'actorData' : 'delta'}.flags.token-variants.internalEffects`
   );
-  if (delta) mergeObject(internals, delta);
+  if (delta) foundry.utils.mergeObject(internals, delta);
   if (internals['hp--'] != null) effects.push('hp--');
   if (internals['hp++'] != null) effects.push('hp++');
 }
@@ -713,13 +713,13 @@ function getHPChangeEffect(token, effects) {
 function applyHpChangeEffect(actor, change, tokens) {
   let duration = Number(TVA_CONFIG.internalEffects.hpChange.duration);
 
-  const newHpValue = getProperty(change, `system.${TVA_CONFIG.systemHpPath}.value`);
+  const newHpValue = foundry.utils.getProperty(change, `system.${TVA_CONFIG.systemHpPath}.value`);
   if (newHpValue != null) {
     const [currentHpVal, _] = getTokenHP(tokens[0]);
     if (currentHpVal !== newHpValue) {
       if (currentHpVal < newHpValue) {
-        setProperty(change, 'flags.token-variants.internalEffects.-=hp--', null);
-        setProperty(change, 'flags.token-variants.internalEffects.hp++', newHpValue - currentHpVal);
+        foundry.utils.setProperty(change, 'flags.token-variants.internalEffects.-=hp--', null);
+        foundry.utils.setProperty(change, 'flags.token-variants.internalEffects.hp++', newHpValue - currentHpVal);
         if (duration) {
           setTimeout(() => {
             actor.update({
@@ -728,8 +728,8 @@ function applyHpChangeEffect(actor, change, tokens) {
           }, duration * 1000);
         }
       } else {
-        setProperty(change, 'flags.token-variants.internalEffects.-=hp++', null);
-        setProperty(change, 'flags.token-variants.internalEffects.hp--', newHpValue - currentHpVal);
+        foundry.utils.setProperty(change, 'flags.token-variants.internalEffects.-=hp++', null);
+        foundry.utils.setProperty(change, 'flags.token-variants.internalEffects.hp--', newHpValue - currentHpVal);
         if (duration) {
           setTimeout(() => {
             actor.update({
@@ -780,7 +780,9 @@ export function getTokenEffects(token, includeExpressions = false) {
         }
       });
     } else {
-      (data.effects || []).filter((ef) => !ef.disabled && !ef.isSuppressed).forEach((ef) => effects.push(ef.label));
+      (data.actor?.effects || [])
+        .filter((ef) => !ef.disabled && !ef.isSuppressed)
+        .forEach((ef) => effects.push(ef.label));
       getEffectsFromActor(token.actor, effects);
     }
   }
@@ -867,8 +869,8 @@ export function evaluateComparator(token, expression) {
       [currVal, maxVal] = getTokenHP(token);
     } else if (property === 'hp++' || property === 'hp--') {
       [currVal, maxVal] = getTokenHP(token);
-      currVal = getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
-    } else currVal = getProperty(token, property);
+      currVal = foundry.utils.getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
+    } else currVal = foundry.utils.getProperty(token, property);
     if (currVal == null) currVal = 0;
 
     const sign = match[2];
@@ -879,7 +881,7 @@ export function evaluateComparator(token, expression) {
       if (val === 'false') val = false;
       // Convert currVal to a truthy/falsy one if this is a bool check
       if (val === true || val === false) {
-        if (isEmpty(currVal)) currVal = false;
+        if (foundry.utils.isEmpty(currVal)) currVal = false;
         else currVal = Boolean(currVal);
       }
     }
@@ -1049,11 +1051,11 @@ function _getTokenHPv11(token) {
   let attributes;
 
   if (token.actorLink) {
-    attributes = getProperty(token.actor?.system, TVA_CONFIG.systemHpPath);
+    attributes = foundry.utils.getProperty(token.actor?.system, TVA_CONFIG.systemHpPath);
   } else {
-    attributes = mergeObject(
-      getProperty(token.actor?.system, TVA_CONFIG.systemHpPath) || {},
-      getProperty(token.delta?.system) || {},
+    attributes = foundry.utils.mergeObject(
+      foundry.utils.getProperty(token.actor?.system, TVA_CONFIG.systemHpPath) || {},
+      foundry.utils.getProperty(token.delta?.system) || {},
       {
         inplace: false,
       }
@@ -1069,11 +1071,11 @@ export function getTokenHP(token) {
   let attributes;
 
   if (token.actorLink) {
-    attributes = getProperty(token.actor.system, TVA_CONFIG.systemHpPath);
+    attributes = foundry.utils.getProperty(token.actor.system, TVA_CONFIG.systemHpPath);
   } else {
-    attributes = mergeObject(
-      getProperty(token.actor.system, TVA_CONFIG.systemHpPath) || {},
-      getProperty(token.actorData?.system) || {},
+    attributes = foundry.utils.mergeObject(
+      foundry.utils.getProperty(token.actor.system, TVA_CONFIG.systemHpPath) || {},
+      foundry.utils.getProperty(token.actorData?.system) || {},
       {
         inplace: false,
       }

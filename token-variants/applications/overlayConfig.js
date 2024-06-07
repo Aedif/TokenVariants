@@ -19,14 +19,14 @@ export class OverlayConfig extends FormApplication {
     this.config.id = mapping.id;
     this.callback = callback;
     this.token = canvas.tokens.get(token._id);
-    this.previewConfig = deepClone(this.config);
+    this.previewConfig = foundry.utils.deepClone(this.config);
     this.mapping = mapping;
     this.global = global;
     this.actor = actor;
   }
 
   static get defaultOptions() {
-    return mergeObject(super.defaultOptions, {
+    return foundry.utils.mergeObject(super.defaultOptions, {
       id: 'token-variants-overlay-config',
       classes: ['sheet'],
       template: 'modules/token-variants/templates/overlayConfig.html',
@@ -238,7 +238,7 @@ export class OverlayConfig extends FormApplication {
         if (param)
           game.modules.get('multi-token-edit').api.showGenericForm(param, param.filterType ?? 'TMFX', {
             inputChangeCallback: (selected) => {
-              mergeObject(param, selected, { inplace: true });
+              foundry.utils.mergeObject(param, selected, { inplace: true });
               textarea.val(JSON.stringify(params, null, 2)).trigger('change');
             },
           });
@@ -327,8 +327,8 @@ export class OverlayConfig extends FormApplication {
 
   _onAddShape(event) {
     let shape = $(event.target).siblings('select').val();
-    shape = deepClone(OVERLAY_SHAPES[shape]);
-    shape = mergeObject(deepClone(CORE_SHAPE), { shape });
+    shape = foundry.utils.deepClone(OVERLAY_SHAPES[shape]);
+    shape = foundry.utils.mergeObject(foundry.utils.deepClone(CORE_SHAPE), { shape });
 
     this.config = this._getSubmitData();
 
@@ -399,7 +399,7 @@ export class OverlayConfig extends FormApplication {
 
     this.config = this._getSubmitData();
     if (!this.config.shapes) return;
-    const nShape = deepClone(this.config.shapes[index]);
+    const nShape = foundry.utils.deepClone(this.config.shapes[index]);
     if (nShape.label) {
       nShape.label = nShape.label + ' - Copy';
     }
@@ -482,7 +482,7 @@ export class OverlayConfig extends FormApplication {
   async _applyPreviews() {
     const targets = this.getPreviewIcons();
     for (const target of targets) {
-      const preview = evaluateOverlayExpressions(deepClone(this.previewConfig), target.token, {
+      const preview = evaluateOverlayExpressions(foundry.utils.deepClone(this.previewConfig), target.token, {
         overlayConfig: this.previewConfig,
       });
       target.icon.refresh(preview, {
@@ -511,7 +511,7 @@ export class OverlayConfig extends FormApplication {
       data.filters.unshift('Token Magic FX');
     }
     data.filters.unshift('NONE');
-    const settings = mergeObject(DEFAULT_OVERLAY_CONFIG, this.config, {
+    const settings = foundry.utils.mergeObject(DEFAULT_OVERLAY_CONFIG, this.config, {
       inplace: false,
     });
 
@@ -583,7 +583,7 @@ export class OverlayConfig extends FormApplication {
       settings.linkDimensionsY = true;
     }
 
-    return mergeObject(data, settings);
+    return foundry.utils.mergeObject(data, settings);
   }
 
   _getHeaderButtons() {
@@ -620,7 +620,7 @@ export class OverlayConfig extends FormApplication {
 
   _getSubmitData() {
     let formData = super._getSubmitData();
-    formData = expandObject(formData);
+    formData = foundry.utils.expandObject(formData);
     if (formData.img) {
       const images = Object.values(formData.img);
       if (images.length === 1) {
@@ -660,7 +660,7 @@ export class OverlayConfig extends FormApplication {
       formData.variables = formData.variables.filter((v) => v.name.trim() && v.value.trim());
     }
     if (formData.limitedUsers) {
-      if (getType(formData.limitedUsers) === 'string') formData.limitedUsers = [formData.limitedUsers];
+      if (foundry.utils.getType(formData.limitedUsers) === 'string') formData.limitedUsers = [formData.limitedUsers];
       formData.limitedUsers = formData.limitedUsers.filter((uid) => uid);
     } else {
       formData.limitedUsers = [];
@@ -1132,7 +1132,7 @@ export const FILTERS = {
 function genFilterOptionControls(filterName, filterOptions = {}) {
   if (!(filterName in FILTERS)) return;
 
-  const options = mergeObject(FILTERS[filterName].defaultValues, filterOptions);
+  const options = foundry.utils.mergeObject(FILTERS[filterName].defaultValues, filterOptions);
   const values = getControlValues(filterName, options);
 
   const controls = FILTERS[filterName].controls;
