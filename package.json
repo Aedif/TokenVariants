@@ -1,20 +1,14 @@
 {
-  "name": "token-variants",
-  "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "source:": "token-variants/token-variants.mjs",
-  "main": "token-variants/bundle.js",
-  "targets": {
-    "main": {
-      "optimize": true
-    }
-  },
   "devDependencies": {
-    "parcel": "^2.9.3"
+    "path": "^0.12.7",
+    "webpack": "^5.91.0",
+    "webpack-cli": "^5.1.4"
   },
   "scripts": {
-    "build": "npx parcel build token-variants/token-variants.mjs",
-    "watch": "npx parcel watch token-variants/token-variants.mjs"
+    "build": "webpack"
+  },
+  "dependencies": {
+    "terser-webpack-plugin": "^5.3.10"
   }
 }
