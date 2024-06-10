@@ -782,7 +782,7 @@ export function getTokenEffects(token, includeExpressions = false) {
     } else {
       (data.actor?.effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
-        .forEach((ef) => effects.push(ef.label));
+        .forEach((ef) => effects.push(ef.name));
       getEffectsFromActor(token.actor, effects);
     }
   }
@@ -941,8 +941,7 @@ export function evaluateComparatorEffects(token, effects = []) {
 
 export function evaluateStateEffects(token, effects) {
   if (game.system.id === 'pf2e') {
-    const deathIcon = game.settings.get('pf2e', 'deathIcon');
-    if ((token.document ?? token).overlayEffect === deathIcon) effects.push('Dead');
+    if ((token.document ?? token).actor?.effects.some((ef) => ef.statuses.has('dead'))) effects.push('Dead');
   }
 }
 
