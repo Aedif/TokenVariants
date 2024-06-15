@@ -87,9 +87,9 @@ export default class ConfigureSettings extends FormApplication {
     // === Randomizer ===
     // Get all actor types defined by the game system
     data.randomizer = foundry.utils.deepClone(settings.randomizer);
-    const actorTypes = (game.system.entityTypes ?? game.system.documentTypes)['Actor'];
+    const actorTypes = game.documentTypes.Actor;
     data.randomizer.actorTypes = actorTypes.reduce((obj, t) => {
-      const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
+      const label = CONFIG.Actor?.typeLabels?.[t] ?? t;
       obj[t] = {
         label: game.i18n.has(label) ? game.i18n.localize(label) : t,
         disable: settings.randomizer[`${t}Disable`] ?? false,
@@ -104,7 +104,7 @@ export default class ConfigureSettings extends FormApplication {
     data.popup = foundry.utils.deepClone(settings.popup);
     // Get all actor types defined by the game system
     data.popup.actorTypes = actorTypes.reduce((obj, t) => {
-      const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
+      const label = CONFIG.Actor?.typeLabels?.[t] ?? t;
       obj[t] = {
         type: t,
         label: game.i18n.has(label) ? game.i18n.localize(label) : t,
@@ -597,7 +597,7 @@ export default class ConfigureSettings extends FormApplication {
    */
   async _updateObject(event, formData) {
     const settings = this.settings;
-    formData = expandObject(formData);
+    formData = foundry.utils.expandObject(formData);
 
     // Search Paths
     settings.searchPaths = formData.hasOwnProperty('searchPaths') ? Object.values(formData.searchPaths) : [];

@@ -211,16 +211,13 @@ function _renderContainer(container, resolution, { width = null, height = null }
     resolution: resolution,
   });
 
-  if (isNewerVersion('11', game.version)) {
-    canvas.app.renderer.render(container, renderTexture, true, matrix, false);
-  } else {
-    canvas.app.renderer.render(container, {
-      renderTexture,
-      clear: true,
-      transform: matrix,
-      skipUpdateTransform: false,
-    });
-  }
+  canvas.app.renderer.render(container, {
+    renderTexture,
+    clear: true,
+    transform: matrix,
+    skipUpdateTransform: false,
+  });
+
   renderTexture.destroyable = true;
   return renderTexture;
 }

@@ -8,7 +8,7 @@ import { HTMLOverlay } from './HTMLOverlay.js';
 
 export class TVAOverlay extends PrimarySpriteMesh {
   constructor(pTexture, token, config) {
-    super(token);
+    super({ name: 'TVAOverlay', object: token });
     if (pTexture.shapes) pTexture.shapes = this.addChild(pTexture.shapes);
 
     this.pseudoTexture = pTexture;
@@ -33,7 +33,7 @@ export class TVAOverlay extends PrimarySpriteMesh {
     this._registerHooks(this.overlayConfig);
     this._tvaPlay().then(() => this.refresh());
 
-    // Workaround needed for v11 visible property
+    // Workaround needed for v12 visible property
     Object.defineProperty(this, 'visible', {
       get: this._customVisible,
       set: function () {},
@@ -119,6 +119,14 @@ export class TVAOverlay extends PrimarySpriteMesh {
     this.mouseInteractionManager = mgr.activate();
   }
 
+  /**
+   * Override
+   */
+  _onAdded() {
+    // do nothing
+    // foundry throws inconsequential errors within this method
+  }
+
   _customVisible() {
     const ov = this.overlayConfig;
     if (!this.ready || !(this.object.visible || ov.alwaysVisible)) return false;
@@ -157,6 +165,10 @@ export class TVAOverlay extends PrimarySpriteMesh {
     return true;
   }
 
+  get sortLayer() {
+    return this.object.mesh?.sortLayer || 0;
+  }
+
   get zIndex() {
     return this.sort + this._lastSortedIndex;
   }
@@ -174,7 +186,7 @@ export class TVAOverlay extends PrimarySpriteMesh {
   }
 
   get elevation() {
-    const elevation = this.object.mesh?.data.elevation;
+    const elevation = this.object.mesh?.elevation;
     if (this.overlayConfig.bottom && elevation > 0) return 0;
     else if (this.overlayConfig.top) return elevation + 9999;
     return elevation;

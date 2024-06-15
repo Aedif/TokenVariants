@@ -455,7 +455,7 @@ export default class CompendiumMapConfig extends FormApplication {
     // If search paths are the same, remove them from searchOptions
     if (
       !this.searchOptions.searchPaths?.length ||
-      foundry.utils.isEmpty(diffObject(this.searchOptions.searchPaths, TVA_CONFIG.searchPaths))
+      foundry.utils.isEmpty(foundry.utils.diffObject(this.searchOptions.searchPaths, TVA_CONFIG.searchPaths))
     ) {
       this.searchOptions.searchPaths = [];
     }

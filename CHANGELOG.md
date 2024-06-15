@@ -1,3 +1,7 @@
+# 5.0.0
+
+- Foundry v12 compatible release
+
 # 4.64.3
 
 - Mappings now respond to Gear equip/un-equip in `Shadowrun 5th Edition` system

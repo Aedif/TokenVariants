@@ -701,10 +701,7 @@ export function toggleTemplateOnSelected(templateName = null, mappings = null) {
 
 function getHPChangeEffect(token, effects) {
   const internals = token.actor?.getFlag('token-variants', 'internalEffects') || {};
-  const delta = foundry.utils.getProperty(
-    token,
-    `${isNewerVersion('11', game.version) ? 'actorData' : 'delta'}.flags.token-variants.internalEffects`
-  );
+  const delta = foundry.utils.getProperty(token, 'delta.flags.token-variants.internalEffects');
   if (delta) foundry.utils.mergeObject(internals, delta);
   if (internals['hp--'] != null) effects.push('hp--');
   if (internals['hp++'] != null) effects.push('hp++');
@@ -1046,7 +1043,7 @@ export function evaluateMappingExpression(mapping, effects, token, added = new S
   return false;
 }
 
-function _getTokenHPv11(token) {
+export function getTokenHP(token) {
   let attributes;
 
   if (token.actorLink) {
@@ -1061,25 +1058,6 @@ function _getTokenHPv11(token) {
     );
   }
 
-  return [attributes?.value, attributes?.max];
-}
-
-export function getTokenHP(token) {
-  if (!isNewerVersion('11', game.version)) return _getTokenHPv11(token);
-
-  let attributes;
-
-  if (token.actorLink) {
-    attributes = foundry.utils.getProperty(token.actor.system, TVA_CONFIG.systemHpPath);
-  } else {
-    attributes = foundry.utils.mergeObject(
-      foundry.utils.getProperty(token.actor.system, TVA_CONFIG.systemHpPath) || {},
-      foundry.utils.getProperty(token.actorData?.system) || {},
-      {
-        inplace: false,
-      }
-    );
-  }
   return [attributes?.value, attributes?.max];
 }
 

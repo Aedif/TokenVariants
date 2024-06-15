@@ -638,7 +638,7 @@ function activateStatusEffectListeners(token) {
         if (keyPressed('config')) {
           event.stopPropagation();
 
-          let effectName = event.target.getAttribute('title');
+          let effectName = $(event.target).data('tooltip');
           if (game.system.id === 'pf2e') {
             effectName = $(event.target).closest('picture').attr('title');
           }

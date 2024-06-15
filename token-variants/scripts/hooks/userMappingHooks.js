@@ -21,7 +21,7 @@ async function _updateToken(token, change) {
       const t = canvas.tokens.get(token.id);
       if (t) {
         await t.draw();
-        canvas.effects.visibility.restrictVisibility();
+        canvas.visibility.restrictVisibility();
       }
     }
   }
@@ -34,7 +34,7 @@ async function _updateTile(tile, change) {
       const t = canvas.tiles.get(tile.id);
       if (t) {
         await t.draw();
-        canvas.effects.visibility.restrictVisibility();
+        canvas.visibility.restrictVisibility();
       }
     }
   }
