@@ -131,7 +131,7 @@ export class TVAOverlay extends PrimarySpriteMesh {
     const ov = this.overlayConfig;
     if (!this.ready || !(this.object.visible || ov.alwaysVisible)) return false;
 
-    if (ov.limitedToOwner && !this.object.owner) return false;
+    if (ov.limitedToOwner && !this.object.isOwner) return false;
     if (ov.limitedUsers?.length && !ov.limitedUsers.includes(game.user.id)) return false;
 
     if (ov.limitOnEffect || ov.limitOnProperty) {
@@ -170,7 +170,8 @@ export class TVAOverlay extends PrimarySpriteMesh {
   }
 
   get zIndex() {
-    return this.sort + this._lastSortedIndex;
+    return this.object.mesh.zIndex;
+    //return this.sort + this._lastSortedIndex;
   }
 
   // Overlays have the same sort order as the parent

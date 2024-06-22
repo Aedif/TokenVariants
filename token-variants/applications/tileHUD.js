@@ -289,9 +289,7 @@ async function renderSideSelect(tile, searchText = null, fp_files = null) {
   sideSelect.find('.token-variants-button-select').click((event) => _onImageClick(event, tile));
 
   if (FULL_ACCESS) {
-    sideSelect
-      .find('.token-variants-button-select')
-      .on('contextmenu', (event) => _onImageRightClick(event, tile));
+    sideSelect.find('.token-variants-button-select').on('contextmenu', (event) => _onImageRightClick(event, tile));
   }
 
   return sideSelect;
@@ -308,7 +306,7 @@ async function _onImageClick(event, tile) {
   const name = imgButton.attr('data-filename');
   if (imgSrc) {
     canvas.tiles.hud.clear();
-    await tile.document.update({ img: imgSrc });
+    await tile.document.update({ 'texture.src': imgSrc });
     try {
       if (getFileName(imgSrc) !== name) await tile.document.setFlag('token-variants', 'name', name);
     } catch (e) {}

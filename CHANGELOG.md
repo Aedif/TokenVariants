@@ -1,3 +1,8 @@
+# 5.0.1
+
+- Fixed issue preventing Tile HUD selections from updating Tile texture
+- Fixed warnings thrown during overlay owner visibility check
+
 # 5.0.0
 
 - Foundry v12 compatible release
