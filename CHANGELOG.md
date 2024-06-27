@@ -1,3 +1,7 @@
+# 5.0.3
+
+- Fixed video source processing errors
+
 # 5.0.2
 
 **Mappings/Overlays**
