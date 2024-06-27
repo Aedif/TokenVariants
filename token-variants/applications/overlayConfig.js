@@ -116,6 +116,7 @@ export class OverlayConfig extends FormApplication {
     html.find('.cloneShape').on('click', this._onCloneShape.bind(this));
 
     html.find('input,select').on('change', this._onInputChange.bind(this));
+    html.find('color-picker').on('input', this._onInputChange.bind(this));
     html.find('textarea').on('change', this._onInputChange.bind(this));
     const parentId = html.find('[name="parentID"]');
     parentId.on('change', (event) => {

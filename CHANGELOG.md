@@ -1,3 +1,11 @@
+# 5.0.2
+
+**Mappings/Overlays**
+
+- Fixed `Configure Applicable Actor` button not opening the config form
+- Fixed playback not being started for video overlays
+- Fixed color changes within overlays not triggering a preview refresh
+
 # 5.0.1
 
 - Fixed issue preventing Tile HUD selections from updating Tile texture

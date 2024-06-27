@@ -197,11 +197,10 @@ export class TVAOverlay extends PrimarySpriteMesh {
 
   async _tvaPlay() {
     // Ensure playback state for video
-    const source = foundry.utils.getProperty(this.texture, 'baseTexture.resource.source');
-    if (source && source.tagName === 'VIDEO') {
+    const source = game.video.getVideoSource(this.texture);
+    if (source) {
       // Detach video from others
-      const s = source.cloneNode();
-
+      const s = source.cloneNode(true);
       if (this.overlayConfig.playOnce) {
         s.onended = () => {
           this.alpha = 0;

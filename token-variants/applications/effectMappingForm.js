@@ -140,7 +140,7 @@ export default class EffectMappingForm extends FormApplication {
       html.find('.mapping-image img').click(this._onImageClick.bind(this));
       html.find('.mapping-image img').mousedown(this._onImageMouseDown.bind(this));
       html.find('.mapping-image video').click(this._onImageClick.bind(this));
-      html.find('.mapping-target').click(this._onConfigureApplicableActors.bind(this));
+      html.find('.mapping-target.btn').click(this._onConfigureApplicableActors.bind(this));
     }
     html.find('.mapping-image img').contextmenu(this._onImageRightClick.bind(this));
     html.find('.mapping-image video').contextmenu(this._onImageRightClick.bind(this));
@@ -702,7 +702,7 @@ export default class EffectMappingForm extends FormApplication {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
 
-    let actorTypes = (game.system.entityTypes ?? game.system.documentTypes)['Actor'];
+    let actorTypes = Object.keys(game.system.documentTypes.Actor);
     let actors = [];
     for (const t of actorTypes) {
       const label = CONFIG['Actor']?.typeLabels?.[t] ?? t;
