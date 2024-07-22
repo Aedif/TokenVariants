@@ -853,7 +853,7 @@ function _activePF2EItem(item) {
   return false;
 }
 
-export const VALID_EXPRESSION = new RegExp('([a-zA-Z\\-\\.\\+]+)([><=]+)(".*"|-?\\d+)(%{0,1})');
+export const VALID_EXPRESSION = new RegExp('([a-zA-Z0-9\\-\\.\\+]+)([><=]+)(".*"|-?\\d+)(%{0,1})');
 
 export function evaluateComparator(token, expression) {
   const match = expression.match(VALID_EXPRESSION);
