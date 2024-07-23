@@ -70,7 +70,7 @@ export default class TokenCustomConfig extends TokenConfig {
   }
 
   applyCustomConfig() {
-    const tokenConfig = flattenObject(this.config || getTokenConfig(this.imgSrc, this.imgName));
+    const tokenConfig = foundry.utils.flattenObject(this.config || getTokenConfig(this.imgSrc, this.imgName));
     const form = $(this.form);
     for (const key of Object.keys(tokenConfig)) {
       const el = form.find(`[name="${key}"]`);
@@ -109,7 +109,7 @@ export default class TokenCustomConfig extends TokenConfig {
       if (!$(formGroup).find('[name="img"]').length) {
         let savedField = false;
         if (tokenConfig) {
-          const flatConfig = flattenObject(tokenConfig);
+          const flatConfig = foundry.utils.flattenObject(tokenConfig);
           $(formGroup)
             .find('[name]')
             .each(function (_) {

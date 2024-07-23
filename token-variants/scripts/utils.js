@@ -137,10 +137,10 @@ export async function updateTokenImage(
   };
 
   const constructDefaultConfig = (origData, customConfig) => {
-    const flatOrigData = flattenObject(origData);
+    const flatOrigData = foundry.utils.flattenObject(origData);
     TokenDataAdapter.dataToForm(flatOrigData);
-    const flatCustomConfig = flattenObject(customConfig);
-    let filtered = filterObject(flatOrigData, flatCustomConfig);
+    const flatCustomConfig = foundry.utils.flattenObject(customConfig);
+    let filtered = foundry.utils.filterObject(flatOrigData, flatCustomConfig);
 
     // Flags need special treatment as once set they are not removed via absence of them in the update
     for (let [k, v] of Object.entries(flatCustomConfig)) {

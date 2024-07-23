@@ -1,7 +1,7 @@
 export const CORE_TEMPLATES = [
   {
-    name: 'Tint Red when HP is bellow 10%',
-    hint: 'Tint token red when HP falls bellow 10%',
+    name: 'Tint Red when HP is below 10%',
+    hint: 'Tint token red when HP falls below 10%',
     img: 'https://user-images.githubusercontent.com/7693704/243428871-c52130b3-2f12-4de7-a86e-fabc67e865a9.png',
     group: 'Health',
     mappings: [

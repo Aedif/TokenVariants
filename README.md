@@ -14,7 +14,7 @@ Main features include:
 
 - Sourcing images from local folders, rolltables, Imgur galleries, and s3 buckets
 - Pop-ups on Actor/Token create to select images found based on Actor/Token name
-- Overlaying images/videos on top or bellow the token ([examples](https://github.com/Aedif/TokenVariants/wiki/Templates))
+- Overlaying images/videos on top or below the token ([examples](https://github.com/Aedif/TokenVariants/wiki/Templates))
 - Sharing specific art with players through the Token HUD allowing them to switch out their token art on the fly
 - Displaying different images for the same token for each user
 - Image filtering based on identifiers e.g. when selecting a portrait only showing images containing 'PRT': Bob[PRT].png, Tom[PRT].png
@@ -53,10 +53,12 @@ By Shift+Left-clicking the Token HUD button you are able to override certain mod
 The module allows for application of token configurations, running of scripts, display of overlays, and more based on conditions defined via expressions. The mapping menu is accessed by:
 
 Actor Mappings
+
 - Shift-Left Clicking the `Toggle Visibility State`, `Assign Status Effects`, or `Toggle Combat State` buttons on the Token HUD
 - Right-clicking the newly added TVA button on the Token HUD and selecting `Effect Config`
 
 Global Mappings
+
 - Using the `Shift+G` shortcut
 - Going to module settings and selecting `Global Effect Configurations` under `Active Effects`
 - Selecting `Open Global` header button from the `Actor Mappings` form
@@ -75,6 +77,7 @@ Global Mappings
 #### Expressions
 
 - Accepted Operators:
+
   - `&&` ( logical AND)
   - `||` (logical OR)
   - `\!` (escaped logical NOT)
@@ -82,6 +85,7 @@ Global Mappings
   - `\)` (escaped closed bracket to group expressions)
 
 - Accepted hp and Token property Comparators:
+
   - `=` (equal)
   - `<` (less than)
   - `>` (greater than)
@@ -94,6 +98,7 @@ Global Mappings
   - `\{  \}`
 
 ##### Examples of valid expressions:
+
 - `Flying`
 - `Dead && Burning`
 - `Flying && \! \( Prone || Dead \)`
@@ -105,6 +110,7 @@ Global Mappings
 - `Exhaustion \{1,2,3\}`
 
 ##### Special Effect Names:
+
 - `token-variants-combat` : Actives when Token is in combat
 - `combat-turn` : Activates when it's Token's turn in combat
 - `combat-turn-next` : Actives when Token is next in the initiative order

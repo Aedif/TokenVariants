@@ -1,3 +1,7 @@
+# 5.0.4
+
+- Fixed `Effects` > `Effect Icons` > `Display Token Effect Icons on Hover` setting
+
 # 5.0.3
 
 - Fixed video source processing errors
@@ -278,7 +282,7 @@ Mappings
 
 Misc.
 
-- Fixed overlays rendering bellow the token when elevation is assigned
+- Fixed overlays rendering below the token when elevation is assigned
 
 # 4.52.1
 
@@ -669,9 +673,9 @@ Overlays
 
 Overlays
 
-- Overlays/underlays will no longer display above or bellow other tokens unless specified to:
+- Overlays/underlays will no longer display above or below other tokens unless specified to:
 - New option: BOTTOM
-  - Underlays with this enabled will ALWAYS show bellow all tokens
+  - Underlays with this enabled will ALWAYS show below all tokens
 - New option: TOP
   - Overlays with enabled will ALWAYS show above all tokens
 
@@ -1013,7 +1017,7 @@ Active Effect Configuration
   - Godray, KawaseBlur, OldFilm, Outline,Pixelate, RGBSplit, RadialBlur, Reflection
 - New simulated effect added: `hp`
   - Allows to apply images, overlays, and configurations to tokens based on their current health
-  - e.g. `hp<50%` will be applied when actors health drops bellow 50%
+  - e.g. `hp<50%` will be applied when actors health drops below 50%
   - Accepts both percentages and exact values (e.g. `hp<=15`, `hp=100%`)
   - Accepted signs: `<, >, =, <=, >=`
   - HP effects with the same priority will overwrite each other, if you want multiple HP effects to be active at the same time set their priorities to unique values
@@ -1175,7 +1179,7 @@ New options:
 
 - Link To Token Data: Rotation, Mirror Image, Opacity
 - Underlay
-  - Places the overlay bellow the token
+  - Places the overlay below the token
 - Play once and hide
   - If the overlay is a video it will be played only once and then hidden
 
@@ -1274,7 +1278,7 @@ Status Effect Configuration
 
 # 2.15.0
 
-- Right-click on the Token HUD button will now display additional controls bellow the search box
+- Right-click on the Token HUD button will now display additional controls below the search box
   - **Flags**: Opens a window to set overrides for Randomization and Pop-ups.
   - **FilePicker**: Opens Foundry's Directory Browser allowing you to select an image directory that will be displayed on the Token HUD
     - These images can be **Shared** and interacted with as usual
@@ -1344,7 +1348,7 @@ Misc.
 
 # 2.9.1
 
-- Fixed '**Art Select**' closing before the user can select the Token image when the bellow two settings are enabled and a search is performed before selecting the portrait.
+- Fixed '**Art Select**' closing before the user can select the Token image when the below two settings are enabled and a search is performed before selecting the portrait.
   - **Display separate pop-ups for Portrait and Token art**
   - **Disable prompt between Portrait and token art select**
 
