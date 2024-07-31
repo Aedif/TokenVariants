@@ -1,3 +1,7 @@
+# 5.0.5
+
+- Text Overlays font options now include 'Additional Fonts' configured under core settings
+
 # 5.0.4
 
 - Fixed `Effects` > `Effect Icons` > `Display Token Effect Icons on Hover` setting
