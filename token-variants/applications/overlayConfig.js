@@ -576,6 +576,8 @@ export class OverlayConfig extends FormApplication {
       { value: 'justify', label: 'Justify' },
     ];
 
+    data.vision5e = game.modules.get('vision-5e')?.active;
+
     // linkDimensions has been converted to linkDimensionsX and linkDimensionsY
     // Make sure we're using the latest fields
     // 20/07/2023

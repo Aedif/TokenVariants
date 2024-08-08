@@ -1,3 +1,13 @@
+# 5.1.0
+
+**Overlays**
+
+- Fixed errors thrown with both `UI Element` and `Display Priority > Bottom` options enabled
+- New option added: `Visibility` > `Visible on Imprecise Modes`
+  - Vision5e module compatibility
+  - By default overlays will not be displayed when tokens are only visible via an 'imprecise' vision mode which hide the identity of the perceived token
+  - Enable the setting if you wish the overlay to be displayed regardless
+
 # 5.0.5
 
 - Text Overlays font options now include 'Additional Fonts' configured under core settings

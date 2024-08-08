@@ -146,6 +146,8 @@ export class TVAOverlay extends PrimarySpriteMesh {
       }
     }
 
+    if (this.object.detectionLevel === 1) return Boolean(ov.impreciseVisible);
+
     if (
       ov.limitOnHover ||
       ov.limitOnControl ||
@@ -170,8 +172,7 @@ export class TVAOverlay extends PrimarySpriteMesh {
   }
 
   get zIndex() {
-    return this.object.mesh.zIndex;
-    //return this.sort + this._lastSortedIndex;
+    return (this.overlayConfig.ui ? -9999 : 0) + this.object.mesh.zIndex;
   }
 
   // Overlays have the same sort order as the parent
@@ -483,29 +484,6 @@ export class TVAOverlay extends PrimarySpriteMesh {
       this.filters = [filter];
     } else {
       this.removeTVAFilters();
-    }
-
-    if (this.overlayConfig.ui && this.overlayConfig.bottom) this.applyReverseMask();
-    else this.removeReverseMask();
-  }
-
-  applyReverseMask() {
-    if (!this.filters?.find((f) => f.tvaReverse)) {
-      const filters = this.filters || [];
-      const reverseMask = ReverseMaskFilter.create({
-        uMaskSampler: canvas.primary.tokensRenderTexture,
-        channel: 'a',
-      });
-      reverseMask.tvaReverse = true;
-      filters.push(reverseMask);
-      this.filters = filters;
-    }
-    if (!this.filters) filters = [];
-  }
-
-  removeReverseMask() {
-    if (this.filters?.length) {
-      this.filters = this.filters.filter((f) => !f.tvaReverse);
     }
   }
 

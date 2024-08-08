@@ -538,6 +538,19 @@
                         <br>hp&lt;=50%</p>
                 </div>
             </fieldset>
+
+            {{#if vision5e}}
+            <fieldset>
+                <legend>Vision5e</legend>
+                <div class="form-group">
+                    <label>Visible on Imprecise Modes</label>
+                    <div class="form-fields">
+                        <input type="checkbox" name="impreciseVisible" data-dtype="Boolean" value="{{impreciseVisible}}" {{#if impreciseVisible}}checked{{/if}}>
+                    </div>
+                    <p class="notes">Enable to display the overlay with vision modes that do not reveal identity, such as <b>Hearing</b> and <b>Tremorsense</b>.</p>
+                </div>
+            </fieldset>
+            {{/if}}
         </div>
 
         <div class="tab active" data-group="main" data-tab="text">
@@ -733,7 +746,7 @@
                 <div class="form-group">
                     <label>Color</label>
                     <div class="form-fields">
-                        {{ colorPicker name=(concat "shapes." @index ".line.color") value=shape.line.color }}
+                        <color-picker name="shapes.{{@index}}.line.color" value="{{shape.line.color}}"></color-picker>
                     </div>
                 </div>
                 <div class="form-group">
@@ -749,7 +762,7 @@
                 <div class="form-group">
                     <label>Color</label>
                     <div class="form-fields">
-                        {{ colorPicker name=(concat "shapes." @index ".fill.color") value=shape.fill.color }}
+                        <color-picker name="shapes.{{@index}}.fill.color" value="{{shape.fill.color}}"></color-picker>
                     </div>
                 </div>
 
