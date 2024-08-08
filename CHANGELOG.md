@@ -1,3 +1,7 @@
+# 5.1.1
+
+- Fixed `UI Element` overlays always rendering below the token regardless of priority setting selected
+
 # 5.1.0
 
 **Overlays**

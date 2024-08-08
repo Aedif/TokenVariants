@@ -172,7 +172,9 @@ export class TVAOverlay extends PrimarySpriteMesh {
   }
 
   get zIndex() {
-    return (this.overlayConfig.ui ? -9999 : 0) + this.object.mesh.zIndex;
+    let zIndex = this.object.mesh.zIndex;
+    if (this.overlayConfig.ui && this.overlayConfig.bottom) zIndex -= 9999;
+    return zIndex;
   }
 
   // Overlays have the same sort order as the parent
