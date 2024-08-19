@@ -330,7 +330,7 @@ export default class CompendiumMapConfig extends FormApplication {
 
         let defaultImg = '';
         if (doc.schema.fields.img || doc.schema.fields.texture) {
-          defaultImg = (doc.schema.fields.img ?? doc.schema.fields.texture).initial();
+          defaultImg = (doc.schema.fields.img ?? doc.schema.fields.texture).initial(doc);
         }
         const hasImage = doc.img != null && doc.img !== defaultImg && !missingImageList.includes(doc.img);
 

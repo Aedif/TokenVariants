@@ -1,3 +1,8 @@
+# 5.1.2
+
+- `Dfred's Convenient Effects` compatibility fixes
+- Fixed compendium mapper errors when executing on PF2e Item compendiums
+
 # 5.1.1
 
 - Fixed `UI Element` overlays always rendering below the token regardless of priority setting selected

@@ -37,7 +37,7 @@ export default class EditScriptConfig extends FormApplication {
     data.ceActive = game.modules.get('dfreds-convenient-effects')?.active;
     if (data.ceActive) {
       data.ceEffect = script.ceEffect ?? { apply: true, remove: true };
-      data.ceEffects = game.dfreds.effects.all.map((ef) => ef.name);
+      data.ceEffects = game.dfreds.effectInterface.findEffects().map((ef) => ef.name);
     }
 
     data.macros = game.macros.map((m) => m.name);
