@@ -9,30 +9,16 @@ export function registerEffectIconWrappers() {
   unregisterWrapper(feature_id, 'CombatTracker.prototype.getData');
   if (!FEATURE_CONTROL[feature_id]) return;
 
-  if (
-    !TVA_CONFIG.disableEffectIcons &&
-    TVA_CONFIG.filterEffectIcons &&
-    !['pf1e', 'pf2e'].includes(game.system.id)
-  ) {
+  if (!TVA_CONFIG.disableEffectIcons && TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
     registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects, 'OVERRIDE');
   } else if (TVA_CONFIG.disableEffectIcons) {
-    registerWrapper(
-      feature_id,
-      'Token.prototype.drawEffects',
-      _drawEffects_fullReplace,
-      'OVERRIDE'
-    );
+    registerWrapper(feature_id, 'Token.prototype._drawEffects', _drawEffects_fullReplace, 'OVERRIDE');
   } else if (TVA_CONFIG.displayEffectIconsOnHover) {
     registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects_hoverOnly, 'WRAPPER');
   }
 
   if (TVA_CONFIG.disableEffectIcons || TVA_CONFIG.filterCustomEffectIcons) {
-    registerWrapper(
-      feature_id,
-      'CombatTracker.prototype.getData',
-      _combatTrackerGetData,
-      'WRAPPER'
-    );
+    registerWrapper(feature_id, 'CombatTracker.prototype.getData', _combatTrackerGetData, 'WRAPPER');
   }
 }
 
@@ -86,55 +72,42 @@ async function _combatTrackerGetData(wrapped, ...args) {
 
 async function _drawEffects(...args) {
   this.effects.renderable = false;
+
+  // Clear Effects Container
   this.effects.removeChildren().forEach((c) => c.destroy());
   this.effects.bg = this.effects.addChild(new PIXI.Graphics());
+  this.effects.bg.zIndex = -1;
   this.effects.overlay = null;
 
-  // Categorize new effects
-  let tokenEffects = this.document.effects;
-  let actorEffects = this.actor?.temporaryEffects || [];
-  let overlay = {
-    src: this.document.overlayEffect,
-    tint: null,
-  };
+  // Categorize effects
+  let activeEffects = this.actor?.temporaryEffects || [];
+  let overlayEffect = activeEffects.findLast((e) => e.img && e.getFlag('core', 'overlay'));
 
   // Modified from the original token.drawEffects
   if (TVA_CONFIG.displayEffectIconsOnHover) this.effects.visible = this.hover;
-  if (tokenEffects.length || actorEffects.length) {
+  if (activeEffects.length) {
     const restrictedEffects = _getRestrictedEffects(this.document);
-    actorEffects = actorEffects.filter((ef) => !restrictedEffects.includes(ef.name ?? ef.label));
-    tokenEffects = tokenEffects.filter(
-      // check if it's a string here
-      // for tokens without representing actors effects are just stored as paths to icons
-      (ef) => typeof ef === 'string' || !restrictedEffects.includes(ef.name ?? ef.label)
-    );
+    activeEffects = activeEffects.filter((ef) => !restrictedEffects.includes(ef.name));
   }
   // End of modifications
 
-  // Draw status effects
-  if (tokenEffects.length || actorEffects.length) {
-    const promises = [];
-
-    // Draw actor effects first
-    for (let f of actorEffects) {
-      if (!f.icon) continue;
-      const tint = Color.from(f.tint ?? null);
-      if (f.getFlag('core', 'overlay')) {
-        overlay = { src: f.icon, tint };
-        continue;
-      }
-      promises.push(this._drawEffect(f.icon, tint));
-    }
-
-    // Next draw token effects
-    for (let f of tokenEffects) promises.push(this._drawEffect(f, null));
-    await Promise.all(promises);
+  // Draw effects
+  const promises = [];
+  for (const [i, effect] of activeEffects.entries()) {
+    if (!effect.img) continue;
+    const promise =
+      effect === overlayEffect ? this._drawOverlay(effect.img, effect.tint) : this._drawEffect(effect.img, effect.tint);
+    promises.push(
+      promise.then((e) => {
+        if (e) e.zIndex = i;
+      })
+    );
   }
+  await Promise.allSettled(promises);
 
-  // Draw overlay effect
-  this.effects.overlay = await this._drawOverlay(overlay.src, overlay.tint);
-  this._refreshEffects();
+  this.effects.sortChildren();
   this.effects.renderable = true;
+  this.renderFlags.set({ refreshEffects: true });
 }
 
 function _getRestrictedEffects(tokenDoc) {

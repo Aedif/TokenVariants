@@ -14,6 +14,7 @@ export class TVAOverlay extends PrimarySpriteMesh {
     this.pseudoTexture = pTexture;
     this.texture = pTexture.texture;
     //this.setTexture(pTexture, { refresh: false });
+    this.occludedAlpha = 1; // Prevent overlay from fading when occluded
 
     this.ready = false;
     this.overlaySort = 0;

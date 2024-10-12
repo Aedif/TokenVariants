@@ -5969,6 +5969,7 @@ export const CORE_TEMPLATES = [
         overlayConfig: {
           id: '3IAo8ZUu',
           parentID: '',
+          ui: true,
           underlay: false,
           bottom: false,
           top: true,

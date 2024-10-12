@@ -1,3 +1,9 @@
+# 5.1.3
+
+- Fixes for **Effect Icon** settings
+- Fixed token animations impacting comparators within mappings
+- Fixed **Spell Slot Ring** template
+
 # 5.1.2
 
 - `Dfred's Convenient Effects` compatibility fixes

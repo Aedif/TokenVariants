@@ -740,63 +740,63 @@ function applyHpChangeEffect(actor, change, tokens) {
 }
 
 export function getTokenEffects(token, includeExpressions = false) {
-  const data = token.document ?? token;
+  const tokenDoc = token.document ?? token;
   let effects = [];
 
   // TVA Effects
   const tokenInCombat = game.combats.some((combat) => {
-    return combat.combatants.some((c) => c.tokenId === token.id);
+    return combat.combatants.some((c) => c.tokenId === tokenDoc.id);
   });
   if (tokenInCombat) {
     effects.push('token-variants-combat');
   }
 
   if (game.combat?.started) {
-    if (game.combat?.combatant?.token?.id === token.id) {
+    if (game.combat?.combatant?.token?.id === tokenDoc.id) {
       effects.push('combat-turn');
-    } else if (game.combat?.nextCombatant?.token?.id === token.id) {
+    } else if (game.combat?.nextCombatant?.token?.id === tokenDoc.id) {
       effects.push('combat-turn-next');
     }
   }
-  if (data.hidden) {
+  if (tokenDoc.hidden) {
     effects.push('token-variants-visibility');
   }
 
   if (TVA_CONFIG.internalEffects.hpChange.enabled) {
-    getHPChangeEffect(data, effects);
+    getHPChangeEffect(tokenDoc, effects);
   }
 
   // Actor/Token effects
-  if (data.actorLink) {
-    getEffectsFromActor(token.actor, effects);
+  if (tokenDoc.actorLink) {
+    getEffectsFromActor(tokenDoc.actor, effects);
   } else {
     if (game.system.id === 'pf2e') {
-      (data.delta?.items || []).forEach((item) => {
+      (tokenDoc.delta?.items || []).forEach((item) => {
         if (_activePF2EItem(item)) {
           effects.push(item.name);
         }
       });
     } else {
-      (data.actor?.effects || [])
+      (tokenDoc.actor?.effects || [])
         .filter((ef) => !ef.disabled && !ef.isSuppressed)
         .forEach((ef) => effects.push(ef.name));
-      getEffectsFromActor(token.actor, effects);
+      getEffectsFromActor(tokenDoc.actor, effects);
     }
   }
 
   // Expression/Mapping effects
-  evaluateComparatorEffects(token, effects);
-  evaluateStateEffects(token, effects);
+  evaluateComparatorEffects(tokenDoc, effects);
+  evaluateStateEffects(tokenDoc, effects);
 
   // Include mappings marked as always applicable
   // as well as the ones defined as logical expressions if needed
-  const mappings = getAllEffectMappings(token);
+  const mappings = getAllEffectMappings(tokenDoc);
 
   for (const m of mappings) {
     if (m.tokens?.length && !m.tokens.includes(data.id)) continue;
     if (m.alwaysOn) effects.unshift(m.id);
     else if (includeExpressions) {
-      const evaluation = evaluateMappingExpression(m, effects, token);
+      const evaluation = evaluateMappingExpression(m, effects, tokenDoc);
       if (evaluation) effects.unshift(m.id);
     }
   }
@@ -867,7 +867,7 @@ export function evaluateComparator(token, expression) {
     } else if (property === 'hp++' || property === 'hp--') {
       [currVal, maxVal] = getTokenHP(token);
       currVal = foundry.utils.getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
-    } else currVal = foundry.utils.getProperty(token, property);
+    } else currVal = foundry.utils.getProperty(token._source, property);
     if (currVal == null) currVal = 0;
 
     const sign = match[2];
