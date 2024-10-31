@@ -440,9 +440,7 @@ export class OverlayConfig extends FormApplication {
   _convertColor(colString) {
     try {
       const c = Color.fromString(colString);
-      const rgba = c.rgb;
-      rgba.push(1);
-      return rgba;
+      return [...c.rgb, 1];
     } catch (e) {
       return [1, 1, 1, 1];
     }
@@ -673,16 +671,16 @@ export class OverlayConfig extends FormApplication {
     formData.limitOnProperty = formData.limitOnProperty.trim();
     if (formData.parentID === 'TOKEN') formData.parentID = '';
 
-    if (formData.filter === 'OutlineOverlayFilter' && 'filterOptions.outlineColor' in formData) {
-      formData['filterOptions.outlineColor'] = this._convertColor(formData['filterOptions.outlineColor']);
+    if (formData.filter === 'OutlineOverlayFilter' && formData.filterOptions?.outlineColor) {
+      formData.filterOptions.outlineColor = this._convertColor(formData.filterOptions.outlineColor);
     } else if (formData.filter === 'BevelFilter') {
-      if ('filterOptions.lightColor' in formData)
-        formData['filterOptions.lightColor'] = Number(Color.fromString(formData['filterOptions.lightColor']));
-      if ('filterOptions.shadowColor' in formData)
-        formData['filterOptions.shadowColor'] = Number(Color.fromString(formData['filterOptions.shadowColor']));
+      if (formData.filterOptions?.lightColor)
+        formData.filterOptions.lightColor = Number(Color.fromString(formData.filterOptions.lightColor));
+      if (formData.filterOptions?.shadowColor)
+        formData.filterOptions.shadowColor = Number(Color.fromString(formData.filterOptions.shadowColor));
     } else if (['DropShadowFilter', 'GlowFilter', 'OutlineFilter', 'FilterFire'].includes(formData.filter)) {
-      if ('filterOptions.color' in formData)
-        formData['filterOptions.color'] = Number(Color.fromString(formData['filterOptions.color']));
+      if (formData.filterOptions?.color)
+        formData.filterOptions.color = Number(Color.fromString(formData.filterOptions.color));
     }
 
     return formData;

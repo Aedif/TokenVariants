@@ -41,6 +41,8 @@ export async function drawOverlays(token) {
       // To keep track of the overlay order
       let overlaySort = 0;
       let underlaySort = 0;
+
+      // Process overlays
       for (const ov of overlays) {
         let sprite = _findTVAOverlay(ov.id, token);
         if (sprite) {

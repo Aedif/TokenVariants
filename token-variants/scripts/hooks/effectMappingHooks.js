@@ -867,7 +867,9 @@ export function evaluateComparator(token, expression) {
     } else if (property === 'hp++' || property === 'hp--') {
       [currVal, maxVal] = getTokenHP(token);
       currVal = foundry.utils.getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
-    } else currVal = foundry.utils.getProperty(token._source, property);
+    } else if (property.startsWith('actor.')) currVal = foundry.utils.getProperty(token, property);
+    else currVal = foundry.utils.getProperty(token._source, property);
+
     if (currVal == null) currVal = 0;
 
     const sign = match[2];

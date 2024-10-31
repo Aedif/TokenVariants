@@ -476,7 +476,7 @@ export class TVAOverlay extends PrimarySpriteMesh {
     } else if (filterName === 'OutlineOverlayFilter') {
       filter = OutlineFilter.create(options);
       filter.thickness = options.trueThickness ?? 1;
-      filter.animate = options.animate ?? false;
+      filter.animated = options.animate ?? false;
     } else if (filterName === 'Token Magic FX') {
       this.applyTVAFilters(await constructTMFXFilters(options.params || [], this));
       return;

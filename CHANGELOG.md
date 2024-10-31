@@ -1,3 +1,8 @@
+# 5.1.4
+
+- Fixed color processing on Overlay filters
+- Fixed actor properties not being evaluated in mappings
+
 # 5.1.3
 
 - Fixes for **Effect Icon** settings
