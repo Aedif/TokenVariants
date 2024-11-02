@@ -146,7 +146,7 @@ export class Reticle {
       this.reticleOverlay.destroy(true);
     }
 
-    const interaction = canvas.app.renderer.plugins.interaction;
+    const interaction = canvas.app.renderer.events;
     if (!interaction.cursorStyles['reticle']) {
       interaction.cursorStyles['reticle'] = "url('modules/token-variants/img/reticle.webp'), auto";
     }

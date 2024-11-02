@@ -168,14 +168,14 @@ async function _updateToken(token, change, options, userId) {
   // TODO
   token.object?.tvaOverlays?.forEach((ov) => ov.htmlOverlay?.render());
 
-  const addedEffects = [];
-  const removedEffects = [];
+  const addedEffects = new Set();
+  const removedEffects = new Set();
   const preUpdateEffects = foundry.utils.getProperty(options, 'token-variants.preUpdateEffects') || [];
   const postUpdateEffects = getTokenEffects(token, true);
   determineAddedRemovedEffects(addedEffects, removedEffects, postUpdateEffects, preUpdateEffects);
 
-  if (addedEffects.length || removedEffects.length || 'actorLink' in change) {
-    updateWithEffectMapping(token, { added: addedEffects, removed: removedEffects });
+  if (addedEffects.size || removedEffects.size || 'actorLink' in change) {
+    updateWithEffectMapping(token, { added: Array.from(addedEffects), removed: Array.from(removedEffects) });
   } else if (foundry.utils.getProperty(options, 'token-variants.wasPolymorphed') && !token.actor?.isPolymorphed) {
     updateWithEffectMapping(token);
   }
@@ -199,7 +199,7 @@ async function _updateActor(actor, change, options, userId) {
   if ('flags' in change && 'token-variants' in change.flags) {
     const tokenVariantFlags = change.flags['token-variants'];
     if ('effectMappings' in tokenVariantFlags || '-=effectMappings' in tokenVariantFlags) {
-      const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+      const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, false);
       tokens.forEach((tkn) => updateWithEffectMapping(tkn));
       for (const tkn of tokens) {
         if (tkn.object && TVA_CONFIG.filterEffectIcons) {
@@ -217,7 +217,7 @@ function _preUpdateAssign(actor, change, options) {
 
   // Determine which comparators are applicable so that we can compare after the
   // actor update
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, false);
   if (TVA_CONFIG.internalEffects.hpChange.enabled && tokens.length) {
     applyHpChangeEffect(actor, change, tokens);
   }
@@ -232,16 +232,17 @@ function _preUpdateAssign(actor, change, options) {
 
 function _preUpdateCheck(actor, options, pAdded = [], pRemoved = []) {
   if (!actor) return;
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, false);
   for (const tkn of tokens) {
     // Check if effects changed by comparing them against the ones calculated in preUpdate*
-    const added = [...pAdded];
-    const removed = [...pRemoved];
+    const added = new Set([...pAdded]);
+    const removed = new Set([...pRemoved]);
     const postUpdateEffects = getTokenEffects(tkn, true);
     const preUpdateEffects = foundry.utils.getProperty(options, 'token-variants.' + tkn.id + '.preUpdateEffects') ?? [];
 
     determineAddedRemovedEffects(added, removed, postUpdateEffects, preUpdateEffects);
-    if (added.length || removed.length) updateWithEffectMapping(tkn, { added, removed });
+    if (added.size || removed.size)
+      updateWithEffectMapping(tkn, { added: Array.from(added), removed: Array.from(removed) });
   }
 }
 
@@ -867,9 +868,9 @@ export function evaluateComparator(token, expression) {
     } else if (property === 'hp++' || property === 'hp--') {
       [currVal, maxVal] = getTokenHP(token);
       currVal = foundry.utils.getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
-    } else if (property.startsWith('actor.')) currVal = foundry.utils.getProperty(token, property);
-    else currVal = foundry.utils.getProperty(token._source, property);
+    } else currVal = foundry.utils.getProperty(token._source, property);
 
+    if (currVal == null) currVal = foundry.utils.getProperty(token, property);
     if (currVal == null) currVal = 0;
 
     const sign = match[2];
@@ -1066,7 +1067,7 @@ export function getTokenHP(token) {
 async function _updateImageOnEffectChange(effectName, source, added = true) {
   const actor = getActorParent(source);
   if (!actor) return;
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, false);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
       added: added ? [effectName] : [],
@@ -1082,7 +1083,7 @@ function getActorParent(ent) {
 
 async function _updateImageOnMultiEffectChange(actor, added = [], removed = []) {
   if (!actor) return;
-  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, !TVA_CONFIG.mappingsCurrentSceneOnly);
+  const tokens = actor.token ? [actor.token] : getAllActorTokens(actor, true, false);
   for (const token of tokens) {
     await updateWithEffectMapping(token, {
       added: added,

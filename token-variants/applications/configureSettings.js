@@ -167,7 +167,6 @@ export default class ConfigureSettings extends FormApplication {
     data.disableImageChangeOnPolymorphed = settings.disableImageChangeOnPolymorphed;
     data.disableImageUpdateOnNonPrototype = settings.disableImageUpdateOnNonPrototype;
     data.disableTokenUpdateAnimation = settings.disableTokenUpdateAnimation;
-    data.mappingsCurrentSceneOnly = settings.mappingsCurrentSceneOnly;
     data.evaluateOverlayOnHover = settings.evaluateOverlayOnHover;
 
     // Controls
@@ -677,7 +676,6 @@ export default class ConfigureSettings extends FormApplication {
       disableImageChangeOnPolymorphed: formData.disableImageChangeOnPolymorphed,
       disableImageUpdateOnNonPrototype: formData.disableImageUpdateOnNonPrototype,
       disableTokenUpdateAnimation: formData.disableTokenUpdateAnimation,
-      mappingsCurrentSceneOnly: formData.mappingsCurrentSceneOnly,
       evaluateOverlayOnHover: formData.evaluateOverlayOnHover,
     });
 

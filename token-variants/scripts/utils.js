@@ -896,12 +896,12 @@ export class TokenDataAdapter {
 export function determineAddedRemovedEffects(addedEffects, removedEffects, newEffects, oldEffects) {
   for (const ef of newEffects) {
     if (!oldEffects.includes(ef)) {
-      addedEffects.push(ef);
+      addedEffects.add(ef);
     }
   }
   for (const ef of oldEffects) {
     if (!newEffects.includes(ef)) {
-      removedEffects.push(ef);
+      removedEffects.add(ef);
     }
   }
 }

@@ -141,7 +141,6 @@ export const TVA_CONFIG = {
   disableImageChangeOnPolymorphed: false,
   disableImageUpdateOnNonPrototype: false,
   disableTokenUpdateAnimation: false,
-  mappingsCurrentSceneOnly: false,
   evaluateOverlayOnHover: true,
   invisibleImage: '',
   systemHpPath: '',
