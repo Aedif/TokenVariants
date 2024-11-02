@@ -1,3 +1,10 @@
+# 5.1.5
+
+- Removed setting: `Effects` > `Update tokens on the current scene`
+- Fixed `ASSISTED POSITIONING` menu not opening via Overlay configuration form
+- Fixed Token placeable properties not being evaluated in comparator expressions
+- Fixed mapping macros being run incorrectly on Token changes made via Token configuration form
+
 # 5.1.4
 
 - Fixed color processing on Overlay filters
