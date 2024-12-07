@@ -223,14 +223,14 @@ export async function updateTokenImage(
       TokenDataAdapter.formToData(token, tokenUpdateObj);
       if (TVA_CONFIG.updateTokenProto && token.actor) {
         if (update) {
-          foundry.utils.mergeObject(update, { token: tokenUpdateObj });
+          foundry.utils.mergeObject(update, { prototypeToken: tokenUpdateObj });
         } else {
           // Timeout to prevent race conditions with other modules namely MidiQOL
           // this is a low priority update so it should be Ok to do
           if (token.actorLink) {
-            setTimeout(() => queueActorUpdate(token.actor.id, { token: tokenUpdateObj }), 500);
-          } else {
-            setTimeout(() => token.actor.update({ token: tokenUpdateObj }), 500);
+            setTimeout(() => queueActorUpdate(token.actor.id, { prototypeToken: tokenUpdateObj }), 500);
+          } else if (token.baseActor) {
+            setTimeout(() => token.baseActor.update({ prototypeToken: tokenUpdateObj }), 500);
           }
         }
       }
