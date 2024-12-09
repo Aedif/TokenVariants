@@ -171,7 +171,7 @@ function _modActorSheet(actorSheet, html, options) {
   if (options.editable && TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
     let profile = null;
     let profileQueries = {
-      all: ['.profile', '.profile-img', '.profile-image'],
+      all: ['.profile', '.profile-img', '.profile-image', '.portrait'],
       pf2e: ['.player-image', '.actor-icon', '.sheet-header img', '.actor-image'],
     };
 
