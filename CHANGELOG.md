@@ -1,3 +1,10 @@
+# 5.1.6
+
+Courtesy to: jacobsteffler
+
+- Fixed `Transfer Token Updates to Prototype` option not working correctly
+- Fixed portrait right-click not working on second-generation DnD5e sheets
+
 # 5.1.5
 
 - Removed setting: `Effects` > `Update tokens on the current scene`
