@@ -712,7 +712,8 @@ function applyHpChangeEffect(actor, change, tokens) {
 
   const newHpValue = foundry.utils.getProperty(change, `system.${TVA_CONFIG.systemHpPath}.value`);
   if (newHpValue != null) {
-    const [currentHpVal, _] = getTokenHP(tokens[0]);
+    const { val } = getTokenHP(tokens[0]);
+    const currentHpVal = val;
     if (currentHpVal !== newHpValue) {
       if (currentHpVal < newHpValue) {
         foundry.utils.setProperty(change, 'flags.token-variants.internalEffects.-=hp--', null);
@@ -853,59 +854,71 @@ function _activePF2EItem(item) {
   return false;
 }
 
-export const VALID_EXPRESSION = new RegExp('([a-zA-Z0-9\\-\\.\\+]+)([><=]+)(".*"|-?\\d+)(%{0,1})');
+export const VALID_EXPRESSION = new RegExp('([a-zA-Z0-9\\-\\.\\+]+)([><=]+)([^ ]+)');
+
+// TODO: Take into account arithmetic operations?
+function getPropertyValue(token, property) {
+  let val;
+  let maxVal;
+
+  if (property.startsWith('"') && property.endsWith('"')) {
+    val = property.substring(1, property.length - 1);
+    if (val === 'true') val = true;
+    else if (val === 'false') val = true;
+    return { val, boolean: true };
+  } else if (property.endsWith('%')) {
+    val = Number(property.substring(property.length - 1));
+    return { val, percentage: true };
+  } else if (property === 'hp') {
+    return getTokenHP(token);
+  } else if (property === 'hp++' || property === 'hp--') {
+    ({ val, maxVal } = getTokenHP(token));
+    val = foundry.utils.getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
+    return { val, maxVal };
+  }
+
+  val = Number(property);
+  if (isNaN(val)) {
+    val = foundry.utils.getProperty(token._source, property);
+    if (val == null) val = foundry.utils.getProperty(token, property);
+
+    if (property === 'rotation') maxVal = 360;
+    else if (maxVal == null) maxVal = 999999;
+
+    return { val, maxVal };
+  }
+
+  return { val };
+}
 
 export function evaluateComparator(token, expression) {
   const match = expression.match(VALID_EXPRESSION);
   if (match) {
-    const property = match[1];
-
-    let currVal;
-    let maxVal;
-    if (property === 'hp') {
-      [currVal, maxVal] = getTokenHP(token);
-    } else if (property === 'hp++' || property === 'hp--') {
-      [currVal, maxVal] = getTokenHP(token);
-      currVal = foundry.utils.getProperty(token, `actor.flags.token-variants.internalEffects.${property}`) ?? 0;
-    } else currVal = foundry.utils.getProperty(token._source, property);
-
-    if (currVal == null) currVal = foundry.utils.getProperty(token, property);
-    if (currVal == null) currVal = 0;
-
+    const property1 = match[1];
     const sign = match[2];
-    let val = Number(match[3]);
-    if (isNaN(val)) {
-      val = match[3].substring(1, match[3].length - 1);
-      if (val === 'true') val = true;
-      if (val === 'false') val = false;
-      // Convert currVal to a truthy/falsy one if this is a bool check
-      if (val === true || val === false) {
-        if (foundry.utils.isEmpty(currVal)) currVal = false;
-        else currVal = Boolean(currVal);
-      }
-    }
-    const isPercentage = Boolean(match[4]);
+    const property2 = match[3];
 
-    if (property === 'rotation') {
-      maxVal = 360;
-    } else if (maxVal == null) {
-      maxVal = 999999;
-    }
-    const toCompare = isPercentage ? (currVal / maxVal) * 100 : currVal;
+    const val1 = getPropertyValue(token, property1);
+    const val2 = getPropertyValue(token, property2);
+
+    if (val1.percentage) val2.val = (val2.val / val2.maxVal) * 100;
+    else if (val2.percentage) val1.val = (val1.val / val2.maxVal) * 100;
+    else if (val1.boolean) val2.val = foundry.utils.isEmpty(val2.val) ? false : Boolean(val2.val);
+    else if (val2.boolean) val1.val = foundry.utils.isEmpty(val1.val) ? false : Boolean(val1.val);
 
     let passed = false;
     if (sign === '=') {
-      passed = toCompare == val;
+      passed = val1.val == val2.val;
     } else if (sign === '>') {
-      passed = toCompare > val;
+      passed = val1.val > val2.val;
     } else if (sign === '<') {
-      passed = toCompare < val;
+      passed = val1.val < val2.val;
     } else if (sign === '>=') {
-      passed = toCompare >= val;
+      passed = val1.val >= val2.val;
     } else if (sign === '<=') {
-      passed = toCompare <= val;
+      passed = val1.val <= val2.val;
     } else if (sign === '<>') {
-      passed = toCompare < val || toCompare > val;
+      passed = val1.val < val2.val || val1.val > val2.val;
     }
     return passed;
   }
@@ -1060,7 +1073,7 @@ export function getTokenHP(token) {
     );
   }
 
-  return [attributes?.value, attributes?.max];
+  return { val: attributes?.value, maxVal: attributes?.max };
 }
 
 async function _updateImageOnEffectChange(effectName, source, added = true) {

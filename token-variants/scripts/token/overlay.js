@@ -382,8 +382,8 @@ function rgb2hsv(r, g, b) {
 }
 
 const CORE_VARIABLES = {
-  '@hp': (token) => getTokenHP(token)?.[0],
-  '@hpMax': (token) => getTokenHP(token)?.[1],
+  '@hp': (token) => getTokenHP(token)?.val,
+  '@hpMax': (token) => getTokenHP(token)?.maxVal,
   '@gridSize': () => canvas.grid?.size,
   '@label': (_, conf) => conf.label,
 };
@@ -406,8 +406,8 @@ function _evaluateString(str, token, conf) {
       if (conf && property === 'effect') {
         return conf.expression;
       }
-      if (token && property === 'hp') return getTokenHP(token)?.[0];
-      else if (token && property === 'hpMax') return getTokenHP(token)?.[1];
+      if (token && property === 'hp') return getTokenHP(token)?.val;
+      else if (token && property === 'hpMax') return getTokenHP(token)?.maxVal;
       const val = foundry.utils.getProperty(token.document ?? token, property);
       return val ?? 0;
     })
