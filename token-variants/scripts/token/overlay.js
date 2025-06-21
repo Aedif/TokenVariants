@@ -503,12 +503,12 @@ export async function generateTextTexture(token, conf) {
     label = tmp;
   }
 
-  let style = PreciseText.getTextStyle({
+  let style = foundry.canvas.containers.PreciseText.getTextStyle({
     ...conf.text,
     fontFamily: [conf.text.fontFamily, 'fontAwesome'].join(','),
     fill: interpolateColor(conf.text.fill, conf.text.interpolateColor, true),
   });
-  const text = new PreciseText(label, style);
+  const text = new foundry.canvas.containers.PreciseText(label, style);
   text.updateText(false);
 
   const texture = text.texture;

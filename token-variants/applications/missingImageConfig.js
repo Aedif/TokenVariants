@@ -66,7 +66,7 @@ export default class MissingImageConfig extends FormApplication {
     });
 
     html.on('click', '.file-picker', (event) => {
-      new FilePicker({
+      new foundry.applications.apps.FilePicker.implementation({
         type: 'imagevideo',
         callback: (path) => {
           $(event.target).closest('li').find('[name="image"]').val(path);

@@ -145,7 +145,7 @@ export class ArtSelect extends FormApplication {
       class: 'file-picker',
       icon: 'fas fa-file-import fa-fw',
       onclick: () => {
-        new FilePicker({
+        new foundry.applications.apps.FilePicker.implementation({
           type: 'imagevideo',
           callback: (path) => {
             if (!this.preventClose) {

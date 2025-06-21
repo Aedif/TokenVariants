@@ -77,10 +77,6 @@
             "Name": "Display only shared images",
             "Hint": "Only shared images will be shown in the side menu. Search can still be performed."
           },
-          "display-as-image": {
-            "Name": "Display as Image",
-            "Hint": "Disable to display images as a list of their filenames in the HUD."
-          },
           "image-opacity": {
             "Name": "Opacity of token preview",
             "Hint": "The opacity of the token previews in the HUD before hovering over them."

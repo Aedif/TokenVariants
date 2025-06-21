@@ -26,10 +26,13 @@ async function _renderTokenConfig(config, html) {
       config.actor?.prototypeToken?.flags['token-hud-wildcard']?.['default'] ||
       '';
 
-    const field = await renderTemplate('/modules/token-variants/templates/protoTokenElement.html', {
-      defaultImg,
-      disableHUDButton: config.object?.getFlag('token-variants', 'disableHUDButton'),
-    });
+    const field = await foundry.applications.handlebars.renderTemplate(
+      '/modules/token-variants/templates/protoTokenElement.html',
+      {
+        defaultImg,
+        disableHUDButton: config.object?.getFlag('token-variants', 'disableHUDButton'),
+      }
+    );
     checkboxRandomize.closest('.form-group').after(field);
 
     const tvaFieldset = html.find('.token-variants-proto');
@@ -37,7 +40,9 @@ async function _renderTokenConfig(config, html) {
     tvaFieldset.find('button').click((event) => {
       event.preventDefault();
       const input = tvaFieldset.find('input');
-      new FilePicker({ current: input.val(), field: input[0] }).browse(defaultImg);
+      new foundry.applications.apps.FilePicker.implementation({ current: input.val(), field: input[0] }).browse(
+        defaultImg
+      );
     });
 
     insertArtSelectButton(tvaFieldset, 'flags.token-variants.randomImgDefault', {

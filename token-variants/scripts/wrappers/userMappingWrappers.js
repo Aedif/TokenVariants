@@ -5,8 +5,8 @@ import { registerWrapper } from './wrappers.js';
 const feature_id = 'UserMappings';
 
 export function registerUserMappingWrappers() {
-  registerWrapper(feature_id, 'Tile.prototype.draw', _draw);
-  registerWrapper(feature_id, 'Token.prototype.draw', _draw);
+  registerWrapper(feature_id, 'foundry.canvas.placeables.Tile.prototype.draw', _draw);
+  registerWrapper(feature_id, 'foundry.canvas.placeables.Token.prototype.draw', _draw);
 }
 
 async function _draw(wrapped, ...args) {

@@ -68,7 +68,7 @@ export class ForgeSearchPaths extends FormApplication {
   async _onBrowseFolder(event) {
     const pathInput = $(event.target).closest('.table-row').find('.path-text input');
 
-    new FilePicker({
+    new foundry.applications.apps.FilePicker.implementation({
       type: 'folder',
       activeSource: 'forgevtt',
       current: pathInput.val(),

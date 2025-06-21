@@ -535,7 +535,9 @@ export class OverlayConfig extends FormApplication {
       return { id: u.id, name: u.name, selected: settings.limitedUsers.includes(u.id) };
     });
 
-    data.fonts = Object.keys(CONFIG.fontDefinitions).concat(Object.keys(game.settings.get('core', FontConfig.SETTING)));
+    data.fonts = Object.keys(CONFIG.fontDefinitions).concat(
+      Object.keys(game.settings.get('core', foundry.applications.settings.menus.FontConfig.SETTING))
+    );
     data.fontWeights = [
       'normal',
       'bold',

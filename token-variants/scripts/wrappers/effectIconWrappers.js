@@ -5,20 +5,35 @@ import { registerWrapper, unregisterWrapper } from './wrappers.js';
 const feature_id = 'EffectIcons';
 
 export function registerEffectIconWrappers() {
-  unregisterWrapper(feature_id, 'Token.prototype.drawEffects');
-  unregisterWrapper(feature_id, 'CombatTracker.prototype.getData');
+  unregisterWrapper(feature_id, 'foundry.canvas.placeables.Token.prototype.drawEffects');
+  unregisterWrapper(feature_id, 'foundry.applications.sidebar.tabs.CombatTracker.prototype._prepareTurnContext');
   if (!FEATURE_CONTROL[feature_id]) return;
 
   if (!TVA_CONFIG.disableEffectIcons && TVA_CONFIG.filterEffectIcons && !['pf1e', 'pf2e'].includes(game.system.id)) {
-    registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects, 'OVERRIDE');
+    registerWrapper(feature_id, 'foundry.canvas.placeables.Token.prototype.drawEffects', _drawEffects, 'OVERRIDE');
   } else if (TVA_CONFIG.disableEffectIcons) {
-    registerWrapper(feature_id, 'Token.prototype._drawEffects', _drawEffects_fullReplace, 'OVERRIDE');
+    registerWrapper(
+      feature_id,
+      'foundry.canvas.placeables.Token.prototype._drawEffects',
+      _drawEffects_fullReplace,
+      'OVERRIDE'
+    );
   } else if (TVA_CONFIG.displayEffectIconsOnHover) {
-    registerWrapper(feature_id, 'Token.prototype.drawEffects', _drawEffects_hoverOnly, 'WRAPPER');
+    registerWrapper(
+      feature_id,
+      'foundry.canvas.placeables.Token.prototype.drawEffects',
+      _drawEffects_hoverOnly,
+      'WRAPPER'
+    );
   }
 
   if (TVA_CONFIG.disableEffectIcons || TVA_CONFIG.filterCustomEffectIcons) {
-    registerWrapper(feature_id, 'CombatTracker.prototype.getData', _combatTrackerGetData, 'WRAPPER');
+    registerWrapper(
+      feature_id,
+      'foundry.applications.sidebar.tabs.CombatTracker.prototype._prepareTurnContext',
+      _combatTrackerPrepareTurnContext,
+      'WRAPPER'
+    );
   }
 }
 
@@ -34,40 +49,23 @@ async function _drawEffects_fullReplace(...args) {
   this.effects.overlay = null;
 }
 
-async function _combatTrackerGetData(wrapped, ...args) {
-  let data = await wrapped(...args);
+async function _combatTrackerPrepareTurnContext(wrapped, ...args) {
+  const context = await wrapped(...args);
 
-  if (data && data.combat && data.turns) {
-    const combat = data.combat;
-    for (const turn of data.turns) {
-      const combatant = combat.combatants.find((c) => c.id === turn.id);
-      if (combatant) {
-        if (TVA_CONFIG.disableEffectIcons) {
-          turn.effects = new Set();
-        } else if (TVA_CONFIG.filterEffectIcons) {
-          const restrictedEffects = _getRestrictedEffects(combatant.token);
+  if (TVA_CONFIG.disableEffectIcons) {
+    context.effects = {};
+  } else if (TVA_CONFIG.filterEffectIcons && context.effects?.icons) {
+    const restrictedEffects = _getRestrictedEffects(args[1].token);
+    if (!restrictedEffects.length) return;
 
-          // Copied from CombatTracker.getData(...)
-          turn.effects = new Set();
-          if (combatant.token) {
-            combatant.token.effects.forEach((e) => turn.effects.add(e));
-            if (combatant.token.overlayEffect) turn.effects.add(combatant.token.overlayEffect);
-          }
-
-          // modified to filter restricted effects
-          if (combatant.actor) {
-            for (const effect of combatant.actor.temporaryEffects) {
-              if (effect.statuses.has(CONFIG.specialStatusEffects.DEFEATED)) {
-              } else if (effect.icon && !restrictedEffects.includes(effect.name ?? effect.label))
-                turn.effects.add(effect.icon);
-            }
-          }
-          // end of copy
-        }
-      }
-    }
+    const icons = context.effect.icons.filter((i) => !restrictedEffects.includes(i.name));
+    context.effects = {
+      icons,
+      tooltip: this._formatEffectsTooltip(icons),
+    };
   }
-  return data;
+
+  return context;
 }
 
 async function _drawEffects(...args) {

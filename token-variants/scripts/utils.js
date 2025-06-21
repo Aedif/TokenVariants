@@ -268,18 +268,6 @@ export async function updateActorImage(actor, imgSrc, directUpdate = true, pack 
   }
 }
 
-async function showTileArtSelect() {
-  for (const tile of canvas.tiles.controlled) {
-    const tileName = tile.document.getFlag('token-variants', 'tileName') || tile.id;
-    showArtSelect(tileName, {
-      callback: async function (imgSrc, name) {
-        tile.document.update({ img: imgSrc });
-      },
-      searchType: SEARCH_TYPE.TILE,
-    });
-  }
-}
-
 /**
  * Checks if a key is pressed taking into account current game version.
  * @param {string} key v/Ctrl/Shift/Alt
@@ -346,7 +334,6 @@ export function registerKeybinds() {
           object: actor,
         });
       }
-      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
@@ -374,7 +361,6 @@ export function registerKeybinds() {
           object: token,
         });
       }
-      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
@@ -404,7 +390,6 @@ export function registerKeybinds() {
           object: token,
         });
       }
-      if (TVA_CONFIG.tilesEnabled && canvas.tokens.controlled.length === 0) showTileArtSelect();
     },
     restricted: true,
     precedence: CONST.KEYBINDING_PRECEDENCE.NORMAL,
@@ -419,9 +404,7 @@ export function registerKeybinds() {
       },
     ],
     onDown: () => {
-      const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
-      const data = new foundry.data.PrototypeToken(setting);
-      const token = new TokenDocument(data, { actor: null });
+      const token = new TokenDocument();
       new EffectMappingForm(token, { globalMappings: true }).render(true);
     },
     restricted: true,
@@ -913,7 +896,7 @@ export async function wildcardImageSearch(imgSrc) {
   // Support non-user sources
   if (/\.s3\./.test(imgSrc)) {
     source = 's3';
-    const { bucket, keyPrefix } = FilePicker.parseS3URL(imgSrc);
+    const { bucket, keyPrefix } = foundry.applications.apps.FilePicker.implementation.parseS3URL(imgSrc);
     if (bucket) {
       browseOptions.bucket = bucket;
       imgSrc = keyPrefix;
@@ -922,7 +905,7 @@ export async function wildcardImageSearch(imgSrc) {
 
   // Retrieve wildcard content
   try {
-    const content = await FilePicker.browse(source, imgSrc, browseOptions);
+    const content = await foundry.applications.apps.FilePicker.implementation.browse(source, imgSrc, browseOptions);
     return content.files;
   } catch (err) {}
   return [];
@@ -966,7 +949,7 @@ export async function uploadTokenImage(token, options) {
     let blob = await res.blob();
     const filename = options.name + `.webp`;
     let file = new File([blob], filename, { type: 'image/webp' });
-    await FilePicker.upload('data', options.path, file, {});
+    await foundry.applications.apps.FilePicker.implementation.upload('data', options.path, file, {});
   }
 }
 

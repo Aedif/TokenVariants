@@ -32,7 +32,6 @@ export const TVA_CONFIG = {
   },
   hud: {
     enableSideMenu: true,
-    displayAsImage: true,
     imageOpacity: 50,
   },
   keywordSearch: true,
@@ -74,7 +73,6 @@ export const TVA_CONFIG = {
   mergeGroup: false,
   staticCache: false,
   staticCacheFile: 'modules/token-variants/token-variants-cache.json',
-  tilesEnabled: true,
   compendiumMapper: {
     missingOnly: false,
     diffImages: false,

@@ -6,7 +6,7 @@ import { interpolateColor, removeMarkedOverlays } from '../token/overlay.js';
 import { executeMacro, toggleCEEffect, toggleTMFXPreset, tv_executeScript } from '../utils.js';
 import { HTMLOverlay } from './HTMLOverlay.js';
 
-export class TVAOverlay extends PrimarySpriteMesh {
+export class TVAOverlay extends foundry.canvas.primary.PrimarySpriteMesh {
   constructor(pTexture, token, config) {
     super({ name: 'TVAOverlay', object: token });
     if (pTexture.shapes) pTexture.shapes = this.addChild(pTexture.shapes);
@@ -660,7 +660,7 @@ async function constructTMFXFilters(paramsArray, sprite) {
   return filters;
 }
 
-class OutlineFilter extends OutlineOverlayFilter {
+class OutlineFilter extends foundry.canvas.rendering.filters.OutlineOverlayFilter {
   /** @inheritdoc */
   static createFragmentShader() {
     return `

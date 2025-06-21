@@ -158,7 +158,6 @@ export default class ConfigureSettings extends FormApplication {
     data.hideTokenBorder = settings.hideTokenBorder;
     data.filterCustomEffectIcons = settings.filterCustomEffectIcons;
     data.filterIconList = settings.filterIconList.join(',');
-    data.tilesEnabled = settings.tilesEnabled;
     data.updateTokenProto = settings.updateTokenProto;
     data.imgNameContainsDimensions = settings.imgNameContainsDimensions;
     data.imgNameContainsFADimensions = settings.imgNameContainsFADimensions;
@@ -255,9 +254,7 @@ export default class ConfigureSettings extends FormApplication {
 
     // Global Mappings
     html.find('button.token-variants-global-mapping').click(() => {
-      const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
-      const data = new foundry.data.PrototypeToken(setting);
-      const token = new TokenDocument(data, { actor: null });
+      const token = new TokenDocument();
       new EffectMappingForm(token, { globalMappings: true }).render(true);
     });
   }
@@ -326,7 +323,7 @@ export default class ConfigureSettings extends FormApplication {
     }
 
     if (activeSource === 'json') {
-      new FilePicker({
+      new foundry.applications.apps.FilePicker.implementation({
         type: 'text',
         activeSource: 'data',
         current: current,
@@ -335,7 +332,7 @@ export default class ConfigureSettings extends FormApplication {
         },
       }).render(true);
     } else {
-      new FilePicker({
+      new foundry.applications.apps.FilePicker.implementation({
         type: 'folder',
         activeSource: activeSource,
         current: current,
@@ -651,7 +648,6 @@ export default class ConfigureSettings extends FormApplication {
       disableNotifs: formData.disableNotifs,
       staticCache: formData.staticCache,
       staticCacheFile: formData.staticCacheFile,
-      tilesEnabled: formData.tilesEnabled,
       stackStatusConfig: formData.stackStatusConfig,
       mergeGroup: formData.mergeGroup,
       customImageCategories: (formData.customImageCategories || '')

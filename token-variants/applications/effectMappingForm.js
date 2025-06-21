@@ -455,7 +455,7 @@ export default class EffectMappingForm extends FormApplication {
     const li = event.currentTarget.closest('.table-row');
     const mapping = this.object.mappings[li.dataset.index];
 
-    new FilePicker({
+    new foundry.applications.apps.FilePicker.implementation({
       type: 'imagevideo',
       current: mapping.imgSrc,
       callback: (path) => {
@@ -637,7 +637,7 @@ export default class EffectMappingForm extends FormApplication {
   }
 
   async _importConfigs(event) {
-    const content = await renderTemplate('templates/apps/import-data.html', {
+    const content = await foundry.applications.handlebars.renderTemplate('templates/apps/import-data.html', {
       entity: 'token-variants',
       name: 'settings',
     });

@@ -48,7 +48,7 @@ export default class FlagsConfig extends FormApplication {
       $(e.target).siblings('.flag').prop('disabled', !e.target.checked);
     });
     html.find('.directory-fp').click((event) => {
-      new FilePicker({
+      new foundry.applications.apps.FilePicker.implementation({
         type: 'folder',
         activeSource: 'data',
         callback: (path, fp) => {

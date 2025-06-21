@@ -19,7 +19,7 @@ import { doImageSearch, findImagesFuzzy } from '../scripts/search.js';
 export const TOKEN_HUD_VARIANTS = { variants: null, actor: null };
 
 export async function renderTokenHUD(hud, html, token, searchText = '', fp_files = null) {
-  activateStatusEffectListeners(token);
+  //activateStatusEffectListeners(token);
 
   const hudSettings = TVA_CONFIG.hud;
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
@@ -41,145 +41,64 @@ export async function renderTokenHUD(hud, html, token, searchText = '', fp_files
   }
 
   const button = $(`
-  <div class="control-icon" data-action="token-variants-side-selector">
-    <img
-      id="token-variants-side-button"
-      src="modules/token-variants/img/token-images.svg"
-      width="36"
-      height="36"
-      title="Left-click: Image Menu&#013;Right-click: Search & Additional settings"
-    />
-  </div>
+  <button type="button" class="control-icon" data-action="tva" data-palette="tva" data-tooltip="Left-click: Image Menu&#013;Shift+Left-click: Search & Additional settings">
+    <img src="modules/token-variants/img/token-images.svg" width="36" height="36"/>
+  </button>
 `);
 
-  html.find('div.right').last().append(button);
-  html.find('div.right').click(_deactivateTokenVariantsSideSelector);
-
-  button.click((event) => _onButtonClick(event, token));
-  if (FULL_ACCESS) {
-    button.contextmenu((event) => _onButtonRightClick(event, hud, html, token));
-  }
+  html.querySelector('div.right').appendChild(button[0]);
 }
 
-async function _onButtonClick(event, token) {
-  const button = $(event.target).closest('.control-icon');
+export async function renderContextMenuPalette(token) {
+  const contextMenu = $(
+    await foundry.applications.handlebars.renderTemplate('modules/token-variants/templates/contextMenuPalette.html', {})
+  );
 
-  // De-activate 'Status Effects'
-  button.closest('div.right').find('div.control-icon.effects').removeClass('active');
-  button.closest('div.right').find('.status-effects').removeClass('active');
-
-  // Remove contextmenu
-  button.find('.contextmenu').remove();
-
-  // Toggle variants side menu
-  button.toggleClass('active');
-  let variantsWrap = button.find('.token-variants-wrap');
-  if (button.hasClass('active')) {
-    if (!variantsWrap.length) {
-      variantsWrap = await renderSideSelect(token);
-      if (variantsWrap) button.find('img').after(variantsWrap);
-      else return;
-    }
-    variantsWrap.addClass('active');
-  } else {
-    variantsWrap.removeClass('active');
-  }
-}
-
-function _onButtonRightClick(event, hud, html, token) {
-  // Display side menu if button is not active yet
-  const button = $(event.target).closest('.control-icon');
-  if (!button.hasClass('active')) {
-    // button.trigger('click');
-    button.addClass('active');
-  }
-
-  if (button.find('.contextmenu').length) {
-    // Contextmenu already displayed. Remove and activate images
-    button.find('.contextmenu').remove();
-    button.removeClass('active').trigger('click');
-    //button.find('.token-variants-wrap.images').addClass('active');
-  } else {
-    // Contextmenu is not displayed. Hide images, create it and add it
-    button.find('.token-variants-wrap.images').removeClass('active');
-    const contextMenu = $(`
-    <div class="token-variants-wrap contextmenu active">
-      <div class="token-variants-context-menu active">
-        <input class="token-variants-side-search" type="text" />
-        <button class="flags" type="button"><i class="fab fa-font-awesome-flag"></i><label>Flags</label></button>
-        <button class="file-picker" type="button"><i class="fas fa-file-import fa-fw"></i><label>Browse Folders</label></button>
-        <button class="effectConfig" type="button"><i class="fas fa-sun"></i><label>Mappings</label></button>
-        <button class="randomizerConfig" type="button"><i class="fas fa-dice"></i><label>Randomizer</label></button>
-      </div>
-    </div>
-      `);
-    button.append(contextMenu);
-
-    // Register contextmenu listeners
-    contextMenu
-      .find('.token-variants-side-search')
-      .on('keyup', (event) => _onImageSearchKeyUp(event, token))
-      .on('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-      });
-    contextMenu.find('.flags').click((event) => {
-      const tkn = canvas.tokens.get(token._id);
-      if (tkn) {
-        event.preventDefault();
-        event.stopPropagation();
-        new FlagsConfig(tkn).render(true);
-      }
-    });
-    contextMenu.find('.file-picker').click(async (event) => {
+  // Register contextmenu listeners
+  contextMenu
+    .find('.token-variants-side-search')
+    .on('keyup', (event) => _onImageSearchKeyUp(event, token))
+    .on('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
-      new FilePicker({
-        type: 'imagevideo',
-        callback: async (path, fp) => {
-          const content = await FilePicker.browse(fp.activeSource, fp.result.target);
-          let files = content.files.filter((f) => isImage(f) || isVideo(f));
-          if (files.length) {
-            button.find('.token-variants-wrap').remove();
-            const sideSelect = await renderSideSelect(token, '', files);
-            if (sideSelect) {
-              sideSelect.addClass('active');
-              button.append(sideSelect);
-            }
-          }
-        },
-      }).render(true);
     });
-    contextMenu.find('.effectConfig').click((event) => {
-      new EffectMappingForm(token).render(true);
-    });
-    contextMenu.find('.randomizerConfig').click((event) => {
-      new RandomizerConfig(token).render(true);
-    });
-  }
+  contextMenu.find('.flags').click((event) => {
+    const tkn = canvas.tokens.get(token._id);
+    if (tkn) {
+      event.preventDefault();
+      event.stopPropagation();
+      new FlagsConfig(tkn).render(true);
+    }
+  });
+  contextMenu.find('.file-picker').click(async (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    new foundry.applications.apps.FilePicker.implementation({
+      type: 'imagevideo',
+      callback: async (path, fp) => {
+        const content = await foundry.applications.apps.FilePicker.implementation.browse(
+          fp.activeSource,
+          fp.result.target
+        );
+        let files = content.files.filter((f) => isImage(f) || isVideo(f));
+        if (files.length) {
+          const palette = await renderPalette(token, '', files);
+          palette.addClass('active');
+          contextMenu.replaceWith(palette);
+        }
+      },
+    }).render(true);
+  });
+  contextMenu.find('.effectConfig').click((event) => {
+    new EffectMappingForm(token).render(true);
+  });
+  contextMenu.find('.randomizerConfig').click((event) => {
+    new RandomizerConfig(token).render(true);
+  });
+  return contextMenu;
 }
 
-function _deactivateTokenVariantsSideSelector(event) {
-  const controlIcon = $(event.target).closest('.control-icon');
-  const dataAction = controlIcon.attr('data-action');
-
-  switch (dataAction) {
-    case 'effects':
-      break; // Effects button
-    case 'thwildcard-selector':
-      break; // Token HUD Wildcard module button
-    default:
-      return;
-  }
-
-  $(event.target)
-    .closest('div.right')
-    .find('.control-icon[data-action="token-variants-side-selector"]')
-    .removeClass('active');
-  $(event.target).closest('div.right').find('.token-variants-wrap').removeClass('active');
-}
-
-async function renderSideSelect(token, searchText = '', fp_files = null) {
+export async function renderPalette(token, searchText = '', fp_files = null) {
   const hudSettings = TVA_CONFIG.hud;
   const worldHudSettings = TVA_CONFIG.worldHud;
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
@@ -244,7 +163,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
                 bucket = source.substring(3, source.length);
                 source = 's3';
               }
-              const content = await FilePicker.browse(source, path, {
+              const content = await foundry.applications.apps.FilePicker.implementation.browse(source, path, {
                 type: 'imagevideo',
                 bucket,
               });
@@ -283,7 +202,7 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
               // Support non-user sources
               if (/\.s3\./.test(pattern)) {
                 source = 's3';
-                const { bucket, keyPrefix } = FilePicker.parseS3URL(pattern);
+                const { bucket, keyPrefix } = foundry.applications.apps.FilePicker.implementation.parseS3URL(pattern);
                 if (bucket) {
                   browseOptions.bucket = bucket;
                   pattern = keyPrefix;
@@ -292,7 +211,11 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
 
               // Retrieve wildcard content
               try {
-                const content = await FilePicker.browse(source, pattern, browseOptions);
+                const content = await foundry.applications.apps.FilePicker.implementation.browse(
+                  source,
+                  pattern,
+                  browseOptions
+                );
                 tokenActor._tokenImages = content.files;
               } catch (err) {
                 tokenActor._tokenImages = [];
@@ -391,13 +314,11 @@ async function renderSideSelect(token, searchText = '', fp_files = null) {
   //
   // Render
   //
-  const imageDisplay = hudSettings.displayAsImage;
   const imageOpacity = hudSettings.imageOpacity / 100;
 
   const sideSelect = $(
-    await renderTemplate('modules/token-variants/templates/sideSelect.html', {
+    await foundry.applications.handlebars.renderTemplate('modules/token-variants/templates/palette.html', {
       imagesParsed,
-      imageDisplay,
       imageOpacity,
       tokenHud: true,
     })
@@ -504,7 +425,7 @@ async function _onImageRightClick(event, tokenId) {
       const name = imgButton.attr('data-filename');
       const [title, style] = genTitleAndStyle(mappings, img, name);
       imgButton
-        .closest('.token-variants-wrap')
+        .closest('.token-variants-palette')
         .find(`.token-variants-button-select[data-name='${img}']`)
         .css('box-shadow', style)
         .prop('title', title);
@@ -544,13 +465,10 @@ async function _onImageSearchKeyUp(event, token) {
   event.stopPropagation();
   if (event.key === 'Enter' || event.keyCode === 13) {
     if (event.target.value.length >= 3) {
-      const button = $(event.target).closest('.control-icon');
-      button.find('.token-variants-wrap').remove();
-      const sideSelect = await renderSideSelect(token, event.target.value);
-      if (sideSelect) {
-        sideSelect.addClass('active');
-        button.append(sideSelect);
-      }
+      const palette = $(event.target).closest('.palette');
+      const sideSelect = await renderPalette(token, event.target.value);
+      sideSelect.addClass('active');
+      palette.replaceWith(sideSelect);
     }
   }
 }

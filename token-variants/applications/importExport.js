@@ -26,7 +26,7 @@ export default class ImportExport extends FormApplication {
   }
 
   async _importFromJSONDialog() {
-    const content = await renderTemplate('templates/apps/import-data.html', {
+    const content = await foundry.applications.handlebars.renderTemplate('templates/apps/import-data.html', {
       entity: 'token-variants',
       name: 'settings',
     });

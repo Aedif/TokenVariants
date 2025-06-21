@@ -1,6 +1,6 @@
 import { getTokenConfig, setTokenConfig } from '../scripts/utils.js';
 
-export default class TokenCustomConfig extends TokenConfig {
+export default class TokenCustomConfig extends foundry.applications.sheets.TokenConfig {
   constructor(object, options, imgSrc, imgName, callback, config) {
     let token;
     if (object instanceof Actor) {

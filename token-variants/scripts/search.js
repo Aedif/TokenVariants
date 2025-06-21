@@ -218,7 +218,7 @@ async function _randSearchUtil(
         // Support non-user sources
         if (/\.s3\./.test(protoImg)) {
           source = 's3';
-          const { bucket, keyPrefix } = FilePicker.parseS3URL(protoImg);
+          const { bucket, keyPrefix } = foundry.applications.apps.FilePicker.implementation.parseS3URL(protoImg);
           if (bucket) {
             browseOptions.bucket = bucket;
             protoImg = keyPrefix;
@@ -227,7 +227,11 @@ async function _randSearchUtil(
 
         // Retrieve wildcard content
         try {
-          const content = await FilePicker.browse(source, protoImg, browseOptions);
+          const content = await foundry.applications.apps.FilePicker.implementation.browse(
+            source,
+            protoImg,
+            browseOptions
+          );
           return content.files;
         } catch (err) {
           return [];
@@ -261,7 +265,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
   const typeKey = path.types.sort().join(',');
   try {
     if (path.source.startsWith('s3:')) {
-      files = await FilePicker.browse('s3', path.text, {
+      files = await foundry.applications.apps.FilePicker.implementation.browse('s3', path.text, {
         bucket: path.source.replace('s3:', ''),
       });
     } else if (path.source.startsWith('forgevtt')) {
@@ -269,10 +273,14 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
         const response = await callForgeVTT(path.text, apiKey);
         files.files = response.files.map((f) => f.url);
       } else {
-        files = await FilePicker.browse('forgevtt', path.text, { recursive: true });
+        files = await foundry.applications.apps.FilePicker.implementation.browse('forgevtt', path.text, {
+          recursive: true,
+        });
       }
     } else if (path.source.startsWith('forge-bazaar')) {
-      files = await FilePicker.browse('forge-bazaar', path.text, { recursive: true });
+      files = await foundry.applications.apps.FilePicker.implementation.browse('forge-bazaar', path.text, {
+        recursive: true,
+      });
     } else if (path.source.startsWith('imgur')) {
       await fetch('https://api.imgur.com/3/gallery/album/' + path.text, {
         headers: {
@@ -328,7 +336,7 @@ async function walkFindImages(path, { apiKey = '' } = {}, found_images) {
         .catch((error) => console.warn('TVA |', error));
       return;
     } else {
-      files = await FilePicker.browse(path.source, path.text);
+      files = await foundry.applications.apps.FilePicker.implementation.browse(path.source, path.text);
     }
   } catch (err) {
     console.warn(
@@ -557,7 +565,7 @@ export async function saveCache(cacheFile) {
   let file = new File([JSON.stringify(data)], getFileNameWithExt(cacheFile), {
     type: 'text/plain',
   });
-  FilePicker.upload('data', getFilePath(cacheFile), file);
+  foundry.applications.apps.FilePicker.implementation.upload('data', getFilePath(cacheFile), file);
 }
 
 /**

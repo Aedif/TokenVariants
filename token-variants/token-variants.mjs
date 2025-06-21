@@ -45,7 +45,7 @@ async function initialize() {
   }
 
   // Font Awesome need to be loaded manually on FireFox
-  FONT_LOADING.loading = FontConfig.loadFont('fontAwesome', {
+  FONT_LOADING.loading = foundry.applications.settings.menus.FontConfig.loadFont('fontAwesome', {
     editor: false,
     fonts: [{ urls: ['fonts/fontawesome/webfonts/fa-solid-900.ttf'] }],
   });

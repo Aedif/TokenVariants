@@ -1,0 +1,44 @@
+<div class="palette token-variants-palette images" data-palette="tva">
+  {{#each imagesParsed as |image|}}
+  <div
+    class="token-variants-button-select control-icon {{#if image.used}}token-variants-button-disabled active{{/if}}"
+    data-name="{{image.route}}"
+    data-filename="{{image.name}}"
+    title="{{#if image.unknownType}}{{image.route}}{{else}}{{image.title}}{{/if}}"
+    style="{{image.style}}">
+
+    {{#if image.img}}
+    <img
+      class="token-variants-button-image"
+      src="{{image.route}}"
+      style="opacity:{{../imageOpacity}};"
+    />
+    {{/if}} 
+    {{#if image.vid}}
+    <video
+      class="token-variants-button-image"
+      src="{{image.route}}"
+      style="opacity:{{../imageOpacity}};"
+      loop
+      {{#if ../autoplay}}
+      autoplay
+      {{/if}}
+      muted>
+    </video>
+    {{#unless ../autoplay}}
+    <i class="fas fa-play"></i>
+    {{/unless}}
+    {{/if}}
+    {{#if image.unknownType}}
+    <img
+      class="token-variants-button-image"
+      src="{{image.route}}"
+      style="opacity:{{../imageOpacity}};"
+    />
+    {{/if}}
+
+    <i class="fas fa-share {{#if image.shared}}active{{/if}}"></i>
+    <i class="fas fa-cog {{#if image.hasConfig}}active{{/if}}"></i>
+    </div>
+  {{/each}}
+</div>

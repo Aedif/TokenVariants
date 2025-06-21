@@ -112,9 +112,7 @@ export async function showPathSelectConfigForm(event) {
     config = JSON.parse(configInput.val());
   } catch (e) {}
 
-  const setting = game.settings.get('core', DefaultTokenConfig.SETTING);
-  const data = new foundry.data.PrototypeToken(setting);
-  const token = new TokenDocument(data, { actor: null });
+  const token = new TokenDocument();
   new TokenCustomConfig(
     token,
     {},
@@ -190,7 +188,7 @@ export async function showTokenCaptureDialog(token) {
     },
     render: (html) => {
       html.find('.file-picker').click(() => {
-        new FilePicker({
+        new foundry.applications.apps.FilePicker.implementation({
           type: 'folder',
           current: html.find('[name="path"]').val(),
           callback: (path) => {
