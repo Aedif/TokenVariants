@@ -212,12 +212,7 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
   }
 
   get id() {
-    return `token-custom-config-${this.object.id}`;
-  }
-
-  _getHeaderButtons() {
-    const buttons = super._getHeaderButtons();
-    return buttons;
+    return `token-custom-config-${this.document.id}`;
   }
 }
 

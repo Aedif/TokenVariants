@@ -1,3 +1,7 @@
+# 6.0.0
+
+- Preliminary v13 compatible release
+
 # 5.1.6
 
 Courtesy to: jacobsteffler

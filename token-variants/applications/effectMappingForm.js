@@ -686,7 +686,7 @@ export default class EffectMappingForm extends FormApplication {
       title2: 'Select Mappings to Copy:',
       buttonTitle: 'Copy',
       callback: (mappings) => {
-        this._insertMappings(event, mappings);
+        if (mappings) this._insertMappings(event, mappings);
       },
     });
   }
