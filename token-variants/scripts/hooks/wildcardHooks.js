@@ -19,6 +19,7 @@ export function registerWildcardHooks() {
 }
 
 async function _renderTokenConfig(config, html) {
+  html = $(html);
   const checkboxRandomize = html.find('input[name="randomImg"]');
   if (checkboxRandomize.length && !html.find('.token-variants-proto').length) {
     const defaultImg =

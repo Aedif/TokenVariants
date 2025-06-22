@@ -472,7 +472,7 @@ export function insertArtSelectButton(html, target, { search = '', searchType = 
       searchType,
     });
   });
-  const input = html.find(`[name="${target}"]`);
+  const input = $(html).find(`[name="${target}"]`);
   input.after(button);
   return Boolean(input.length);
 }

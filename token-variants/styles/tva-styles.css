@@ -637,6 +637,8 @@ display: flex;
 #token-hud .token-variants-button-select {
   width: 100px;
   height: 100px;
+  position: relative;
+  box-shadow: none;
 }
 
 #token-hud .token-variants-button-select.hide {
@@ -645,7 +647,8 @@ display: flex;
 
 #token-hud .token-variants-button-select .fa-share {
   position: absolute;
-  left: 0;
+  left: 2px;
+  top: 0;
   color: green;
   opacity: 0;
   pointer-events: none;
@@ -653,7 +656,8 @@ display: flex;
 
 #token-hud .token-variants-button-select .fa-cog {
   position: absolute;
-  right: 0;
+  right: 2px;
+  top: 0;
   color: rgb(182, 182, 121);
   opacity: 0;
   pointer-events: none;
@@ -704,6 +708,7 @@ display: flex;
   height: 100px;
   margin: 2px;
   object-fit: contain;
+  filter: none;
 }
 
 #token-hud .token-variants-button-disabled span,

@@ -48,7 +48,6 @@ function _initializeApplicationOptions(wrapped, options) {
 }
 
 async function tvaButtonClick(event) {
-  console.log(event);
   const palette = this.element.querySelector(`.palette[data-palette="tva"]`);
 
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];

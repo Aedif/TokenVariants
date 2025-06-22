@@ -48,8 +48,8 @@ export function registerArtSelectButtonHooks() {
 }
 
 function _modTokenConfig(config, html) {
-  insertArtSelectButton(html, 'texture.src', {
-    search: config.object.name,
+  insertArtSelectButton($(html), 'texture.src', {
+    search: config.document.name,
     searchType: SEARCH_TYPE.TOKEN,
   });
 }
