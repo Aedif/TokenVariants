@@ -1,3 +1,9 @@
+# 6.0.1
+
+- TVA Art Select button fixes
+- Style fixes for light mode
+- Position fixes for shared and config icons
+
 # 6.0.0
 
 - Preliminary v13 compatible release
