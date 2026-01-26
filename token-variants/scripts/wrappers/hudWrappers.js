@@ -42,7 +42,7 @@ async function _applyVariantFlags() {
 
 function _initializeApplicationOptions(wrapped, options) {
   const actions = options.actions ?? {};
-  actions.tva = tvaButtonClick;
+  actions.tva = { handler: tvaButtonClick, buttons: [0, 2] };
   options.actions = actions;
   return wrapped(options);
 }
@@ -52,7 +52,7 @@ async function tvaButtonClick(event) {
 
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
 
-  if (FULL_ACCESS && event.shiftKey) {
+  if (FULL_ACCESS && event.button === 2) {
     if (!palette || !palette.classList.contains('contextmenu')) {
       palette?.remove();
       this.element.querySelector('.col.right').appendChild((await renderContextMenuPalette(this.document))[0]);

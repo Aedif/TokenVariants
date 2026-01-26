@@ -41,7 +41,7 @@ export async function renderTokenHUD(hud, html, token, searchText = '', fp_files
   }
 
   const button = $(`
-  <button type="button" class="control-icon" data-action="tva" data-palette="tva" data-tooltip="Left-click: Image Menu&#013;Shift+Left-click: Search & Additional settings">
+  <button type="button" class="control-icon" data-action="tva" data-palette="tva" data-tooltip="[Left-click]: Image Menu &#013;[Right-Click]: Search & Additional settings">
     <img src="modules/token-variants/img/token-images.svg" width="36" height="36"/>
   </button>
 `);
@@ -51,7 +51,10 @@ export async function renderTokenHUD(hud, html, token, searchText = '', fp_files
 
 export async function renderContextMenuPalette(token) {
   const contextMenu = $(
-    await foundry.applications.handlebars.renderTemplate('modules/token-variants/templates/contextMenuPalette.html', {})
+    await foundry.applications.handlebars.renderTemplate(
+      'modules/token-variants/templates/contextMenuPalette.html',
+      {},
+    ),
   );
 
   // Register contextmenu listeners
@@ -78,7 +81,7 @@ export async function renderContextMenuPalette(token) {
       callback: async (path, fp) => {
         const content = await foundry.applications.apps.FilePicker.implementation.browse(
           fp.activeSource,
-          fp.result.target
+          fp.result.target,
         );
         let files = content.files.filter((f) => isImage(f) || isVideo(f));
         if (files.length) {
@@ -214,7 +217,7 @@ export async function renderPalette(token, searchText = '', fp_files = null) {
                 const content = await foundry.applications.apps.FilePicker.implementation.browse(
                   source,
                   pattern,
-                  browseOptions
+                  browseOptions,
                 );
                 tokenActor._tokenImages = content.files;
               } catch (err) {
@@ -284,7 +287,7 @@ export async function renderPalette(token, searchText = '', fp_files = null) {
     const vid = isVideo(imageObj.path);
 
     const hasConfig = Boolean(
-      tokenConfigs.find((config) => config.tvImgSrc === imageObj.path && config.tvImgName === imageObj.name)
+      tokenConfigs.find((config) => config.tvImgSrc === imageObj.path && config.tvImgName === imageObj.name),
     );
     let shared = false;
     if (TVA_CONFIG.permissions.hudFullAccess[game.user.role]) {
@@ -321,7 +324,7 @@ export async function renderPalette(token, searchText = '', fp_files = null) {
       imagesParsed,
       imageOpacity,
       tokenHud: true,
-    })
+    }),
   );
 
   // Activate listeners
@@ -338,7 +341,7 @@ export async function renderPalette(token, searchText = '', fp_files = null) {
         this.currentTime = 0;
         $(this).siblings('.fa-play').show();
       }
-    }
+    },
   );
   sideSelect.find('.token-variants-button-select').click((event) => _onImageClick(event, token._id));
 
@@ -503,7 +506,7 @@ async function updateActorWithSimilarName(imgSrc, imgName, actor) {
         fuzzyLimit: 50,
       },
     },
-    true
+    true,
   );
 
   if (results && results.length !== 0) {
