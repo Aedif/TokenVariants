@@ -24,6 +24,7 @@ export function registerArtSelectButtonHooks() {
     registerHook(feature_id, 'renderTileConfig', _modTileConfig);
     registerHook(feature_id, 'renderMeasuredTemplateConfig', _modTemplateConfig);
     registerHook(feature_id, 'renderTokenConfig', _modTokenConfig);
+    registerHook(feature_id, 'renderPrototypeTokenConfig', _modTokenConfig);
     registerHook(feature_id, 'renderDrawingConfig', _modDrawingConfig);
     registerHook(feature_id, 'renderNoteConfig', _modNoteConfig);
     registerHook(feature_id, 'renderSceneConfig', _modSceneConfig);
@@ -34,6 +35,7 @@ export function registerArtSelectButtonHooks() {
       'renderTileConfig',
       'renderMeasuredTemplateConfig',
       'renderTokenConfig',
+      'renderPrototypeTokenConfig',
       'renderDrawingConfig',
       'renderNoteConfig',
       'renderSceneConfig',
@@ -44,7 +46,7 @@ export function registerArtSelectButtonHooks() {
 
 function _modTokenConfig(config, html) {
   insertArtSelectButton(html, 'texture.src', {
-    search: config.document.name,
+    search: config.document?.name ?? config.token?.name ?? 'Token',
     searchType: SEARCH_TYPE.TOKEN,
   });
 }

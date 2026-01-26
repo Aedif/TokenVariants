@@ -157,7 +157,7 @@ export class TVAOverlay extends foundry.canvas.primary.PrimarySpriteMesh {
       ov.limitOnTarget ||
       ov.limitOnAnyTarget
     ) {
-      if (ov.limitOnHover && canvas.controls.ruler._state === Ruler.STATES.INACTIVE && this.object.hover) return true;
+      if (ov.limitOnHover && !canvas.controls.ruler.active && this.object.hover) return true;
       if (ov.limitOnControl && this.object.controlled) return true;
       if (ov.limitOnHighlight && (canvas.tokens.highlightObjects ?? canvas.tokens._highlight)) return true;
       if (ov.limitOnHUD && this.object.hasActiveHUD) return true;
@@ -365,19 +365,19 @@ export class TVAOverlay extends foundry.canvas.primary.PrimarySpriteMesh {
       const pHeight = (this.parent.shapesHeight ?? this.parent.height) / this.parent.scale.y;
       this.position.set(
         pOffsetX + -config.offsetX * pWidth - anchor.x * pWidth + pWidth / 2,
-        pOffsetY + -config.offsetY * pHeight - anchor.y * pHeight + pHeight / 2
+        pOffsetY + -config.offsetY * pHeight - anchor.y * pHeight + pHeight / 2,
       );
     } else {
       if (config.animation.relative) {
         this.position.set(
           this.object.document.x + this.object.w / 2 + pOffsetX + -config.offsetX * this.object.w + xOff,
-          this.object.document.y + this.object.h / 2 + pOffsetY + -config.offsetY * this.object.h + yOff
+          this.object.document.y + this.object.h / 2 + pOffsetY + -config.offsetY * this.object.h + yOff,
         );
       } else {
         this.position.set(this.object.document.x + this.object.w / 2, this.object.document.y + this.object.h / 2);
         this.pivot.set(
           -pOffsetX / this.scale.x + (config.offsetX * this.object.w) / this.scale.x,
-          -pOffsetY / this.scale.y + (config.offsetY * this.object.h) / this.scale.y
+          -pOffsetY / this.scale.y + (config.offsetY * this.object.h) / this.scale.y,
         );
       }
     }
