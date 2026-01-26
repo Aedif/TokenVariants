@@ -1,3 +1,7 @@
+# 6.x
+
+- Fixed setting import
+
 # 6.0.1
 
 - TVA Art Select button fixes
@@ -284,8 +288,7 @@ Overlays
 
 - Fixed a bug causing incorrect positioning of child overlays when they're out of bounds of the parent overlay
 - Fixed shape overlays not inheriting tint and opacity when they are linked to the token
-- Assisted Positioning utility has been added under ` Image`` >  `Positioning`
-
+- Assisted Positioning utility has been added under `Image`` > `Positioning`
   - Allows to position overlays via the use of your mouse (Click and/or Click and Drag to move the overlay)
   - 4 positioning `modes` are provided via a dialog: `Token`, `Tooltip`, `HUD`, `Static`
   - `Step Size` will make the overlay move in specific size steps/increments
@@ -350,7 +353,6 @@ Misc.
 
 - `Image Names Contain Dimensions` renamed to `Image Updates` > `Dimensions in Image Names` > `Token HUD Wildcard`
 - New option `Image Updates` > `Dimensions in Image Names` > `Forgotten Adventures`
-
   - When enabled image names will be examined for a string matching `_Scale###_` and apply appropriate scale to the token
 
 - Fixed an issue with child overlays not being removed when their parent's expression is false
@@ -381,7 +383,7 @@ Overlays
 
 - New tab: `Triggers`
   - Allows hover and mouse Click triggers to be assigned to overlays (hoverIn, hoverOut, clickLeft, clickLeft2, clickRight, clickRight2)
-  - Upon the trigger being met the module will; ` run a macro``,  `run a script`` , `toggle TMFX preset ``, and/or `toggle DFreds Convenient Effect`
+  - Upon the trigger being met the module will; `run a macro``, `run a script``, `toggle TMFX preset``, and/or `toggle DFreds Convenient Effect`
   - Both `token` and `actor` will be available within the context of the macro or script
   - TMFX and DFreds toggles will apply to the Token/Actor the overlay is assigned to
 - New option: `Visibility` > `Limit Visibility to Owner`
@@ -570,7 +572,6 @@ v11
 # 4.42.0
 
 - Effect names now support wildcards
-
   - `\*` and `\{` `\}`
   - e.g.
     - `Exhaustion\*`
@@ -617,7 +618,6 @@ v11
 **Misc**
 
 - New setting: `Misc` > `Image Names Contain Dimensions`
-
   - When enabled the module will recognise the following strings in image names and apply corresponding scale, width, and/or height to the token:
   - `_scaleX.X_` (e.g. `Goblin_scale0.8_.png`)
   - `_widthX.X_` (e.g. `Goblin_width0.5_.png`)
@@ -758,7 +758,6 @@ Overlays
 !! Important !!
 
 - Fixed inaccuracies wit Overlay scaling and offsetting
-
   - This fix may change the size and positioning of your current overlays. **DO NOT** update or revert back to the previous version until you are ready to adjust your mappings
 
 - Fixed current Token image showing in manual Token HUD searches
