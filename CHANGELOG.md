@@ -1,3 +1,11 @@
+# 6.0.3
+
+**Mappings**
+
+- Fixed Token config window
+- Improved JSON and Script editor styling
+- Improved Image and Config control layout
+
 # 6.0.2
 
 - Fixed setting import errors

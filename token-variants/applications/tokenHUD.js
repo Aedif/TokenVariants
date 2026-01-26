@@ -370,11 +370,8 @@ async function _onImageClick(event, tokenId) {
   if (keyPressed('config') && game.user.isGM) {
     const toggleCog = (saved) => {
       const cog = imgButton.find('.fa-cog');
-      if (saved) {
-        cog.addClass('active');
-      } else {
-        cog.removeClass('active');
-      }
+      if (saved) cog.addClass('active');
+      else cog.removeClass('active');
     };
     new TokenCustomConfig(token, {}, imgSrc, name, toggleCog).render(true);
   } else if (token.document.texture.src === imgSrc) {

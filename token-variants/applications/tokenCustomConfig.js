@@ -66,8 +66,10 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
     else return this._onSaveConfig(event, form, formData);
   }
 
-  async _onSaveConfig(event, form, formData) {
+  async _onSaveConfig(event, form) {
     // filter form data by selected form-groups
+    const formData = new FormDataExtended(form).object;
+
     const filtered = {};
     form.querySelectorAll('.form-group').forEach((formGroup) => {
       const tva_checkbox = formGroup.querySelector('.tva-config-checkbox > input');
