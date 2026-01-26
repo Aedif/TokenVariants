@@ -3,12 +3,11 @@
   "devDependencies": {
     "path": "^0.12.7",
     "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4"
-  },
-  "scripts": {
-    "build": "webpack"
-  },
-  "dependencies": {
+    "webpack-cli": "^5.1.4",
     "terser-webpack-plugin": "^5.3.10"
-  }
+  },
+	"scripts": {
+		"build": "webpack --env mode=build",
+		"watch": "webpack --env mode=watch"
+	}
 }

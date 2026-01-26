@@ -18,7 +18,7 @@
   ],
   "bugs": "https://github.com/Aedif/TokenVariants/issues",
   "socket": true,
-  "esmodules": ["bundle.js"],
+  "esmodules": ["bundle/token-variants.js"],
   "scripts": [],
   "styles": ["styles/tva-styles.css"],
   "languages": [
