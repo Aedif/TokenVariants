@@ -867,7 +867,7 @@ function getPropertyValue(token, property) {
     else if (val === 'false') val = true;
     return { val, boolean: true };
   } else if (property.endsWith('%')) {
-    val = Number(property.substring(property.length - 1));
+    val = Number(property.substring(0, property.length - 1));
     return { val, percentage: true };
   } else if (property === 'hp') {
     return getTokenHP(token);
@@ -902,7 +902,7 @@ export function evaluateComparator(token, expression) {
     const val2 = getPropertyValue(token, property2);
 
     if (val1.percentage) val2.val = (val2.val / val2.maxVal) * 100;
-    else if (val2.percentage) val1.val = (val1.val / val2.maxVal) * 100;
+    else if (val2.percentage) val1.val = (val1.val / val1.maxVal) * 100;
     else if (val1.boolean) val2.val = foundry.utils.isEmpty(val2.val) ? false : Boolean(val2.val);
     else if (val2.boolean) val1.val = foundry.utils.isEmpty(val1.val) ? false : Boolean(val1.val);
 
@@ -1069,7 +1069,7 @@ export function getTokenHP(token) {
       foundry.utils.getProperty(token.delta?.system) || {},
       {
         inplace: false,
-      }
+      },
     );
   }
 

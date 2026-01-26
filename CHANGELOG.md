@@ -1,6 +1,11 @@
-# 6.x
+# 6.0.2
 
-- Fixed setting import
+- Fixed setting import errors
+- Fixed TVA Art Select button not inserting into document sheets
+- Fixed image share transferring across tokens and not saving state
+- Fixed TVA Overlay ruler state check causing render failures
+- Fixed percentage values within mapping not being treated correctly
+- Fixed `Info Box` overlays referencing outdated DnD5e attribute values
 
 # 6.0.1
 
