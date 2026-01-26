@@ -12,7 +12,7 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
         actor: game.actors.get(object.actorId),
       });
     }
-    super(token, options);
+    super({ ...options, document: token });
     this.imgSrc = imgSrc;
     this.imgName = imgName;
     this.callback = callback;
@@ -23,35 +23,59 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
     }
   }
 
-  _getSubmitData(updateData = {}) {
-    if (!this.form) throw new Error('The FormApplication subclass has no registered form element');
-    const fd = new FormDataExtended(this.form, { editors: this.editors });
-    let data = fd.object;
-    if (updateData) data = foundry.utils.flattenObject(foundry.utils.mergeObject(data, updateData));
+  /** @inheritDoc */
+  static DEFAULT_OPTIONS = {
+    window: {
+      contentClasses: ['tva-custom-config'],
+    },
+  };
 
-    // Clear detection modes array
-    if (!('detectionModes.0.id' in data)) data.detectionModes = [];
+  /** @override */
+  async _preparePartContext(partId, context, options) {
+    context = await super._preparePartContext(partId, context, options);
+    switch (partId) {
+      case 'footer':
+        context.buttons = [
+          { type: 'submit', action: 'saveConfig', icon: 'fa-solid fa-floppy-disk', label: 'Save Config' },
+        ];
 
-    // Treat "None" as null for bar attributes
-    data['bar1.attribute'] ||= null;
-    data['bar2.attribute'] ||= null;
-    return data;
+        if (this.config || getTokenConfig(this.imgSrc, this.imgName)) {
+          context.buttons.push({
+            type: 'submit',
+            action: 'deleteConfig',
+            icon: 'fas fa-trash',
+            label: 'Delete Config',
+          });
+        }
+
+        break;
+    }
+    return context;
   }
 
-  async _updateObject(event, formData) {
+  /** @override */
+  _processChanges(submitData) {
+    submitData.bar1 ||= {};
+    submitData.bar2 ||= {};
+    return super._processChanges(submitData);
+  }
+
+  /** @override */
+  async _processSubmitData(event, form, formData, options) {
+    if (event.submitter.dataset.action === 'deleteConfig') return this._onRemoveConfig();
+    else return this._onSaveConfig(event, form, formData);
+  }
+
+  async _onSaveConfig(event, form, formData) {
+    // filter form data by selected form-groups
     const filtered = {};
-
-    const form = $(event.target).closest('form');
-
-    form.find('.form-group').each(function (_) {
-      const tva_checkbox = $(this).find('.tva-config-checkbox > input');
-      if (tva_checkbox.length && tva_checkbox.is(':checked')) {
-        $(this)
-          .find('[name]')
-          .each(function (_) {
-            const name = $(this).attr('name');
-            filtered[name] = formData[name];
-          });
+    form.querySelectorAll('.form-group').forEach((formGroup) => {
+      const tva_checkbox = formGroup.querySelector('.tva-config-checkbox > input');
+      if (tva_checkbox?.checked) {
+        formGroup.querySelectorAll('[name]').forEach((namedElement) => {
+          const name = namedElement.getAttribute('name');
+          filtered[name] = foundry.utils.getProperty(formData, name);
+        });
       }
     });
 
@@ -69,17 +93,26 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
     }
   }
 
-  applyCustomConfig() {
+  async _onRemoveConfig() {
+    if (this.config) {
+      if (this.callback) this.callback({});
+    } else {
+      const saved = setTokenConfig(this.imgSrc, this.imgName, null);
+      if (this.callback) this.callback(saved);
+    }
+    this.close();
+  }
+
+  applyCustomConfig(html) {
+    html = html ?? this.form;
     const tokenConfig = foundry.utils.flattenObject(this.config || getTokenConfig(this.imgSrc, this.imgName));
-    const form = $(this.form);
     for (const key of Object.keys(tokenConfig)) {
-      const el = form.find(`[name="${key}"]`);
-      if (el.is(':checkbox')) {
-        el.prop('checked', tokenConfig[key]);
-      } else {
-        el.val(tokenConfig[key]);
+      const el = html.querySelector(`[name="${key}"]`);
+      if (el) {
+        if (el.type === 'checkbox') el.checked = Boolean(tokenConfig[key]);
+        else el.value = tokenConfig[key];
+        el.dispatchEvent(new Event('change'));
       }
-      el.trigger('change');
     }
   }
 
@@ -87,74 +120,49 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
   // consider moving html injection to:
   // _replaceHTML | _injectHTML
 
+  _attachPartListeners(partId, element, options) {
+    super._attachPartListeners(partId, element, options);
+    this.activateListeners(element);
+  }
+
   async activateListeners(html) {
-    await super.activateListeners(html);
-
     // Disable image path controls
-    $(html).find('.token-variants-image-select-button').prop('disabled', true);
-    $(html).find('.file-picker').prop('disabled', true);
-    $(html).find('.image').prop('disabled', true);
-
-    // Remove 'Assign Token' button
-    $(html).find('.assign-token').remove();
+    html.querySelector('.token-variants-image-select-button')?.setAttribute('disabled', '');
+    html.querySelector('[name="texture.src"]')?.setAttribute('disabled', '');
 
     // Add checkboxes to control inclusion of specific tabs in the custom config
     const tokenConfig = this.config || getTokenConfig(this.imgSrc, this.imgName);
     this.tv_script = tokenConfig.tv_script;
 
-    $(html).on('change', '.tva-config-checkbox', this._onCheckboxChange);
-
     const processFormGroup = function (formGroup) {
       // Checkbox is not added for the Image Path group
-      if (!$(formGroup).find('[name="img"]').length) {
-        let savedField = false;
-        if (tokenConfig) {
-          const flatConfig = foundry.utils.flattenObject(tokenConfig);
-          $(formGroup)
-            .find('[name]')
-            .each(function (_) {
-              const name = $(this).attr('name');
-              if (name in flatConfig) {
-                savedField = true;
-              }
-            });
-        }
 
-        const checkbox = $(
-          `<div class="tva-config-checkbox"><input type="checkbox" data-dtype="Boolean" ${
-            savedField ? 'checked=""' : ''
-          }></div>`
-        );
-        if ($(formGroup).find('p.hint').length) {
-          $(formGroup).find('p.hint').before(checkbox);
-        } else {
-          $(formGroup).append(checkbox);
-        }
-        checkbox.find('input').trigger('change');
+      let savedField = false;
+      if (tokenConfig) {
+        const flatConfig = foundry.utils.flattenObject(tokenConfig);
+        savedField = formGroup.querySelectorAll('[name]').forEach((el) => {
+          if (el.getAttribute('name') in flatConfig) savedField = true;
+        });
       }
+
+      // Create checkbox
+      const container = document.createElement('div');
+      container.classList.add('tva-config-checkbox');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = savedField;
+
+      container.appendChild(checkbox);
+
+      const pHint = formGroup.querySelector('p.hint');
+      if (pHint) pHint.insertAdjacentElement('beforebegin', container);
+      else formGroup.appendChild(container);
+
+      checkbox.dispatchEvent(new Event('change'));
     };
     // Add checkboxes to each form-group to control highlighting and which fields will are to be saved
-    $(html)
-      .find('.form-group')
-      .each(function (index) {
-        processFormGroup(this);
-      });
-
-    // Add 'update' and 'remove' config buttons
-    $(html).find('.sheet-footer > button').remove();
-    $(html)
-      .find('.sheet-footer')
-      .append('<button type="submit" value="1"><i class="far fa-save"></i> Save Config</button>');
-    if (tokenConfig) {
-      $(html)
-        .find('.sheet-footer')
-        .append('<button type="button" class="remove-config"><i class="fas fa-trash"></i> Remove Config</button>');
-      html.find('.remove-config').click(this._onRemoveConfig.bind(this));
-    }
-
-    // Pre-select image or appearance tab
-    $(html).find('.tabs > .item[data-tab="image"] > i').trigger('click');
-    $(html).find('.tabs > .item[data-tab="appearance"] > i').trigger('click');
+    html.querySelectorAll('.form-group').forEach((formGroup) => processFormGroup(formGroup));
 
     document.activeElement.blur(); // Hack fix for key UP/DOWN effects not registering after config has been opened
 
@@ -172,7 +180,7 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
     };
 
     const observer = new MutationObserver(mutate);
-    observer.observe(html[0], {
+    observer.observe(html, {
       characterData: false,
       attributes: false,
       childList: true,
@@ -180,35 +188,14 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
     });
 
     // On any field being changed we want to automatically select the form-group to be included in the update
-    $(html).on('change', 'input, select', onInputChange);
-    $(html).on('click', 'button', onInputChange);
-
-    this.applyCustomConfig();
-  }
-
-  async _onCheckboxChange(event) {
-    const checkbox = $(event.target);
-    checkbox.closest('.form-group').css({
-      'outline-color': checkbox.is(':checked') ? 'green' : '#ffcc6e',
-      'outline-width': '2px',
-      'outline-style': 'dotted',
-      'margin-bottom': '5px',
+    html.querySelectorAll('input, select, range-picker, color-picker').forEach((el) => {
+      el.addEventListener('change', onInputChange);
     });
-    checkbox.closest('.tva-config-checkbox').css({
-      'outline-color': checkbox.is(':checked') ? 'green' : '#ffcc6e',
-      'outline-width': '2px',
-      'outline-style': 'solid',
+    html.querySelectorAll('button').forEach((el) => {
+      el.addEventListener('click', onInputChange);
     });
-  }
 
-  async _onRemoveConfig(event) {
-    if (this.config) {
-      if (this.callback) this.callback({});
-    } else {
-      const saved = setTokenConfig(this.imgSrc, this.imgName, null);
-      if (this.callback) this.callback(saved);
-    }
-    this.close();
+    this.applyCustomConfig(html);
   }
 
   get id() {
@@ -219,5 +206,10 @@ export default class TokenCustomConfig extends foundry.applications.sheets.Token
 // Toggle checkbox if input has been detected inside it's form-group
 async function onInputChange(event) {
   if (event.target.parentNode.className === 'tva-config-checkbox') return;
-  $(event.target).closest('.form-group').find('.tva-config-checkbox input').prop('checked', true);
+  const fromGroup = event.target.closest('.form-group');
+  const tva_checkbox = fromGroup?.querySelector('.tva-config-checkbox input');
+  if (tva_checkbox) {
+    fromGroup.classList.add('selected');
+    tva_checkbox.checked = true;
+  }
 }

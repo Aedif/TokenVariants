@@ -447,12 +447,17 @@ ol.token-variant-table .table-row .mapping-group > input {
 
 ol.token-variant-table .table-row .mapping-image {
   flex: 0.2;
-  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 ol.token-variant-table .table-row .mapping-config {
   flex: 0.12;
-  text-align: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 5px;
 }
 
 ol.token-variant-table .table-row .mapping-overlay {
@@ -1027,4 +1032,13 @@ input.tvaInvalid {
   text-align: left;
   padding: 5px;
   pointer-events: auto;
+}
+
+
+.tva-custom-config .form-group {
+  background-color: rgba(255, 166, 0, 0.288);
+}
+
+.tva-custom-config .form-group.selected {
+  background-color: rgba(30, 255, 0, 0.288);
 }

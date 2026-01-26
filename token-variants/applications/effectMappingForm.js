@@ -5,7 +5,7 @@ import { TVA_CONFIG, getFlagMappings, migrateMappings, updateSettings } from '..
 import EditJsonConfig from './configJsonEdit.js';
 import EditScriptConfig from './configScriptEdit.js';
 import { OverlayConfig } from './overlayConfig.js';
-import { showMappingSelectDialog, showOverlayJsonConfigDialog, showTokenCaptureDialog } from './dialogs.js';
+import { showMappingSelectDialog, showOverlayJsonConfigDialog } from './dialogs.js';
 import { DEFAULT_ACTIVE_EFFECT_CONFIG } from '../scripts/models.js';
 import { updateWithEffectMapping } from '../scripts/hooks/effectMappingHooks.js';
 import { drawOverlays } from '../scripts/token/overlay.js';
@@ -174,7 +174,7 @@ export default class EffectMappingForm extends FormApplication {
       .focusout((event) =>
         $(event.target).animate({ height: '1em' }, 500, () => {
           if (this._state === Application.RENDER_STATES.RENDERED) this.setPosition();
-        })
+        }),
       );
     html.find('.tokens').on('click', this._onTokensRemove.bind(this));
   }
@@ -323,7 +323,7 @@ export default class EffectMappingForm extends FormApplication {
         }
       },
       this.token,
-      { mapping, global: Boolean(this.globalMappings), actor: this.objectToFlag }
+      { mapping, global: Boolean(this.globalMappings), actor: this.objectToFlag },
     ).render(true);
   }
 
@@ -385,7 +385,7 @@ export default class EffectMappingForm extends FormApplication {
       null,
       null,
       (config) => {
-        if (!config || foundry.utils.isEmpty(config)) {
+        if (foundry.utils.isEmpty(config)) {
           config = {};
           config.tv_script = mapping.config.tv_script;
           config.flags = mapping.config.flags;
@@ -393,7 +393,7 @@ export default class EffectMappingForm extends FormApplication {
         mapping.config = config;
         this._toggleActiveControls(event);
       },
-      mapping.config ? mapping.config : {}
+      mapping.config ? mapping.config : {},
     ).render(true);
   }
 
@@ -608,12 +608,6 @@ export default class EffectMappingForm extends FormApplication {
       },
     });
 
-    buttons.unshift({
-      label: '',
-      class: 'token-variants-print-token',
-      icon: 'fa fa-print',
-      onclick: () => showTokenCaptureDialog(canvas.tokens.get(this.token._id)),
-    });
     return buttons;
   }
 
@@ -674,7 +668,7 @@ export default class EffectMappingForm extends FormApplication {
         },
         {
           width: 400,
-        }
+        },
       ).render(true);
     });
     return await dialog;
@@ -777,7 +771,7 @@ export default class EffectMappingForm extends FormApplication {
             inplace: false,
             insertKeys: false,
             recursive: false,
-          })
+          }),
         );
         if (this.globalMappings) {
           updateSettings({ globalMappings: effectMappings });
