@@ -1,7 +1,7 @@
 export default class FlagsConfig extends FormApplication {
   constructor(obj) {
     super({}, {});
-    if (obj instanceof Tile) {
+    if (obj instanceof foundry.canvas.placeables.Tile) {
       this.objectToFlag = obj.document;
       this.isTile = true;
     } else {

@@ -6,20 +6,20 @@ import { registerWrapper, unregisterWrapper } from './wrappers.js';
 const feature_id = 'HUD';
 
 export function registerHUDWrappers() {
-  unregisterWrapper(feature_id, 'foundry.applications.hud.TokenHUD.prototype.clear');
+  unregisterWrapper(feature_id, 'foundry.applications.hud.TokenHUD.prototype.close');
   unregisterWrapper(feature_id, 'foundry.applications.hud.TokenHUD.prototype._initializeApplicationOptions');
   if (FEATURE_CONTROL[feature_id]) {
-    registerWrapper(feature_id, 'foundry.applications.hud.TokenHUD.prototype.clear', _clear, 'MIXED');
+    registerWrapper(feature_id, 'foundry.applications.hud.TokenHUD.prototype.close', _close, 'MIXED');
     registerWrapper(
       feature_id,
       'foundry.applications.hud.TokenHUD.prototype._initializeApplicationOptions',
       _initializeApplicationOptions,
-      'WRAPPER'
+      'WRAPPER',
     );
   }
 }
 
-function _clear(wrapped, ...args) {
+function _close(wrapped, ...args) {
   _applyVariantFlags();
 
   // HUD should not close if we're in assisted overlay positioning mode
