@@ -74,35 +74,35 @@ function _modNoteConfig(config, html) {
 
 function _modSceneConfig(config, html) {
   insertArtSelectButton(html, 'background.src', {
-    search: config.object.name,
+    search: config.document.name,
     searchType: TVA_CONFIG.customImageCategories.includes('Scene') ? 'Scene' : SEARCH_TYPE.TILE,
   });
   insertArtSelectButton(html, 'foreground', {
-    search: config.object.name,
+    search: config.document.name,
     searchType: TVA_CONFIG.customImageCategories.includes('Scene') ? 'Scene' : SEARCH_TYPE.TILE,
   });
   insertArtSelectButton(html, 'fogOverlay', {
-    search: config.object.name,
+    search: config.document.name,
     searchType: TVA_CONFIG.customImageCategories.includes('Fog') ? 'Fog' : SEARCH_TYPE.TILE,
   });
 }
 
 function _modTileConfig(tileConfig, html) {
   insertArtSelectButton(html, 'texture.src', {
-    search: tileConfig.object.getFlag('token-variants', 'tileName') || 'Tile',
+    search: tileConfig.document.getFlag('token-variants', 'tileName') || 'Tile',
     searchType: SEARCH_TYPE.TILE,
   });
 }
 
 function _modActiveEffectConfig(effectConfig, html) {
   const inserted = insertArtSelectButton(html, 'icon', {
-    search: effectConfig.object.name || 'Active Effect',
+    search: effectConfig.document.name || 'Active Effect',
     searchType: TVA_CONFIG.customImageCategories.includes('Active Effect') ? 'Active Effect' : SEARCH_TYPE.ITEM,
   });
   if (!inserted) {
     const img = $(html).find('.effect-icon');
     img.on('contextmenu', () => {
-      showArtSelect(effectConfig.object?.name ?? 'Active Effect', {
+      showArtSelect(effectConfig.document?.name ?? 'Active Effect', {
         searchType: SEARCH_TYPE.ITEM,
         callback: (imgSrc) => img.attr('src', imgSrc),
       });
@@ -114,7 +114,7 @@ function _modItemSheet(itemSheet, html, options) {
   $(html)
     .find('img.profile, .profile-img, [data-edit="img"]')
     .on('contextmenu', () => {
-      const item = itemSheet.object;
+      const item = itemSheet.document;
       if (!item) return;
       showArtSelect(item.name, {
         searchType: SEARCH_TYPE.ITEM,
@@ -126,7 +126,7 @@ function _modItemSheet(itemSheet, html, options) {
 function _modMacroConfig(macroConfig, html, options) {
   const img = $(html).find('.sheet-header > img');
   img.on('contextmenu', () => {
-    showArtSelect(macroConfig.object?.name ?? 'Macro', {
+    showArtSelect(macroConfig.document?.name ?? 'Macro', {
       searchType: SEARCH_TYPE.MACRO,
       callback: (imgSrc) => img.attr('src', imgSrc),
     });
@@ -137,7 +137,7 @@ function _modJournalSheet(journalSheet, html, options) {
   $(html)
     .find('.header-button.entry-image')
     .on('contextmenu', () => {
-      const journal = journalSheet.object;
+      const journal = journalSheet.document;
       if (!journal) return;
       showArtSelect(journal.name, {
         searchType: SEARCH_TYPE.JOURNAL,
@@ -150,7 +150,7 @@ function _modRollTableSheet(sheet, html) {
   $(html)
     .find('.result-image')
     .on('contextmenu', (event) => {
-      const table = sheet.object;
+      const table = sheet.document;
       if (!table) return;
       const img = $(event.target).closest('.result-image').find('img');
       showArtSelect(table.name, {
@@ -195,13 +195,13 @@ function _modActorSheet(actorSheet, html, options) {
     profile.addEventListener(
       'contextmenu',
       function (ev) {
-        showArtSelect(actorSheet.object.name, {
-          callback: (imgSrc, name) => updateActorImage(actorSheet.object, imgSrc),
+        showArtSelect(actorSheet.document.name, {
+          callback: (imgSrc, name) => updateActorImage(actorSheet.document, imgSrc),
           searchType: SEARCH_TYPE.PORTRAIT,
-          object: actorSheet.object,
+          object: actorSheet.document,
         });
       },
-      false
+      false,
     );
   }
 }

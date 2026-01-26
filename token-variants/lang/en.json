@@ -181,7 +181,7 @@
       "art-select": {
         "apply-same-art": "Apply the same art to the token?",
         "no-art-found": "No art found containing",
-        "select-variant": "Select variant",
+        "select-variant": "TVA Art Select",
         "select-portrait-art": "Select Portrait Art",
         "select-token-art": "Select Token Art"
       },
