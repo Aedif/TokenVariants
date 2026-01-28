@@ -1,3 +1,8 @@
+# 6.0.4
+
+- Fixed errors thrown when toggling HUD art select
+- Switch Token HUD name search to `Portrait` category while on a `Mass Edit` scenescape
+
 # 6.0.3
 
 **Mappings**

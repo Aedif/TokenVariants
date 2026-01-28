@@ -250,8 +250,13 @@ export async function renderPalette(token, searchText = '', fp_files = null) {
       }
 
       if (search) {
+        let searchType = SEARCH_TYPE.TOKEN;
+        if (!foundry.utils.isEmpty(canvas.scene?.getFlag('multi-token-edit', 'scenescape'))) {
+          searchType = SEARCH_TYPE.PORTRAIT;
+        }
+
         let artSearch = await doImageSearch(search, {
-          searchType: SEARCH_TYPE.TOKEN,
+          searchType,
           searchOptions: { keywordSearch: worldHudSettings.includeKeywords },
         });
 

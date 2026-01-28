@@ -48,19 +48,24 @@ function _initializeApplicationOptions(wrapped, options) {
 }
 
 async function tvaButtonClick(event) {
-  const palette = this.element.querySelector(`.palette[data-palette="tva"]`);
+  const button = event.target.closest('.control-icon');
+  let palette = this.element.querySelector(`.palette[data-palette="tva"]`);
 
   const FULL_ACCESS = TVA_CONFIG.permissions.hudFullAccess[game.user.role];
 
   if (FULL_ACCESS && event.button === 2) {
     if (!palette || !palette.classList.contains('contextmenu')) {
       palette?.remove();
-      this.element.querySelector('.col.right').appendChild((await renderContextMenuPalette(this.document))[0]);
+      palette = (await renderContextMenuPalette(this.document))[0];
+      this.element.querySelector('.col.right').appendChild(palette);
     }
   } else if (!palette || palette.classList.contains('contextmenu')) {
     palette?.remove();
-    this.element.querySelector('.col.right').appendChild((await renderPalette(this.document))[0]);
+    palette = (await renderPalette(this.document))[0];
+    this.element.querySelector('.col.right').appendChild(palette);
   }
 
-  this.togglePalette('tva');
+  const active = !button.classList.contains('active');
+  button.classList.toggle('active', active);
+  if (palette) palette.classList.toggle('active', active);
 }
