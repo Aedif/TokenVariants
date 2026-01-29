@@ -251,7 +251,10 @@ export async function renderPalette(token, searchText = '', fp_files = null) {
 
       if (search) {
         let searchType = SEARCH_TYPE.TOKEN;
-        if (!foundry.utils.isEmpty(canvas.scene?.getFlag('multi-token-edit', 'scenescape'))) {
+        if (
+          game.modules.get('multi-token-edit')?.active &&
+          !foundry.utils.isEmpty(canvas.scene?.getFlag('multi-token-edit', 'scenescape'))
+        ) {
           searchType = SEARCH_TYPE.PORTRAIT;
         }
 

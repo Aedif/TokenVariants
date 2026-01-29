@@ -1,3 +1,7 @@
+# 6.0.5
+
+- Fixed a bug causing unresponsive Token HUD button
+
 # 6.0.4
 
 - Fixed errors thrown when toggling HUD art select
