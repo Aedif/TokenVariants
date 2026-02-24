@@ -863,9 +863,9 @@ function getPropertyValue(token, property) {
 
   if (property.startsWith('"') && property.endsWith('"')) {
     val = property.substring(1, property.length - 1);
-    if (val === 'true') val = true;
-    else if (val === 'false') val = true;
-    return { val, boolean: true };
+    if (val === 'true') return { val: true, boolean: true };
+    else if (val === 'false') return { val: false, boolean: true };
+    return { val };
   } else if (property.endsWith('%')) {
     val = Number(property.substring(0, property.length - 1));
     return { val, percentage: true };
@@ -903,8 +903,8 @@ export function evaluateComparator(token, expression) {
 
     if (val1.percentage) val2.val = (val2.val / val2.maxVal) * 100;
     else if (val2.percentage) val1.val = (val1.val / val1.maxVal) * 100;
-    else if (val1.boolean) val2.val = foundry.utils.isEmpty(val2.val) ? false : Boolean(val2.val);
-    else if (val2.boolean) val1.val = foundry.utils.isEmpty(val1.val) ? false : Boolean(val1.val);
+    else if (val1.boolean && !val2.boolean) val2.val = foundry.utils.isEmpty(val2.val) ? false : Boolean(val2.val);
+    else if (val2.boolean && !val1.boolean) val1.val = foundry.utils.isEmpty(val1.val) ? false : Boolean(val1.val);
 
     let passed = false;
     if (sign === '=') {

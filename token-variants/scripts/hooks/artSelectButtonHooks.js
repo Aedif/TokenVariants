@@ -10,8 +10,9 @@ export function registerArtSelectButtonHooks() {
   // Insert right-click listeners to open up ArtSelect forms from various contexts
   if (TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
     registerHook(feature_id, 'renderActorSheet', _modActorSheet);
-    registerHook(feature_id, 'renderItemSheet5e', _modItemSheet);
+    if (game.system.id === 'dnd5e') registerHook(feature_id, 'renderItemSheet5e', _modItemSheet);
     registerHook(feature_id, 'renderItemActionSheet', _modItemSheet);
+    if (game.system.id === 'pf1') registerHook(feature_id, 'renderItemSheetPF', _modItemSheetPF);
     registerHook(feature_id, 'renderJournalSheet', _modJournalSheet);
   } else {
     ['renderActorSheet', 'renderItemSheet5e', 'renderItemActionSheet', 'renderJournalSheet'].forEach((name) =>
@@ -109,6 +110,17 @@ function _modActiveEffectConfig(effectConfig, html) {
 
 function _modItemSheet(itemSheet, html, options) {
   html.querySelector('[data-action="editImage"]')?.addEventListener('contextmenu', () => {
+    const item = itemSheet.document;
+    if (!item) return;
+    showArtSelect(item.name, {
+      searchType: SEARCH_TYPE.ITEM,
+      callback: (imgSrc) => item.update({ img: imgSrc }),
+    });
+  });
+}
+
+function _modItemSheetPF(itemSheet, html, options) {
+  html[0]?.querySelector('.profile')?.addEventListener('contextmenu', () => {
     const item = itemSheet.document;
     if (!item) return;
     showArtSelect(item.name, {

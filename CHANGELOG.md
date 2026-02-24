@@ -1,3 +1,8 @@
+# 6.0.6
+
+- Fixed string and boolean evaluators within mappings not behaving correctly (#217)
+- Added Art Select Right-click listener for PF1e item sheet images (#216)
+
 # 6.0.5
 
 - Fixed a bug causing unresponsive Token HUD button
