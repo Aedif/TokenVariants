@@ -24,6 +24,7 @@ async function _createToken(token, options, userId) {
     inplace: false,
     recursive: false,
   });
+  const worldHudSettings = TVA_CONFIG.worldHud;
 
   let vDown = keyPressed('v');
   const flagTarget = token.actor ? game.actors.get(token.actor.id) : token.document ?? token;
@@ -56,6 +57,7 @@ async function _createToken(token, options, userId) {
           token: token,
           actor: token.actor,
           imgName: img[1],
+          animate: worldHudSettings.animate,
         });
       }
 
