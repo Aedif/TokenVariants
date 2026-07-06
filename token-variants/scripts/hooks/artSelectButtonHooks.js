@@ -160,8 +160,10 @@ function _modActorSheet(actorSheet, html, options) {
   // isEditable works on both ApplicationV1 and V2 sheets; the third hook arg is not
   // consistent across the two (v1 passes render data, v2 passes the render context).
   if (actorSheet.isEditable && TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
-    // renderActorSheet passes a jQuery object, renderActorSheetV2 a raw HTMLElement.
-    const element = html[0] ?? html;
+    // renderActorSheet passes a jQuery object, renderActorSheetV2 a raw element.
+    // Don't use `html[0]`: a V2 sheet's root is a <form>, whose [0] is its first
+    // control, not undefined. Detect jQuery explicitly via its `.jquery` marker.
+    const element = html.jquery ? html[0] : html;
 
     let profile = null;
     let profileQueries = {
