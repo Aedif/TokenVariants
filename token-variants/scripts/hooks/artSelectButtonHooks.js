@@ -10,13 +10,14 @@ export function registerArtSelectButtonHooks() {
   // Insert right-click listeners to open up ArtSelect forms from various contexts
   if (TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
     registerHook(feature_id, 'renderActorSheet', _modActorSheet);
+    registerHook(feature_id, 'renderActorSheetV2', _modActorSheet);
     if (game.system.id === 'dnd5e') registerHook(feature_id, 'renderItemSheet5e', _modItemSheet);
     registerHook(feature_id, 'renderItemActionSheet', _modItemSheet);
     if (game.system.id === 'pf1') registerHook(feature_id, 'renderItemSheetPF', _modItemSheetPF);
     registerHook(feature_id, 'renderJournalSheet', _modJournalSheet);
   } else {
-    ['renderActorSheet', 'renderItemSheet5e', 'renderItemActionSheet', 'renderJournalSheet'].forEach((name) =>
-      unregisterHook(feature_id, name),
+    ['renderActorSheet', 'renderActorSheetV2', 'renderItemSheet5e', 'renderItemActionSheet', 'renderJournalSheet'].forEach(
+      (name) => unregisterHook(feature_id, name),
     );
   }
 
@@ -156,7 +157,14 @@ function _modJournalSheet(journalSheet, html, options) {
  * the 'Art Select' screen.
  */
 function _modActorSheet(actorSheet, html, options) {
-  if (options.editable && TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
+  // isEditable works on both ApplicationV1 and V2 sheets; the third hook arg is not
+  // consistent across the two (v1 passes render data, v2 passes the render context).
+  if (actorSheet.isEditable && TVA_CONFIG.permissions.portrait_right_click[game.user.role]) {
+    // renderActorSheet passes a jQuery object, renderActorSheetV2 a raw element.
+    // Don't use `html[0]`: a V2 sheet's root is a <form>, whose [0] is its first
+    // control, not undefined. Detect jQuery explicitly via its `.jquery` marker.
+    const element = html.jquery ? html[0] : html;
+
     let profile = null;
     let profileQueries = {
       all: ['.profile', '.profile-img', '.profile-image', '.portrait'],
@@ -164,13 +172,13 @@ function _modActorSheet(actorSheet, html, options) {
     };
 
     for (let query of profileQueries.all) {
-      profile = html[0].querySelector(query);
+      profile = element.querySelector(query);
       if (profile) break;
     }
 
     if (!profile && game.system.id in profileQueries) {
       for (let query of profileQueries[game.system.id]) {
-        profile = html[0].querySelector(query);
+        profile = element.querySelector(query);
         if (profile) break;
       }
     }
@@ -179,6 +187,11 @@ function _modActorSheet(actorSheet, html, options) {
       console.warn('TVA |', game.i18n.localize('token-variants.notifications.warn.profile-image-not-found'));
       return;
     }
+
+    // Guard against stacking listeners when the hook fires repeatedly for the same
+    // element (e.g. sheets that re-render in place rather than rebuilding the DOM).
+    if (profile.dataset.tvaPortraitListener) return;
+    profile.dataset.tvaPortraitListener = 'true';
 
     profile.addEventListener(
       'contextmenu',
